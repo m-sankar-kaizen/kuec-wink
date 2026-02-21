@@ -1,0 +1,46 @@
+// KUEC WINK - Theme Variables Definition
+// Pending formal brand guidelines from KUEC Product Owner.
+
+:root {
+    // Brand Colors
+    --wink-primary: #0055b7; // KUEC Primary Blue
+    --wink-secondary: #c62753; // KUEC Accent Magenta/Red
+    --wink-accent: #53c8e7; // KUEC Light Blue
+    --wink-bg: #F8F9FA; // Light background
+
+    // Typography
+    --wink-text-dark: #212529;
+    --wink-text-light: #6C757D;
+    --wink-font-primary: 'Calibri', 'Inter', sans-serif;
+    --wink-font-heading: 'Calibri', 'Inter', sans-serif;
+}
+
+// Basic application of CSS variables to portal elements
+body {
+    font-family: var(--wink-font-primary) !important;
+    background-color: var(--wink-bg) !important;
+    color: var(--wink-text-dark) !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--wink-font-heading) !important;
+}
+
+.btn-primary {
+    background-color: var(--wink-primary) !important;
+    border-color: var(--wink-primary) !important;
+}
+
+.btn-secondary {
+    background-color: var(--wink-secondary) !important;
+    border-color: var(--wink-secondary) !important;
+}
+
+.o_portal_menu {
+    border-bottom: 3px solid var(--wink-primary) !important;
+}

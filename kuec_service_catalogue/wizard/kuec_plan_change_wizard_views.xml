@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_kuec_plan_change_wizard" model="ir.ui.view">
+        <field name="name">kuec.plan.change.wizard.form</field>
+        <field name="model">kuec.plan.change.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Subscription Plan Change">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="subscription_id" invisible="1"/>
+                            <field name="change_type" widget="radio" options="{'horizontal': True}"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Current Status">
+                            <field name="current_product_id"/>
+                            <field name="remaining_value" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                        <group string="New Target" invisible="change_type == 'cancel'">
+                            <field name="target_combo_domain" invisible="1"/>
+                            <field name="target_combo_id" required="change_type in ('upgrade', 'downgrade')" domain="target_combo_domain" invisible="change_type == 'cancel'"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Confirm Change" name="action_confirm_plan_change" type="object" class="btn-primary"/>
+                    <button string="Discard" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_kuec_plan_change_wizard" model="ir.actions.act_window">
+        <field name="name">Subscription Plan Change</field>
+        <field name="res_model">kuec.plan.change.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

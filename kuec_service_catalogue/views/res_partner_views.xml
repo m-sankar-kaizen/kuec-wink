@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_partner_form_kuec_eligibility" model="ir.ui.view">
+        <field name="name">res.partner.form.kuec.eligibility</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Add Eligibility tags inside the Sales & Purchase tab -->
+            <xpath expr="//page[@name='sales_purchases']/group[@name='container_row_2']" position="inside">
+                <group string="WINK Eligibility" name="kuec_eligibility">
+                    <field name="eligibility_tag_ids" widget="many2many_tags" placeholder="Eligibility Tags..." options="{'color_field': 'color'}"/>
+                </group>
+            </xpath>
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="employee_directory_enabled" widget="boolean_toggle"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

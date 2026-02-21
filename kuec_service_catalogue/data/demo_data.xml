@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- ============================================== -->
+        <!-- 1. DEPARTMENTS                                 -->
+        <!-- ============================================== -->
+        <record id="kuec_demo_dept_legal" model="kuec.department">
+            <field name="name">Legal &amp; Compliance</field>
+        </record>
+        
+        <record id="kuec_demo_dept_it" model="kuec.department">
+            <field name="name">Information Technology</field>
+        </record>
+        
+        <record id="kuec_demo_dept_hr" model="kuec.department">
+            <field name="name">Human Resources</field>
+        </record>
+        
+        <record id="kuec_demo_dept_finance" model="kuec.department">
+            <field name="name">Finance &amp; Accounting</field>
+        </record>
+        
+        <record id="kuec_demo_dept_bd" model="kuec.department">
+            <field name="name">Business Development</field>
+        </record>
+
+        <!-- ============================================== -->
+        <!-- 2. BUNDLE GROUPS                               -->
+        <!-- ============================================== -->
+        <record id="kuec_demo_bundle_startup" model="kuec.bundle.group">
+            <field name="name">Startup Enablement Packages</field>
+            <field name="allow_upgrade">True</field>
+            <field name="allow_downgrade">True</field>
+            <field name="allow_cancellation">True</field>
+            <field name="credit_routing">wallet</field>
+        </record>
+        
+        <record id="kuec_demo_bundle_compliance" model="kuec.bundle.group">
+            <field name="name">Corporate Compliance Packages</field>
+            <field name="allow_upgrade">True</field>
+            <field name="allow_downgrade">False</field>
+            <field name="allow_cancellation">True</field>
+            <field name="credit_routing">credit_note</field>
+        </record>
+
+        <!-- ============================================== -->
+        <!-- 3. PRODUCTS (SERVICES)                         -->
+        <!-- ============================================== -->
+        
+        <!-- SERVICE 1 -->
+        <record id="kuec_demo_svc_company_reg" model="product.template">
+            <field name="name">Company Registration Assistance</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">1500.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_legal')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="delivery_model">project</field>
+            <field name="commercial_structure">standalone</field>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae'), ref('kuec_service_catalogue.kuec_eligibility_abroad')])]"/>
+            <field name="price_visibility">visible</field>
+            <field name="request_frequency">one_time</field>
+            <field name="wink_description"><![CDATA[<p>Professional assistance with company registration procedures across all UAE free zones and mainland authorities. Our team handles documentation, submission, and follow-up on your behalf.</p>]]></field>
+        </record>
+        
+        <record id="kuec_demo_svc_company_reg_doc1" model="kuec.service.document">
+            <field name="name">Passport Copy</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_company_reg"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_company_reg_doc2" model="kuec.service.document">
+            <field name="name">Business Plan</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_company_reg"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="kuec_demo_svc_company_reg_doc3" model="kuec.service.document">
+            <field name="name">NOC Letter</field>
+            <field name="requirement">optional</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_company_reg"/>
+            <field name="sequence">30</field>
+        </record>
+        
+        <record id="kuec_demo_svc_company_reg_faq1" model="kuec.service.faq">
+            <field name="question">How long does the registration process take?</field>
+            <field name="answer"><![CDATA[<p>Typically 5-10 business days depending on the authority.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_company_reg"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_company_reg_faq2" model="kuec.service.faq">
+            <field name="question">Do you handle both mainland and free zone?</field>
+            <field name="answer"><![CDATA[<p>Yes, we cover all major UAE authorities.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_company_reg"/>
+            <field name="sequence">20</field>
+        </record>
+        
+        <!-- SERVICE 2 -->
+        <record id="kuec_demo_svc_it_audit" model="product.template">
+            <field name="name">IT Infrastructure Audit</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">3200.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="delivery_model">project</field>
+            <field name="commercial_structure">standalone</field>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
+            <field name="price_visibility">visible</field>
+            <field name="request_frequency">one_time</field>
+            <field name="wink_description"><![CDATA[<p>Comprehensive audit of your IT infrastructure including network security, hardware inventory, software licensing compliance, and risk assessment with a detailed executive report.</p>]]></field>
+        </record>
+        
+        <record id="kuec_demo_svc_it_audit_doc1" model="kuec.service.document">
+            <field name="name">Network Diagram</field>
+            <field name="requirement">optional</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_it_audit"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_it_audit_doc2" model="kuec.service.document">
+            <field name="name">Current IT Asset List</field>
+            <field name="requirement">optional</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_it_audit"/>
+            <field name="sequence">20</field>
+        </record>
+        
+        <record id="kuec_demo_svc_it_audit_faq1" model="kuec.service.faq">
+            <field name="question">What is included in the audit report?</field>
+            <field name="answer"><![CDATA[<p>Executive summary, risk matrix, findings, and prioritized recommendations.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_it_audit"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- SERVICE 3 -->
+        <record id="kuec_demo_svc_hr_outsourcing" model="product.template">
+            <field name="name">HR Outsourcing - Monthly Retainer</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">2500.00</field>
+            <field name="standard_monthly_price">2500.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_hr')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="delivery_model">retainer</field>
+            <field name="commercial_structure">flexible</field>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
+            <field name="price_visibility">visible</field>
+            <field name="request_frequency">repeated</field>
+            <field name="reminder_days_before">30</field>
+            <field name="wink_description"><![CDATA[<p>Dedicated HR outsourcing service covering recruitment support, onboarding, payroll processing, and employee relations management on a monthly retainer basis.</p>]]></field>
+        </record>
+        
+        <record id="kuec_demo_svc_hr_outsourcing_doc1" model="kuec.service.document">
+            <field name="name">Trade License</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_hr_outsourcing"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_hr_outsourcing_doc2" model="kuec.service.document">
+            <field name="name">HR Policy Document</field>
+            <field name="requirement">optional</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_hr_outsourcing"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- SERVICE 4 -->
+        <record id="kuec_demo_svc_legal_review" model="product.template">
+            <field name="name">Legal Document Review</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">0.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_legal')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="delivery_model">project</field>
+            <field name="commercial_structure">standalone</field>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_kuec')])]"/>
+            <field name="price_visibility">hidden</field>
+            <field name="price_hidden_label">Contact us for pricing</field>
+            <field name="request_frequency">one_time</field>
+            <field name="wink_description"><![CDATA[<p>Expert review of contracts, MOUs, agreements, and legal correspondence by our qualified legal team. Pricing varies based on document complexity and turnaround requirements.</p>]]></field>
+        </record>
+        
+        <record id="kuec_demo_svc_legal_review_doc1" model="kuec.service.document">
+            <field name="name">Document to Review</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_legal_review"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_legal_review_doc2" model="kuec.service.document">
+            <field name="name">Reference Agreement</field>
+            <field name="requirement">optional</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_legal_review"/>
+            <field name="sequence">20</field>
+        </record>
+        
+        <record id="kuec_demo_svc_legal_review_faq1" model="kuec.service.faq">
+            <field name="question">What types of documents do you review?</field>
+            <field name="answer"><![CDATA[<p>Contracts, MOUs, NDAs, employment agreements, and regulatory submissions.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_legal_review"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_legal_review_faq2" model="kuec.service.faq">
+            <field name="question">Is Arabic legal review available?</field>
+            <field name="answer"><![CDATA[<p>Yes, bilingual review in English and Arabic is available.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_legal_review"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- SERVICE 5 -->
+        <record id="kuec_demo_svc_vat_filing" model="product.template">
+            <field name="name">VAT Filing &amp; Compliance</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">800.00</field>
+            <field name="standard_monthly_price">800.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_finance')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="delivery_model">retainer</field>
+            <field name="commercial_structure">flexible</field>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae')])]"/>
+            <field name="price_visibility">visible</field>
+            <field name="request_frequency">repeated</field>
+            <field name="reminder_days_before">14</field>
+            <field name="requires_employee_selection">False</field>
+            <field name="wink_description"><![CDATA[<p>Monthly VAT return preparation and filing with the Federal Tax Authority. Includes transaction review, reconciliation, and submission confirmation.</p>]]></field>
+        </record>
+        
+        <record id="kuec_demo_svc_vat_filing_doc1" model="kuec.service.document">
+            <field name="name">Sales Invoices</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_vat_filing"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_vat_filing_doc2" model="kuec.service.document">
+            <field name="name">Purchase Invoices</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_vat_filing"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="kuec_demo_svc_vat_filing_doc3" model="kuec.service.document">
+            <field name="name">Bank Statements</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_vat_filing"/>
+            <field name="sequence">30</field>
+        </record>
+
+        <!-- SERVICE 6 -->
+        <record id="kuec_demo_svc_biz_dev" model="product.template">
+            <field name="name">Business Development Consulting</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">0.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_bd')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="delivery_model">project</field>
+            <field name="commercial_structure">standalone</field>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
+            <field name="price_visibility">hidden</field>
+            <field name="price_hidden_label">Request a custom proposal</field>
+            <field name="request_frequency">one_time</field>
+            <field name="wink_description"><![CDATA[<p>Strategic business development consulting tailored to your growth objectives. Covers market entry strategy, partnership development, and opportunity assessment across GCC markets.</p>]]></field>
+        </record>
+        
+        <record id="kuec_demo_svc_biz_dev_faq1" model="kuec.service.faq">
+            <field name="question">Do you offer industry-specific consulting?</field>
+            <field name="answer"><![CDATA[<p>Yes, we specialize in technology, education, and government sectors.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_biz_dev"/>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- SERVICE 7 -->
+        <record id="kuec_demo_svc_visa" model="product.template">
+            <field name="name">Employee Visa Processing</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">650.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_hr')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="delivery_model">project</field>
+            <field name="commercial_structure">bundled</field>
+            <field name="bundle_group_id" ref="kuec_demo_bundle_compliance"/>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae'), ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
+            <field name="price_visibility">visible</field>
+            <field name="request_frequency">one_time</field>
+            <field name="requires_employee_selection">True</field>
+            <field name="wink_description"><![CDATA[<p>End-to-end employee visa processing including entry permit, status change, medical typing, Emirates ID registration, and visa stamping.</p>]]></field>
+        </record>
+        
+        <record id="kuec_demo_svc_visa_doc1" model="kuec.service.document">
+            <field name="name">Passport Copy</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_visa"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_visa_doc2" model="kuec.service.document">
+            <field name="name">Educational Certificate</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_visa"/>
+            <field name="sequence">20</field>
+        </record>
+        <record id="kuec_demo_svc_visa_doc3" model="kuec.service.document">
+            <field name="name">Employment Contract</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_visa"/>
+            <field name="sequence">30</field>
+        </record>
+        <record id="kuec_demo_svc_visa_doc4" model="kuec.service.document">
+            <field name="name">Passport Photo</field>
+            <field name="requirement">required</field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_visa"/>
+            <field name="sequence">40</field>
+        </record>
+        
+        <record id="kuec_demo_svc_visa_faq1" model="kuec.service.faq">
+            <field name="question">How long does visa processing take?</field>
+            <field name="answer"><![CDATA[<p>Standard processing is 10-15 business days. Express options available.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_visa"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_svc_visa_faq2" model="kuec.service.faq">
+            <field name="question">Is medical test included?</field>
+            <field name="answer"><![CDATA[<p>Medical test coordination is included in the service.</p>]]></field>
+            <field name="product_tmpl_id" ref="kuec_demo_svc_visa"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- SERVICE 8 -->
+        <record id="kuec_demo_svc_it_support" model="product.template">
+            <field name="name">IT Support - Monthly Retainer</field>
+            <field name="type">service</field>
+            <field name="sale_ok">True</field>
+            <field name="available_on_wink">True</field>
+            <field name="list_price">1800.00</field>
+            <field name="standard_monthly_price">1800.00</field>
+            <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
+            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="delivery_model">retainer</field>
+            <field name="commercial_structure">bundled</field>
+            <field name="bundle_group_id" ref="kuec_demo_bundle_startup"/>
+            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
+            <field name="price_visibility">visible</field>
+            <field name="request_frequency">repeated</field>
+            <field name="reminder_days_before">7</field>
+            <field name="wink_description"><![CDATA[<p>Dedicated monthly IT support retainer covering helpdesk tickets, on-site visits, software troubleshooting, and infrastructure maintenance with guaranteed SLA response times.</p>]]></field>
+        </record>
+
+        <!-- ============================================== -->
+        <!-- 4. PARTNERS (CUSTOMERS)                        -->
+        <!-- ============================================== -->
+        <record id="kuec_demo_partner_alnoor" model="res.partner">
+            <field name="name">Al Noor Technology Solutions</field>
+            <field name="is_company">True</field>
+            <field name="company_type">company</field>
+            <field name="email">info@alnoor-tech.ae</field>
+            <field name="phone">+971 4 123 4567</field>
+            <field name="country_id" ref="base.ae"/>
+            <field name="employee_directory_enabled">True</field>
+            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae')])]"/>
+        </record>
+        
+        <record id="kuec_demo_partner_ku" model="res.partner">
+            <field name="name">Kuwait University - Main Campus</field>
+            <field name="is_company">True</field>
+            <field name="company_type">company</field>
+            <field name="email">services@ku.edu.kw</field>
+            <field name="phone">+965 2498 0000</field>
+            <field name="country_id" ref="base.kw"/>
+            <field name="employee_directory_enabled">True</field>
+            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
+        </record>
+        
+        <record id="kuec_demo_partner_horizon" model="res.partner">
+            <field name="name">Horizon Consulting FZE</field>
+            <field name="is_company">True</field>
+            <field name="company_type">company</field>
+            <field name="email">admin@horizonfze.com</field>
+            <field name="phone">+971 4 987 6543</field>
+            <field name="country_id" ref="base.ae"/>
+            <field name="employee_directory_enabled">False</field>
+            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_abroad')])]"/>
+        </record>
+
+        <!-- ============================================== -->
+        <!-- 5. EMPLOYEES                                   -->
+        <!-- ============================================== -->
+        <record id="kuec_demo_emp_ahmed" model="kuec.employee.directory">
+            <field name="partner_id" ref="kuec_demo_partner_alnoor"/>
+            <field name="name">Ahmed Mohammed Al Rashidi</field>
+            <field name="full_name_arabic">أحمد محمد الراشدي</field>
+            <field name="gender">male</field>
+            <field name="nationality" ref="base.ae"/>
+            <field name="date_of_birth">1990-05-14</field>
+            <field name="place_of_birth">Dubai</field>
+            <field name="marital_status">married</field>
+            <field name="mobile">+971 50 123 4567</field>
+            <field name="email">ahmed.rashidi@alnoor-tech.ae</field>
+            <field name="passport_number">A12345678</field>
+            <field name="passport_issue_date">2019-03-10</field>
+            <field name="passport_expiry_date">2029-03-09</field>
+            <field name="passport_place_of_issue">Dubai</field>
+            <field name="current_location">inside_uae</field>
+            <field name="previous_uae_visa">False</field>
+            <field name="uid_number">784-1990-1234567-1</field>
+            <field name="emirates_id">784-1990-1234567-1</field>
+            <field name="current_visa_expiry">2026-12-31</field>
+        </record>
+        
+        <record id="kuec_demo_emp_sarah" model="kuec.employee.directory">
+            <field name="partner_id" ref="kuec_demo_partner_alnoor"/>
+            <field name="name">Sarah Johnson</field>
+            <field name="full_name_arabic">سارة جونسون</field>
+            <field name="gender">female</field>
+            <field name="nationality" ref="base.gb"/>
+            <field name="date_of_birth">1988-11-22</field>
+            <field name="place_of_birth">London</field>
+            <field name="marital_status">single</field>
+            <field name="mobile">+971 55 987 6543</field>
+            <field name="email">sarah.johnson@alnoor-tech.ae</field>
+            <field name="passport_number">GB9876543</field>
+            <field name="passport_issue_date">2021-06-01</field>
+            <field name="passport_expiry_date">2031-05-31</field>
+            <field name="passport_place_of_issue">London</field>
+            <field name="current_location">inside_uae</field>
+            <field name="previous_uae_visa">True</field>
+            <field name="emirates_id">784-1988-9876543-2</field>
+            <field name="current_visa_expiry">2025-08-15</field>
+        </record>
+        
+        <record id="kuec_demo_emp_ravi" model="kuec.employee.directory">
+            <field name="partner_id" ref="kuec_demo_partner_alnoor"/>
+            <field name="name">Ravi Kumar Sharma</field>
+            <field name="full_name_arabic">رافي كومار شارما</field>
+            <field name="gender">male</field>
+            <field name="nationality" ref="base.in"/>
+            <field name="date_of_birth">1985-07-30</field>
+            <field name="place_of_birth">Mumbai</field>
+            <field name="marital_status">married</field>
+            <field name="mobile">+971 52 456 7890</field>
+            <field name="email">ravi.sharma@alnoor-tech.ae</field>
+            <field name="passport_number">IN5432109</field>
+            <field name="passport_issue_date">2020-09-15</field>
+            <field name="passport_expiry_date">2030-09-14</field>
+            <field name="passport_place_of_issue">Mumbai</field>
+            <field name="current_location">inside_uae</field>
+            <field name="previous_uae_visa">True</field>
+            <field name="uid_number">784-1985-5432109-3</field>
+            <field name="emirates_id">784-1985-5432109-3</field>
+            <field name="current_visa_expiry">2026-06-30</field>
+        </record>
+
+    </data>
+</odoo>

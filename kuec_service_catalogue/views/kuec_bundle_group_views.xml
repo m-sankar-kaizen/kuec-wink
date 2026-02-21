@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="kuec_bundle_group_view_form" model="ir.ui.view">
+        <field name="name">kuec.bundle.group.view.form</field>
+        <field name="model">kuec.bundle.group</field>
+        <field name="arch" type="xml">
+            <form string="Bundle Group">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="E.g. Enterprise Tier"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Configuration">
+                            <field name="sequence"/>
+                        </group>
+                        <group string="Policy" name="policy_group">
+                            <field name="allow_upgrade"/>
+                            <field name="allow_downgrade"/>
+                            <field name="allow_cancellation"/>
+                            <field name="credit_routing"/>
+                            <field name="loyalty_program_id" invisible="credit_routing != 'gift_card'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tiers / Lines" name="lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="label"/>
+                                    <field name="product_tmpl_id"/>
+                                    <field name="combo_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="kuec_bundle_group_view_tree" model="ir.ui.view">
+        <field name="name">kuec.bundle.group.view.list</field>
+        <field name="model">kuec.bundle.group</field>
+        <field name="arch" type="xml">
+            <list string="Bundle Groups">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="credit_routing"/>
+            </list>
+        </field>
+    </record>
+</odoo>

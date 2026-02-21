@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Module Category -->
+        <record id="module_category_kuec_wink" model="ir.module.category">
+            <field name="name">KUEC WINK</field>
+            <field name="description">Helps you manage your KUEC WINK portal and shared services.</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <!-- Admin Group -->
+        <record id="group_kuec_admin" model="res.groups">
+            <field name="name">KUEC Admin</field>
+            <field name="category_id" ref="module_category_kuec_wink"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Full backend access to all WINK config and features.</field>
+        </record>
+
+        <!-- Coordinator Group -->
+        <record id="group_kuec_coordinator" model="res.groups">
+            <field name="name">KUEC Coordinator</field>
+            <field name="category_id" ref="module_category_kuec_wink"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Manages requests, finalizes quotes, and handles delivery.</field>
+        </record>
+
+        <!-- Finance Group -->
+        <record id="group_kuec_finance" model="res.groups">
+            <field name="name">KUEC Finance</field>
+            <field name="category_id" ref="module_category_kuec_wink"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Invoice and payment access for WINK services.</field>
+        </record>
+
+        <!-- Vendor Portal User Group -->
+        <record id="group_kuec_vendor" model="res.groups">
+            <field name="name">Vendor Portal User</field>
+            <field name="category_id" ref="module_category_kuec_wink"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="comment">Vendor-specific portal view restricted to assigned elements.</field>
+        </record>
+
+    </data>
+</odoo>

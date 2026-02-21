@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <!-- Branded Layout Header Override Example -->
+    <!-- Applies visual changes across the overall /my/ and /shop/ interfaces -->
+    <!-- 
+    <template id="kuec_branded_portal_layout" inherit_id="portal.portal_layout" name="WINK Brand Portal Hooks">
+        <xpath expr="//div[@id='wrap']" position="before">
+            <!- Dynamic CSS block ready to be activated for Multi-Brand switching via res.company settings ->
+            <style type="text/css">
+                /* 
+                   Currently rendering variables out of wink_theme.scss directly.
+                   If Multi-Company is utilized, we can print QWEB logic here:
+                   :root {
+                       __wink-primary: <t t-esc="res_company.wink_primary_color"/> !important;
+                   }
+                */
+            </style>
+        </xpath>
+    </template>
+    -->
+
+</odoo>
