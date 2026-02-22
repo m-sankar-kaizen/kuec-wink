@@ -20,37 +20,24 @@ document.addEventListener('input', function (ev) {
     }
 });
 
-// 3. Request Service Login Gate
-document.addEventListener('click', function (ev) {
-    const btn = ev.target.closest('.wink-request-btn');
-    if (btn) {
-        ev.preventDefault();
-        const productId = btn.dataset.productId;
-        const redirectUrl = btn.dataset.redirect;
-
-        const isAuthenticated = (typeof odoo !== 'undefined' && odoo.session_info && odoo.session_info.uid);
-
-        if (!isAuthenticated) {
-            const modalEl = document.getElementById('winkLoginModal');
-            if (modalEl) {
-                const encodedRedirect = encodeURIComponent(redirectUrl + '?request=1');
-                const signinLink = modalEl.querySelector('.wink-signin-link');
-                const signupLink = modalEl.querySelector('.wink-signup-link');
-
-                if (signinLink) signinLink.href = '/web/login?redirect=' + encodedRedirect;
-                if (signupLink) signupLink.href = '/web/signup?redirect=' + encodedRedirect;
-
-                // Provide fallback if bootstrap isn't globally exposed
-                if (window.bootstrap && window.bootstrap.Modal) {
-                    const modal = new window.bootstrap.Modal(modalEl);
-                    modal.show();
-                } else {
-                    // Fallback directly to login if Bootstrap fails
-                    window.location.href = '/web/login?redirect=' + encodedRedirect;
-                }
+// 3. Request Service Login Gate Modal Setup
+document.addEventListener('show.bs.modal', function(ev) {
+    if (ev.target.id === 'winkLoginModal') {
+        const btn = ev.relatedTarget;
+        if (btn && btn.dataset.productId) {
+            const productId = btn.dataset.productId;
+            const signinLink = ev.target.querySelector('.wink-signin-link');
+            const signupLink = ev.target.querySelector('.wink-signup-link');
+            
+            // Log in redirects back to the request form
+            if (signinLink) {
+                signinLink.href = '/web/login?redirect=' + encodeURIComponent('/my/requests/new?product_id=' + productId);
             }
-        } else {
-            window.location.href = '/my/requests/new?product_id=' + productId;
+            
+            // Create account goes straight to the custom WINK registration form for this product
+            if (signupLink) {
+                signupLink.href = '/my/requests/new?product_id=' + productId;
+            }
         }
     }
 });

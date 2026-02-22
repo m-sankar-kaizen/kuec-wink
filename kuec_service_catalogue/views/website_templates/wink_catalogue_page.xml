@@ -62,7 +62,12 @@
 
                 <div class="d-grid gap-2 d-md-flex">
                     <a t-attf-href="/services/#{product.id}" class="btn btn-outline-secondary btn-sm w-100">View Details</a>
-                    <a href="#" class="btn btn-primary btn-sm w-100 wink-request-btn" t-att-data-product-id="product.id" t-attf-data-redirect="/services/#{product.id}">Request Service</a>
+                    <t t-if="request.env.user._is_public()">
+                        <button type="button" class="btn btn-primary btn-sm w-100 wink-request-btn" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">Request Service</button>
+                    </t>
+                    <t t-else="">
+                        <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-primary btn-sm w-100 wink-request-btn" t-att-data-product-id="product.id">Request Service</a>
+                    </t>
                 </div>
             </div>
         </div>
@@ -295,9 +300,16 @@
                                         </t>
                                     </div>
                                     <div class="d-grid">
-                                        <a href="#" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id" t-att-data-redirect="redirect_url">
-                                            Request Service
-                                        </a>
+                                        <t t-if="request.env.user._is_public()">
+                                            <button type="button" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">
+                                                Request Service
+                                            </button>
+                                        </t>
+                                        <t t-else="">
+                                            <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id">
+                                                Request Service
+                                            </a>
+                                        </t>
                                     </div>
                                 </div>
                             </div>
