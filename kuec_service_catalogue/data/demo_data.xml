@@ -395,7 +395,7 @@
             <field name="name">Ahmed Mohammed Al Rashidi</field>
             <field name="full_name_arabic">أحمد محمد الراشدي</field>
             <field name="gender">male</field>
-            <field name="nationality" ref="base.ae"/>
+            <field name="nationality_id" ref="base.ae"/>
             <field name="date_of_birth">1990-05-14</field>
             <field name="place_of_birth">Dubai</field>
             <field name="marital_status">married</field>
@@ -409,7 +409,7 @@
             <field name="previous_uae_visa">False</field>
             <field name="uid_number">784-1990-1234567-1</field>
             <field name="emirates_id">784-1990-1234567-1</field>
-            <field name="current_visa_expiry">2026-12-31</field>
+            <field name="visa_expiry_date">2026-12-31</field>
         </record>
         
         <record id="kuec_demo_emp_sarah" model="kuec.employee.directory">
@@ -417,7 +417,7 @@
             <field name="name">Sarah Johnson</field>
             <field name="full_name_arabic">سارة جونسون</field>
             <field name="gender">female</field>
-            <field name="nationality" ref="base.gb"/>
+            <field name="nationality_id" ref="base.gb"/>
             <field name="date_of_birth">1988-11-22</field>
             <field name="place_of_birth">London</field>
             <field name="marital_status">single</field>
@@ -430,7 +430,7 @@
             <field name="current_location">inside_uae</field>
             <field name="previous_uae_visa">True</field>
             <field name="emirates_id">784-1988-9876543-2</field>
-            <field name="current_visa_expiry">2025-08-15</field>
+            <field name="visa_expiry_date">2025-08-15</field>
         </record>
         
         <record id="kuec_demo_emp_ravi" model="kuec.employee.directory">
@@ -438,7 +438,7 @@
             <field name="name">Ravi Kumar Sharma</field>
             <field name="full_name_arabic">رافي كومار شارما</field>
             <field name="gender">male</field>
-            <field name="nationality" ref="base.in"/>
+            <field name="nationality_id" ref="base.in"/>
             <field name="date_of_birth">1985-07-30</field>
             <field name="place_of_birth">Mumbai</field>
             <field name="marital_status">married</field>
@@ -452,7 +452,7 @@
             <field name="previous_uae_visa">True</field>
             <field name="uid_number">784-1985-5432109-3</field>
             <field name="emirates_id">784-1985-5432109-3</field>
-            <field name="current_visa_expiry">2026-06-30</field>
+            <field name="visa_expiry_date">2026-06-30</field>
         </record>
 
     </data>
