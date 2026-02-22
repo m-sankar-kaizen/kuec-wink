@@ -9,6 +9,7 @@
             <field name="line_ids" eval="[
                 (0, 0, {
                     'value': 'balance',
+                    'delay_type': 'days_after',
                     'nb_days': 0
                 })
             ]"/>
@@ -22,10 +23,12 @@
                 (0, 0, {
                     'value': 'percent',
                     'value_amount': 50.0,
+                    'delay_type': 'days_after',
                     'nb_days': 0
                 }),
                 (0, 0, {
                     'value': 'balance',
+                    'delay_type': 'days_after',
                     'nb_days': 30
                 })
             ]"/>
@@ -39,10 +42,12 @@
                 (0, 0, {
                     'value': 'percent',
                     'value_amount': 30.0,
+                    'delay_type': 'days_after',
                     'nb_days': 0
                 }),
                 (0, 0, {
                     'value': 'balance',
+                    'delay_type': 'days_after',
                     'nb_days': 30
                 })
             ]"/>
