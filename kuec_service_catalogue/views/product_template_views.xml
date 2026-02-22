@@ -33,6 +33,7 @@
                     <group name="wink_commercial" string="Commercial Settings">
                         <field name="price_visibility" required="available_on_wink"/>
                         <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
+                        <field name="wink_payment_term_id"/>
                         <separator string="Portal Configuration"/>
                         <field name="requires_employee_selection"/>
                         <field name="reminder_days_before"/>

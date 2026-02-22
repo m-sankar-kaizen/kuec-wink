@@ -88,6 +88,11 @@ class ProductTemplate(models.Model):
         default='Contact us for pricing',
         translate=True
     )
+    wink_payment_term_id = fields.Many2one(
+        'account.payment.term',
+        string='WINK Payment Term',
+        help='Specific payment terms to apply when this service is requested from the portal.'
+    )
     requires_employee_selection = fields.Boolean(
         string='Requires Employee Selection',
         default=False,
