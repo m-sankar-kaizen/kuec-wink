@@ -3,6 +3,7 @@ from odoo import http, _
 from odoo.http import request
 from werkzeug.exceptions import NotFound
 from werkzeug.utils import redirect
+import werkzeug.urls
 
 class WinkRequest(http.Controller):
 
@@ -117,17 +118,17 @@ class WinkRequest(http.Controller):
             'partner_id': contact.id,
         })
         
-        try:
-            request.session.authenticate(request.db, contact.email, False)
-        except Exception:
-            # Fallback redirect if authenticate fails
-            pass
-
         # Step 8 — Redirect to request form
-        if not request.session.uid:
-            return request.redirect(f'/web/login?login={contact.email}&redirect=/my/requests/new?product_id={product_id}&registered=1')
-            
-        return request.redirect(f'/my/requests/new?product_id={product_id}&registered=1')
+        return request.redirect(
+            f"/web/login"
+            f"?token={contact.sudo().signup_token}"
+            f"&redirect="
+            + werkzeug.urls.url_quote(
+                f"/my/requests/new"
+                f"?product_id={post.get('product_id','')}"
+                f"&registered=1"
+            )
+        )
 
     @http.route('/my/requests/submit', type='http', auth='user', website=True, methods=['POST'], csrf=True)
     def submit_request(self, **post):
