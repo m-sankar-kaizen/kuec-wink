@@ -2,6 +2,12 @@
 
 import { registry } from "@web/core/registry";
 
+// Odoo 18 TourInteractive explicitly calls DOMPurify.sanitize onTourEnd, but public website 
+// pages (like /services) might not load the DOMPurify bundle, resulting in a TypeError.
+if (typeof window.DOMPurify === 'undefined') {
+    window.DOMPurify = { sanitize: (str) => str };
+}
+
 const guestTour = {
     id: "wink_guest_tour",
     url: "/services",
