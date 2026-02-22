@@ -14,7 +14,8 @@
                         Your WINK portal account has been created.<br/>
                         Click the button below to set your password and access your dashboard.<br/><br/>
                         <div style="text-align: center; margin: 16px 0px 16px 0px;">
-                            <a t-att-href="object.signup_url" style="background-color: #1F4E79; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                            <t t-set="reset_url" t-value="object.get_base_url() + '/web/login?token=' + str(object.signup_token)"/>
+                            <a t-att-href="reset_url" style="background-color: #1F4E79; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
                                 Set My Password
                             </a>
                         </div>
