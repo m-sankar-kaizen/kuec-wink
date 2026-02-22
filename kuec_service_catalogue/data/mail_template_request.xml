@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data noupdate="0">
         <!-- Welcome Email Template -->
         <record id="kuec_portal_welcome_email" model="mail.template">
             <field name="name">WINK Portal: Welcome Email</field>
