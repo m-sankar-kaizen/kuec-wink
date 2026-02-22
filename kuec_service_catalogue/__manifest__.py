@@ -30,6 +30,7 @@
         'data/kuec_tag_data.xml',
         'data/mail_template_data.xml',
         'data/ir_cron_data.xml',
+        'data/kuec_tour_data.xml',
         'views/kuec_classification_views.xml',
         'views/product_template_views.xml',
         'views/res_partner_views.xml',
