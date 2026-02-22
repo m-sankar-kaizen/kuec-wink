@@ -309,15 +309,14 @@
                             </ul>
                             <div class="tab-content border border-top-0 p-4 bg-white" id="paymentTabContent">
                                 <div class="tab-pane fade show active" id="online" role="tabpanel" aria-labelledby="online-tab">
-                                    <p class="text-muted mb-4">Securely pay online using your credit card or saved payment methods.</p>
-                                    <t t-call="payment.checkout">
-                                        <t t-set="amount" t-value="order.amount_total"/>
-                                        <t t-set="currency" t-value="order.currency_id"/>
-                                        <t t-set="reference_prefix" t-value="order.name"/>
-                                        <t t-set="partner_id" t-value="order.partner_id.id"/>
-                                        <t t-set="access_token" t-value="order.access_token"/>
-                                        <t t-set="transaction_route" t-value="'/shop/payment/transaction/' + str(order.id)"/>
-                                    </t>
+                                    <div class="text-center py-5">
+                                        <i class="fa fa-lock fa-3x text-muted mb-3"/>
+                                        <h5 class="mb-3">Secure Online Payment</h5>
+                                        <p class="text-muted mb-4">Click below to be redirected to our secure payment gateway to complete your transaction using your credit card or saved payment methods.</p>
+                                        <a t-att-href="order.get_portal_url()" class="btn btn-primary btn-lg px-5" style="background:var(--wink-primary); border-color:var(--wink-primary)">
+                                            Proceed to Secure Checkout
+                                        </a>
+                                    </div>
                                 </div>
                                 <div class="tab-pane fade" id="manual" role="tabpanel" aria-labelledby="manual-tab">
                                     <h5>Bank Transfer details</h5>
