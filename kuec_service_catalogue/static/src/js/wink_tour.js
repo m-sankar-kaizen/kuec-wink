@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
+import { session } from "@web/session";
 
 const guestTour = {
     id: "wink_guest_tour",
@@ -50,7 +51,7 @@ const clientTour = {
     showSkipButton: true,
     steps: () => [
         {
-            trigger: ".o_portal_my_home",
+            trigger: ".o_portal_wrap, #wrapwrap",
             content: "Welcome to your WINK portal. Here's a quick overview.",
             position: "bottom",
             isCheck: false,
@@ -82,9 +83,9 @@ if (localStorage.getItem('wink_guest_tour_seen') !== 'true') {
 
 // Check Client Tour
 if (localStorage.getItem('wink_client_tour_seen') !== 'true') {
-    const isAuthenticated = (typeof odoo !== 'undefined' && odoo.session_info && odoo.session_info.uid);
-    if (isAuthenticated) {
+    if (session.uid) {
         clientTour.sequence = 20;
         registry.category("web_tour.tours").add("wink_client_tour", clientTour);
     }
 }
+
