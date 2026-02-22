@@ -270,7 +270,7 @@
         </template>
 
         <!-- wink_payment_page -->
-        <template id="wink_payment_page" name="WINK Portal Payment">
+        <template id="wink_payment_page_v2" name="WINK Portal Payment">
             <t t-call="website.layout">
                 <div class="container mt-5 mb-5">
                     <h2 class="mb-4">Complete Payment for <t t-esc="order.name"/></h2>

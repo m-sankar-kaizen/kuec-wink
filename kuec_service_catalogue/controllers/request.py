@@ -107,9 +107,11 @@ class WinkRequest(http.Controller):
         contact.sudo().signup_prepare(signup_type='reset')
 
         # Step 6 — Send welcome email
-        template = request.env.ref('kuec_service_catalogue.kuec_portal_welcome_email_v4', raise_if_not_found=False)
+        template = request.env.ref('kuec_service_catalogue.kuec_portal_welcome_email_v5', raise_if_not_found=False)
         if template:
-            template.sudo().send_mail(contact.id, force_send=True)
+            # Compute the reset URL in Python and pass via context
+            reset_url = contact.sudo().signup_url or (contact.get_base_url() + '/web/reset_password')
+            template.sudo().with_context(reset_url=reset_url).send_mail(contact.id, force_send=True)
 
         # Step 7 — Auto-login the new user
         request.env['res.users'].sudo()._signup_create_user({
@@ -196,7 +198,7 @@ class WinkRequest(http.Controller):
             subtype_xmlid='mail.mt_note',
         )
 
-        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v4', raise_if_not_found=False)
+        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v5', raise_if_not_found=False)
         if template:
             template.sudo().send_mail(order.id, force_send=True)
 
@@ -235,7 +237,7 @@ class WinkRequest(http.Controller):
         if order.state != 'sale' or (not order.wink_price_confirmed and order.wink_source_product_id.price_visibility == 'hidden'):
             return request.redirect(f'/my/requests/{order.id}?error=payment_not_available')
             
-        return request.render('kuec_service_catalogue.wink_payment_page', {
+        return request.render('kuec_service_catalogue.wink_payment_page_v2', {
             'order': order
         })
 
@@ -255,7 +257,7 @@ class WinkRequest(http.Controller):
             subtype_xmlid='mail.mt_note',
         )
 
-        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v4', raise_if_not_found=False)
+        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v5', raise_if_not_found=False)
         if template:
             template.sudo().send_mail(order.id, force_send=True)
 

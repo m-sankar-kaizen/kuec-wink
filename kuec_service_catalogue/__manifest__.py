@@ -16,6 +16,7 @@
         'website_sale',
         'project',
         'portal',
+        'auth_signup',
         'account',
         'hr',
         'web',
