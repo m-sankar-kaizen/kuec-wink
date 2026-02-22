@@ -40,6 +40,11 @@
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="wink_price_confirmed" readonly="1" invisible="not wink_price_confirmed"/>
+                <field name="wink_is_portal_request" invisible="1"/>
+                <field name="wink_source_product_id" readonly="1" invisible="not wink_is_portal_request"/>
+                <field name="wink_requested_start_date" readonly="1" invisible="not wink_is_portal_request"/>
+                <field name="wink_selected_employee_ids" widget="many2many_tags" readonly="1" invisible="not wink_is_portal_request"/>
+                <field name="wink_request_notes" readonly="1" invisible="not wink_is_portal_request"/>
             </xpath>
         </field>
     </record>

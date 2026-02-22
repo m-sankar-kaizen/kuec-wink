@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- wink_registration_form -->
+        <template id="wink_registration_form" name="Request a Service — Create Your Account">
+            <t t-call="website.layout">
+                <!-- Product Context Banner -->
+                <div class="wink-request-context alert alert-info m-4">
+                    <strong>You are requesting:</strong>
+                    <t t-esc="product.name"/>
+                </div>
+
+                <!-- Registration Form -->
+                <div class="row justify-content-center mt-4 mb-5">
+                    <div class="col-md-8 col-lg-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header" style="background:var(--wink-primary); color:var(--wink-text-light)">
+                                <h4 class="mb-0">Create Your Account</h4>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" action="/my/requests/register" enctype="multipart/form-data">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="product_id" t-att-value="product.id"/>
+
+                                    <!-- Error summary if errors exist -->
+                                    <div t-if="errors" class="alert alert-danger mb-3">
+                                        <t t-foreach="errors" t-as="field_name">
+                                            <div>
+                                                <t t-esc="errors[field_name]"/>
+                                            </div>
+                                        </t>
+                                    </div>
+
+                                    <h5 class="mt-2 mb-3 border-bottom pb-2">Company Information</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label fw-bold">Company Name *</label>
+                                            <input type="text" class="form-control" t-attf-class="form-control #{' is-invalid' if errors.get('company_name') else ''}" name="company_name" t-att-value="post.get('company_name','')" required="required"/>
+                                            <div t-if="errors.get('company_name')" class="invalid-feedback">
+                                                <t t-esc="errors.get('company_name')"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">Company Email</label>
+                                            <input type="email" class="form-control" name="company_email" t-att-value="post.get('company_email', '')"/>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">Company Type *</label>
+                                            <select class="form-select" name="company_type" required="required">
+                                                <option value="">Select type...</option>
+                                                <option value="ku" t-att-selected="post.get('company_type') =='ku'">KU (Kuwait University)</option>
+                                                <option value="kuec" t-att-selected="post.get('company_type') =='kuec'">KUEC Ecosystem</option>
+                                                <option value="uae" t-att-selected="post.get('company_type') =='uae'">UAE Company</option>
+                                                <option value="outside" t-att-selected="post.get('company_type') =='outside'">Outside UAE</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">Trade License No.</label>
+                                            <input type="text" class="form-control" name="trade_license" t-att-value="post.get('trade_license', '')"/>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">Tax Registration No.</label>
+                                            <input type="text" class="form-control" name="tax_license" t-att-value="post.get('tax_license', '')"/>
+                                        </div>
+                                    </div>
+
+                                    <h5 class="mt-4 mb-3 border-bottom pb-2">Contact Person</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label fw-bold">Full Name *</label>
+                                            <input type="text" class="form-control" name="contact_name" t-att-value="post.get('contact_name', '')" required="required"/>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Email Address *</label>
+                                            <input type="email" t-attf-class="form-control #{' is-invalid' if errors.get('contact_email') else ''}" name="contact_email" t-att-value="post.get('contact_email', '')" required="required"/>
+                                            <div t-if="errors.get('contact_email')" class="invalid-feedback">
+                                                <t t-esc="errors.get('contact_email')"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Phone Number *</label>
+                                            <input type="tel" class="form-control" name="contact_phone" t-att-value="post.get('contact_phone', '')" required="required"/>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg" style="background:var(--wink-primary); border-color:var(--wink-primary)">
+                                            Create Account &amp; Continue
+                                        </button>
+                                    </div>
+
+                                    <p class="text-muted text-center small mt-3">
+                                        Already have an account?
+                                        <a t-attf-href="/web/login?redirect=/my/requests/new?product_id=#{product.id}">Sign in here</a>
+                                    </p>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- wink_request_form -->
+        <template id="wink_request_form" name="Submit Service Request">
+            <t t-call="website.layout">
+                <div class="container mt-4 mb-5">
+                    <!-- Registration success banner -->
+                    <div t-if="show_registration_banner" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Account created!</strong> Check your email to set your password. You can continue with your request below.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+
+                    <!-- Service context -->
+                    <div class="wink-request-context card mb-4">
+                        <div class="card-body d-flex align-items-center gap-3">
+                            <div>
+                                <h5 class="mb-1">
+                                    <t t-esc="product.name"/>
+                                </h5>
+                                <span class="badge" style="background:var(--wink-primary)">
+                                    <t t-if="product.delivery_model == 'project'">Project-Based</t>
+                                    <t t-if="product.delivery_model == 'retainer'">Retainer</t>
+                                </span>
+                                <span class="ms-2 text-muted">
+                                    <t t-if="product.price_visibility == 'visible'">
+                                        <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': request.env.company.currency_id}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-esc="product.price_hidden_label"/>
+                                    </t>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Request form -->
+                    <form method="post" action="/my/requests/submit">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="product_id" t-att-value="product.id"/>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control" name="qty" value="1" min="1"/>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Requested Start Date</label>
+                                <input type="date" class="form-control" name="start_date"/>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Special Requirements / Notes</label>
+                                <textarea class="form-control" name="notes" rows="4" placeholder="Any specific requirements or notes for this request..."/>
+                            </div>
+                        </div>
+
+                        <!-- Employee selection — conditional -->
+                        <div t-if="product.requires_employee_selection" class="mt-4">
+                            <h5 class="border-bottom pb-2">Select Employees for This Service</h5>
+                            <t t-if="employees">
+                                <div class="row g-2">
+                                    <t t-foreach="employees" t-as="emp">
+                                        <div class="col-md-6">
+                                            <div class="form-check border rounded p-3">
+                                                <input type="checkbox" class="form-check-input" name="employee_ids" t-att-value="emp.id"/>
+                                                <label class="form-check-label">
+                                                    <strong><t t-esc="emp.name"/></strong><br/>
+                                                    <small class="text-muted"><t t-esc="emp.passport_number or 'No passport on file'"/></small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="alert alert-warning">
+                                    No employees found in your directory.
+                                    <a href="/my/employees">Add employees here</a> before submitting this request.
+                                </div>
+                            </t>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <a t-attf-href="/services/#{product.id}" class="btn btn-outline-secondary">Back</a>
+                            <button type="submit" class="btn btn-primary" style="background:var(--wink-primary); border-color:var(--wink-primary)">
+                                Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </t>
+        </template>
+
+        <!-- wink_request_confirmation -->
+        <template id="wink_request_confirmation" name="Service Request Confirmation">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5">
+                    <div t-if="order.state == 'sale'" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Your request has been confirmed!</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-else="" class="alert alert-info alert-dismissible fade show" role="alert">
+                        <strong>Request submitted — pending review</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-if="payment_pending" class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Manual payment logged!</strong> Awaiting coordinator validation.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-header" style="background:var(--wink-primary); color:var(--wink-text-light)">
+                            <h4 class="mb-0">Order Summary: <t t-esc="order.name"/></h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted fw-bold">Service</div>
+                                <div class="col-sm-8"><t t-esc="product.name if product else (order.order_line[0].product_id.name if order.order_line else 'N/A')"/></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted fw-bold">Requested Start</div>
+                                <div class="col-sm-8"><t t-esc="order.wink_requested_start_date or 'N/A'"/></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted fw-bold">Status</div>
+                                <div class="col-sm-8"><t t-esc="dict(order._fields['state'].selection).get(order.state)"/></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted fw-bold">Amount Due</div>
+                                <div class="col-sm-8">
+                                    <t t-if="not order.wink_price_confirmed">
+                                        <span class="text-warning"><i class="fa fa-clock-o"/> Pending coordinator confirmation</span>
+                                    </t>
+                                    <t t-else="">
+                                        <b style="font-size: 1.25rem;"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></b>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <hr/>
+
+                            <h5 class="mt-4">Next Steps</h5>
+                            <t t-if="order.state in ['draft', 'sent']">
+                                <p>Our team will review your request and send you a quotation within 2 business days.</p>
+                            </t>
+                            <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
+                                <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
+                            </t>
+                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed">
+                                <div class="mt-3">
+                                    <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg">Proceed to Payment</a>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="card-footer bg-light d-flex justify-content-between">
+                            <a href="/my/orders" class="btn btn-outline-secondary">View My Requests</a>
+                            <a href="/services" class="btn btn-outline-primary">Browse More Services</a>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- wink_payment_page -->
+        <template id="wink_payment_page" name="WINK Portal Payment">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5">
+                    <h2 class="mb-4">Complete Payment for <t t-esc="order.name"/></h2>
+                    <div class="row">
+                        <div class="col-md-5 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Order Summary</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Service</span>
+                                        <strong><t t-esc="order.order_line[0].product_id.name if order.order_line else 'N/A'"/></strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Payment Terms</span>
+                                        <strong><t t-esc="order.payment_term_id.name if order.payment_term_id else 'Immediate Payment'"/></strong>
+                                    </div>
+                                    <hr/>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted fs-5">Amount Due</span>
+                                        <strong class="fs-4 text-primary"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <ul class="nav nav-tabs" id="paymentTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab" aria-controls="online" aria-selected="true">Pay Online</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="false">Pay by Bank Transfer</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content border border-top-0 p-4 bg-white" id="paymentTabContent">
+                                <div class="tab-pane fade show active" id="online" role="tabpanel" aria-labelledby="online-tab">
+                                    <p class="text-muted mb-4">Securely pay online using your credit card or saved payment methods.</p>
+                                    <t t-call="payment.checkout">
+                                        <t t-set="amount" t-value="order.amount_total"/>
+                                        <t t-set="currency" t-value="order.currency_id"/>
+                                        <t t-set="reference_prefix" t-value="order.name"/>
+                                        <t t-set="partner_id" t-value="order.partner_id.id"/>
+                                        <t t-set="access_token" t-value="order.access_token"/>
+                                        <t t-set="transaction_route" t-value="'/shop/payment/transaction/' + str(order.id)"/>
+                                    </t>
+                                </div>
+                                <div class="tab-pane fade" id="manual" role="tabpanel" aria-labelledby="manual-tab">
+                                    <h5>Bank Transfer details</h5>
+                                    <div class="bg-light p-3 rounded mb-4">
+                                        Please transfer the amount to: <br/>
+                                        <strong>Bank:</strong> KUEC Corporate Bank (Configure in Settings)<br/>
+                                        <strong>Reference:</strong> <t t-esc="order.name"/>
+                                    </div>
+                                    <form method="post" t-attf-action="/my/requests/#{order.id}/confirm-manual">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <button type="submit" class="btn btn-primary w-100">I have made the payment</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none">
+                                    <i class="fa fa-arrow-left me-1"/> Back to Request
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

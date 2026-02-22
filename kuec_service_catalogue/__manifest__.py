@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'KUEC Service Catalogue',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.1.1',
     'category': 'Sales',
     'summary': 'Service Catalogue & Business Configurability',
     'description': """
@@ -31,6 +31,8 @@
         'data/mail_template_data.xml',
         'data/ir_cron_data.xml',
         'data/kuec_tour_data.xml',
+        'data/mail_template_request.xml',
+        'data/kuec_payment_terms_data.xml',
         'views/kuec_classification_views.xml',
         'views/product_template_views.xml',
         'views/res_partner_views.xml',
@@ -40,6 +42,7 @@
         'views/kuec_bundle_group_views.xml',
         'views/website_templates/kuec_catalogue_templates.xml',
         'views/website_templates/employee_portal_templates.xml',
+        'views/website_templates/request_templates.xml',
         'views/kuec_employee_directory_views.xml',
         'views/website_templates/wink_catalogue_page.xml',
     ],
