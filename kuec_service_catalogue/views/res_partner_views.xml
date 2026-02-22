@@ -9,6 +9,8 @@
             <xpath expr="//page[@name='sales_purchases']/group[@name='container_row_2']" position="inside">
                 <group string="WINK Eligibility" name="kuec_eligibility">
                     <field name="eligibility_tag_ids" widget="many2many_tags" placeholder="Eligibility Tags..." options="{'color_field': 'color'}"/>
+                    <field name="trade_license_number"/>
+                    <field name="tax_license_number"/>
                 </group>
             </xpath>
             <xpath expr="//field[@name='category_id']" position="after">
