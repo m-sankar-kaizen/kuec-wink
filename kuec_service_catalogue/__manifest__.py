@@ -40,10 +40,18 @@
         'views/website_templates/kuec_catalogue_templates.xml',
         'views/website_templates/employee_portal_templates.xml',
         'views/kuec_employee_directory_views.xml',
+        'views/website_templates/wink_catalogue_page.xml',
     ],
     'demo': [
         'data/demo_data.xml',
     ],
+    'assets': {
+        'web.assets_frontend': [
+            'kuec_portal_foundation/static/src/scss/wink_theme.scss',
+            'kuec_service_catalogue/static/src/js/wink_catalogue.js',
+            'kuec_service_catalogue/static/src/js/wink_tour.js',
+        ],
+    },
     'installable': True,
     'application': False,
     'license': 'LGPL-3',
