@@ -6,9 +6,11 @@
         <record id="kuec_payment_term_full" model="account.payment.term">
             <field name="name">WINK — Full Payment</field>
             <field name="note">Full payment due at time of order.</field>
+            <!-- In Odoo 18, the balance is implicitly the remaining amount or calculated by default line -->
             <field name="line_ids" eval="[
                 (0, 0, {
-                    'value': 'balance',
+                    'value': 'percent',
+                    'value_amount': 100.0,
                     'delay_type': 'days_after',
                     'nb_days': 0
                 })
@@ -27,7 +29,8 @@
                     'nb_days': 0
                 }),
                 (0, 0, {
-                    'value': 'balance',
+                    'value': 'percent',
+                    'value_amount': 50.0,
                     'delay_type': 'days_after',
                     'nb_days': 30
                 })
@@ -46,7 +49,8 @@
                     'nb_days': 0
                 }),
                 (0, 0, {
-                    'value': 'balance',
+                    'value': 'percent',
+                    'value_amount': 70.0,
                     'delay_type': 'days_after',
                     'nb_days': 30
                 })
