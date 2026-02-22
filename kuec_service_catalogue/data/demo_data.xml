@@ -366,7 +366,7 @@
         </record>
         
         <record id="kuec_demo_partner_ku" model="res.partner">
-            <field name="name">Kuwait University - Main Campus</field>
+            <field name="name">Khalifa University - Main Campus</field>
             <field name="is_company">True</field>
             <field name="company_type">company</field>
             <field name="email">services@ku.edu.kw</field>

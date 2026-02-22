@@ -107,7 +107,7 @@ class WinkRequest(http.Controller):
         contact.sudo().signup_prepare(signup_type='reset')
 
         # Step 6 — Send welcome email
-        template = request.env.ref('kuec_service_catalogue.kuec_portal_welcome_email', raise_if_not_found=False)
+        template = request.env.ref('kuec_service_catalogue.kuec_portal_welcome_email_v2', raise_if_not_found=False)
         if template:
             template.sudo().send_mail(contact.id, force_send=True)
 
@@ -196,7 +196,7 @@ class WinkRequest(http.Controller):
             subtype_xmlid='mail.mt_note',
         )
 
-        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email', raise_if_not_found=False)
+        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v2', raise_if_not_found=False)
         if template:
             template.sudo().send_mail(order.id, force_send=True)
 
@@ -255,7 +255,7 @@ class WinkRequest(http.Controller):
             subtype_xmlid='mail.mt_note',
         )
 
-        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email', raise_if_not_found=False)
+        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v2', raise_if_not_found=False)
         if template:
             template.sudo().send_mail(order.id, force_send=True)
 

@@ -50,7 +50,7 @@
                                             <label class="form-label">Company Type *</label>
                                             <select class="form-select" name="company_type" required="required">
                                                 <option value="">Select type...</option>
-                                                <option value="ku" t-att-selected="post.get('company_type') =='ku'">KU (Kuwait University)</option>
+                                                <option value="ku" t-att-selected="post.get('company_type') =='ku'">KU (Khalifa University)</option>
                                                 <option value="kuec" t-att-selected="post.get('company_type') =='kuec'">KUEC Ecosystem</option>
                                                 <option value="uae" t-att-selected="post.get('company_type') =='uae'">UAE Company</option>
                                                 <option value="outside" t-att-selected="post.get('company_type') =='outside'">Outside UAE</option>
