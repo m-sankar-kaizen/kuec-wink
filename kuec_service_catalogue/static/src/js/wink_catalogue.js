@@ -1,42 +1,30 @@
 /** @odoo-module **/
 
-import publicWidget from "@web/legacy/js/public/public_widget";
-
-publicWidget.registry.WinkCatalogue = publicWidget.Widget.extend({
-    selector: '#wrapwrap', // Target the main wrapper so both catalogue and detail pages are caught
-    events: {
-        'change .wink-filter-checkbox': '_onFilterChange',
-        'change input[name="delivery_model"]': '_onFilterChange',
-        'change input[name="commercial_structure"]': '_onFilterChange',
-        'input .wink-catalogue-header input[name="search"]': '_onSearchInput',
-        'click .wink-request-btn': '_onRequestBtnClick',
-    },
-
-    init: function () {
-        this._super.apply(this, arguments);
-        this.debounceTimer = null;
-    },
-
-    _onFilterChange: function (ev) {
+// 1. Auto-submit filter form on checkbox/radio change
+document.addEventListener('change', function (ev) {
+    if (ev.target.matches('.wink-filter-checkbox, input[name="delivery_model"], input[name="commercial_structure"]')) {
         const form = document.getElementById('wink-filter-form');
-        if (form) {
-            form.submit();
-        }
-    },
+        if (form) form.submit();
+    }
+});
 
-    _onSearchInput: function (ev) {
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = setTimeout(() => {
-            const form = ev.currentTarget.closest('form');
-            if (form) {
-                form.submit();
-            }
+// 2. Search debounce (300ms)
+let debounceTimer;
+document.addEventListener('input', function (ev) {
+    if (ev.target.matches('.wink-catalogue-header input[name="search"]')) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const form = ev.target.closest('form');
+            if (form) form.submit();
         }, 300);
-    },
+    }
+});
 
-    _onRequestBtnClick: function (ev) {
+// 3. Request Service Login Gate
+document.addEventListener('click', function (ev) {
+    const btn = ev.target.closest('.wink-request-btn');
+    if (btn) {
         ev.preventDefault();
-        const btn = ev.currentTarget;
         const productId = btn.dataset.productId;
         const redirectUrl = btn.dataset.redirect;
 
@@ -52,8 +40,14 @@ publicWidget.registry.WinkCatalogue = publicWidget.Widget.extend({
                 if (signinLink) signinLink.href = '/web/login?redirect=' + encodedRedirect;
                 if (signupLink) signupLink.href = '/web/signup?redirect=' + encodedRedirect;
 
-                const modal = new window.bootstrap.Modal(modalEl);
-                modal.show();
+                // Provide fallback if bootstrap isn't globally exposed
+                if (window.bootstrap && window.bootstrap.Modal) {
+                    const modal = new window.bootstrap.Modal(modalEl);
+                    modal.show();
+                } else {
+                    // Fallback directly to login if Bootstrap fails
+                    window.location.href = '/web/login?redirect=' + encodedRedirect;
+                }
             }
         } else {
             window.location.href = '/my/requests/new?product_id=' + productId;

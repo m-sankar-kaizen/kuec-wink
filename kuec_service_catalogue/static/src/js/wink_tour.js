@@ -1,7 +1,6 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
-import { session } from "@web/session";
 
 const guestTour = {
     id: "wink_guest_tour",
@@ -82,10 +81,9 @@ if (localStorage.getItem('wink_guest_tour_seen') !== 'true') {
 }
 
 // Check Client Tour
+// We removed the @web/session check to prevent Odoo 18 module crash.
+// Odoo will only trigger this tour on /my/home, which is already login-gated.
 if (localStorage.getItem('wink_client_tour_seen') !== 'true') {
-    if (session.uid) {
-        clientTour.sequence = 20;
-        registry.category("web_tour.tours").add("wink_client_tour", clientTour);
-    }
+    clientTour.sequence = 20;
+    registry.category("web_tour.tours").add("wink_client_tour", clientTour);
 }
-
