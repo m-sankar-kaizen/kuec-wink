@@ -104,32 +104,26 @@ class WinkRequest(http.Controller):
         })
 
         # Step 5 — Create portal user account
-        contact.sudo().signup_prepare(signup_type='reset')
-
-        # Step 6 — Send welcome email
-        template = request.env.ref('kuec_service_catalogue.kuec_portal_welcome_email_v5', raise_if_not_found=False)
-        if template:
-            # Compute the reset URL in Python and pass via context
-            reset_url = contact.sudo().signup_url or (contact.get_base_url() + '/web/reset_password')
-            template.sudo().with_context(reset_url=reset_url).send_mail(contact.id, force_send=True)
-
-        # Step 7 — Auto-login the new user
-        request.env['res.users'].sudo()._signup_create_user({
+        portal_group = request.env.ref('base.group_portal')
+        new_user = request.env['res.users'].sudo().create({
             'name': contact.name,
             'login': contact.email,
             'partner_id': contact.id,
+            'groups_id': [(6, 0, [portal_group.id])],
         })
-        
-        # Step 8 — Redirect to request form
+
+        # Step 6 — Send password reset email (uses Odoo's native reset flow)
+        try:
+            new_user.sudo().action_reset_password()
+        except Exception:
+            pass  # Non-blocking: user can always reset later
+
+        # Step 7 — Redirect to login page
+        redirect_url = werkzeug.urls.url_quote(
+            f"/my/requests/new?product_id={post.get('product_id', '')}&registered=1"
+        )
         return request.redirect(
-            f"/web/login"
-            f"?token={contact.sudo().signup_token}"
-            f"&redirect="
-            + werkzeug.urls.url_quote(
-                f"/my/requests/new"
-                f"?product_id={post.get('product_id','')}"
-                f"&registered=1"
-            )
+            f"/web/login?redirect={redirect_url}"
         )
 
     @http.route('/my/requests/submit', type='http', auth='user', website=True, methods=['POST'], csrf=True)
