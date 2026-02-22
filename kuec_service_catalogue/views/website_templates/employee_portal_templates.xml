@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Portal Home Integration -->
+    <template id="portal_my_home_menu_employee_directory" name="Portal layout : employee menu entry" inherit_id="portal.portal_breadcrumbs" priority="20">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'employee_directory'" t-attf-class="breadcrumb-item #{'active ' if not employee else ''}">
+                <a t-if="employee" href="/my/employees">Employees</a>
+                <t t-else="">Employees</t>
+            </li>
+            <li t-if="employee" class="breadcrumb-item active">
+                <t t-esc="employee.name"/>
+            </li>
+        </xpath>
+    </template>
+
+    <template id="portal_my_home_employee_directory" name="Show Employees" inherit_id="portal.portal_my_home" customize_show="True" priority="20">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-if="request.env.user.partner_id.commercial_partner_id.employee_directory_enabled">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">Employee Directory</t>
+                    <t t-set="url" t-value="'/my/employees'"/>
+                    <t t-set="placeholder_count" t-value="'employee_count'"/>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Employees List View -->
+    <template id="portal_my_employees" name="My Employees">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Employees</t>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <a href="/my/employees/template" class="btn btn-outline-secondary btn-sm" title="Download Excel Template">
+                        <i class="fa fa-download me-1"/> Template
+                    </a>
+                    <a href="/my/employee/new" class="btn btn-primary btn-sm">
+                        <i class="fa fa-plus me-1"/> Add Employee
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadEmployeeModal">
+                        <i class="fa fa-upload me-1"/> Bulk Upload
+                    </button>
+                </div>
+            </t>
+
+            <t t-if="not employees">
+                <p class="mt-3">There are currently no employees in your directory.</p>
+            </t>
+            <t t-if="employees" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Name</th>
+                        <th>Job Title</th>
+                        <th>Nationality</th>
+                        <th>UAE Status</th>
+                        <th>Passport</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="employees" t-as="emp">
+                        <tr>
+                            <td>
+                                <a t-attf-href="/my/employee/#{emp.id}">
+                                    <t t-esc="emp.name"/>
+                                </a>
+                            </td>
+                            <td><span t-field="emp.job_title"/></td>
+                            <td><span t-field="emp.nationality_id.name"/></td>
+                            <td><span t-field="emp.uae_status"/></td>
+                            <td><span t-field="emp.passport_number"/></td>
+                        </tr>
+                    </t>
+                </tbody>
+            </t>
+
+            <!-- Modal for Excel Upload -->
+            <div class="modal fade" id="uploadEmployeeModal" tabindex="-1" aria-labelledby="uploadEmployeeModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form action="/my/employees/upload" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="uploadEmployeeModalLabel">Upload Employees</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Please upload your filled employee template. If you don't have the template, <a href="/my/employees/template">download it here</a>.</p>
+                                <input type="file" name="upload_file" accept=".xlsx" required="required" class="form-control"/>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Upload</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Upload Error Page -->
+    <template id="portal_my_employees_upload_error" name="Upload Errors">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <div class="alert alert-danger mt-4" role="alert">
+                <h4 class="alert-heading"><i class="fa fa-exclamation-triangle me-2"/>Upload Failed</h4>
+                <p>We found errors in your uploaded Excel file. <strong>No records were imported.</strong> Please fix these issues and try again.</p>
+                <hr/>
+                <ul class="mb-0">
+                    <t t-foreach="errors" t-as="err">
+                        <li><t t-esc="err"/></li>
+                    </t>
+                </ul>
+            </div>
+            <a href="/my/employees" class="btn btn-primary mt-3">Back to Directory</a>
+        </t>
+    </template>
+
+    <!-- Employee Form View (Create/Edit) -->
+    <template id="portal_my_employee_detail" name="Employee Details">
+        <t t-call="portal.portal_layout">
+            <div class="row mt-4">
+                <div class="col-12 col-md-8 offset-md-2">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h4 class="mb-0">
+                                <t t-if="employee">Edit Employee</t>
+                                <t t-else="">New Employee</t>
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <form action="/my/employee/save" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <input t-if="employee" type="hidden" name="employee_id" t-att-value="employee.id"/>
+
+                                <h5 class="mt-2 mb-3">Personal Information</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Full Name *</label>
+                                        <input type="text" class="form-control" name="name" t-att-value="employee.name if employee else ''" required="True"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Full Name in Arabic</label>
+                                        <input type="text" class="form-control" name="full_name_arabic" t-att-value="employee.full_name_arabic if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Gender</label>
+                                        <select class="form-select" name="gender">
+                                            <option value=""/>
+                                            <option value="male" t-att-selected="employee and employee.gender == 'male'">Male</option>
+                                            <option value="female" t-att-selected="employee and employee.gender == 'female'">Female</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Nationality</label>
+                                        <select name="nationality_id" class="form-select">
+                                            <option value="">Select Country...</option>
+                                            <t t-foreach="countries" t-as="c">
+                                                <option t-att-value="c.id" t-att-selected="employee and employee.nationality_id.id == c.id">
+                                                    <t t-esc="c.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Date of Birth</label>
+                                        <input type="date" class="form-control" name="date_of_birth" t-att-value="employee.date_of_birth if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Place of Birth</label>
+                                        <input type="text" class="form-control" name="place_of_birth" t-att-value="employee.place_of_birth if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Marital Status</label>
+                                        <select class="form-select" name="marital_status">
+                                            <option value=""/>
+                                            <option value="single" t-att-selected="employee and employee.marital_status == 'single'">Single</option>
+                                            <option value="married" t-att-selected="employee and employee.marital_status == 'married'">Married</option>
+                                            <option value="divorced" t-att-selected="employee and employee.marital_status == 'divorced'">Divorced</option>
+                                            <option value="widowed" t-att-selected="employee and employee.marital_status == 'widowed'">Widowed</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Mobile Number</label>
+                                        <input type="tel" class="form-control" name="mobile" t-att-value="employee.mobile if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Email</label>
+                                        <input type="email" class="form-control" name="email" t-att-value="employee.email if employee else ''"/>
+                                    </div>
+                                </div>
+
+                                <h5 class="mt-4 mb-3">Passport Details</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Passport Number</label>
+                                        <input type="text" class="form-control" name="passport_number" t-att-value="employee.passport_number if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Place of Issue</label>
+                                        <input type="text" class="form-control" name="passport_place_of_issue" t-att-value="employee.passport_place_of_issue if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Passport Issue Date</label>
+                                        <input type="date" class="form-control" name="passport_issue_date" t-att-value="employee.passport_issue_date if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Passport Expiry Date</label>
+                                        <input type="date" class="form-control" name="passport_expiry_date" t-att-value="employee.passport_expiry_date if employee else ''"/>
+                                    </div>
+                                </div>
+
+                                <h5 class="mt-4 mb-3">UAE Context</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Current Location</label>
+                                        <select class="form-select" name="current_location">
+                                            <option value=""/>
+                                            <option value="inside_uae" t-att-selected="employee and employee.current_location == 'inside_uae'">Inside UAE</option>
+                                            <option value="outside_uae" t-att-selected="employee and employee.current_location == 'outside_uae'">Outside UAE</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">UAE Status</label>
+                                        <select class="form-select" name="uae_status" required="True">
+                                            <option value="none" t-att-selected="employee and employee.uae_status == 'none' or not employee">No Status (Abroad)</option>
+                                            <option value="resident" t-att-selected="employee and employee.uae_status == 'resident'">UAE Resident</option>
+                                            <option value="citizen" t-att-selected="employee and employee.uae_status == 'citizen'">UAE Citizen</option>
+                                            <option value="tourist" t-att-selected="employee and employee.uae_status == 'tourist'">Tourist / Visitor</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check mt-4">
+                                            <input class="form-check-input" type="checkbox" name="previous_uae_visa" id="previous_uae_visa" t-att-checked="employee and employee.previous_uae_visa"/>
+                                            <label class="form-check-label fw-bold" for="previous_uae_visa">
+                                                Previous UAE Visa
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">UID Number</label>
+                                        <input type="text" class="form-control" name="uid_number" t-att-value="employee.uid_number if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Emirates ID</label>
+                                        <input type="text" class="form-control" name="emirates_id" t-att-value="employee.emirates_id if employee else ''"/>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Visa Expiry D.</label>
+                                        <input type="date" class="form-control" name="visa_expiry_date" t-att-value="employee.visa_expiry_date if employee else ''"/>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-top text-end">
+                                    <a class="btn btn-secondary me-2" href="/my/employees">Discard</a>
+                                    <button type="submit" class="btn btn-primary">Save Employee</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

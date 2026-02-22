@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_kuec_service_document_user,kuec.service.document.user,model_kuec_service_document,base.group_user,1,1,1,1
+access_kuec_department_user,kuec.department.user,model_kuec_department,base.group_user,1,1,1,1
+access_kuec_service_nature_user,kuec.service.nature.user,model_kuec_service_nature,base.group_user,1,1,1,1
+access_kuec_eligibility_rule_user,kuec.eligibility.rule.user,model_kuec_eligibility_rule,base.group_user,1,1,1,1
+access_kuec_bundle_group_user,kuec.bundle.group.user,model_kuec_bundle_group,base.group_user,1,1,1,1
+access_kuec_plan_change_wizard_user,kuec.plan.change.wizard.user,model_kuec_plan_change_wizard,base.group_user,1,1,1,1
+access_kuec_service_faq_user,kuec.service.faq.user,model_kuec_service_faq,base.group_user,1,1,1,1
+access_kuec_employee_directory_user,kuec.employee.directory.user,model_kuec_employee_directory,base.group_user,1,1,1,1
+kuec_employee_dir_portal,kuec.employee.directory,kuec_service_catalogue.model_kuec_employee_directory,base.group_portal,1,1,1,0
+kuec_eligibility_rule_portal,kuec.eligibility.rule,kuec_service_catalogue.model_kuec_eligibility_rule,base.group_portal,1,0,0,0
+kuec_bundle_group_line_admin,kuec.bundle.group.line,kuec_service_catalogue.model_kuec_bundle_group_line,base.group_system,1,1,1,1
+kuec_bundle_group_line_internal,kuec.bundle.group.line,kuec_service_catalogue.model_kuec_bundle_group_line,base.group_user,1,0,0,0
+access_kuec_service_document_portal,kuec.service.document.portal,kuec_service_catalogue.model_kuec_service_document,base.group_portal,1,0,0,0
+access_kuec_service_document_public,kuec.service.document.public,kuec_service_catalogue.model_kuec_service_document,base.group_public,1,0,0,0
+access_kuec_service_faq_portal,kuec.service.faq.portal,kuec_service_catalogue.model_kuec_service_faq,base.group_portal,1,0,0,0
+access_kuec_service_faq_public,kuec.service.faq.public,kuec_service_catalogue.model_kuec_service_faq,base.group_public,1,0,0,0

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_kuec_service" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.kuec.service</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Add available_on_wink to General Information page under sale part -->
+            <xpath expr="//group[@name='sale']" position="inside">
+                <group invisible="type != 'service' or not sale_ok">
+                    <field name="available_on_wink" widget="boolean_toggle"/>
+                </group>
+            </xpath>
+
+            <!-- Add Wink and Required Documents tabs inside the notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Wink" name="wink_tab" invisible="not available_on_wink">
+                    <group name="wink_core_settings">
+                        <separator string="Classification"/>
+                        <field name="department_ids" widget="many2many_tags"/>
+                        <field name="nature_ids" widget="many2many_tags"/>
+
+                        <separator string="Delivery"/>
+                        <field name="delivery_model" widget="radio"/>
+                        <field name="request_frequency" widget="radio" invisible="delivery_model != 'retainer'"/>
+
+                        <separator string="Commercial"/>
+                        <field name="commercial_structure" widget="radio"/>
+
+                        <separator string="Eligibility"/>
+                        <field name="eligibility_ids" widget="many2many_tags"/>
+                    </group>
+                    <group name="wink_commercial" string="Commercial Settings">
+                        <field name="price_visibility" required="available_on_wink"/>
+                        <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
+                        <separator string="Portal Configuration"/>
+                        <field name="requires_employee_selection"/>
+                        <field name="reminder_days_before"/>
+                        <field name="standard_monthly_price" invisible="commercial_structure != 'bundled' or delivery_model != 'retainer'"/>
+                        <field name="bundle_group_id" invisible="commercial_structure != 'bundled'"/>
+                    </group>
+                    
+                    <group string="Service Content &amp; Media" name="wink_content">
+                        <field name="wink_description" nolabel="1" placeholder="Enter the rich text description that will appear on the portal service page..."/>
+                        <field name="wink_faq_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="question"/>
+                                <field name="answer"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+                
+                <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink">
+                    <field name="kuec_document_ids" widget="one2many">
+                        <list string="Documents" editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="requirement"/>
+                            <field name="attachment_ids" widget="many2many_binary" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Search View Inheritance for Department and Nature filtering -->
+    <record id="product_template_search_view_kuec_service" model="ir.ui.view">
+        <field name="name">product.template.search.inherit.kuec.service</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='categ_id']" position="after">
+                <field name="department_ids" string="Wink Department"/>
+                <field name="nature_ids" string="Wink Service Nature"/>
+            </xpath>
+            <xpath expr="//filter[@name='filter_to_sell']" position="after">
+                <separator/>
+                <filter string="Wink Services" name="filter_available_on_wink" domain="[('available_on_wink', '=', True)]"/>
+            </xpath>
+            <xpath expr="//filter[@name='categ_id']" position="after">
+                <filter string="Wink Department" name="groupby_department" context="{'group_by': 'department_ids'}"/>
+                <filter string="Wink Service Nature" name="groupby_nature" context="{'group_by': 'nature_ids'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

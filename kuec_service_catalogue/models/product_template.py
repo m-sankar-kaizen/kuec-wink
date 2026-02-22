@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+
+from odoo import models, fields, api
+
+class ProductTemplate(models.Model):
+    _inherit = 'product.template'
+
+    available_on_wink = fields.Boolean(
+        string='Available on Wink',
+        help="Check this box to make this service available on the Wink portal."
+    )
+    
+    kuec_document_ids = fields.One2many(
+        'kuec.service.document',
+        'product_tmpl_id',
+        string='Required Documents'
+    )
+
+    # Layer 2 Classification Fields
+    department_ids = fields.Many2many(
+        'kuec.department',
+        string='Departments'
+    )
+    nature_ids = fields.Many2many(
+        'kuec.service.nature',
+        string='Service Natures'
+    )
+    delivery_model = fields.Selection(
+        selection=[
+            ('project', 'Project'),
+            ('retainer', 'Retainer')
+        ],
+        string='Delivery Model'
+    )
+    commercial_structure = fields.Selection(
+        selection=[
+            ('standalone', 'Standalone'),
+            ('bundled', 'Bundled'),
+            ('flexible', 'Flexible')
+        ],
+        string='Commercial Structure'
+    )
+    eligibility_ids = fields.Many2many(
+        'kuec.eligibility.rule',
+        string='Eligibility Rules'
+    )
+    request_frequency = fields.Selection(
+        selection=[
+            ('one_time', 'One Time'),
+            ('repeated', 'Repeated')
+        ],
+        string='Request Frequency',
+        default='one_time'
+    )
+    
+    # Layer 3 Bundle Engine Fields
+    bundle_group_id = fields.Many2one(
+        'kuec.bundle.group',
+        string='Bundle Group / Tier'
+    )
+
+    standard_monthly_price = fields.Float(
+        string='Standard Monthly Price',
+        help='Used for proration algorithms for early plan changes. Distinct from list_price.'
+    )
+    reminder_days_before = fields.Integer(
+        string='Reminder Days Before Expiry',
+        default=0,
+        help='Odoo will use the global Wink Settings if this is 0.'
+    )
+
+    # Layer 4 Website / Portal Extensions
+    wink_description = fields.Html(
+        string='Service Overview (Portal)',
+        translate=True
+    )
+    wink_faq_ids = fields.One2many(
+        'kuec.service.faq',
+        'product_tmpl_id',
+        string='Service FAQs'
+    )
+    price_visibility = fields.Selection([
+        ('visible', 'Visible'),
+        ('hidden', 'Hidden (Requires Coordinator)')
+    ], string='Price Visibility on Portal', default='visible')
+    price_hidden_label = fields.Char(
+        string='Hidden Price Label',
+        default='Contact us for pricing',
+        translate=True
+    )
+    requires_employee_selection = fields.Boolean(
+        string='Requires Employee Selection',
+        default=False,
+        help="When enabled, the customer must select one or more employees from their directory when submitting a service request for this service."
+    )
+
+    @api.constrains('delivery_model')
+    def _check_delivery_model_subscription(self):
+        """Automatically configure subscription fields based on delivery model natively for Odoo 18."""
+        for template in self:
+            if template.delivery_model == 'retainer':
+                if 'plan_id' in template._fields and not template.plan_id:
+                    PlanModel = self.env.get('product.plan', self.env.get('sale.subscription.plan'))
+                    if PlanModel is not None:
+                        default_plan = PlanModel.search([], limit=1)
+                        if default_plan:
+                            template.plan_id = default_plan.id
+            elif template.delivery_model == 'project':
+                if 'plan_id' in template._fields:
+                    template.plan_id = False
