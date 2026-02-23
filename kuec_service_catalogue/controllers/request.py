@@ -184,7 +184,15 @@ class WinkRequest(http.Controller):
             and product.request_frequency == 'one_time'
         )
         if is_auto_confirm:
-            order.sudo().action_confirm()
+            try:
+                order.sudo().action_confirm()
+            except (ValueError, Exception) as e:
+                # Odoo 18 bug: project template with 0 tasks causes ValueError
+                # in project_task.create() — order is still created, coordinator
+                # can confirm manually.
+                import logging
+                _logger = logging.getLogger(__name__)
+                _logger.warning("Auto-confirm failed for order %s: %s", order.name, e)
 
         order.sudo().message_post(
             body=f"Service request submitted via WINK portal by {request.env.user.partner_id.name}.",
