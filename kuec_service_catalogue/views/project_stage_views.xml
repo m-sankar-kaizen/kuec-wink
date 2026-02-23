@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_task_type_form_kuec" model="ir.ui.view">
+        <field name="name">project.task.type.form.kuec</field>
+        <field name="model">project.task.type</field>
+        <field name="inherit_id" ref="project.view_task_type_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='description']" position="after">
+                <field name="portal_visible"
+                       widget="boolean_toggle"
+                       string="Visible on Customer Portal"/>
+                <p class="text-muted small mt-1" invisible="portal_visible">
+                    Internal only — customers cannot see this stage.
+                </p>
+                <p class="text-muted small mt-1" invisible="not portal_visible">
+                    Visible to customers in their portal.
+                </p>
+            </xpath>
+        </field>
+    </record>
+</odoo>

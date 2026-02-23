@@ -44,3 +44,66 @@ h6 {
 .o_portal_menu {
     border-bottom: 3px solid var(--wink-primary) !important;
 }
+
+/* ── Epic 4: Stage Progress Bar ─────────────── */
+.wink-delivery-panel {
+    background: var(--wink-light, #f8f9fa);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px 20px;
+}
+.wink-panel-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c757d;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.wink-stage-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+}
+.wink-node-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #dee2e6;
+    border: 2px solid #adb5bd;
+    transition: all 0.2s ease;
+}
+.wink-node-label {
+    font-size: 11px;
+    color: #6c757d;
+    text-align: center;
+    max-width: 72px;
+    line-height: 1.2;
+}
+.wink-stage-node.wink-done .wink-node-dot {
+    background: var(--wink-primary);
+    border-color: var(--wink-primary);
+}
+.wink-stage-node.wink-done .wink-node-label {
+    color: var(--wink-primary);
+}
+.wink-stage-node.wink-current .wink-node-dot {
+    background: var(--wink-primary);
+    border-color: var(--wink-primary);
+    box-shadow: 0 0 0 4px rgba(31,78,121,0.15);
+    transform: scale(1.2);
+}
+.wink-stage-node.wink-current .wink-node-label {
+    color: var(--wink-primary);
+    font-weight: 700;
+}
+.wink-stage-connector {
+    flex: 1;
+    height: 2px;
+    background: #dee2e6;
+    min-width: 16px;
+    align-self: flex-start;
+    margin-top: 6px;
+}

@@ -14,3 +14,4 @@ from . import kuec_service_faq
 from . import product_tag
 from . import kuec_employee_directory
 from . import kuec_service_request
+from . import kuec_project_stage
