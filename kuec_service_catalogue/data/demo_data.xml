@@ -59,7 +59,6 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae'), ref('kuec_service_catalogue.kuec_eligibility_abroad')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">one_time</field>
             <field name="wink_description"><![CDATA[<p>Professional assistance with company registration procedures across all UAE free zones and mainland authorities. Our team handles documentation, submission, and follow-up on your behalf.</p>]]></field>
@@ -108,7 +107,6 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">one_time</field>
             <field name="wink_description"><![CDATA[<p>Comprehensive audit of your IT infrastructure including network security, hardware inventory, software licensing compliance, and risk assessment with a detailed executive report.</p>]]></field>
@@ -146,7 +144,6 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">flexible</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">30</field>
@@ -177,7 +174,6 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_kuec')])]"/>
             <field name="price_visibility">hidden</field>
             <field name="price_hidden_label">Contact us for pricing</field>
             <field name="request_frequency">one_time</field>
@@ -222,7 +218,6 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">flexible</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">14</field>
@@ -260,7 +255,6 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
             <field name="price_visibility">hidden</field>
             <field name="price_hidden_label">Request a custom proposal</field>
             <field name="request_frequency">one_time</field>
@@ -286,7 +280,6 @@
             <field name="delivery_model">project</field>
             <field name="commercial_structure">bundled</field>
             <field name="bundle_group_id" ref="kuec_demo_bundle_compliance"/>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae'), ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">one_time</field>
             <field name="requires_employee_selection">True</field>
@@ -344,7 +337,6 @@
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">bundled</field>
             <field name="bundle_group_id" ref="kuec_demo_bundle_startup"/>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">7</field>
@@ -362,7 +354,6 @@
             <field name="phone">+971 4 123 4567</field>
             <field name="country_id" ref="base.ae"/>
             <field name="employee_directory_enabled">True</field>
-            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae')])]"/>
         </record>
         
         <record id="kuec_demo_partner_ku" model="res.partner">
@@ -373,7 +364,6 @@
             <field name="phone">+965 2498 0000</field>
             <field name="country_id" ref="base.kw"/>
             <field name="employee_directory_enabled">True</field>
-            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
         </record>
         
         <record id="kuec_demo_partner_horizon" model="res.partner">
@@ -384,7 +374,6 @@
             <field name="phone">+971 4 987 6543</field>
             <field name="country_id" ref="base.ae"/>
             <field name="employee_directory_enabled">False</field>
-            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_abroad')])]"/>
         </record>
 
         <!-- ============================================== -->

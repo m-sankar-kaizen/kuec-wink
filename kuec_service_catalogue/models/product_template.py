@@ -2,6 +2,7 @@
 
 from odoo import models, fields, api
 
+
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
@@ -39,10 +40,6 @@ class ProductTemplate(models.Model):
             ('flexible', 'Flexible')
         ],
         string='Commercial Structure'
-    )
-    eligibility_ids = fields.Many2many(
-        'kuec.eligibility.rule',
-        string='Eligibility Rules'
     )
     request_frequency = fields.Selection(
         selection=[
@@ -98,6 +95,14 @@ class ProductTemplate(models.Model):
         string='Requires Employee Selection',
         default=False,
         help="When enabled, the customer must select one or more employees from their directory when submitting a service request for this service."
+    )
+
+    # Subscription / Retainer
+    wink_recurrence_id = fields.Many2one(
+        'sale.recurrence',
+        string='Subscription Recurrence',
+        help="Recurrence plan for retainer services (monthly, quarterly etc).",
+        ondelete='set null',
     )
 
     @api.constrains('delivery_model')

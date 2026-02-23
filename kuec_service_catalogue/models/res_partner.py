@@ -2,13 +2,9 @@
 
 from odoo import models, fields
 
+
 class ResPartner(models.Model):
     _inherit = 'res.partner'
-
-    eligibility_tag_ids = fields.Many2many(
-        'kuec.eligibility.rule',
-        string='Eligibility Tags'
-    )
 
     employee_directory_enabled = fields.Boolean(
         string='Enable Employee Directory Portal',

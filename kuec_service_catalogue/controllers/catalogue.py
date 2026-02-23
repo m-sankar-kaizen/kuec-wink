@@ -2,9 +2,9 @@
 
 from odoo import http
 from odoo.http import request
-from odoo.osv import expression
 from odoo.tools import html2plaintext
 from werkzeug.exceptions import NotFound
+
 
 class WinkCatalogue(http.Controller):
 
@@ -12,23 +12,12 @@ class WinkCatalogue(http.Controller):
     def service_catalogue(self, **kwargs):
         Product = request.env['product.template'].sudo()
         
-        # Base domain
+        # Base domain — all users see all available services
         domain = [
             ('available_on_wink', '=', True),
             ('sale_ok', '=', True),
             ('active', '=', True)
         ]
-
-        # Eligibility filter
-        user = request.env.user
-        if user._is_public():
-            eligibility_domain = ['|', ('eligibility_ids.code', '=', 'all'), ('eligibility_ids', '=', False)]
-        else:
-            partner = user.partner_id.commercial_partner_id
-            allowed_codes = request.env['kuec.eligibility.rule'].sudo().get_accessible_codes(partner)
-            allowed_codes_list = list(allowed_codes)
-            allowed_codes_list.append('all')
-            eligibility_domain = ['|', ('eligibility_ids.code', 'in', allowed_codes_list), ('eligibility_ids', '=', False)]
 
         # URL Filters
         department_ids = request.httprequest.args.getlist('department_ids')
@@ -43,17 +32,11 @@ class WinkCatalogue(http.Controller):
         if delivery_model:
             domain.append(('delivery_model', '=', delivery_model))
 
-        commercial_structure = kwargs.get('commercial_structure')
-        if commercial_structure:
-            domain.append(('commercial_structure', '=', commercial_structure))
-
         search = kwargs.get('search')
         if search:
             domain.append(('name', 'ilike', search))
 
-        # Combine domains
-        final_domain = expression.AND([domain, eligibility_domain])
-        products = Product.search(final_domain)
+        products = Product.search(domain)
 
         # Build short descriptions dictionary for template
         short_descs = {}
@@ -68,19 +51,16 @@ class WinkCatalogue(http.Controller):
         departments = request.env['kuec.department'].sudo().search([('active', '=', True)])
         natures = request.env['kuec.service.nature'].sudo().search([('active', '=', True)])
         delivery_models = Product._fields['delivery_model'].selection
-        commercial_structures = Product._fields['commercial_structure'].selection
 
         values = {
             'products': products,
             'departments': departments,
             'natures': natures,
             'delivery_models': delivery_models,
-            'commercial_structures': commercial_structures,
             'current_filters': {
                 'department_ids': [int(d) for d in department_ids if d.isdigit()],
                 'nature_ids': [int(n) for n in nature_ids if n.isdigit()],
                 'delivery_model': delivery_model,
-                'commercial_structure': commercial_structure,
             },
             'search': search,
             'short_descs': short_descs,

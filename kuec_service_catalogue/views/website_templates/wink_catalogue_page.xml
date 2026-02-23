@@ -157,16 +157,6 @@
                                     </t>
                                 </div>
 
-                                <div class="wink-filter-group mb-4">
-                                    <h6 class="fw-bold mb-2 border-bottom pb-2">Commercial Structure</h6>
-                                    <t t-foreach="commercial_structures" t-as="cs">
-                                        <div class="form-check">
-                                            <input type="radio" class="form-check-input" name="commercial_structure" t-att-value="cs[0]" t-att-checked="current_filters.get('commercial_structure') == cs[0]"/>
-                                            <label class="form-check-label text-muted"><t t-esc="cs[1]"/></label>
-                                        </div>
-                                    </t>
-                                </div>
-
                                 <a href="/services" class="btn btn-outline-secondary btn-sm w-100">Clear Filters</a>
                             </form>
                         </div>

@@ -22,13 +22,11 @@
 
                         <separator string="Delivery"/>
                         <field name="delivery_model" widget="radio"/>
+                        <field name="wink_recurrence_id" invisible="delivery_model != 'retainer'"/>
                         <field name="request_frequency" widget="radio" invisible="delivery_model != 'retainer'"/>
 
                         <separator string="Commercial"/>
                         <field name="commercial_structure" widget="radio"/>
-
-                        <separator string="Eligibility"/>
-                        <field name="eligibility_ids" widget="many2many_tags"/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
                         <field name="price_visibility" required="available_on_wink"/>

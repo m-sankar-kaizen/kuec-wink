@@ -80,19 +80,10 @@ class WinkRequest(http.Controller):
             'tax_license_number': post.get('tax_license') or False,
         })
 
-        # Step 3 — Assign eligibility tag
+        # Step 3 — Save company type for classification
         company_type = post.get('company_type')
-        mapping = {
-            'ku': 'ku',
-            'kuec': 'kuec',
-            'uae': 'uae',
-            'outside': 'abroad'
-        }
-        
-        if company_type in mapping:
-            rule = request.env['kuec.eligibility.rule'].sudo().search([('code', '=', mapping[company_type])], limit=1)
-            if rule:
-                company.eligibility_tag_ids = [(4, rule.id)]
+        if company_type:
+            company.sudo().write({'wink_company_type': company_type})
 
         # Step 4 — Create contact person
         contact = request.env['res.partner'].sudo().create({
@@ -178,6 +169,17 @@ class WinkRequest(http.Controller):
 
         if employee_ids:
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
+
+        # Subscription activation for retainer services
+        try:
+            if product.delivery_model == 'retainer':
+                sub_vals = {'is_subscription': True}
+                if product.wink_recurrence_id:
+                    sub_vals['recurrence_id'] = product.wink_recurrence_id.id
+                order.sudo().write(sub_vals)
+        except Exception:
+            # sale_subscription not installed or field names differ
+            pass
 
         is_auto_confirm = (
             product.commercial_structure == 'standalone'

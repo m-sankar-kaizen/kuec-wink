@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="res_partner_form_kuec_eligibility" model="ir.ui.view">
-        <field name="name">res.partner.form.kuec.eligibility</field>
+    <record id="res_partner_form_kuec_wink" model="ir.ui.view">
+        <field name="name">res.partner.form.kuec.wink</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Add Eligibility tags inside the Sales & Purchase tab -->
+            <!-- WINK Partner fields inside the Sales &amp; Purchase tab -->
             <xpath expr="//page[@name='sales_purchases']/group[@name='container_row_2']" position="inside">
-                <group string="WINK Eligibility" name="kuec_eligibility">
-                    <field name="eligibility_tag_ids" widget="many2many_tags" placeholder="Eligibility Tags..." options="{'color_field': 'color'}"/>
+                <group string="WINK Details" name="kuec_wink_details">
                     <field name="trade_license_number"/>
                     <field name="tax_license_number"/>
                 </group>

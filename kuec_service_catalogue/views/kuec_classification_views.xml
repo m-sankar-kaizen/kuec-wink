@@ -67,19 +67,6 @@
               action="kuec_service_nature_action"
               sequence="20"/>
 
-    <!-- Eligibility Rules Views & Menu -->
-    <record id="action_kuec_eligibility_rule" model="ir.actions.act_window">
-        <field name="name">Eligibility Rules</field>
-        <field name="res_model">kuec.eligibility.rule</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
-    <menuitem id="menu_kuec_eligibility_rule"
-              name="Eligibility Rules"
-              parent="menu_kuec_wink_config_root"
-              action="action_kuec_eligibility_rule"
-              sequence="30"/>
-
     <!-- Bundle Groups Views & Menu -->
     <record id="action_kuec_bundle_group" model="ir.actions.act_window">
         <field name="name">Bundle Groups</field>

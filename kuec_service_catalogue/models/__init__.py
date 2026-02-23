@@ -3,7 +3,6 @@
 from . import product_template
 from . import kuec_service_document
 from . import kuec_classification
-from . import kuec_eligibility_rule
 from . import res_partner
 from . import sale_order_line
 from . import sale_order
