@@ -12,13 +12,16 @@ access_kuec_service_faq_public,kuec.service.faq.public,kuec_service_catalogue.mo
 access_mail_activity_portal,mail.activity.portal,mail.model_mail_activity,base.group_portal,1,0,0,0
 access_mail_activity_type_portal,mail.activity.type.portal,mail.model_mail_activity_type,base.group_portal,1,0,0,0
 access_kuec_doc_submission_coordinator,kuec.document.submission,model_kuec_document_submission,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
-access_kuec_doc_submission_portal,kuec.document.submission,model_kuec_document_submission,base.group_portal,1,1,0,0
 access_wink_bundle_coordinator,wink.bundle,model_wink_bundle,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
 access_wink_bundle_tier_coordinator,wink.bundle.tier,model_wink_bundle_tier,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
 access_wink_bundle_tier_item_coordinator,wink.bundle.tier.item,model_wink_bundle_tier_item,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
+access_kuec_doc_submission_portal,kuec.document.submission,model_kuec_document_submission,base.group_portal,1,1,1,0
 access_wink_bundle_portal,wink.bundle,model_wink_bundle,base.group_portal,1,0,0,0
 access_wink_bundle_tier_portal,wink.bundle.tier,model_wink_bundle_tier,base.group_portal,1,0,0,0
 access_wink_bundle_tier_item_portal,wink.bundle.tier.item,model_wink_bundle_tier_item,base.group_portal,1,0,0,0
 access_wink_bundle_public,wink.bundle,model_wink_bundle,base.group_public,1,0,0,0
 access_wink_bundle_tier_public,wink.bundle.tier,model_wink_bundle_tier,base.group_public,1,0,0,0
 access_wink_bundle_tier_item_public,wink.bundle.tier.item,model_wink_bundle_tier_item,base.group_public,1,0,0,0
+access_wink_bundle_user,wink.bundle.user,model_wink_bundle,base.group_user,1,1,1,1
+access_wink_bundle_tier_user,wink.bundle.tier.user,model_wink_bundle_tier,base.group_user,1,1,1,1
+access_wink_bundle_tier_item_user,wink.bundle.tier.item.user,model_wink_bundle_tier_item,base.group_user,1,1,1,1

@@ -12,6 +12,16 @@ class ResPartner(models.Model):
         help='If checked, this partner will have access to the Employee Directory /my/employees app in the portal.'
     )
 
+    wink_company_type = fields.Selection(
+        [
+            ('ku', 'KU'),
+            ('kuec', 'KUEC'),
+            ('uae', 'UAE Team Emirates'),
+            ('outside', 'Outside UAE'),
+        ],
+        string='Company Type (WINK)',
+    )
+
     trade_license_number = fields.Char(
         string="Trade License No.",
         copy=False

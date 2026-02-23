@@ -4,14 +4,9 @@ from odoo import models, fields, api
 from datetime import date
 
 
+
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
-
-    wink_price_confirmed = fields.Boolean(
-        string='Wink Price Confirmed',
-        default=False,
-        help='If checked, hidden price services on this order are finalized and ready for portal checkout.'
-    )
 
     def action_kuec_finalize_price(self):
         for order in self:

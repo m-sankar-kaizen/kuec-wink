@@ -78,8 +78,7 @@ class SaleOrderConfirm(models.Model):
                         and not order.wink_bundle_tier_id):
                     is_bundled = (
                         self.env.context.get('is_bundle_line', False)
-                        or hasattr(line, 'linked_line_id')
-                        and line.linked_line_id
+                        or (hasattr(line, 'linked_line_id') and line.linked_line_id)
                     )
                     if not is_bundled:
                         raise ValidationError(_(
