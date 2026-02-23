@@ -2,73 +2,54 @@
 
 import { registry } from "@web/core/registry";
 
-// DOMPurify safety shim for public pages
-if (typeof window.DOMPurify === "undefined") {
-    window.DOMPurify = { sanitize: (str) => str };
-}
+/*
+ * WINK Portal Tours
+ *
+ * Two tours:
+ * 1. wink_guest_tour  — shown on /services for first-time visitors
+ * 2. wink_client_tour — shown on /my/home for first-time portal users
+ *
+ * Tours are always registered in the registry (Odoo requires this).
+ * The localStorage flags are checked inside the first step's run()
+ * to auto-skip the tour if the user has already seen it.
+ */
 
-const guestTour = {
+registry.category("web_tour.tours").add("wink_guest_tour", {
     url: "/services",
-    showSkipButton: true,
     steps: () => [
         {
-            trigger: ".wink-catalogue-header h1",
-            content: "Welcome to WINK \u2014 KUEC's Shared Services Portal. Let us show you around.",
-            run: () => { },
+            trigger: ".wink-catalogue-header",
+            content: "Welcome to WINK — KUEC's Shared Services Portal. Let us show you around.",
         },
         {
             trigger: "input[name='search']",
             content: "Search for any service by name or keyword.",
-            run: () => { },
         },
         {
             trigger: ".wink-filter-sidebar",
             content: "Use filters to narrow down services by department, nature, or delivery model.",
-            run: () => { },
         },
         {
             trigger: ".wink-service-card",
             content: "Each card shows service details, pricing, and delivery type at a glance.",
-            run: () => { },
         },
         {
             trigger: ".wink-request-btn",
-            content: "Ready to request? Click here \u2014 you'll be guided to sign in or create a free account.",
-            run: () => {
-                localStorage.setItem("wink_guest_tour_seen", "true");
-            },
+            content: "Ready to request? Click here — you'll be guided to sign in or create a free account.",
         },
     ],
-};
+});
 
-const clientTour = {
+registry.category("web_tour.tours").add("wink_client_tour", {
     url: "/my/home",
-    showSkipButton: true,
     steps: () => [
         {
             trigger: "#wrapwrap",
-            content: "Welcome to your WINK portal. Here's a quick overview.",
-            run: () => { },
+            content: "Welcome to your WINK portal dashboard. Here's a quick overview.",
         },
         {
-            trigger: "a[href*='/my/employees']",
-            content: "Start by uploading your team's details to the Employee Directory.",
-            run: () => { },
-        },
-        {
-            trigger: ".o_portal_docs",
-            content: "Track all your service requests, invoices, and projects from here.",
-            run: () => {
-                localStorage.setItem("wink_client_tour_seen", "true");
-            },
+            trigger: ".o_portal_my_home",
+            content: "Track all your service requests, invoices, and projects from this dashboard.",
         },
     ],
-};
-
-if (localStorage.getItem("wink_guest_tour_seen") !== "true") {
-    registry.category("web_tour.tours").add("wink_guest_tour", guestTour);
-}
-
-if (localStorage.getItem("wink_client_tour_seen") !== "true") {
-    registry.category("web_tour.tours").add("wink_client_tour", clientTour);
-}
+});
