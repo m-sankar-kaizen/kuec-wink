@@ -46,6 +46,31 @@
                 <field name="wink_selected_employee_ids" widget="many2many_tags" readonly="1" invisible="not wink_is_portal_request"/>
                 <field name="wink_request_notes" readonly="1" invisible="not wink_is_portal_request"/>
             </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Compliance Documents" name="compliance_docs"
+                      invisible="not wink_is_portal_request">
+                    <field name="document_submission_ids">
+                        <list string="Documents" editable="bottom">
+                            <field name="requirement_name" readonly="1"/>
+                            <field name="filename" readonly="1"/>
+                            <field name="state" readonly="1"
+                                   decoration-success="state == 'approved'"
+                                   decoration-info="state == 'under_review'"
+                                   decoration-warning="state == 'change_required'"
+                                   decoration-danger="state == 'rejected'"/>
+                            <field name="submitted_date" readonly="1"/>
+                            <field name="reviewed_by" readonly="1"/>
+                            <field name="coordinator_notes"/>
+                            <button name="action_approve" string="Approve" type="object"
+                                    icon="fa-check" invisible="state != 'under_review'" class="btn-success"/>
+                            <button name="action_request_change" string="Change" type="object"
+                                    icon="fa-refresh" invisible="state != 'under_review'" class="btn-warning"/>
+                            <button name="action_reject" string="Reject" type="object"
+                                    icon="fa-times" invisible="state != 'under_review'" class="btn-danger"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
         </field>
     </record>
 </odoo>

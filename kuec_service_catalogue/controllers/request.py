@@ -210,11 +210,20 @@ class WinkRequest(http.Controller):
             raise NotFound()
             
         product = order.order_line[0].product_id.product_tmpl_id if order.order_line else False
-            
+
+        # Document compliance context
+        requirements = product.kuec_document_ids if product else request.env['kuec.service.document'].browse()
+        submissions = request.env['kuec.document.submission'].sudo().search([
+            ('order_id', '=', order_id)
+        ])
+        sub_map = {s.requirement_id.id: s for s in submissions}
+
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
             'product': product,
-            'payment_pending': kwargs.get('payment') == 'pending'
+            'payment_pending': kwargs.get('payment') == 'pending',
+            'requirements': requirements,
+            'sub_map': sub_map,
         })
 
 
@@ -256,3 +265,106 @@ class WinkRequest(http.Controller):
             template.sudo().send_mail(order.id, force_send=True)
 
         return request.redirect(f'/my/requests/{order_id}?payment=pending')
+
+    @http.route('/my/requests/<int:order_id>/documents', type='http', auth='user', website=True)
+    def request_documents(self, order_id, **kw):
+        """Portal page listing document requirements and upload forms."""
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        product = order.wink_source_product_id
+        requirements = product.kuec_document_ids if product else request.env['kuec.service.document'].browse()
+        submissions = request.env['kuec.document.submission'].sudo().search([
+            ('order_id', '=', order_id)
+        ])
+        sub_map = {s.requirement_id.id: s for s in submissions}
+
+        return request.render('kuec_service_catalogue.wink_document_upload_page', {
+            'order': order,
+            'requirements': requirements,
+            'sub_map': sub_map,
+            'doc_uploaded': kw.get('doc_uploaded') == '1',
+            'doc_error': kw.get('doc_error', False),
+        })
+
+    @http.route('/my/requests/<int:order_id>/documents/upload', type='http', auth='user', website=True, methods=['POST'], csrf=True)
+    def upload_document(self, order_id, **post):
+        """Handle document file upload from portal."""
+        import base64
+        from odoo import fields as odoo_fields
+
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        requirement_id = int(post.get('requirement_id', 0))
+        requirement = request.env['kuec.service.document'].sudo().browse(requirement_id)
+        if not requirement.exists():
+            raise NotFound()
+
+        uploaded = request.httprequest.files.get('doc_file')
+        if not uploaded or not uploaded.filename:
+            return request.redirect(
+                f'/my/requests/{order_id}/documents?doc_error=no_file'
+            )
+
+        allowed_mimetypes = {
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        }
+        if uploaded.mimetype not in allowed_mimetypes:
+            return request.redirect(
+                f'/my/requests/{order_id}/documents?doc_error=bad_type'
+            )
+
+        file_data = base64.b64encode(uploaded.read())
+
+        attachment = request.env['ir.attachment'].sudo().create({
+            'name': uploaded.filename,
+            'datas': file_data,
+            'res_model': 'kuec.document.submission',
+            'mimetype': uploaded.mimetype,
+            'type': 'binary',
+        })
+
+        existing = request.env['kuec.document.submission'].sudo().search([
+            ('order_id', '=', order_id),
+            ('requirement_id', '=', requirement_id),
+        ], limit=1)
+
+        now = odoo_fields.Datetime.now()
+
+        if existing:
+            existing.sudo().write({
+                'attachment_id': attachment.id,
+                'filename': uploaded.filename,
+                'state': 'under_review',
+                'submitted_date': now,
+                'coordinator_notes': False,
+                'reviewed_date': False,
+                'reviewed_by': False,
+            })
+        else:
+            request.env['kuec.document.submission'].sudo().create({
+                'order_id': order_id,
+                'requirement_id': requirement_id,
+                'partner_id': request.env.user.partner_id.id,
+                'attachment_id': attachment.id,
+                'filename': uploaded.filename,
+                'state': 'under_review',
+                'submitted_date': now,
+            })
+
+        return request.redirect(
+            f'/my/requests/{order_id}/documents?doc_uploaded=1'
+        )

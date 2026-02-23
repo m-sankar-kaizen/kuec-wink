@@ -52,5 +52,44 @@
                 </div>
             </field>
         </record>
+
+        <!-- Document Review Notification Template -->
+        <record id="kuec_doc_review_notification" model="mail.template">
+            <field name="name">WINK Portal: Document Review Update</field>
+            <field name="model_id" ref="kuec_service_catalogue.model_kuec_document_submission"/>
+            <field name="subject">WINK — Document Update: {{ object.requirement_name }}</field>
+            <field name="email_to">{{ object.partner_id.email_formatted }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear {{ object.partner_id.name }},<br/><br/>
+                        Your document <strong>{{ object.requirement_name }}</strong>
+                        for request <strong>{{ object.order_id.name }}</strong>
+                        has been reviewed.<br/><br/>
+                        <strong>Status:</strong>
+                        {{ dict(object._fields['state'].selection).get(object.state, object.state) }}<br/><br/>
+                    </p>
+                    <t t-if="object.coordinator_notes">
+                        <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 12px; margin: 12px 0px;">
+                            <strong style="color: #856404;">Notes from our team:</strong><br/>
+                            <span style="color: #856404;"><t t-out="object.coordinator_notes"/></span>
+                        </div>
+                    </t>
+                    <t t-if="object.state in ('change_required', 'rejected')">
+                        <div style="text-align: center; margin: 16px 0px;">
+                            <a t-attf-href="/my/requests/{{ object.order_id.id }}/documents"
+                               style="background-color: #1F4E79; padding: 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+                                Review &amp; Re-upload
+                            </a>
+                        </div>
+                    </t>
+                    <br/><br/>
+                    <span style="color: #666666; font-size: 11px;">
+                        The WINK Team — KUEC
+                    </span>
+                </div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
     </data>
 </odoo>

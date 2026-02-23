@@ -265,6 +265,35 @@
                             <a href="/services" class="btn btn-outline-primary">Browse More Services</a>
                         </div>
                     </div>
+
+                    <!-- Compliance Documents Section -->
+                    <div t-if="requirements" class="card mt-3 shadow-sm">
+                        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                            <span>Compliance Documents</span>
+                            <a t-attf-href="/my/requests/#{order.id}/documents"
+                               class="btn btn-sm" style="background:var(--wink-primary); color:#fff; font-size:12px;">
+                                Manage Documents
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <t t-foreach="requirements" t-as="req">
+                                <t t-set="sub" t-value="sub_map.get(req.id, False)"/>
+                                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                    <div>
+                                        <span class="fw-semibold"><t t-esc="req.name"/></span>
+                                        <span t-if="req.requirement == 'required'" class="badge ms-2"
+                                              style="background:var(--wink-primary); color:#fff; font-size:10px;">Required</span>
+                                    </div>
+                                    <span t-if="not sub" class="badge bg-secondary">Not Uploaded</span>
+                                    <span t-elif="sub.state == 'approved'" class="badge bg-success">✓ Approved</span>
+                                    <span t-elif="sub.state == 'under_review'" class="badge" style="background:#0d6efd; color:#fff;">Under Review</span>
+                                    <span t-elif="sub.state == 'change_required'" class="badge bg-warning text-dark">Change Required</span>
+                                    <span t-else="" class="badge bg-danger">Rejected</span>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
                 </div>
             </t>
         </template>
@@ -338,6 +367,103 @@
                                 </a>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+    </data>
+
+    <data>
+        <!-- wink_document_upload_page -->
+        <template id="wink_document_upload_page" name="WINK Document Upload">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/my/orders">My Requests</a></li>
+                            <li class="breadcrumb-item"><a t-attf-href="/my/requests/#{order.id}"><t t-esc="order.name"/></a></li>
+                            <li class="breadcrumb-item active">Documents</li>
+                        </ol>
+                    </nav>
+
+                    <h3 class="mb-4">Compliance Documents — <t t-esc="order.name"/></h3>
+
+                    <!-- Upload success banner -->
+                    <div t-if="doc_uploaded" class="alert alert-success alert-dismissible fade show">
+                        Document uploaded successfully. It is now under review by our team.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+
+                    <!-- Error banners -->
+                    <div t-if="doc_error == 'no_file'" class="alert alert-danger">
+                        Please select a file to upload.
+                    </div>
+                    <div t-if="doc_error == 'bad_type'" class="alert alert-danger">
+                        Invalid file type. Accepted: PDF, JPG, PNG, Word documents.
+                    </div>
+
+                    <!-- One card per document requirement -->
+                    <t t-foreach="requirements" t-as="req">
+                        <t t-set="sub" t-value="sub_map.get(req.id)"/>
+                        <t t-set="sub_state" t-value="sub.state if sub else 'draft'"/>
+
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span class="fw-bold"><t t-esc="req.name"/></span>
+                                <span t-if="req.requirement == 'required'" class="badge"
+                                      style="background:var(--wink-primary); color:#fff;">Required</span>
+                                <span t-else="" class="badge bg-secondary">Optional</span>
+                            </div>
+                            <div class="card-body">
+                                <!-- Status badge -->
+                                <div class="mb-3">
+                                    <span t-if="sub_state == 'draft'" class="badge bg-secondary">Not Uploaded</span>
+                                    <span t-elif="sub_state == 'under_review'" class="badge" style="background:#0d6efd; color:#fff;">Under Review</span>
+                                    <span t-elif="sub_state == 'approved'" class="badge bg-success">✓ Approved</span>
+                                    <span t-elif="sub_state == 'change_required'" class="badge bg-warning text-dark">Change Required</span>
+                                    <span t-elif="sub_state == 'rejected'" class="badge bg-danger">Rejected</span>
+                                </div>
+
+                                <!-- Coordinator notes (change/reject) -->
+                                <div t-if="sub and sub.coordinator_notes and sub_state in ('change_required', 'rejected')"
+                                     class="alert alert-warning mb-3">
+                                    <strong>Notes from our team:</strong><br/>
+                                    <t t-esc="sub.coordinator_notes"/>
+                                </div>
+
+                                <!-- Current filename -->
+                                <div t-if="sub and sub.filename" class="text-muted small mb-3">
+                                    Current file: <strong><t t-esc="sub.filename"/></strong>
+                                </div>
+
+                                <!-- Upload form (hidden if approved) -->
+                                <form t-if="sub_state != 'approved'" method="post"
+                                      t-attf-action="/my/requests/#{order.id}/documents/upload"
+                                      enctype="multipart/form-data">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="requirement_id" t-att-value="req.id"/>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <input type="file" name="doc_file"
+                                               class="form-control form-control-sm"
+                                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"/>
+                                        <button type="submit" class="btn btn-sm"
+                                                style="background:var(--wink-primary); color:#fff; white-space:nowrap;">
+                                            <t t-if="sub_state == 'draft'">Upload</t>
+                                            <t t-else="">Re-upload</t>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Navigation -->
+                    <div class="d-flex gap-2 mt-4">
+                        <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary">
+                            Back to Request
+                        </a>
                     </div>
                 </div>
             </t>

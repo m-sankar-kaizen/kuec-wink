@@ -31,3 +31,25 @@ class SaleOrderWink(models.Model):
         default=True,
         help="If false, this request requires pricing finalization by the coordinator before the customer can pay."
     )
+    document_submission_ids = fields.One2many(
+        'kuec.document.submission',
+        'order_id',
+        string='Document Submissions',
+    )
+
+    def _wink_get_docs_status(self):
+        """Returns dict of requirement_id: submission for all submissions on this order."""
+        return {
+            s.requirement_id.id: s
+            for s in self.document_submission_ids
+        }
+
+    def _wink_all_required_docs_approved(self):
+        """Returns (bool, list of pending names). True if all required docs are approved."""
+        required = self.document_submission_ids.filtered(
+            lambda d: d.is_required == 'required'
+        )
+        pending = required.filtered(
+            lambda d: d.state != 'approved'
+        )
+        return (not bool(pending), pending.mapped('requirement_name'))
