@@ -143,3 +143,25 @@ class KuecDocumentSubmission(models.Model):
         )
         if template:
             template.sudo().send_mail(self.id, force_send=True)
+
+    def action_view_attachment(self):
+        """Open uploaded file in new browser tab."""
+        self.ensure_one()
+        if not self.attachment_id:
+            return
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{self.attachment_id.id}?download=false',
+            'target': 'new',
+        }
+
+    def action_download_attachment(self):
+        """Force download of uploaded file."""
+        self.ensure_one()
+        if not self.attachment_id:
+            return
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/web/content/{self.attachment_id.id}/{self.filename}?download=true',
+            'target': 'new',
+        }
