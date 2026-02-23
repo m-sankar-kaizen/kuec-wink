@@ -97,7 +97,7 @@ class ProductTemplate(models.Model):
 
     # Subscription / Retainer
     wink_recurrence_id = fields.Many2one(
-        'sale.recurrence',
+        'sale.subscription.plan',
         string='Subscription Recurrence',
         help="Recurrence plan for retainer services (monthly, quarterly etc).",
         ondelete='set null',
