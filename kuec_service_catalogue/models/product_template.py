@@ -10,7 +10,7 @@ class ProductTemplate(models.Model):
         string='Available on Wink',
         help="Check this box to make this service available on the Wink portal."
     )
-    
+
     kuec_document_ids = fields.One2many(
         'kuec.service.document',
         'product_tmpl_id',
@@ -49,17 +49,15 @@ class ProductTemplate(models.Model):
         string='Request Frequency',
         default='one_time'
     )
-    
-    # Layer 3 Bundle Engine Fields
-    bundle_group_id = fields.Many2one(
-        'kuec.bundle.group',
-        string='Bundle Group / Tier'
+
+    # Bundle
+    wink_bundle_id = fields.Many2one(
+        'wink.bundle',
+        string='Bundle Package',
+        ondelete='set null',
+        help="The bundle this product belongs to. Only for bundled services.",
     )
 
-    standard_monthly_price = fields.Float(
-        string='Standard Monthly Price',
-        help='Used for proration algorithms for early plan changes. Distinct from list_price.'
-    )
     reminder_days_before = fields.Integer(
         string='Reminder Days Before Expiry',
         default=0,

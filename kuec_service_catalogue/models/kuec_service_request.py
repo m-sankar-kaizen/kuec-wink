@@ -31,6 +31,11 @@ class SaleOrderWink(models.Model):
         default=True,
         help="If false, this request requires pricing finalization by the coordinator before the customer can pay."
     )
+    wink_bundle_tier_id = fields.Many2one(
+        'wink.bundle.tier',
+        string='Selected Bundle Tier',
+        ondelete='set null',
+    )
     document_submission_ids = fields.One2many(
         'kuec.document.submission',
         'order_id',

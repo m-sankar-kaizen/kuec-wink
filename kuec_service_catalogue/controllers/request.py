@@ -11,12 +11,12 @@ class WinkRequest(http.Controller):
     def new_request(self, product_id=None, **kwargs):
         if not product_id:
             return request.redirect('/services')
-        
+
         product = request.env['product.template'].sudo().search([
             ('id', '=', int(product_id)),
             ('available_on_wink', '=', True)
         ], limit=1)
-        
+
         if not product:
             return request.redirect('/services')
 
@@ -25,11 +25,31 @@ class WinkRequest(http.Controller):
             employees = request.env['kuec.employee.directory'].sudo().search([
                 ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id)
             ])
-            return request.render('kuec_service_catalogue.wink_request_form', {
+
+            render_vals = {
                 'product': product,
                 'employees': employees,
-                'show_registration_banner': kwargs.get('registered') == '1'
-            })
+                'show_registration_banner': kwargs.get('registered') == '1',
+                'is_bundle': False,
+            }
+
+            # Bundle tier data
+            if product.commercial_structure == 'bundled' and product.wink_bundle_id:
+                bundle = product.wink_bundle_id
+                tiers = bundle.tier_ids.sorted('sequence')
+                tier_data = []
+                for tier in tiers:
+                    tier_data.append({
+                        'tier': tier,
+                        'items': tier.item_ids.sorted('sequence'),
+                    })
+                render_vals.update({
+                    'is_bundle': True,
+                    'bundle': bundle,
+                    'tier_data': tier_data,
+                })
+
+            return request.render('kuec_service_catalogue.wink_request_form', render_vals)
         else:
             # User is anonymous
             return request.render('kuec_service_catalogue.wink_registration_form', {
@@ -59,7 +79,7 @@ class WinkRequest(http.Controller):
             existing_partner = request.env['res.partner'].sudo().search([
                 ('email', '=ilike', post.get('contact_email'))
             ], limit=1)
-            
+
             if existing_partner:
                 errors['contact_email'] = _("An account with this email already exists. Please sign in.")
 
@@ -170,6 +190,51 @@ class WinkRequest(http.Controller):
         if employee_ids:
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
 
+        # --- Bundle tier handling ---
+        is_bundle = (
+            product.commercial_structure == 'bundled'
+            and product.wink_bundle_id
+        )
+        tier = None
+        bundle_line = None
+
+        if is_bundle:
+            tier_id = int(post.get('tier_id', 0))
+            tier = request.env['wink.bundle.tier'].sudo().browse(tier_id)
+            if not tier.exists() or tier.bundle_id != product.wink_bundle_id:
+                return request.redirect('/services')
+
+            # Find the bundle product line and override name/price
+            bundle_line = order.order_line.filtered(
+                lambda l: l.product_id.product_tmpl_id.id == product.id
+            )[:1]
+            if bundle_line:
+                bundle_line.sudo().write({
+                    'price_unit': tier.price,
+                    'name': f"{product.name} — {tier.name}",
+                })
+
+            # Save tier on order
+            order.sudo().write({
+                'wink_bundle_tier_id': tier.id,
+            })
+
+            # Create zero-price child lines
+            for item in tier.item_ids.sorted('sequence'):
+                child_variant = item.service_product_id.product_variant_ids[:1]
+                if not child_variant:
+                    continue
+                request.env['sale.order.line'].sudo().create({
+                    'order_id': order.id,
+                    'product_id': child_variant.id,
+                    'product_uom_qty': 1,
+                    'price_unit': 0.0,
+                    'name': item.description or item.service_product_id.name,
+                    'wink_is_bundle_child': True,
+                    'wink_bundle_activation_state': 'pending',
+                    'wink_bundle_parent_line_id': bundle_line.id if bundle_line else False,
+                })
+
         # Subscription activation for retainer services
         try:
             if product.delivery_model == 'retainer':
@@ -215,10 +280,10 @@ class WinkRequest(http.Controller):
             ('id', '=', order_id),
             ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
         ], limit=1)
-        
+
         if not order:
             raise NotFound()
-            
+
         product = order.order_line[0].product_id.product_tmpl_id if order.order_line else False
 
         # Document compliance context
@@ -232,6 +297,7 @@ class WinkRequest(http.Controller):
             'order': order,
             'product': product,
             'payment_pending': kwargs.get('payment') == 'pending',
+            'bundle_requested': kwargs.get('bundle_requested') == '1',
             'requirements': requirements,
             'sub_map': sub_map,
         })
@@ -243,13 +309,13 @@ class WinkRequest(http.Controller):
             ('id', '=', order_id),
             ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
         ], limit=1)
-        
+
         if not order:
             raise NotFound()
-            
+
         if order.state != 'sale' or (not order.wink_price_confirmed and order.wink_source_product_id.price_visibility == 'hidden'):
             return request.redirect(f'/my/requests/{order.id}?error=payment_not_available')
-            
+
         return request.render('kuec_service_catalogue.wink_payment_page_v2', {
             'order': order
         })
@@ -260,7 +326,7 @@ class WinkRequest(http.Controller):
             ('id', '=', order_id),
             ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
         ], limit=1)
-        
+
         if not order:
             raise NotFound()
 
@@ -377,4 +443,41 @@ class WinkRequest(http.Controller):
 
         return request.redirect(
             f'/my/requests/{order_id}/documents?doc_uploaded=1'
+        )
+
+    # ── Bundle Activation Route ──
+    @http.route(
+        '/my/requests/<int:order_id>/bundle/<int:line_id>/activate',
+        type='http', auth='user', website=True, methods=['POST'], csrf=True)
+    def bundle_activate_request(self, order_id, line_id, **post):
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of',
+             request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        line = request.env['sale.order.line'].sudo().search([
+            ('id', '=', line_id),
+            ('order_id', '=', order_id),
+            ('wink_is_bundle_child', '=', True),
+            ('wink_bundle_activation_state', '=', 'pending'),
+        ], limit=1)
+        if not line:
+            raise NotFound()
+
+        line.sudo().write({
+            'wink_bundle_activation_state': 'requested',
+        })
+        order.message_post(
+            body=(
+                f"Customer requested activation of: "
+                f"<strong>{line.name}</strong>"
+            ),
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+        return request.redirect(
+            f'/my/requests/{order_id}?bundle_requested=1'
         )

@@ -1,40 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="sale_order_form_kuec_plan_change" model="ir.ui.view">
-        <field name="name">sale.order.form.inherit.kuec.plan.change</field>
+    <record id="sale_order_form_kuec_wink" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.kuec.wink</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <!-- Depending on Odoo 18 subscription module status, we place custom actions here. -->
-                <!-- Upgrade -->
-                <button name="%(action_kuec_plan_change_wizard)d"
-                        string="Upgrade Plan"
-                        type="action"
-                        context="{'default_change_type': 'upgrade'}"
-                        groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        invisible="not is_subscription or state not in ['sale', 'done']"/>
-
-                <!-- Downgrade -->
-                <button name="%(action_kuec_plan_change_wizard)d"
-                        string="Downgrade Plan"
-                        type="action"
-                        context="{'default_change_type': 'downgrade'}"
-                        groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        invisible="not is_subscription or state not in ['sale', 'done']"/>
-
-                <!-- Cancel with Refund -->
-                <button name="%(action_kuec_plan_change_wizard)d"
-                        string="Cancel &amp; Refund"
-                        type="action"
-                        context="{'default_change_type': 'cancel'}"
-                        groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        class="btn-danger"
-                        invisible="not is_subscription or state not in ['sale', 'done']"/>
-                <button name="action_kuec_finalize_price" 
-                        string="Finalize &amp; Unlock Payment" 
-                        type="object" 
-                        class="btn-primary" 
+                <button name="action_kuec_finalize_price"
+                        string="Finalize &amp; Unlock Payment"
+                        type="object"
+                        class="btn-primary"
                         groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
                         invisible="state not in ['draft', 'sent'] or wink_price_confirmed"/>
             </xpath>
@@ -45,6 +20,23 @@
                 <field name="wink_requested_start_date" readonly="1" invisible="not wink_is_portal_request"/>
                 <field name="wink_selected_employee_ids" widget="many2many_tags" readonly="1" invisible="not wink_is_portal_request"/>
                 <field name="wink_request_notes" readonly="1" invisible="not wink_is_portal_request"/>
+                <field name="wink_bundle_tier_id" readonly="1" invisible="not wink_bundle_tier_id"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list" position="inside">
+                <field name="wink_is_bundle_child" column_invisible="1"/>
+                <field name="wink_bundle_activation_state" optional="show"
+                       decoration-muted="wink_bundle_activation_state == 'pending'"
+                       decoration-info="wink_bundle_activation_state == 'requested'"
+                       decoration-warning="wink_bundle_activation_state == 'active'"
+                       decoration-success="wink_bundle_activation_state == 'completed'"/>
+                <button name="action_bundle_activate" string="Activate" type="object"
+                        icon="fa-play"
+                        invisible="not wink_is_bundle_child or wink_bundle_activation_state != 'requested'"
+                        class="btn-success"/>
+                <button name="action_bundle_complete" string="Complete" type="object"
+                        icon="fa-check"
+                        invisible="not wink_is_bundle_child or wink_bundle_activation_state != 'active'"
+                        class="btn-primary"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Compliance Documents" name="compliance_docs"

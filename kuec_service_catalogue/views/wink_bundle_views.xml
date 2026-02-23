@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- wink.bundle Form View -->
+    <record id="wink_bundle_view_form" model="ir.ui.view">
+        <field name="name">wink.bundle.view.form</field>
+        <field name="model">wink.bundle</field>
+        <field name="arch" type="xml">
+            <form string="Bundle Package">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="E.g. Business Setup Package"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <field name="tier_count" string="Tiers"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Optional bundle description..."/>
+                    <notebook>
+                        <page string="Tiers" name="tiers">
+                            <field name="tier_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="price"/>
+                                    <field name="item_count" string="Services"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- wink.bundle.tier Form View -->
+    <record id="wink_bundle_tier_view_form" model="ir.ui.view">
+        <field name="name">wink.bundle.tier.view.form</field>
+        <field name="model">wink.bundle.tier</field>
+        <field name="arch" type="xml">
+            <form string="Bundle Tier">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="bundle_id" readonly="1"/>
+                            <field name="name"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="price"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Included Services" name="items">
+                            <field name="item_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="service_product_id"/>
+                                    <field name="description"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- wink.bundle List View -->
+    <record id="wink_bundle_view_list" model="ir.ui.view">
+        <field name="name">wink.bundle.view.list</field>
+        <field name="model">wink.bundle</field>
+        <field name="arch" type="xml">
+            <list string="Bundle Packages">
+                <field name="name"/>
+                <field name="tier_count" string="Tiers"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_wink_bundle" model="ir.actions.act_window">
+        <field name="name">Bundle Packages</field>
+        <field name="res_model">wink.bundle</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Bundle Package!
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu item under Wink Configuration -->
+    <menuitem id="menu_wink_bundle"
+              name="Bundle Packages"
+              parent="menu_kuec_wink_config_root"
+              action="action_wink_bundle"
+              sequence="30"/>
+</odoo>

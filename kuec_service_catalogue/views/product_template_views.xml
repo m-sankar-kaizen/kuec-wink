@@ -27,6 +27,7 @@
 
                         <separator string="Commercial"/>
                         <field name="commercial_structure" widget="radio"/>
+                        <field name="wink_bundle_id" invisible="commercial_structure != 'bundled'"/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
                         <field name="price_visibility" required="available_on_wink"/>
@@ -35,10 +36,8 @@
                         <separator string="Portal Configuration"/>
                         <field name="requires_employee_selection"/>
                         <field name="reminder_days_before"/>
-                        <field name="standard_monthly_price" invisible="commercial_structure != 'bundled' or delivery_model != 'retainer'"/>
-                        <field name="bundle_group_id" invisible="commercial_structure != 'bundled'"/>
                     </group>
-                    
+
                     <group string="Service Content &amp; Media" name="wink_content">
                         <field name="wink_description" nolabel="1" placeholder="Enter the rich text description that will appear on the portal service page..."/>
                         <field name="wink_faq_ids" nolabel="1">
@@ -50,7 +49,7 @@
                         </field>
                     </group>
                 </page>
-                
+
                 <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink">
                     <field name="kuec_document_ids" widget="one2many">
                         <list string="Documents" editable="bottom">

@@ -25,24 +25,6 @@
             <field name="name">Business Development</field>
         </record>
 
-        <!-- ============================================== -->
-        <!-- 2. BUNDLE GROUPS                               -->
-        <!-- ============================================== -->
-        <record id="kuec_demo_bundle_startup" model="kuec.bundle.group">
-            <field name="name">Startup Enablement Packages</field>
-            <field name="allow_upgrade">True</field>
-            <field name="allow_downgrade">True</field>
-            <field name="allow_cancellation">True</field>
-            <field name="credit_routing">wallet</field>
-        </record>
-        
-        <record id="kuec_demo_bundle_compliance" model="kuec.bundle.group">
-            <field name="name">Corporate Compliance Packages</field>
-            <field name="allow_upgrade">True</field>
-            <field name="allow_downgrade">False</field>
-            <field name="allow_cancellation">True</field>
-            <field name="credit_routing">credit_note</field>
-        </record>
 
         <!-- ============================================== -->
         <!-- 3. PRODUCTS (SERVICES)                         -->
@@ -139,7 +121,6 @@
             <field name="sale_ok">True</field>
             <field name="available_on_wink">True</field>
             <field name="list_price">2500.00</field>
-            <field name="standard_monthly_price">2500.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_hr')])]"/>
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
             <field name="delivery_model">retainer</field>
@@ -213,7 +194,6 @@
             <field name="sale_ok">True</field>
             <field name="available_on_wink">True</field>
             <field name="list_price">800.00</field>
-            <field name="standard_monthly_price">800.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_finance')])]"/>
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
             <field name="delivery_model">retainer</field>
@@ -279,7 +259,6 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">bundled</field>
-            <field name="bundle_group_id" ref="kuec_demo_bundle_compliance"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">one_time</field>
             <field name="requires_employee_selection">True</field>
@@ -331,12 +310,10 @@
             <field name="sale_ok">True</field>
             <field name="available_on_wink">True</field>
             <field name="list_price">1800.00</field>
-            <field name="standard_monthly_price">1800.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">bundled</field>
-            <field name="bundle_group_id" ref="kuec_demo_bundle_startup"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">7</field>
