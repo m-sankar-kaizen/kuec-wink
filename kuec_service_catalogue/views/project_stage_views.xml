@@ -3,9 +3,9 @@
     <record id="project_task_type_form_kuec" model="ir.ui.view">
         <field name="name">project.task.type.form.kuec</field>
         <field name="model">project.task.type</field>
-        <field name="inherit_id" ref="project.view_task_type_form"/>
+        <field name="inherit_id" ref="project.task_type_edit"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='description']" position="after">
+            <xpath expr="//group" position="inside">
                 <field name="portal_visible"
                        widget="boolean_toggle"
                        string="Visible on Customer Portal"/>
