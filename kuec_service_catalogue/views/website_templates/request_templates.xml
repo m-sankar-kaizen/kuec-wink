@@ -252,7 +252,7 @@
                     </div>
 
                     <div class="card shadow-sm mt-4">
-                        <div class="card-header" style="background:var(--wink-primary); color:var(--wink-text-light)">
+                        <div class="card-header" style="background:var(--wink-primary); color:#fff;">
                             <h4 class="mb-0">Order Summary: <t t-esc="order.name"/></h4>
                         </div>
                         <div class="card-body">
