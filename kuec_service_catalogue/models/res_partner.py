@@ -12,14 +12,19 @@ class ResPartner(models.Model):
         help='If checked, this partner will have access to the Employee Directory /my/employees app in the portal.'
     )
 
-    wink_company_type = fields.Selection(
+    legal_entity_type = fields.Selection(
         [
-            ('ku', 'KU'),
-            ('kuec', 'KUEC'),
-            ('uae', 'UAE Team Emirates'),
-            ('outside', 'Outside UAE'),
+            ('llc', 'Limited Liability Company (LLC / Ltd.)'),
+            ('corp', 'Corporation (Inc. / Corp.)'),
+            ('plc', 'Public Listed Company'),
+            ('partnership', 'Partnership'),
+            ('lp', 'Limited Partnership (LP / LLP)'),
+            ('gov', 'Government Entity'),
+            ('soe', 'State-Owned Enterprise'),
+            ('non_profit', 'Non-Profit Organization'),
+            ('other', 'Other (Specify)'),
         ],
-        string='Company Type (WINK)',
+        string='Legal Entity Type',
     )
 
     trade_license_number = fields.Char(
