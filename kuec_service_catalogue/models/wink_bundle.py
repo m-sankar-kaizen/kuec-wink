@@ -103,3 +103,9 @@ class WinkBundleTierItem(models.Model):
     description = fields.Char(
         string='Description',
     )
+    qty = fields.Integer(
+        string='Quantity',
+        default=1,
+        required=True,
+        help="Number of times this service is included in the bundle tier.",
+    )

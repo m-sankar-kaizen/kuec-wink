@@ -225,7 +225,7 @@ class WinkRequest(http.Controller):
                 request.env['sale.order.line'].sudo().create({
                     'order_id': order.id,
                     'product_id': child_variant.id,
-                    'product_uom_qty': 1,
+                    'product_uom_qty': item.qty,
                     'price_unit': 0.0,
                     'name': item.description or item.service_product_id.name,
                     'wink_is_bundle_child': True,
