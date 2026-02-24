@@ -50,10 +50,15 @@
                                             <label class="form-label">Company Type *</label>
                                             <select class="form-select" name="company_type" required="required">
                                                 <option value="">Select type...</option>
-                                                <option value="ku" t-att-selected="post.get('company_type') =='ku'">KU (Khalifa University)</option>
-                                                <option value="kuec" t-att-selected="post.get('company_type') =='kuec'">KUEC Ecosystem</option>
-                                                <option value="uae" t-att-selected="post.get('company_type') =='uae'">UAE Company</option>
-                                                <option value="outside" t-att-selected="post.get('company_type') =='outside'">Outside UAE</option>
+                                                <option value="llc" t-att-selected="post.get('company_type') =='llc'">Limited Liability Company (LLC / Ltd.)</option>
+                                                <option value="corp" t-att-selected="post.get('company_type') =='corp'">Corporation (Inc. / Corp.)</option>
+                                                <option value="plc" t-att-selected="post.get('company_type') =='plc'">Public Listed Company</option>
+                                                <option value="partnership" t-att-selected="post.get('company_type') =='partnership'">Partnership</option>
+                                                <option value="lp" t-att-selected="post.get('company_type') =='lp'">Limited Partnership (LP / LLP)</option>
+                                                <option value="gov" t-att-selected="post.get('company_type') =='gov'">Government Entity</option>
+                                                <option value="soe" t-att-selected="post.get('company_type') =='soe'">State-Owned Enterprise</option>
+                                                <option value="non_profit" t-att-selected="post.get('company_type') =='non_profit'">Non-Profit Organization</option>
+                                                <option value="other" t-att-selected="post.get('company_type') =='other'">Other</option>
                                             </select>
                                         </div>
 

@@ -23,7 +23,7 @@
                         <separator string="Delivery"/>
                         <field name="delivery_model" widget="radio"/>
                         <field name="request_frequency" widget="radio"/>
-                        <field name="wink_project_template_id" invisible="delivery_model != 'project'"/>
+                        <field name="project_template_id" invisible="delivery_model != 'project'"/>
 
                         <separator string="Commercial"/>
                         <field name="commercial_structure" widget="radio"/>

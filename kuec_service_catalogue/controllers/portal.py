@@ -16,8 +16,6 @@ class KuecCustomerPortal(CustomerPortal):
     @http.route(['/my/employees', '/my/employee', '/my/employees/page/<int:page>'], type='http', auth="user", website=True)
     def portal_my_employees(self, page=1, sortby=None, **kw):
         partner = request.env.user.partner_id.commercial_partner_id
-        if not partner.employee_directory_enabled:
-            return request.redirect('/my')
 
         EmployeeDirectory = request.env['kuec.employee.directory'].sudo()
         domain = [('partner_id', '=', partner.id)]
@@ -56,8 +54,6 @@ class KuecCustomerPortal(CustomerPortal):
     @http.route(['/my/employee/<int:employee_id>'], type='http', auth="user", website=True)
     def portal_my_employee_detail(self, employee_id, **kw):
         partner = request.env.user.partner_id.commercial_partner_id
-        if not partner.employee_directory_enabled:
-            return request.redirect('/my')
 
         employee = request.env['kuec.employee.directory'].sudo().browse(employee_id)
         if not employee.exists() or employee.partner_id.id != partner.id:
@@ -73,8 +69,6 @@ class KuecCustomerPortal(CustomerPortal):
     @http.route(['/my/employee/new'], type='http', auth="user", website=True)
     def portal_my_employee_new(self, **kw):
         partner = request.env.user.partner_id.commercial_partner_id
-        if not partner.employee_directory_enabled:
-            return request.redirect('/my')
 
         values = {
             'page_name': 'employee_directory',
@@ -85,8 +79,6 @@ class KuecCustomerPortal(CustomerPortal):
     @http.route(['/my/employee/save'], type='http', auth="user", website=True, methods=['POST'])
     def portal_my_employee_save(self, employee_id=None, **post):
         partner = request.env.user.partner_id.commercial_partner_id
-        if not partner.employee_directory_enabled:
-            return request.redirect('/my')
 
         EmployeeDirectory = request.env['kuec.employee.directory'].sudo()
         vals = {
