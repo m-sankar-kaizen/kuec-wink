@@ -95,25 +95,13 @@ class ProductTemplate(models.Model):
         help="When enabled, the customer must select one or more employees from their directory when submitting a service request for this service."
     )
 
-    # Subscription / Retainer
-    wink_recurrence_id = fields.Many2one(
-        'sale.subscription.plan',
-        string='Subscription Recurrence',
-        help="Recurrence plan for retainer services (monthly, quarterly etc).",
-        ondelete='set null',
-    )
-
-    @api.constrains('delivery_model')
-    def _check_delivery_model_subscription(self):
-        """Automatically configure subscription fields based on delivery model natively for Odoo 18."""
+    @api.onchange('delivery_model')
+    def _onchange_delivery_model_subscription(self):
+        """Native Odoo 18 Subscription Configuration."""
         for template in self:
             if template.delivery_model == 'retainer':
-                if 'plan_id' in template._fields and not template.plan_id:
-                    PlanModel = self.env['sale.subscription.plan'] if 'sale.subscription.plan' in self.env else None
-                    if PlanModel is not None:
-                        default_plan = PlanModel.search([], limit=1)
-                        if default_plan:
-                            template.plan_id = default_plan.id
+                if 'recurring_invoice' in template._fields:
+                    template.recurring_invoice = True
             elif template.delivery_model == 'project':
-                if 'plan_id' in template._fields:
-                    template.plan_id = False
+                if 'recurring_invoice' in template._fields:
+                    template.recurring_invoice = False

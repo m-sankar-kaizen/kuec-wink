@@ -22,8 +22,8 @@
 
                         <separator string="Delivery"/>
                         <field name="delivery_model" widget="radio"/>
-                        <field name="wink_recurrence_id" invisible="delivery_model != 'retainer'"/>
-                        <field name="request_frequency" widget="radio" invisible="delivery_model != 'retainer'"/>
+                        <field name="plan_id" invisible="delivery_model != 'retainer'" required="delivery_model == 'retainer'" string="Subscription Plan"/>
+                        <field name="request_frequency" widget="radio"/>
 
                         <separator string="Commercial"/>
                         <field name="commercial_structure" widget="radio"/>

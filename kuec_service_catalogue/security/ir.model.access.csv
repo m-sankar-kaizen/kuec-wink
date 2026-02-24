@@ -25,3 +25,4 @@ access_wink_bundle_tier_item_public,wink.bundle.tier.item,model_wink_bundle_tier
 access_wink_bundle_user,wink.bundle.user,model_wink_bundle,base.group_user,1,1,1,1
 access_wink_bundle_tier_user,wink.bundle.tier.user,model_wink_bundle_tier,base.group_user,1,1,1,1
 access_wink_bundle_tier_item_user,wink.bundle.tier.item.user,model_wink_bundle_tier_item,base.group_user,1,1,1,1
+access_kuec_doc_submission_user,kuec.document.submission.user,model_kuec_document_submission,base.group_user,1,1,1,1

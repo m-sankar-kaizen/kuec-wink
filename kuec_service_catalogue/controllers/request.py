@@ -176,9 +176,7 @@ class WinkRequest(http.Controller):
         if product.wink_payment_term_id:
             order_vals['payment_term_id'] = product.wink_payment_term_id.id
 
-        if product.delivery_model == 'retainer':
-            if hasattr(product, 'plan_id') and product.plan_id:
-                order_vals['plan_id'] = product.plan_id.id
+
 
         if product.price_visibility == 'hidden':
             order_vals['wink_price_confirmed'] = False
@@ -235,16 +233,6 @@ class WinkRequest(http.Controller):
                     'wink_bundle_parent_line_id': bundle_line.id if bundle_line else False,
                 })
 
-        # Subscription activation for retainer services
-        try:
-            if product.delivery_model == 'retainer':
-                sub_vals = {'is_subscription': True}
-                if product.wink_recurrence_id:
-                    sub_vals['recurrence_id'] = product.wink_recurrence_id.id
-                order.sudo().write(sub_vals)
-        except Exception:
-            # sale_subscription not installed or field names differ
-            pass
 
         is_auto_confirm = (
             product.commercial_structure == 'standalone'
