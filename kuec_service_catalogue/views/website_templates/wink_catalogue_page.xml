@@ -277,7 +277,7 @@
                         </div>
 
                         <div class="col-lg-4">
-                            <div class="card shadow-sm sticky-top border-0 rounded-3" style="top: 100px; background: #f8f9fa;">
+                            <div class="card shadow-sm sticky-top border-0 rounded-3" style="top: 100px; background: var(--wink-bg);">
                                 <div class="card-body p-4 text-center">
                                     <div class="mb-4">
                                         <t t-if="product.price_visibility == 'hidden'">

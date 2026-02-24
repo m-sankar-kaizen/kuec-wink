@@ -7,6 +7,10 @@
     --wink-secondary: #c62753; // KUEC Accent Magenta/Red
     --wink-accent: #53c8e7; // KUEC Light Blue
     --wink-bg: #F8F9FA; // Light background
+    --wink-info: #0d6efd; // Bootstrap Info / Active Blue
+    --wink-border: #dee2e6; // Standard border
+    --wink-muted: #6c757d; // Muted text
+    --wink-light: #f8f9fa; // Light panel background
 
     // Typography
     --wink-text-dark: #212529;
@@ -47,8 +51,8 @@ h6 {
 
 /* ── Epic 4: Stage Progress Bar ─────────────── */
 .wink-delivery-panel {
-    background: var(--wink-light, #f8f9fa);
-    border: 1px solid #dee2e6;
+    background: var(--wink-light);
+    border: 1px solid var(--wink-border);
     border-radius: 8px;
     padding: 16px 20px;
 }
@@ -57,7 +61,7 @@ h6 {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #6c757d;
+    color: var(--wink-muted);
     margin-bottom: 8px;
     font-weight: 600;
 }
@@ -74,14 +78,14 @@ h6 {
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #dee2e6;
+    background: var(--wink-border);
     border: 2px solid #adb5bd;
     transition: all 0.2s ease;
 }
 
 .wink-node-label {
     font-size: 11px;
-    color: #6c757d;
+    color: var(--wink-muted);
     text-align: center;
     max-width: 72px;
     line-height: 1.2;
@@ -111,7 +115,7 @@ h6 {
 .wink-stage-connector {
     flex: 1;
     height: 2px;
-    background: #dee2e6;
+    background: var(--wink-border);
     min-width: 16px;
     align-self: flex-start;
     margin-top: 6px;
@@ -123,7 +127,7 @@ h6 {
 }
 
 .wink-tier-label {
-    border: 2px solid #dee2e6;
+    border: 2px solid var(--wink-border);
     border-radius: 8px;
     transition: border-color 0.2s ease,
         box-shadow 0.2s ease;

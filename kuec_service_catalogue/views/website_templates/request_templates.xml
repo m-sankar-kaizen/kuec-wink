@@ -321,7 +321,7 @@
                                     </div>
                                     <span t-if="not sub" class="badge bg-secondary">Not Uploaded</span>
                                     <span t-elif="sub.state == 'approved'" class="badge bg-success">✓ Approved</span>
-                                    <span t-elif="sub.state == 'under_review'" class="badge" style="background:#0d6efd; color:#fff;">Under Review</span>
+                                    <span t-elif="sub.state == 'under_review'" class="badge" style="background:var(--wink-info); color:#fff;">Under Review</span>
                                     <span t-elif="sub.state == 'change_required'" class="badge bg-warning text-dark">Change Required</span>
                                     <span t-else="" class="badge bg-danger">Rejected</span>
                                 </div>
@@ -355,7 +355,7 @@
                                     </div>
                                     <div class="d-flex gap-2 align-items-center">
                                         <span t-if="child.wink_bundle_activation_state == 'pending'" class="badge bg-secondary">Not Started</span>
-                                        <span t-elif="child.wink_bundle_activation_state == 'requested'" class="badge" style="background:#0d6efd;color:#fff;">Requested</span>
+                                        <span t-elif="child.wink_bundle_activation_state == 'requested'" class="badge" style="background:var(--wink-info);color:#fff;">Requested</span>
                                         <span t-elif="child.wink_bundle_activation_state == 'active'" class="badge" style="background:var(--wink-primary);color:#fff;">Active</span>
                                         <span t-elif="child.wink_bundle_activation_state == 'completed'" class="badge bg-success">✓ Completed</span>
                                         <form t-if="child.wink_bundle_activation_state == 'pending'"
@@ -496,7 +496,7 @@
                                 <!-- Status badge -->
                                 <div class="mb-3">
                                     <span t-if="sub_state == 'draft'" class="badge bg-secondary">Not Uploaded</span>
-                                    <span t-elif="sub_state == 'under_review'" class="badge" style="background:#0d6efd; color:#fff;">Under Review</span>
+                                    <span t-elif="sub_state == 'under_review'" class="badge" style="background:var(--wink-info); color:#fff;">Under Review</span>
                                     <span t-elif="sub_state == 'approved'" class="badge bg-success">✓ Approved</span>
                                     <span t-elif="sub_state == 'change_required'" class="badge bg-warning text-dark">Change Required</span>
                                     <span t-elif="sub_state == 'rejected'" class="badge bg-danger">Rejected</span>

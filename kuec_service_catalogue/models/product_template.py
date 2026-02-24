@@ -33,6 +33,12 @@ class ProductTemplate(models.Model):
         ],
         string='Delivery Model'
     )
+    wink_project_template_id = fields.Many2one(
+        'project.project',
+        string='Project Template',
+        domain="[('is_template', '=', True)]",
+        help="The project template to use when a customer requests this service."
+    )
     commercial_structure = fields.Selection(
         selection=[
             ('standalone', 'Standalone'),

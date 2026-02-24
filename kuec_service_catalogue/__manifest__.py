@@ -52,7 +52,6 @@
     ],
     'assets': {
         'web.assets_frontend': [
-            'kuec_portal_foundation/static/src/scss/wink_theme.scss',
             'kuec_service_catalogue/static/src/js/wink_catalogue.js',
             'kuec_service_catalogue/static/src/js/wink_tour.js',
         ],
