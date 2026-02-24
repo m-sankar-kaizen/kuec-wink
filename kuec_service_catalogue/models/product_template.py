@@ -109,7 +109,7 @@ class ProductTemplate(models.Model):
         for template in self:
             if template.delivery_model == 'retainer':
                 if 'plan_id' in template._fields and not template.plan_id:
-                    PlanModel = self.env.get('product.plan', self.env.get('sale.subscription.plan'))
+                    PlanModel = self.env['sale.subscription.plan'] if 'sale.subscription.plan' in self.env else None
                     if PlanModel is not None:
                         default_plan = PlanModel.search([], limit=1)
                         if default_plan:
