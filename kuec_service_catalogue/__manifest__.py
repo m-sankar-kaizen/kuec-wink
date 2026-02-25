@@ -25,6 +25,7 @@
         'security/kuec_service_catalogue_security.xml',
         'security/record_rules.xml',
         'security/ir.model.access.csv',
+        'data/sale_config_parameter.xml',
         'data/kuec_classification_data.xml',
         'data/kuec_tag_data.xml',
         'data/mail_template_data.xml',

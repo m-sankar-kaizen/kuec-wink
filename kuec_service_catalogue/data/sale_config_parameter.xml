@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Enable automatic invoicing for online payments -->
+        <record id="sale_automatic_invoice_param" model="ir.config_parameter">
+            <field name="key">sale.automatic_invoice</field>
+            <field name="value">True</field>
+        </record>
+    </data>
+</odoo>
