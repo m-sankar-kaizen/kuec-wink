@@ -317,7 +317,7 @@
                             </t>
                         </div>
                         <div class="card-footer bg-light d-flex justify-content-between">
-                            <a href="/my/requests" class="btn btn-outline-secondary">View My Requests</a>
+                            <a href="/my/orders" class="btn btn-outline-secondary">View My Requests</a>
                             <a href="/services" class="btn btn-outline-primary">Browse More Services</a>
                         </div>
                     </div>
