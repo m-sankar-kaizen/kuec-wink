@@ -294,8 +294,8 @@
                             <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
                                 <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
                             </t>
-                            <t t-set="tx_paid" t-value="any(tx.state in ('authorized', 'done', 'pending') for tx in order.transaction_ids)"/>
-                            <t t-set="inv_paid" t-value="any(inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid') for inv in order.invoice_ids)"/>
+                            <t t-set="tx_paid" t-value="order.transaction_ids.filtered(lambda tx: tx.state in ('authorized', 'done', 'pending'))"/>
+                            <t t-set="inv_paid" t-value="order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid'))"/>
                             <t t-set="is_paid" t-value="tx_paid or inv_paid"/>
 
                             <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
