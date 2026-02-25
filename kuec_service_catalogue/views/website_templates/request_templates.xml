@@ -288,15 +288,17 @@
                             <hr/>
 
                             <h5 class="mt-4">Next Steps</h5>
+
+                            <t t-set="tx_paid" t-value="order.transaction_ids.filtered(lambda tx: tx.state in ('authorized', 'done', 'pending'))"/>
+                            <t t-set="inv_paid" t-value="order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid'))"/>
+                            <t t-set="is_paid" t-value="tx_paid or inv_paid"/>
+
                             <t t-if="order.state in ['draft', 'sent']">
                                 <p>Our team will review your request and send you a quotation within 2 business days.</p>
                             </t>
                             <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
                                 <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
                             </t>
-                            <t t-set="tx_paid" t-value="order.transaction_ids.filtered(lambda tx: tx.state in ('authorized', 'done', 'pending'))"/>
-                            <t t-set="inv_paid" t-value="order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid'))"/>
-                            <t t-set="is_paid" t-value="tx_paid or inv_paid"/>
 
                             <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
                                 <div class="mt-3">
