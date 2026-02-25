@@ -334,8 +334,8 @@
                         </div>
                     </div>
 
-                    <!-- Bundle Included Services -->
-                    <div t-if="order.order_line.filtered(lambda l: l.wink_is_bundle_child)" class="card mt-3 shadow-sm">
+                    <!-- Bundle Entitlements -->
+                    <div t-if="order.wink_entitlement_ids" class="card mt-3 shadow-sm">
                         <div class="card-header fw-bold d-flex justify-content-between align-items-center">
                             <span>
                                 <t t-if="order.wink_bundle_tier_id">
@@ -349,26 +349,36 @@
                         </div>
                         <div class="card-body p-0">
                             <div t-if="bundle_requested" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
-                                Activation requested. Our team will confirm shortly.
+                                Service activated successfully. A project has been created for delivery.
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                             </div>
-                            <t t-foreach="order.order_line.filtered(lambda l: l.wink_is_bundle_child).sorted(key=lambda l: l.id)" t-as="child">
+                            <t t-foreach="order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)" t-as="ent">
                                 <div class="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
                                     <div>
-                                        <div class="fw-semibold"><t t-esc="child.name"/></div>
-                                        <small class="text-muted">Included in bundle</small>
+                                        <div class="fw-semibold"><t t-esc="ent.name"/></div>
+                                        <small class="text-muted">
+                                            Included in bundle
+                                            <t t-if="ent.qty_entitled > 1">
+                                                — <t t-esc="ent.qty_activated"/>/<t t-esc="ent.qty_entitled"/> used
+                                            </t>
+                                        </small>
                                     </div>
                                     <div class="d-flex gap-2 align-items-center">
-                                        <span t-if="child.wink_bundle_activation_state == 'pending'" class="badge bg-secondary">Not Started</span>
-                                        <span t-elif="child.wink_bundle_activation_state == 'requested'" class="badge" style="background:var(--wink-info);color:#fff;">Requested</span>
-                                        <span t-elif="child.wink_bundle_activation_state == 'active'" class="badge" style="background:var(--wink-primary);color:#fff;">Active</span>
-                                        <span t-elif="child.wink_bundle_activation_state == 'completed'" class="badge bg-success">✓ Completed</span>
-                                        <form t-if="child.wink_bundle_activation_state == 'pending'"
-                                              method="post"
-                                              t-attf-action="/my/requests/#{order.id}/bundle/#{child.id}/activate">
-                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                            <button type="submit" class="btn btn-sm" style="background:var(--wink-primary);color:#fff;">Activate</button>
-                                        </form>
+                                        <t t-if="ent.state == 'fully_activated'">
+                                            <span class="badge bg-success">✓ Activated</span>
+                                        </t>
+                                        <t t-elif="ent.state == 'available'">
+                                            <span class="badge bg-secondary">Available</span>
+                                            <form t-if="order.state in ('sale', 'done')"
+                                                  method="post"
+                                                  t-attf-action="/my/requests/#{order.id}/bundle/#{ent.id}/activate">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <button type="submit" class="btn btn-sm" style="background:var(--wink-primary);color:#fff;">Activate</button>
+                                            </form>
+                                            <t t-if="order.state not in ('sale', 'done')">
+                                                <small class="text-muted fst-italic">Available after order confirmation</small>
+                                            </t>
+                                        </t>
                                     </div>
                                 </div>
                             </t>

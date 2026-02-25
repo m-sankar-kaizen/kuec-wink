@@ -23,20 +23,7 @@
                 <field name="wink_bundle_tier_id" readonly="1" invisible="not wink_bundle_tier_id"/>
             </xpath>
             <xpath expr="//field[@name='order_line']/list" position="inside">
-                <field name="wink_is_bundle_child" column_invisible="1"/>
-                <field name="wink_bundle_activation_state" optional="show"
-                       decoration-muted="wink_bundle_activation_state == 'pending'"
-                       decoration-info="wink_bundle_activation_state == 'requested'"
-                       decoration-warning="wink_bundle_activation_state == 'active'"
-                       decoration-success="wink_bundle_activation_state == 'completed'"/>
-                <button name="action_bundle_activate" string="Activate" type="object"
-                        icon="fa-play"
-                        invisible="not wink_is_bundle_child or wink_bundle_activation_state != 'requested'"
-                        class="btn-success"/>
-                <button name="action_bundle_complete" string="Complete" type="object"
-                        icon="fa-check"
-                        invisible="not wink_is_bundle_child or wink_bundle_activation_state != 'active'"
-                        class="btn-primary"/>
+                <field name="wink_entitlement_id" column_invisible="1"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Compliance Documents" name="compliance_docs"
@@ -64,6 +51,23 @@
                                     icon="fa-refresh" invisible="state != 'under_review'" class="btn-warning"/>
                             <button name="action_reject" string="Reject" type="object"
                                     icon="fa-times" invisible="state != 'under_review'" class="btn-danger"/>
+                        </list>
+                    </field>
+                </page>
+                <page string="Bundle Entitlements"
+                      name="wink_entitlements"
+                      invisible="not wink_entitlement_ids">
+                    <field name="wink_entitlement_ids" readonly="1">
+                        <list string="Bundle Entitlements">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="service_product_id"/>
+                            <field name="qty_entitled"/>
+                            <field name="qty_activated"/>
+                            <field name="state"
+                                   decoration-success="state == 'fully_activated'"
+                                   decoration-info="state == 'available'"
+                                   widget="badge"/>
                         </list>
                     </field>
                 </page>

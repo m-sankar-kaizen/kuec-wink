@@ -217,20 +217,17 @@ class WinkRequest(http.Controller):
                 'wink_bundle_tier_id': tier.id,
             })
 
-            # Create zero-price child lines
+            # Create entitlement records (no SO lines yet —
+            # real lines are created when customer activates)
             for item in tier.item_ids.sorted('sequence'):
-                child_variant = item.service_product_id.product_variant_ids[:1]
-                if not child_variant:
-                    continue
-                request.env['sale.order.line'].sudo().create({
+                request.env['wink.bundle.entitlement'].sudo().create({
                     'order_id': order.id,
-                    'product_id': child_variant.id,
-                    'product_uom_qty': item.qty,
-                    'price_unit': 0.0,
-                    'name': item.description or item.service_product_id.name,
-                    'wink_is_bundle_child': True,
-                    'wink_bundle_activation_state': 'pending',
-                    'wink_bundle_parent_line_id': bundle_line.id if bundle_line else False,
+                    'tier_id': tier.id,
+                    'service_product_id': item.service_product_id.id,
+                    'name': (item.description
+                             or item.service_product_id.name),
+                    'sequence': item.sequence,
+                    'qty_entitled': item.qty,
                 })
 
 
@@ -435,37 +432,46 @@ class WinkRequest(http.Controller):
 
     # ── Bundle Activation Route ──
     @http.route(
-        '/my/requests/<int:order_id>/bundle/<int:line_id>/activate',
-        type='http', auth='user', website=True, methods=['POST'], csrf=True)
-    def bundle_activate_request(self, order_id, line_id, **post):
+        '/my/requests/<int:order_id>/bundle/'
+        '<int:entitlement_id>/activate',
+        type='http', auth='user', website=True,
+        methods=['POST'], csrf=True)
+    def bundle_activate_request(
+        self, order_id, entitlement_id, **post
+    ):
         order = request.env['sale.order'].sudo().search([
             ('id', '=', order_id),
             ('partner_id', 'child_of',
-             request.env.user.partner_id.commercial_partner_id.id),
+             request.env.user.partner_id
+             .commercial_partner_id.id),
         ], limit=1)
         if not order:
             raise NotFound()
 
-        line = request.env['sale.order.line'].sudo().search([
-            ('id', '=', line_id),
+        entitlement = request.env[
+            'wink.bundle.entitlement'
+        ].sudo().search([
+            ('id', '=', entitlement_id),
             ('order_id', '=', order_id),
-            ('wink_is_bundle_child', '=', True),
-            ('wink_bundle_activation_state', '=', 'pending'),
+            ('state', '=', 'available'),
         ], limit=1)
-        if not line:
+        if not entitlement:
             raise NotFound()
 
-        line.sudo().write({
-            'wink_bundle_activation_state': 'requested',
-        })
-        order.message_post(
-            body=(
-                f"Customer requested activation of: "
-                f"<strong>{line.name}</strong>"
-            ),
-            message_type='comment',
-            subtype_xmlid='mail.mt_note',
-        )
+        try:
+            entitlement.action_activate()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Bundle activation failed for entitlement %s: %s",
+                entitlement_id, e,
+            )
+            return request.redirect(
+                f'/my/requests/{order_id}'
+                f'?error=activation_failed'
+            )
+
         return request.redirect(
-            f'/my/requests/{order_id}?bundle_requested=1'
+            f'/my/requests/{order_id}'
+            f'?bundle_requested=1'
         )

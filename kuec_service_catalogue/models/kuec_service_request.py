@@ -41,6 +41,11 @@ class SaleOrderWink(models.Model):
         'order_id',
         string='Document Submissions',
     )
+    wink_entitlement_ids = fields.One2many(
+        'wink.bundle.entitlement',
+        'order_id',
+        string='Bundle Entitlements',
+    )
 
     def _wink_get_docs_status(self):
         """Returns dict of requirement_id: submission for all submissions on this order."""

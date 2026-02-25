@@ -22,5 +22,16 @@
             <field name="perm_create" eval="True"/>
             <field name="perm_unlink" eval="False"/>
         </record>
+
+        <record id="wink_entitlement_portal_rule" model="ir.rule">
+            <field name="name">Bundle Entitlement: Portal Isolation</field>
+            <field name="model_id" ref="model_wink_bundle_entitlement"/>
+            <field name="domain_force">[('order_id.partner_id', 'child_of', [user.partner_id.id])]</field>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
     </data>
 </odoo>

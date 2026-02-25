@@ -14,3 +14,4 @@ from . import kuec_service_request
 from . import kuec_project_stage
 from . import kuec_document_submission
 from . import wink_bundle
+from . import wink_bundle_entitlement
