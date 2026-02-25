@@ -335,7 +335,7 @@
                     </div>
 
                     <!-- Bundle Entitlements -->
-                    <div t-if="order.wink_entitlement_ids" class="card mt-3 shadow-sm">
+                    <div t-if="order.wink_entitlement_ids and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
                         <div class="card-header fw-bold d-flex justify-content-between align-items-center">
                             <span>
                                 <t t-if="order.wink_bundle_tier_id">
