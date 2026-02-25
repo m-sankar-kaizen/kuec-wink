@@ -294,9 +294,23 @@
                             <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
                                 <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
                             </t>
-                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed">
+                            <t t-set="tx_paid" t-value="any(tx.state in ('authorized', 'done', 'pending') for tx in order.transaction_ids)"/>
+                            <t t-set="inv_paid" t-value="any(inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid') for inv in order.invoice_ids)"/>
+                            <t t-set="is_paid" t-value="tx_paid or inv_paid"/>
+
+                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
                                 <div class="mt-3">
                                     <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg">Proceed to Payment</a>
+                                    <t t-if="request.params.get('payment') == 'pending'">
+                                        <div class="alert alert-warning mt-2 mb-0 py-2">
+                                            Manual payment logged. Awaiting coordinator validation.
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid">
+                                <div class="mt-3 alert alert-success py-2 mb-0 border-0">
+                                    <i class="fa fa-check-circle"/> Payment received successfully.
                                 </div>
                             </t>
                         </div>
