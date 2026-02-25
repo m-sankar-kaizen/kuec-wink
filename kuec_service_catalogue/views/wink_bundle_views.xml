@@ -58,12 +58,24 @@
                     <notebook>
                         <page string="Included Services" name="items">
                             <field name="item_ids">
-                                <list editable="bottom">
+                                <list>
                                     <field name="sequence" widget="handle"/>
                                     <field name="service_product_id"/>
                                     <field name="qty"/>
                                     <field name="description"/>
                                 </list>
+                                <form>
+                                    <group>
+                                        <group>
+                                            <field name="service_product_id"/>
+                                            <field name="qty"/>
+                                        </group>
+                                        <group>
+                                            <field name="description"/>
+                                            <field name="sequence"/>
+                                        </group>
+                                    </group>
+                                </form>
                             </field>
                         </page>
                     </notebook>
