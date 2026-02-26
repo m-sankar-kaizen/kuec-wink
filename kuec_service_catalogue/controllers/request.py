@@ -2,7 +2,7 @@
 from odoo import http, _
 from odoo.http import request
 from werkzeug.exceptions import NotFound
-from werkzeug.utils import redirect
+from odoo.addons.sale.controllers.portal import CustomerPortal
 import werkzeug.urls
 
 class WinkRequest(http.Controller):
@@ -301,31 +301,20 @@ class WinkRequest(http.Controller):
         if order.state != 'sale' or (not order.wink_price_confirmed and order.wink_source_product_id.price_visibility == 'hidden'):
             return request.redirect(f'/my/requests/{order.id}?error=payment_not_available')
 
-        return request.render('kuec_service_catalogue.wink_payment_page_v2', {
-            'order': order
-        })
-
-    @http.route('/my/requests/<int:order_id>/confirm-manual', type='http', auth='user', website=True, methods=['POST'], csrf=True)
-    def confirm_manual_payment(self, order_id, **post):
-        order = request.env['sale.order'].sudo().search([
-            ('id', '=', order_id),
-            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
-        ], limit=1)
-
-        if not order:
-            raise NotFound()
-
-        order.sudo().message_post(
-            body="Customer has indicated manual payment has been made. Awaiting coordinator confirmation.",
-            message_type='comment',
-            subtype_xmlid='mail.mt_note',
+        # Use native Odoo CustomerPortal controller to fetch payment providers/tokens
+        portal_controller = CustomerPortal()
+        payment_values = portal_controller._get_payment_values(
+            order,
+            force_auth=True,
+            submit_tx_url='/shop/payment/transaction/{order.id}',
         )
 
-        template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v5', raise_if_not_found=False)
-        if template:
-            template.sudo().send_mail(order.id, force_send=True)
+        render_values = {
+            'order': order,
+            **payment_values
+        }
 
-        return request.redirect(f'/my/requests/{order_id}?payment=pending')
+        return request.render('kuec_service_catalogue.wink_payment_page_v2', render_values)
 
     @http.route('/my/requests/<int:order_id>/documents', type='http', auth='user', website=True)
     def request_documents(self, order_id, **kw):

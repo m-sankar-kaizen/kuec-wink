@@ -434,42 +434,23 @@
                         </div>
 
                         <div class="col-md-7">
-                            <ul class="nav nav-tabs" id="paymentTab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab" aria-controls="online" aria-selected="true">Pay Online</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="false">Pay by Bank Transfer</button>
-                                </li>
-                            </ul>
-                            <div class="tab-content border border-top-0 p-4 bg-white" id="paymentTabContent">
-                                <div class="tab-pane fade show active" id="online" role="tabpanel" aria-labelledby="online-tab">
-                                    <div class="text-center py-5">
-                                        <i class="fa fa-lock fa-3x text-muted mb-3"/>
-                                        <h5 class="mb-3">Secure Online Payment</h5>
-                                        <p class="text-muted mb-4">Click below to be redirected to our secure payment gateway to complete your transaction using your credit card or saved payment methods.</p>
-                                        <a t-att-href="order.get_portal_url()" class="btn btn-primary btn-lg px-5" style="background:var(--wink-primary); border-color:var(--wink-primary)">
-                                            Proceed to Secure Checkout
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="tab-pane fade" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                                    <h5>Bank Transfer details</h5>
-                                    <div class="bg-light p-3 rounded mb-4">
-                                        Please transfer the amount to: <br/>
-                                        <strong>Bank:</strong> KUEC Corporate Bank (Configure in Settings)<br/>
-                                        <strong>Reference:</strong> <t t-esc="order.name"/>
-                                    </div>
-                                    <form method="post" t-attf-action="/my/requests/#{order.id}/confirm-manual">
-                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                        <button type="submit" class="btn btn-primary w-100">I have made the payment</button>
-                                    </form>
+                            <div class="card shadow-sm border-0 mb-4">
+                                <div class="card-body p-4">
+                                    <h4 class="mb-4 text-center">Select Payment Method</h4>
+                                    <!-- Native Odoo Payment & Wallet Widget -->
+                                    <t t-call="payment.checkout">
+                                        <!-- These variables are natively provided by CustomerPortal._get_payment_values() -->
+                                        <t t-set="default_payment_provider_id" t-value="default_payment_provider_id"/>
+                                        <t t-set="amount" t-value="amount"/>
+                                        <t t-set="currency" t-value="currency"/>
+                                        <t t-set="partner_id" t-value="partner_id"/>
+                                    </t>
                                 </div>
                             </div>
 
-                            <div class="mt-4">
+                            <div class="mt-4 text-center">
                                 <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none">
-                                    <i class="fa fa-arrow-left me-1"/> Back to Request
+                                    <i class="fa fa-arrow-left me-1"/> Back to Request Details
                                 </a>
                             </div>
                         </div>
