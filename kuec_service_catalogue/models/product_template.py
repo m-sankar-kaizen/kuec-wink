@@ -62,15 +62,24 @@ class ProductTemplate(models.Model):
         ondelete='set null',
         help="The bundle this product belongs to. Only for bundled services.",
     )
-    # Odoo native subscription plans: plan selection (retainer standalone or bundle)
+    # Odoo native subscription plans (quotation templates); used when product has no Recurring Prices
     wink_subscription_plan_ids = fields.Many2many(
         'sale.order.template',
         'product_template_sale_order_template_rel',
         'product_tmpl_id',
         'sale_order_template_id',
-        string='Subscription Plans (Odoo native)',
-        help='Quotation templates the customer can choose from. For retainer: plan only. For bundle: plan + Bundle Package tiers.',
+        string='Subscription Plans (fallback)',
+        help='Used for portal plan selection only if Recurring Prices tab is empty. Prefer Recurring Prices (Odoo native).',
     )
+
+    def _wink_recurring_plan_lines(self):
+        """Return native Recurring Prices (Recurring Plan + Recurring Price) for portal plan selection.
+        Uses product_pricing_ids from sale_subscription when available."""
+        self.ensure_one()
+        if 'product_pricing_ids' in self._fields and self.product_pricing_ids:
+            key = lambda p: (getattr(p, 'sequence', 0), p.id)
+            return self.product_pricing_ids.sorted(key=key)
+        return self.env['product.pricing'].browse()
 
     reminder_days_before = fields.Integer(
         string='Reminder Days Before Expiry',

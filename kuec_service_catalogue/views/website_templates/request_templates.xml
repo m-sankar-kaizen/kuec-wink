@@ -161,8 +161,36 @@
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
 
-                        <!-- Odoo native subscription plan (first): for standalone retainer OR bundle -->
-                        <div t-if="subscription_plan_ids" class="wink-retainer-plan-selector mb-4">
+                        <!-- Plan: Odoo native Recurring Prices (Recurring Plan + Price) or quotation templates -->
+                        <div t-if="recurring_plan_lines" class="wink-retainer-plan-selector mb-4">
+                            <h5 class="mb-3">Select Your Plan</h5>
+                            <t t-foreach="recurring_plan_lines" t-as="pricing">
+                                <div class="wink-tier-card mb-3">
+                                    <input type="radio" name="recurring_pricing_id" class="d-none"
+                                           t-att-id="'recurring_pricing_%s' % pricing.id"
+                                           t-att-value="pricing.id"
+                                           t-att-checked="'checked' if ((pricing_first and not post.get('recurring_pricing_id')) or str(pricing.id) == str(post.get('recurring_pricing_id', ''))) else None"/>
+                                    <label t-att-for="'recurring_pricing_%s' % pricing.id"
+                                           class="wink-tier-label card p-3 w-100 cursor-pointer">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fw-bold fs-5">
+                                                    <t t-if="pricing.recurring_plan_id"><t t-esc="pricing.recurring_plan_id.name"/></t>
+                                                    <t t-elif="pricing.plan_id"><t t-esc="pricing.plan_id.name"/></t>
+                                                    <t t-else=""><t t-esc="pricing.display_name"/></t>
+                                                </div>
+                                            </div>
+                                            <div class="text-end" t-if="pricing.price">
+                                                <div class="fw-bold fs-4" style="color: var(--wink-primary);">
+                                                    <t t-esc="'{:,.2f}'.format(pricing.price)"/> <t t-esc="request.env.company.currency_id.symbol"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </t>
+                        </div>
+                        <div t-elif="subscription_plan_ids" class="wink-retainer-plan-selector mb-4">
                             <h5 class="mb-3">Select Your Plan</h5>
                             <t t-foreach="subscription_plan_ids" t-as="plan">
                                 <div class="wink-tier-card mb-3">
@@ -442,7 +470,12 @@
                         <div class="card-header fw-bold">Manage your retainer</div>
                         <div class="card-body">
                             <t t-if="retainer_plan">
-                                <p class="mb-2"><strong>Current plan:</strong> <t t-esc="retainer_plan.name"/><t t-if="retainer_plan_has_price"> — <t t-esc="retainer_plan.price" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></t></p>
+                                <p class="mb-2"><strong>Current plan:</strong>
+                                    <t t-if="retainer_plan.recurring_plan_id"><t t-esc="retainer_plan.recurring_plan_id.name"/></t>
+                                    <t t-elif="retainer_plan.plan_id"><t t-esc="retainer_plan.plan_id.name"/></t>
+                                    <t t-else=""><t t-esc="retainer_plan.name"/></t>
+                                    <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price)"/> <t t-esc="order.currency_id.symbol"/></t>
+                                </p>
                             </t>
                             <div class="d-flex flex-wrap gap-2">
                                 <t t-if="retainer_plans_for_change and len(retainer_plans_for_change) > 1">

@@ -38,9 +38,15 @@ class SaleOrderWink(models.Model):
     )
     wink_sale_order_template_id = fields.Many2one(
         'sale.order.template',
-        string='Subscription Plan (Odoo native)',
+        string='Subscription Plan (quotation template)',
         ondelete='set null',
-        help='Selected plan for standalone retainer from portal.',
+        help='Selected when product has no Recurring Prices; else use Recurring Prices.',
+    )
+    wink_recurring_pricing_id = fields.Many2one(
+        'product.pricing',
+        string='Recurring Plan (Odoo native)',
+        ondelete='set null',
+        help='Selected from product Recurring Prices tab (Recurring Plan + Recurring Price).',
     )
     wink_cancellation_requested = fields.Boolean(
         string='Cancellation Requested',

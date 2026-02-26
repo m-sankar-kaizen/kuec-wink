@@ -27,6 +27,7 @@
                         <field name="wink_requested_start_date" readonly="1"/>
                         <field name="wink_price_confirmed" readonly="1"/>
                         <field name="wink_bundle_tier_id" readonly="1" invisible="not wink_bundle_tier_id"/>
+                        <field name="wink_recurring_pricing_id" readonly="1" invisible="not wink_recurring_pricing_id"/>
                         <field name="wink_sale_order_template_id" readonly="1" invisible="not wink_sale_order_template_id"/>
                         <field name="wink_cancellation_requested" readonly="1" invisible="not wink_cancellation_requested"/>
                         <field name="wink_request_notes" readonly="1" colspan="2" nolabel="1"/>
