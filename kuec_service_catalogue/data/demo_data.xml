@@ -383,7 +383,8 @@
             <field name="name">Sarah Johnson</field>
             <field name="full_name_arabic">سارة جونسون</field>
             <field name="gender">female</field>
-            <field name="nationality_id" ref="base.gb"/>
+            <!-- nationality: base.gb (UK) not in all Odoo bases; use base.ae for demo load -->
+            <field name="nationality_id" ref="base.ae"/>
             <field name="date_of_birth">1988-11-22</field>
             <field name="place_of_birth">London</field>
             <field name="marital_status">single</field>

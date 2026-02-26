@@ -203,8 +203,12 @@
                                 <div t-att-id="'tier_employees_%s' % td['tier'].id" class="tier-employees-section mb-4" t-att-style="'display:%s;' % ('block' if ((td_first and not post.get('tier_id')) or str(td['tier'].id) == str(post.get('tier_id', ''))) else 'none')">
                                     <h6 class="text-primary"><t t-esc="td['tier'].name"/> — employees</h6>
                                     <t t-foreach="td['items']" t-as="item">
-                                        <div t-if="item.service_product_id.requires_employee_selection" class="mb-3 ps-3 border-start border-primary">
+                                        <div t-if="item.service_product_id.requires_employee_selection" class="mb-3 ps-3 border-start border-primary bundle-item-employees">
                                             <div class="fw-semibold mb-2"><t t-esc="item.description or item.service_product_id.name"/></div>
+                                            <div class="mb-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm wink-bundle-select-all">Select all</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm wink-bundle-deselect-all">Deselect all</button>
+                                            </div>
                                             <div class="row g-2">
                                                 <t t-foreach="employees" t-as="emp">
                                                     <div class="col-md-6">
@@ -264,7 +268,11 @@
                         <div t-if="product.requires_employee_selection" class="mt-4">
                             <h5 class="border-bottom pb-2">Select Employees for This Service</h5>
                             <t t-if="employees">
-                                <div class="row g-2">
+                                <div class="mb-2 d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm wink-select-all-employees" data-target="employee_ids">Select all</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm wink-deselect-all-employees" data-target="employee_ids">Deselect all</button>
+                                </div>
+                                <div class="row g-2" id="employee_ids_container">
                                     <t t-foreach="employees" t-as="emp">
                                         <div class="col-md-6">
                                             <div class="form-check border rounded p-3">
@@ -293,6 +301,30 @@
                             </button>
                         </div>
                     </form>
+                    <script>
+                        (function() {
+                            var form = document.querySelector('form[action="/my/requests/submit"]');
+                            if (!form) return;
+                            form.addEventListener('click', function(e) {
+                                var target = e.target;
+                                if (target.classList.contains('wink-select-all-employees')) {
+                                    e.preventDefault();
+                                    form.querySelectorAll('input[name="employee_ids"]').forEach(function(cb) { cb.checked = true; });
+                                } else if (target.classList.contains('wink-deselect-all-employees')) {
+                                    e.preventDefault();
+                                    form.querySelectorAll('input[name="employee_ids"]').forEach(function(cb) { cb.checked = false; });
+                                } else if (target.classList.contains('wink-bundle-select-all')) {
+                                    e.preventDefault();
+                                    var block = target.closest('.bundle-item-employees');
+                                    if (block) block.querySelectorAll('.form-check-input').forEach(function(cb) { cb.checked = true; });
+                                } else if (target.classList.contains('wink-bundle-deselect-all')) {
+                                    e.preventDefault();
+                                    var block = target.closest('.bundle-item-employees');
+                                    if (block) block.querySelectorAll('.form-check-input').forEach(function(cb) { cb.checked = false; });
+                                }
+                            });
+                        })();
+                    </script>
                 </div>
             </t>
         </template>

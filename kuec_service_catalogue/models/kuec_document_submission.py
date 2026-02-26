@@ -17,6 +17,13 @@ class KuecDocumentSubmission(models.Model):
         ondelete='cascade',
         index=True,
     )
+    task_id = fields.Many2one(
+        'project.task',
+        string='Task',
+        ondelete='set null',
+        index=True,
+        help='Link to the delivery task. Used in backend to group documents by task.',
+    )
     requirement_id = fields.Many2one(
         'kuec.service.document',
         string='Document Requirement',

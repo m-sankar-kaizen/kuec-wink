@@ -1,10 +1,52 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, api, _
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
 
 class ProjectTaskWink(models.Model):
     _inherit = 'project.task'
+
+    wink_employee_ids = fields.Many2many(
+        'kuec.employee.directory',
+        'project_task_employee_rel',
+        'task_id',
+        'employee_id',
+        string='Employees',
+        help='Employees linked to this task (from WINK request or added in backend).',
+    )
+    document_submission_ids = fields.One2many(
+        'kuec.document.submission',
+        'task_id',
+        string='Document Submissions',
+        help='Compliance documents linked to this task.',
+    )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        tasks = super().create(vals_list)
+        for task in tasks:
+            if not task.sale_order_id or not task.sale_order_id.wink_is_portal_request:
+                continue
+            order = task.sale_order_id
+            # Copy employees from order or from entitlement (bundle activation line)
+            employee_ids = []
+            sale_line = getattr(task, 'sale_line_id', None)
+            if sale_line and getattr(sale_line, 'wink_entitlement_id', None):
+                employee_ids = sale_line.wink_entitlement_id.wink_selected_employee_ids.ids
+            if not employee_ids:
+                employee_ids = order.wink_selected_employee_ids.ids
+            if employee_ids:
+                task.wink_employee_ids = [(6, 0, employee_ids)]
+            # Link order documents to this task when order has a single task (standalone)
+            if task.project_id:
+                order_tasks = self.search([
+                    ('sale_order_id', '=', order.id),
+                    ('project_id', '=', task.project_id.id),
+                ])
+                if len(order_tasks) <= 1:
+                    order.document_submission_ids.write({'task_id': task.id})
+        return tasks
 
     def write(self, vals):
         if 'stage_id' in vals:

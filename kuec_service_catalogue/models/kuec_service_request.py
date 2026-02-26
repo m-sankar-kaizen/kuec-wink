@@ -105,6 +105,18 @@ class SaleOrderWink(models.Model):
         )
         return (not bool(pending), pending.mapped('requirement_name'))
 
+    def action_wink_add_all_employees(self):
+        """Add all employees from the customer's directory to this order (standalone request)."""
+        self.ensure_one()
+        if not self.partner_id:
+            return
+        partner = self.partner_id.commercial_partner_id
+        employees = self.env['kuec.employee.directory'].search([
+            ('partner_id', '=', partner.id),
+        ])
+        if employees:
+            self.wink_selected_employee_ids = [(6, 0, employees.ids)]
+
     def _generate_tier_entitlements(self, tier):
         """Generates the entitlement records for a given tier on this order."""
         self.ensure_one()

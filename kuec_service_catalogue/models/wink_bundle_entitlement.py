@@ -69,6 +69,18 @@ class WinkBundleEntitlement(models.Model):
         help='Employees selected for this child service (bundle).',
     )
 
+    def action_add_all_employees(self):
+        """Add all employees from the order's company directory to this entitlement (bulk)."""
+        self.ensure_one()
+        if not self.order_id or not self.order_id.partner_id:
+            return
+        partner = self.order_id.partner_id.commercial_partner_id
+        employees = self.env['kuec.employee.directory'].search([
+            ('partner_id', '=', partner.id),
+        ])
+        if employees:
+            self.wink_selected_employee_ids = [(6, 0, employees.ids)]
+
     @api.depends('qty_entitled', 'qty_activated')
     def _compute_state(self):
         for rec in self:
