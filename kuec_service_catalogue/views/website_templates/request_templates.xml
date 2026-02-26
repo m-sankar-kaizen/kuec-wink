@@ -197,28 +197,9 @@
                                 </div>
                             </t>
                         </div>
-                        <!-- When retainer/bundle has no plan selector (e.g. Recurring Prices tab not loaded by portal) -->
-                        <div t-if="product.delivery_model == 'retainer' and not recurring_plan_lines and not subscription_plan_ids" class="alert alert-info py-2 mb-3">
-                            <small>Plan options (e.g. Monthly / Yearly) are set in the product's <strong>Recurring Prices</strong> tab. If no plan selector appears above, the subscription module may not be available to the portal—contact your administrator.</small>
-                        </div>
-                        <div t-elif="subscription_plan_ids" class="wink-retainer-plan-selector mb-4">
-                            <h5 class="mb-3">Select Your Plan</h5>
-                            <t t-foreach="subscription_plan_ids" t-as="plan">
-                                <div class="wink-tier-card mb-3">
-                                    <input type="radio" name="subscription_plan_id" class="d-none"
-                                           t-att-id="'subscription_plan_%s' % plan.id"
-                                           t-att-value="plan.id"
-                                           t-att-checked="'checked' if ((plan_first and not post.get('subscription_plan_id')) or str(plan.id) == str(post.get('subscription_plan_id', ''))) else None"/>
-                                    <label t-att-for="'subscription_plan_%s' % plan.id"
-                                           class="wink-tier-label card p-3 w-100 cursor-pointer">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <div class="fw-bold fs-5"><t t-esc="plan.name"/></div>
-                                            </div>
-                                        </div>
-                                    </label>
-                                </div>
-                            </t>
+                        <!-- When no Recurring Prices loaded (Odoo subscription / product.pricing not available to portal) -->
+                        <div t-if="product.delivery_model == 'retainer' and not recurring_plan_lines" class="alert alert-info py-2 mb-3">
+                            <small>Plan options (Monthly / Yearly) come from the product's <strong>Recurring Prices</strong> tab (Odoo subscription). If no plan selector appears, ensure the subscription module is installed and Recurring Prices are set—contact your administrator.</small>
                         </div>
 
                         <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.) -->

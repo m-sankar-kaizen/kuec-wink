@@ -24,11 +24,6 @@
                         <field name="delivery_model" widget="radio"/>
                         <field name="request_frequency" widget="radio"/>
                         <field name="project_template_id" invisible="delivery_model != 'project'"/>
-                        <field name="wink_subscription_plan_ids" invisible="delivery_model != 'retainer'"
-                               widget="many2many_tags"
-                               options="{'no_create': True}"
-                               help="Quotation templates the customer can choose from (plan only). For bundle, also configure Bundle Package below for tiers."/>
-
                         <separator string="Commercial"/>
                         <field name="commercial_structure" widget="radio"/>
                         <field name="wink_bundle_id" invisible="commercial_structure != 'bundled'"/>
