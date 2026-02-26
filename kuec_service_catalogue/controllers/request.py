@@ -263,9 +263,22 @@ class WinkRequest(http.Controller):
                 if not selected_plan.exists():
                     selected_plan = None
             else:
-                selected_pricing = _get_product_pricing_browse(request.env, [chosen_id])
-                if selected_pricing.exists():
-                    selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
+                # Recurring lines are from a pricing model (product.pricing, sale.subscription.pricing, etc.)
+                # Browse the chosen id on the same model as recurring_lines
+                try:
+                    pricing_model = getattr(recurring_lines, '_name', None)
+                    if pricing_model and chosen_id in (recurring_lines.ids or []):
+                        selected_pricing = request.env[pricing_model].sudo().browse(chosen_id)
+                        if selected_pricing.exists():
+                            selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None) or getattr(selected_pricing, 'recurrence_id', None)
+                    else:
+                        selected_pricing = _get_product_pricing_browse(request.env, [chosen_id])
+                        if selected_pricing.exists():
+                            selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
+                except KeyError:
+                    selected_pricing = _get_product_pricing_browse(request.env, [chosen_id])
+                    if selected_pricing.exists():
+                        selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
 
         # Validation: employees required when product or child service requires selection
         if not is_bundle:
@@ -334,22 +347,23 @@ class WinkRequest(http.Controller):
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
 
         # --- Set plan_id (sale.subscription.plan) and optional wink_recurring_pricing_id on order ---
-        if use_recurring_prices and selected_plan:
-            write_vals = {}
-            if hasattr(order, 'plan_id'):
-                write_vals['plan_id'] = selected_plan.id
-            if hasattr(order, 'recurring_plan_id'):
-                write_vals['recurring_plan_id'] = selected_plan.id
-            if write_vals:
-                order.sudo().write(write_vals)
+        if use_recurring_prices:
+            if selected_plan and getattr(selected_plan, '_name', None) == 'sale.subscription.plan':
+                write_vals = {}
+                if hasattr(order, 'plan_id'):
+                    write_vals['plan_id'] = selected_plan.id
+                if hasattr(order, 'recurring_plan_id'):
+                    write_vals['recurring_plan_id'] = selected_plan.id
+                if write_vals:
+                    order.sudo().write(write_vals)
+                if order.order_line:
+                    line = order.order_line[0]
+                    if hasattr(line, 'plan_id'):
+                        line.sudo().write({'plan_id': selected_plan.id})
+                    elif hasattr(line, 'recurring_plan_id'):
+                        line.sudo().write({'recurring_plan_id': selected_plan.id})
             if selected_pricing.exists():
                 order.sudo().write({'wink_recurring_pricing_id': selected_pricing.id})
-            if order.order_line:
-                line = order.order_line[0]
-                if hasattr(line, 'plan_id'):
-                    line.sudo().write({'plan_id': selected_plan.id})
-                elif hasattr(line, 'recurring_plan_id'):
-                    line.sudo().write({'recurring_plan_id': selected_plan.id})
 
         # --- Bundle tier handling ---
         tier = None
@@ -448,7 +462,8 @@ class WinkRequest(http.Controller):
         sub_map = {s.requirement_id.id: s for s in submissions}
 
         is_retainer = product and product.delivery_model == 'retainer'
-        # Current plan: order.plan_id (sale.subscription.plan) or product.pricing from wink_recurring_pricing_id
+        recurring_lines = product._wink_recurring_plan_lines() if product else []
+        # Current plan: order.plan_id (sale.subscription.plan) or pricing record from wink_recurring_pricing_id
         retainer_plan = False
         if getattr(order, 'plan_id', None):
             try:
@@ -458,14 +473,20 @@ class WinkRequest(http.Controller):
                 pass
         if not retainer_plan:
             pid = getattr(order, 'wink_recurring_pricing_id', None) or 0
-            if pid:
+            if pid and recurring_lines and pid in (recurring_lines.ids or []):
+                try:
+                    rec = request.env[recurring_lines._name].sudo().browse(pid)
+                    if rec.exists():
+                        retainer_plan = rec
+                except KeyError:
+                    pass
+            if not retainer_plan and pid:
                 rec = _get_product_pricing_browse(request.env, [pid])
                 if rec.exists():
                     retainer_plan = rec
-        recurring_lines = product._wink_recurring_plan_lines() if product else []
         retainer_plans_for_change = recurring_lines
         retainer_plan_has_price = bool(
-            getattr(retainer_plan, 'price', None) or getattr(retainer_plan, 'list_price', None)
+            getattr(retainer_plan, 'price', None) or getattr(retainer_plan, 'list_price', None) or getattr(retainer_plan, 'recurring_price', None)
         ) if retainer_plan else False
 
         return request.render('kuec_service_catalogue.wink_request_confirmation', {

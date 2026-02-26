@@ -77,11 +77,29 @@ class ProductTemplate(models.Model):
 
     def _wink_recurring_plan_lines(self):
         """Return native Recurring Prices for portal plan selection (retainer).
-        Uses sudo so portal users can see plans. Supports product.pricing (Time-based pricing)
-        and sale.subscription.plan linked to product."""
+        Uses sudo so portal users can see plans. Discovers the Recurring Prices One2many
+        by field name and by dynamic detection (any One2many whose comodel has plan + price)."""
         self.ensure_one()
         product = self.sudo()
-        # 1) One2many pricing lines on product.template (Odoo 18: pricing_ids, etc.)
+
+        def _sort_lines(lines):
+            return lines.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
+
+        def _is_pricing_comodel(model_name):
+            """True if this model looks like recurring pricing (has plan/recurrence + price)."""
+            try:
+                M = self.env[model_name]
+                plan = any(
+                    f in M._fields for f in ('recurrence_id', 'recurring_plan_id', 'plan_id')
+                )
+                price = any(
+                    f in M._fields for f in ('price', 'recurring_price', 'list_price')
+                )
+                return plan and price
+            except KeyError:
+                return False
+
+        # 1) Explicit One2many field names (Odoo 18 / enterprise naming)
         for field_name in (
             'pricing_ids',
             'product_pricing_ids',
@@ -94,34 +112,53 @@ class ProductTemplate(models.Model):
             if field_name in product._fields:
                 lines = product[field_name]
                 if lines:
-                    key = lambda p: (getattr(p, 'sequence', 0), p.id)
-                    return lines.sorted(key=key)
-        # 2) product.pricing: search by product_tmpl_id or by product_id (variant)
-        try:
-            Pricing = self.env['product.pricing'].sudo()
-            if 'product_tmpl_id' in Pricing._fields:
-                lines = Pricing.search([('product_tmpl_id', '=', product.id)])
+                    return _sort_lines(lines)
+
+        # 2) Dynamic: any One2many on product.template whose comodel is recurring pricing
+        for fname, field in product._fields.items():
+            if field.type != 'one2many' or fname.startswith('kuec_') or fname.startswith('wink_'):
+                continue
+            try:
+                comodel = field.comodel_name
+                if not _is_pricing_comodel(comodel):
+                    continue
+                lines = product[fname]
                 if lines:
-                    return lines.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
-            if 'product_id' in Pricing._fields:
-                variant_ids = product.product_variant_ids.ids or (product.product_variant_id and [product.product_variant_id.id] or [])
-                if variant_ids:
-                    lines = Pricing.search([('product_id', 'in', variant_ids)])
+                    return _sort_lines(lines)
+            except (KeyError, AttributeError):
+                continue
+
+        # 3) Search by product_tmpl_id / product_id for known pricing model names
+        for model_name in ('product.pricing', 'sale.subscription.pricing', 'product.recurring.pricing'):
+            if not _is_pricing_comodel(model_name):
+                continue
+            try:
+                Pricing = self.env[model_name].sudo()
+                if 'product_tmpl_id' in Pricing._fields:
+                    lines = Pricing.search([('product_tmpl_id', '=', product.id)])
                     if lines:
-                        return lines.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
-        except (KeyError, AttributeError):
-            pass
-        # 3) sale.subscription.plan: product linked via Many2many or plan has product_tmpl_id
+                        return _sort_lines(lines)
+                if 'product_id' in Pricing._fields:
+                    variant_ids = product.product_variant_ids.ids or (
+                        [product.product_variant_id.id] if product.product_variant_id else []
+                    )
+                    if variant_ids:
+                        lines = Pricing.search([('product_id', 'in', variant_ids)])
+                        if lines:
+                            return _sort_lines(lines)
+            except KeyError:
+                continue
+
+        # 4) sale.subscription.plan: product linked via Many2many or plan has product_tmpl_id
         try:
             Plan = self.env['sale.subscription.plan'].sudo()
             for field_name in ('plan_ids', 'subscription_plan_ids', 'recurring_plan_ids'):
                 if field_name in product._fields and product[field_name]:
-                    plans = product[field_name]
-                    return plans.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
+                    return _sort_lines(product[field_name])
             if Plan._fields.get('product_tmpl_id'):
                 plans = Plan.search([('product_tmpl_id', '=', product.id)])
                 if plans:
-                    return plans.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
+                    return _sort_lines(plans)
         except (KeyError, AttributeError):
             pass
         return []
