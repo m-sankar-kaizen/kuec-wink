@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="0">
+        <!-- Force-delete stale mail.template records so every upgrade recreates them clean.
+             This resolves "old template body cached in DB" errors where the upgrade loads new XML
+             but the DB-cached compiled QWeb body is not refreshed. -->
+        <delete model="mail.template" search="[('name','=','WINK Portal: Welcome Email')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: New Service Request')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: Service Request Confirmation (Customer)')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: Document Review Update')]"/>
+
         <!-- Welcome Email Template -->
         <record id="kuec_portal_welcome_email_v5" model="mail.template">
             <field name="name">WINK Portal: Welcome Email</field>

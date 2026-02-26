@@ -1,4 +1,4 @@
-from odoo import models, fields, api, _
+from odoo import models, fields, api, exceptions, _
 
 class KuecEmployeeDirectory(models.Model):
     _name = 'kuec.employee.directory'
@@ -58,7 +58,64 @@ class KuecEmployeeDirectory(models.Model):
     emirates_id = fields.Char(string='Emirates ID (EID)', copy=False)
     visa_expiry_date = fields.Date(string='Visa Expiry Date')
 
-    _sql_constraints = [
-        ('passport_unique', 'unique(passport_number)', 'Passport number must be unique!'),
-        ('emirates_id_unique', 'unique(emirates_id)', 'Emirates ID must be unique!'),
-    ]
+    # NOTE: We intentionally do NOT use _sql_constraints for passport_number and emirates_id
+    # because PostgreSQL treats '' (empty string) as a value, so two records with no passport
+    # number would violate a standard UNIQUE constraint. Instead we use @api.constrains
+    # which skips the check when the field is blank/False.
+
+    @api.constrains('passport_number')
+    def _check_passport_unique(self):
+        for rec in self:
+            if not rec.passport_number:
+                continue
+            duplicate = self.search([
+                ('passport_number', '=', rec.passport_number),
+                ('id', '!=', rec.id),
+            ], limit=1)
+            if duplicate:
+                raise exceptions.ValidationError(
+                    _('Passport number "%s" is already used by another employee.') % rec.passport_number
+                )
+
+    @api.constrains('emirates_id')
+    def _check_emirates_id_unique(self):
+        for rec in self:
+            if not rec.emirates_id:
+                continue
+            duplicate = self.search([
+                ('emirates_id', '=', rec.emirates_id),
+                ('id', '!=', rec.id),
+            ], limit=1)
+            if duplicate:
+                raise exceptions.ValidationError(
+                    _('Emirates ID "%s" is already used by another employee.') % rec.emirates_id
+                )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Convert empty strings to False so the uniqueness check above works correctly
+        for vals in vals_list:
+            if vals.get('passport_number') == '':
+                vals['passport_number'] = False
+            if vals.get('emirates_id') == '':
+                vals['emirates_id'] = False
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if vals.get('passport_number') == '':
+            vals['passport_number'] = False
+        if vals.get('emirates_id') == '':
+            vals['emirates_id'] = False
+        return super().write(vals)
+
+    def _auto_init(self):
+        """On upgrade: normalize empty strings to NULL so existing DB data doesn't
+        violate uniqueness checks (PostgreSQL treats '' as a distinct value from NULL)."""
+        res = super()._auto_init()
+        self.env.cr.execute(
+            "UPDATE kuec_employee_directory SET passport_number = NULL WHERE passport_number = ''"
+        )
+        self.env.cr.execute(
+            "UPDATE kuec_employee_directory SET emirates_id = NULL WHERE emirates_id = ''"
+        )
+        return res

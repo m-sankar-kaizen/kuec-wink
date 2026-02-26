@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
+    <data noupdate="0">
+        <!-- Force-delete stale ir.ui.view cache records so every upgrade recreates them clean.
+             This resolves "pricing_label / old compiled template" errors on UAT. -->
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_registration_form')]"/>
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_request_form')]"/>
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_request_confirmation')]"/>
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_request_already_subscription')]"/>
+
         <!-- wink_registration_form -->
         <template id="wink_registration_form" name="Request a Service — Create Your Account">
             <t t-call="website.layout">
@@ -458,7 +465,10 @@
                             <div t-if="getattr(order, 'is_subscription', False)" class="mt-3 pt-3 border-top">
                                 <h5 class="mb-2">Subscription Plan</h5>
                                 <div class="small">
-                                    <t t-if="getattr(order, 'recurrence_id', None)"><strong><t t-esc="order.recurrence_id.name"/></strong> — <t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></t>
+                                    <t t-if="getattr(order, 'recurrence_id', None) and order.recurrence_id.id">
+                                        <t t-set="_rec_name" t-value="order.recurrence_id.name or ''"/>
+                                        <strong><t t-esc="_rec_name"/> Plan</strong> — <t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+                                    </t>
                                     <t t-if="getattr(order, 'next_date', None)" class="d-block mt-1">Next renewal: <t t-esc="order.next_date" t-options="{'widget': 'date'}"/></t>
                                     <t t-if="getattr(order, 'subscription_state', None)" class="d-block mt-1">
                                         <span t-if="order.subscription_state == '3_progress'" class="badge bg-success">Active</span>
@@ -514,7 +524,7 @@
                                 <p class="mb-2"><strong>Current plan:</strong>
                                     <t t-set="plan_label" t-value="getattr(getattr(retainer_plan, 'recurrence_id', None), 'name', None) or getattr(getattr(retainer_plan, 'recurring_plan_id', None), 'name', None) or getattr(getattr(retainer_plan, 'plan_id', None), 'name', None) or getattr(retainer_plan, 'name', None) or retainer_plan.display_name"/>
                                     <t t-esc="plan_label"/>
-                                    <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price or retainer_plan.list_price or 0)"/> <t t-esc="order.currency_id.symbol"/></t>
+                                    <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price or retainer_plan.list_price or 0)"/> <t t-esc="order.currency_id.symbol or 'AED'"/></t>
                                 </p>
                             </t>
                             <div class="d-flex flex-wrap gap-2">
