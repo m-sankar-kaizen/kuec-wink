@@ -461,24 +461,7 @@
                                 </div>
                             </div>
 
-                            <!-- Subscription Plan (Odoo 18) -->
-                            <div t-if="getattr(order, 'is_subscription', False)" class="mt-3 pt-3 border-top">
-                                <h5 class="mb-2">Subscription Plan</h5>
-                                <div class="small">
-                                    <t t-if="getattr(order, 'recurrence_id', None) and order.recurrence_id.id">
-                                        <t t-set="_rec_name" t-value="order.recurrence_id.name or ''"/>
-                                        <strong><t t-esc="_rec_name"/> Plan</strong> — <t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
-                                    </t>
-                                    <t t-if="getattr(order, 'next_date', None)" class="d-block mt-1">Next renewal: <t t-esc="order.next_date" t-options="{'widget': 'date'}"/></t>
-                                    <t t-if="getattr(order, 'subscription_state', None)" class="d-block mt-1">
-                                        <span t-if="order.subscription_state == '3_progress'" class="badge bg-success">Active</span>
-                                        <span t-elif="order.subscription_state == '2_renewal'" class="badge bg-warning text-dark">Renewal Due</span>
-                                        <span t-elif="order.subscription_state == '4_paused'" class="badge bg-warning text-dark">Paused</span>
-                                        <span t-else="" class="badge bg-secondary"><t t-esc="order.subscription_state"/></span>
-                                    </t>
-                                    <a href="/my/subscriptions" class="d-inline-block mt-2">Manage Subscription →</a>
-                                </div>
-                            </div>
+                            <!-- Subscription managed from /my/subscriptions — no ORM widget calls here -->
 
                             <hr/>
 
