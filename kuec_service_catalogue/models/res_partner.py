@@ -36,3 +36,11 @@ class ResPartner(models.Model):
         string="Tax Registration No.",
         copy=False
     )
+
+    wink_company_type = fields.Selection([
+        ('ku', 'KU'),
+        ('kuec', 'KUEC'),
+        ('uae', 'UAE Company'),
+        ('outside', 'Outside UAE'),
+    ], string='Company Classification',
+       help="This helps us serve you better.")

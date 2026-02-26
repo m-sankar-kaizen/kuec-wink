@@ -37,13 +37,16 @@
                         <field name="reminder_days_before"/>
                     </group>
 
-                    <group string="Service Content &amp; Media" name="wink_content">
+                    <separator string="Service Content &amp; Media"/>
+                    <group string="Service Overview (Portal)" name="wink_content_desc" col="1">
                         <field name="wink_description" nolabel="1" placeholder="Enter the rich text description that will appear on the portal service page..."/>
+                    </group>
+                    <group string="Service FAQs" name="wink_content_faq" col="1">
                         <field name="wink_faq_ids" nolabel="1">
-                            <list editable="bottom">
+                            <list string="Questions &amp; Answers" editable="bottom" create="1" delete="1">
                                 <field name="sequence" widget="handle"/>
                                 <field name="question"/>
-                                <field name="answer"/>
+                                <field name="answer" widget="html"/>
                             </list>
                         </field>
                     </group>

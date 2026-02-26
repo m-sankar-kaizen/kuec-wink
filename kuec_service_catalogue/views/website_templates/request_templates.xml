@@ -166,6 +166,22 @@
                     <form method="post" action="/my/requests/submit">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
+                        <input t-if="selected_plan" type="hidden" name="selected_recurrence_id" t-att-value="selected_plan['recurrence_id']"/>
+
+                        <!-- v2: Your Selected Plan summary (when coming from detail page with plan) -->
+                        <div t-if="is_subscription_service and selected_plan" class="mb-4">
+                            <h5 class="mb-2"><i class="fa fa-calendar-check-o me-1"/> Selected Plan</h5>
+                            <div class="card border-primary mb-2">
+                                <div class="card-body">
+                                    <span class="badge rounded-pill mb-2" style="background: #1F3864; color: white;"><t t-esc="selected_plan['plan_name']"/> Plan</span>
+                                    <div class="fw-bold" style="font-family: 'IBM Plex Mono', monospace; color: #1F3864;">AED <t t-esc="'{:,.2f}'.format(selected_plan['price'])"/> <t t-esc="selected_plan['period_label']"/></div>
+                                    <t t-if="selected_plan.get('monthly_equivalent') and selected_plan['monthly_equivalent'] != selected_plan['price']"><div class="small text-success">≈ AED <t t-esc="'{:,.2f}'.format(selected_plan['monthly_equivalent'])"/> / month</div></t>
+                                    <t t-if="selected_plan.get('show_savings')"><span class="badge bg-success mt-1">Save <t t-esc="selected_plan['savings_pct']"/>%</span></t>
+                                    <t t-if="selected_plan.get('features')"><ul class="list-unstyled small mt-2 mb-0"><t t-foreach="selected_plan['features'][:6]" t-as="feat"><li class="mb-1"><i class="fa fa-check me-1" style="color: #2E75B6;"/><t t-esc="feat"/></li></t></ul></t>
+                                    <a t-attf-href="/services/#{product.id}" class="small">Change Plan (back to service)</a>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Plan: Recurring price based on recurring plan (Retainer) or quotation templates -->
                         <div t-if="recurring_plan_lines" class="wink-retainer-plan-selector mb-4">
@@ -184,12 +200,13 @@
                                                 <div class="fw-bold fs-5">
                                                     <t t-if="pricing.recurring_plan_id"><t t-esc="pricing.recurring_plan_id.name"/></t>
                                                     <t t-elif="pricing.plan_id"><t t-esc="pricing.plan_id.name"/></t>
+                                                    <t t-elif="getattr(pricing, 'recurrence_id', None)"><t t-esc="pricing.recurrence_id.name"/></t>
                                                     <t t-else=""><t t-esc="pricing.name or pricing.display_name"/></t>
                                                 </div>
                                             </div>
-                                            <div class="text-end" t-if="pricing.price or pricing.list_price">
+                                            <div class="text-end" t-if="pricing.price or pricing.list_price or getattr(pricing, 'recurring_price', None)">
                                                 <div class="fw-bold fs-4" style="color: var(--wink-primary);">
-                                                    <t t-esc="'{:,.2f}'.format(pricing.price or pricing.list_price or 0)"/> <t t-esc="request.env.company.currency_id.symbol"/>
+                                                    <t t-esc="'{:,.2f}'.format(pricing.price or pricing.list_price or getattr(pricing, 'recurring_price', None) or 0)"/> <t t-esc="request.env.company.currency_id.symbol"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -197,9 +214,9 @@
                                 </div>
                             </t>
                         </div>
-                        <!-- When no Recurring Prices loaded (Odoo subscription / product.pricing not available to portal) -->
+                        <!-- When no plans loaded: remind admin to set Time-based / Recurring Prices on the product -->
                         <div t-if="product.delivery_model == 'retainer' and not recurring_plan_lines" class="alert alert-info py-2 mb-3">
-                            <small>Plan options (Monthly / Yearly) come from the product's <strong>Recurring Prices</strong> tab (Odoo subscription). If no plan selector appears, ensure the subscription module is installed and Recurring Prices are set—contact your administrator.</small>
+                            <small>Plan options (Monthly / Yearly) come from this product's <strong>Recurring Prices</strong> or <strong>Time-based pricing</strong> tab. Add at least one price line there and save the product—then the plan selector and price will appear here. If the tab is missing, ensure the Subscriptions app is installed.</small>
                         </div>
 
                         <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.) -->
@@ -371,6 +388,22 @@
             </t>
         </template>
 
+        <!-- Already have active subscription for this service (edge case 10.3) -->
+        <template id="wink_request_already_subscription" name="Already Have Subscription">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">You already have an active subscription</h4>
+                        <p class="mb-0">You already have an active subscription for <strong><t t-esc="product.name"/></strong>. You can manage it from your portal.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/my/subscriptions" class="btn btn-primary">View My Subscriptions</a>
+                        <a href="/my/support/new" class="btn btn-outline-secondary">Contact Support</a>
+                    </div>
+                </div>
+            </t>
+        </template>
+
         <!-- wink_request_confirmation -->
         <template id="wink_request_confirmation" name="Service Request Confirmation">
             <t t-call="website.layout">
@@ -418,6 +451,22 @@
                                     <t t-else="">
                                         <b style="font-size: 1.25rem;"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></b>
                                     </t>
+                                </div>
+                            </div>
+
+                            <!-- Subscription Plan (Odoo 18) -->
+                            <div t-if="getattr(order, 'is_subscription', False)" class="mt-3 pt-3 border-top">
+                                <h5 class="mb-2">Subscription Plan</h5>
+                                <div class="small">
+                                    <t t-if="getattr(order, 'recurrence_id', None)"><strong><t t-esc="order.recurrence_id.name"/></strong> — <t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></t>
+                                    <t t-if="getattr(order, 'next_date', None)" class="d-block mt-1">Next renewal: <t t-esc="order.next_date" t-options="{'widget': 'date'}"/></t>
+                                    <t t-if="getattr(order, 'subscription_state', None)" class="d-block mt-1">
+                                        <span t-if="order.subscription_state == '3_progress'" class="badge bg-success">Active</span>
+                                        <span t-elif="order.subscription_state == '2_renewal'" class="badge bg-warning text-dark">Renewal Due</span>
+                                        <span t-elif="order.subscription_state == '4_paused'" class="badge bg-warning text-dark">Paused</span>
+                                        <span t-else="" class="badge bg-secondary"><t t-esc="order.subscription_state"/></span>
+                                    </t>
+                                    <a href="/my/subscriptions" class="d-inline-block mt-2">Manage Subscription →</a>
                                 </div>
                             </div>
 
@@ -772,9 +821,13 @@
                                     <t t-if="req.wink_bundle_tier_id">
                                         <span class="badge ms-1" style="background-color: var(--wink-info); color: #fff;"><t t-esc="req.wink_bundle_tier_id.name"/></span>
                                     </t>
+                                    <t t-if="getattr(req, 'is_subscription', False) and getattr(req, 'recurrence_id', None)">
+                                        <span class="badge rounded-pill ms-1" style="background: #f3f4f6; color: #4b5563; font-size: 12px;"><i class="fa fa-refresh me-1"/><t t-esc="req.recurrence_id.name"/> Subscription</span>
+                                        <span class="small ms-1" style="color: #2E75B6;"><t t-esc="req.amount_total" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/> / <t t-esc="req.recurrence_id.name"/></span>
+                                    </t>
                                 </td>
                                 <td class="text-end">
-                                    <span t-field="req.amount_total" t-options='{"widget": "monetary", "display_currency": req.pricelist_id.currency_id}'/>
+                                    <span t-field="req.amount_total" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/>
                                 </td>
                                 <td class="text-center">
                                     <span t-if="req.state == 'draft'" class="badge rounded-pill text-bg-secondary"><i class="fa fa-fw fa-file-text"/> Quotation</span>

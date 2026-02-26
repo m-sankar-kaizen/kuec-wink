@@ -8,7 +8,7 @@ class KuecDocumentSubmission(models.Model):
     _name = 'kuec.document.submission'
     _description = 'WINK Document Submission'
     _order = 'submitted_date desc'
-    _inherit = ['mail.thread']
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     order_id = fields.Many2one(
         'sale.order',

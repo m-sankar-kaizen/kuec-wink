@@ -5,6 +5,25 @@ from werkzeug.exceptions import NotFound
 from odoo.addons.sale.controllers.portal import CustomerPortal
 import werkzeug.urls
 
+
+def _get_product_pricing_browse(env, ids=None):
+    """Return product.pricing recordset or a sentinel that .exists() is False when model is not installed."""
+    try:
+        return env['product.pricing'].sudo().browse(ids or [])
+    except KeyError:
+        return _EmptyPricing()
+
+
+class _EmptyPricing:
+    """Sentinel when product.pricing model is not installed (e.g. subscription addon not present)."""
+
+    def exists(self):
+        return False
+
+    def __bool__(self):
+        return False
+
+
 class WinkRequest(http.Controller):
 
     def _parse_product_id(self, value):
@@ -48,7 +67,61 @@ class WinkRequest(http.Controller):
         if recurring_lines:
             vals['recurring_plan_lines'] = recurring_lines
             vals['use_recurring_prices'] = True
+        # v2: subscription_plans dicts + selected_plan (for request form confirmation UI)
+        is_sub = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
+        vals['is_subscription_service'] = is_sub
+        if is_sub:
+            vals['subscription_plans'] = product._wink_subscription_plans_dicts(pricelist_id=False)
+            vals['selected_plan'] = None  # caller can override
         return vals
+
+    @http.route(['/services/<int:service_id>/request'], type='http', auth='user', website=True)
+    def service_request_form(self, service_id, **kwargs):
+        """GET: Show request form with plan pre-selected from ?plan=<recurrence_id>. Validates plan; defaults to first if invalid."""
+        product = request.env['product.template'].sudo().search([
+            ('id', '=', service_id),
+            ('available_on_wink', '=', True),
+        ], limit=1)
+        if not product:
+            raise NotFound()
+        # Edge case 10.3: already has active subscription for this service
+        if getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer':
+            Order = request.env['sale.order'].sudo()
+            partner = request.env.user.partner_id.commercial_partner_id
+            active = Order.search([
+                ('partner_id', 'child_of', partner.id),
+                ('is_subscription', '=', True),
+                ('subscription_state', '=', '3_progress'),
+                ('order_line.product_id.product_tmpl_id', '=', product.id),
+            ], limit=1)
+            if active:
+                return request.render('kuec_service_catalogue.wink_request_already_subscription', {
+                    'product': product,
+                    'order': active,
+                })
+        plan_param = kwargs.get('plan')
+        recurrence_id = None
+        if plan_param is not None:
+            try:
+                recurrence_id = int(plan_param)
+            except (TypeError, ValueError):
+                recurrence_id = None
+        subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+        selected_plan = None
+        if subscription_plans:
+            if recurrence_id is not None:
+                for p in subscription_plans:
+                    if p['recurrence_id'] == recurrence_id:
+                        selected_plan = p
+                        break
+            if not selected_plan:
+                selected_plan = subscription_plans[0]
+        vals = self._get_request_form_vals(product, errors={}, post=kwargs)
+        vals['is_subscription_service'] = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
+        vals['subscription_plans'] = subscription_plans
+        vals['selected_plan'] = selected_plan
+        vals['post'] = dict(kwargs, plan=selected_plan['recurrence_id'] if selected_plan else None)
+        return request.render('kuec_service_catalogue.wink_request_form', vals)
 
     @http.route('/my/requests/new', type='http', auth='public', website=True)
     def new_request(self, product_id=None, **kwargs):
@@ -101,6 +174,26 @@ class WinkRequest(http.Controller):
             if recurring_lines:
                 render_vals['recurring_plan_lines'] = recurring_lines
                 render_vals['use_recurring_prices'] = True
+            # v2: subscription_plans + selected_plan from ?plan= (when coming from detail page)
+            is_sub = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
+            render_vals['is_subscription_service'] = is_sub
+            if is_sub:
+                subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+                render_vals['subscription_plans'] = subscription_plans
+                plan_param = kwargs.get('plan')
+                selected_plan = None
+                if plan_param is not None and subscription_plans:
+                    try:
+                        rid = int(plan_param)
+                        for p in subscription_plans:
+                            if p['recurrence_id'] == rid:
+                                selected_plan = p
+                                break
+                    except (TypeError, ValueError):
+                        pass
+                if not selected_plan and subscription_plans:
+                    selected_plan = subscription_plans[0]
+                render_vals['selected_plan'] = selected_plan
 
             return request.render('kuec_service_catalogue.wink_request_form', render_vals)
         else:
@@ -154,10 +247,10 @@ class WinkRequest(http.Controller):
             'tax_license_number': post.get('tax_license') or False,
         })
 
-        # Step 3 — Save company type for classification
+        # Step 3 — Save company type for classification (legal_entity_type matches form option values)
         company_type = post.get('company_type')
         if company_type:
-            company.sudo().write({'wink_company_type': company_type})
+            company.sudo().write({'legal_entity_type': company_type})
 
         # Step 4 — Create contact person
         contact = request.env['res.partner'].sudo().create({
@@ -225,11 +318,46 @@ class WinkRequest(http.Controller):
         # Plan: Odoo subscription only (Recurring Prices)
         recurring_lines = product._wink_recurring_plan_lines()
         use_recurring_prices = bool(recurring_lines)
+        is_subscription_service = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
 
-        # Validate selected plan/pricing (product.pricing or sale.subscription.plan)
+        # v2: validate selected_recurrence_id (from request form) — price always from server
+        selected_recurrence_id = None
+        try:
+            selected_recurrence_id = int(post.get('selected_recurrence_id') or 0) or None
+        except (TypeError, ValueError):
+            pass
+        if is_subscription_service and use_recurring_prices and selected_recurrence_id is not None:
+            # Find pricing line for this product + recurrence_id
+            pricing_line = None
+            for line in recurring_lines:
+                rec_id = getattr(getattr(line, 'recurrence_id', None), 'id', None) or getattr(getattr(line, 'plan_id', None), 'id', None) or getattr(getattr(line, 'recurring_plan_id', None), 'id', None)
+                if rec_id == selected_recurrence_id:
+                    pricing_line = line
+                    break
+            if not pricing_line:
+                vals = self._get_request_form_vals(product, errors={'subscription_plan': _('Invalid plan selected — please choose a plan to continue.')}, post=post)
+                vals['recurring_plan_lines'] = recurring_lines
+                vals['use_recurring_prices'] = True
+                vals['is_subscription_service'] = True
+                vals['subscription_plans'] = product._wink_subscription_plans_dicts(pricelist_id=False)
+                vals['selected_plan'] = vals['subscription_plans'][0] if vals['subscription_plans'] else None
+                return request.render('kuec_service_catalogue.wink_request_form', vals)
+            selected_pricing = pricing_line
+            selected_plan = getattr(pricing_line, 'recurrence_id', None) or getattr(pricing_line, 'plan_id', None) or getattr(pricing_line, 'recurring_plan_id', None)
+        elif is_subscription_service and use_recurring_prices and not selected_recurrence_id:
+            # Plan required but not provided
+            vals = self._get_request_form_vals(product, errors={'subscription_plan': _('Please select a billing plan to continue.')}, post=post)
+            vals['recurring_plan_lines'] = recurring_lines
+            vals['use_recurring_prices'] = True
+            vals['is_subscription_service'] = True
+            vals['subscription_plans'] = product._wink_subscription_plans_dicts(pricelist_id=False)
+            vals['selected_plan'] = None
+            return request.render('kuec_service_catalogue.wink_request_form', vals)
+
+        # Validate selected plan/pricing (product.pricing or sale.subscription.plan) — legacy recurring_pricing_id
         selected_plan = None
-        selected_pricing = request.env['product.pricing'].browse()
-        if use_recurring_prices:
+        selected_pricing = _get_product_pricing_browse(request.env)
+        if use_recurring_prices and selected_recurrence_id is None:
             try:
                 chosen_id = int(post.get('recurring_pricing_id') or 0)
             except (TypeError, ValueError):
@@ -244,9 +372,22 @@ class WinkRequest(http.Controller):
                 if not selected_plan.exists():
                     selected_plan = None
             else:
-                selected_pricing = request.env['product.pricing'].sudo().browse(chosen_id)
-                if selected_pricing.exists():
-                    selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
+                # Recurring lines are from a pricing model (product.pricing, sale.subscription.pricing, etc.)
+                # Browse the chosen id on the same model as recurring_lines
+                try:
+                    pricing_model = getattr(recurring_lines, '_name', None)
+                    if pricing_model and chosen_id in (recurring_lines.ids or []):
+                        selected_pricing = request.env[pricing_model].sudo().browse(chosen_id)
+                        if selected_pricing.exists():
+                            selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None) or getattr(selected_pricing, 'recurrence_id', None)
+                    else:
+                        selected_pricing = _get_product_pricing_browse(request.env, [chosen_id])
+                        if selected_pricing.exists():
+                            selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
+                except KeyError:
+                    selected_pricing = _get_product_pricing_browse(request.env, [chosen_id])
+                    if selected_pricing.exists():
+                        selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
 
         # Validation: employees required when product or child service requires selection
         if not is_bundle:
@@ -314,23 +455,33 @@ class WinkRequest(http.Controller):
         if not is_bundle and employee_ids:
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
 
-        # --- Set plan_id (sale.subscription.plan) and optional wink_recurring_pricing_id on order ---
-        if use_recurring_prices and selected_plan:
-            write_vals = {}
-            if hasattr(order, 'plan_id'):
-                write_vals['plan_id'] = selected_plan.id
-            if hasattr(order, 'recurring_plan_id'):
-                write_vals['recurring_plan_id'] = selected_plan.id
-            if write_vals:
-                order.sudo().write(write_vals)
-            if selected_pricing.exists():
+        # --- Set plan_id (sale.subscription.plan), recurrence_id, is_subscription, wink_recurring_pricing_id on order ---
+        if use_recurring_prices:
+            if selected_plan and getattr(selected_plan, '_name', None) == 'sale.subscription.plan':
+                write_vals = {}
+                if hasattr(order, 'plan_id'):
+                    write_vals['plan_id'] = selected_plan.id
+                if hasattr(order, 'recurring_plan_id'):
+                    write_vals['recurring_plan_id'] = selected_plan.id
+                if write_vals:
+                    order.sudo().write(write_vals)
+                if order.order_line:
+                    line = order.order_line[0]
+                    if hasattr(line, 'plan_id'):
+                        line.sudo().write({'plan_id': selected_plan.id})
+                    elif hasattr(line, 'recurring_plan_id'):
+                        line.sudo().write({'recurring_plan_id': selected_plan.id})
+            # v2: Odoo 18 subscription — recurrence_id + is_subscription
+            if selected_recurrence_id:
+                sub_vals = {}
+                if hasattr(order, 'recurrence_id'):
+                    sub_vals['recurrence_id'] = selected_recurrence_id
+                if hasattr(order, 'is_subscription'):
+                    sub_vals['is_subscription'] = True
+                if sub_vals:
+                    order.sudo().write(sub_vals)
+            if getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing:
                 order.sudo().write({'wink_recurring_pricing_id': selected_pricing.id})
-            if order.order_line:
-                line = order.order_line[0]
-                if hasattr(line, 'plan_id'):
-                    line.sudo().write({'plan_id': selected_plan.id})
-                elif hasattr(line, 'recurring_plan_id'):
-                    line.sudo().write({'recurring_plan_id': selected_plan.id})
 
         # --- Bundle tier handling ---
         tier = None
@@ -405,6 +556,9 @@ class WinkRequest(http.Controller):
         template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v5', raise_if_not_found=False)
         if template:
             template.sudo().send_mail(order.id, force_send=True)
+        customer_confirmation = request.env.ref('kuec_service_catalogue.kuec_request_confirmation_template', raise_if_not_found=False)
+        if customer_confirmation:
+            customer_confirmation.sudo().send_mail(order.id, force_send=True)
 
         return request.redirect(f'/my/requests/{order.id}')
 
@@ -429,7 +583,8 @@ class WinkRequest(http.Controller):
         sub_map = {s.requirement_id.id: s for s in submissions}
 
         is_retainer = product and product.delivery_model == 'retainer'
-        # Current plan: order.plan_id (sale.subscription.plan) or product.pricing from wink_recurring_pricing_id
+        recurring_lines = product._wink_recurring_plan_lines() if product else []
+        # Current plan: order.plan_id (sale.subscription.plan) or pricing record from wink_recurring_pricing_id
         retainer_plan = False
         if getattr(order, 'plan_id', None):
             try:
@@ -439,17 +594,20 @@ class WinkRequest(http.Controller):
                 pass
         if not retainer_plan:
             pid = getattr(order, 'wink_recurring_pricing_id', None) or 0
-            if pid:
+            if pid and recurring_lines and pid in (recurring_lines.ids or []):
                 try:
-                    rec = request.env['product.pricing'].sudo().browse(pid)
+                    rec = request.env[recurring_lines._name].sudo().browse(pid)
                     if rec.exists():
                         retainer_plan = rec
                 except KeyError:
                     pass
-        recurring_lines = product._wink_recurring_plan_lines() if product else []
+            if not retainer_plan and pid:
+                rec = _get_product_pricing_browse(request.env, [pid])
+                if rec.exists():
+                    retainer_plan = rec
         retainer_plans_for_change = recurring_lines
         retainer_plan_has_price = bool(
-            getattr(retainer_plan, 'price', None) or getattr(retainer_plan, 'list_price', None)
+            getattr(retainer_plan, 'price', None) or getattr(retainer_plan, 'list_price', None) or getattr(retainer_plan, 'recurring_price', None)
         ) if retainer_plan else False
 
         return request.render('kuec_service_catalogue.wink_request_confirmation', {

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form view for FAQ lines: used when editing a FAQ from the product form -->
+    <record id="kuec_service_faq_view_form" model="ir.ui.view">
+        <field name="name">kuec.service.faq.form</field>
+        <field name="model">kuec.service.faq</field>
+        <field name="arch" type="xml">
+            <form string="FAQ">
+                <group>
+                    <field name="product_tmpl_id" invisible="1"/>
+                    <field name="sequence" widget="handle"/>
+                    <field name="question" placeholder="e.g. What is included in this service?"/>
+                    <field name="answer" nolabel="1" placeholder="Enter the answer (supports rich text)."/>
+                </group>
+            </form>
+        </field>
+    </record>
+</odoo>
