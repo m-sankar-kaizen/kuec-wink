@@ -145,7 +145,13 @@
                                     <t t-if="product.delivery_model == 'retainer'">Retainer</t>
                                 </span>
                                 <span class="ms-2 text-muted">
-                                    <t t-if="product.price_visibility == 'visible'">
+                                    <t t-if="product.price_visibility == 'hidden'">
+                                        <t t-esc="product.price_hidden_label"/>
+                                    </t>
+                                    <t t-elif="product.delivery_model == 'retainer'">
+                                        Price based on plan selected below
+                                    </t>
+                                    <t t-elif="product.price_visibility == 'visible'">
                                         <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': request.env.company.currency_id}"/>
                                     </t>
                                     <t t-else="">
@@ -190,6 +196,10 @@
                                     </label>
                                 </div>
                             </t>
+                        </div>
+                        <!-- When retainer/bundle has no plan selector (e.g. Recurring Prices tab not loaded by portal) -->
+                        <div t-if="product.delivery_model == 'retainer' and not recurring_plan_lines and not subscription_plan_ids" class="alert alert-info py-2 mb-3">
+                            <small>Plan options (e.g. Monthly / Yearly) are set in the product's <strong>Recurring Prices</strong> tab. If no plan selector appears above, the subscription module may not be available to the portal—contact your administrator.</small>
                         </div>
                         <div t-elif="subscription_plan_ids" class="wink-retainer-plan-selector mb-4">
                             <h5 class="mb-3">Select Your Plan</h5>
