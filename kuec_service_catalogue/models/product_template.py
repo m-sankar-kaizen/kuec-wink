@@ -62,21 +62,14 @@ class ProductTemplate(models.Model):
         ondelete='set null',
         help="The bundle this product belongs to. Only for bundled services.",
     )
-    # Retainer plans (for delivery_model = retainer): customer chooses a plan
-    wink_retainer_plan_ids = fields.One2many(
-        'wink.retainer.plan',
-        'product_tmpl_id',
-        string='Retainer Plans (legacy)',
-        help='Deprecated for standalone retainer: use Subscription Plans (Odoo native) below.',
-    )
-    # Odoo native subscription plans for standalone retainer (quotation templates)
+    # Odoo native subscription plans: plan selection (retainer standalone or bundle)
     wink_subscription_plan_ids = fields.Many2many(
         'sale.order.template',
         'product_template_sale_order_template_rel',
         'product_tmpl_id',
         'sale_order_template_id',
         string='Subscription Plans (Odoo native)',
-        help='For standalone retainer: subscription plans (quotation templates) the customer can choose from.',
+        help='Quotation templates the customer can choose from. For retainer: plan only. For bundle: plan + Bundle Package tiers.',
     )
 
     reminder_days_before = fields.Integer(

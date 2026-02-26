@@ -36,11 +36,6 @@ class SaleOrderWink(models.Model):
         string='Selected Bundle Tier',
         ondelete='set null',
     )
-    wink_retainer_plan_id = fields.Many2one(
-        'wink.retainer.plan',
-        string='Selected Retainer Plan (legacy)',
-        ondelete='set null',
-    )
     wink_sale_order_template_id = fields.Many2one(
         'sale.order.template',
         string='Subscription Plan (Odoo native)',

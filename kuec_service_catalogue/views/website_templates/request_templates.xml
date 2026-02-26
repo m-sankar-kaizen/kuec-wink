@@ -123,12 +123,11 @@
                     </div>
 
                     <!-- Validation errors (e.g. employee selection required, plan required) -->
-                    <div t-if="errors and (errors.get('employee_ids') or errors.get('employee_ids_bundle') or errors.get('retainer_plan') or errors.get('subscription_plan'))" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div t-if="errors and (errors.get('employee_ids') or errors.get('employee_ids_bundle') or errors.get('subscription_plan'))" class="alert alert-danger alert-dismissible fade show" role="alert">
                         <strong>Please fix the following:</strong>
                         <ul class="mb-0 mt-2">
                             <li t-if="errors.get('employee_ids')" t-esc="errors['employee_ids']"/>
                             <li t-if="errors.get('employee_ids_bundle')" t-esc="errors['employee_ids_bundle']"/>
-                            <li t-if="errors.get('retainer_plan')" t-esc="errors['retainer_plan']"/>
                             <li t-if="errors.get('subscription_plan')" t-esc="errors['subscription_plan']"/>
                         </ul>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>

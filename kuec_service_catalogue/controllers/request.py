@@ -43,15 +43,8 @@ class WinkRequest(http.Controller):
                 'bundle': bundle,
                 'tier_data': tier_data,
             })
-        # Odoo native subscription plans: for standalone retainer OR for bundle (plan + tier)
         if product.wink_subscription_plan_ids:
-            vals.update({
-                'subscription_plan_ids': product.wink_subscription_plan_ids,
-            })
-        if (product.delivery_model == 'retainer'
-                and product.commercial_structure != 'bundled'
-                and product.wink_subscription_plan_ids):
-            vals['is_retainer_native_plan'] = True
+            vals['subscription_plan_ids'] = product.wink_subscription_plan_ids
         return vals
 
     @http.route('/my/requests/new', type='http', auth='public', website=True)
@@ -100,13 +93,8 @@ class WinkRequest(http.Controller):
                     'bundle': bundle,
                     'tier_data': tier_data,
                 })
-            # Odoo native subscription plans (standalone retainer or bundle)
             if product.wink_subscription_plan_ids:
                 render_vals['subscription_plan_ids'] = product.wink_subscription_plan_ids
-            if (product.delivery_model == 'retainer'
-                    and product.commercial_structure != 'bundled'
-                    and product.wink_subscription_plan_ids):
-                render_vals['is_retainer_native_plan'] = True
 
             return request.render('kuec_service_catalogue.wink_request_form', render_vals)
         else:
@@ -239,8 +227,6 @@ class WinkRequest(http.Controller):
             if not template.exists() or template.id not in product.wink_subscription_plan_ids.ids:
                 vals = self._get_request_form_vals(product, errors={'subscription_plan': _('Please select a plan.')}, post=post)
                 vals.setdefault('subscription_plan_ids', product.wink_subscription_plan_ids)
-                if product.delivery_model == 'retainer' and product.commercial_structure != 'bundled':
-                    vals.setdefault('is_retainer_native_plan', True)
                 return request.render('kuec_service_catalogue.wink_request_form', vals)
 
         # Validation: employees required when product or child service requires selection
@@ -416,14 +402,9 @@ class WinkRequest(http.Controller):
         sub_map = {s.requirement_id.id: s for s in submissions}
 
         is_retainer = product and product.delivery_model == 'retainer'
-        # Plan: native (sale.order.template) or legacy wink_retainer_plan
-        retainer_plan = order.wink_sale_order_template_id or order.wink_retainer_plan_id
-        retainer_plans_for_change = request.env['wink.retainer.plan'].browse()
-        if product and product.wink_subscription_plan_ids:
-            retainer_plans_for_change = product.wink_subscription_plan_ids  # native templates (retainer or bundle)
-        retainer_plan_has_price = False
-        if retainer_plan and getattr(retainer_plan, '_name', '') == 'wink.retainer.plan':
-            retainer_plan_has_price = bool(getattr(retainer_plan, 'price', None))
+        retainer_plan = order.wink_sale_order_template_id
+        retainer_plans_for_change = (product.wink_subscription_plan_ids if product else request.env['sale.order.template'].browse())
+        retainer_plan_has_price = bool(getattr(retainer_plan, 'price', None)) if retainer_plan else False
 
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,

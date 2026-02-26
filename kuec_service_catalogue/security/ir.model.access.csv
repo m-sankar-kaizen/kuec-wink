@@ -29,5 +29,3 @@ access_kuec_doc_submission_user,kuec.document.submission.user,model_kuec_documen
 access_wink_bundle_entitlement_coordinator,wink.bundle.entitlement.coordinator,model_wink_bundle_entitlement,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
 access_wink_bundle_entitlement_portal,wink.bundle.entitlement.portal,model_wink_bundle_entitlement,base.group_portal,1,0,0,0
 access_wink_bundle_entitlement_user,wink.bundle.entitlement.user,model_wink_bundle_entitlement,base.group_user,1,1,1,1
-access_wink_retainer_plan_user,wink.retainer.plan.user,model_wink_retainer_plan,base.group_user,1,1,1,1
-access_wink_retainer_plan_portal,wink.retainer.plan.portal,model_wink_retainer_plan,base.group_portal,1,0,0,0
