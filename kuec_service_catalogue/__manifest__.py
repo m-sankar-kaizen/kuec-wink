@@ -45,6 +45,7 @@
         'views/website_templates/request_templates.xml',
         'views/kuec_employee_directory_views.xml',
         'views/project_stage_views.xml',
+        'views/project_task_views.xml',
         'views/kuec_document_submission_views.xml',
         'views/website_templates/wink_catalogue_page.xml',
         'views/website_templates/project_portal_templates.xml',

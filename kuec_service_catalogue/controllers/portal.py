@@ -8,6 +8,11 @@ class KuecCustomerPortal(CustomerPortal):
         values = super()._prepare_home_portal_values(counters)
         partner = request.env.user.partner_id.commercial_partner_id
         
+        # Odoo 18 frontend workaround: Prevent /my/counters from returning custom
+        # counts that crash the JS if the UI spans (.o_portal_request_count) are missing.
+        if request.httprequest.path == '/my/counters':
+            return values
+        
         # Employee Directory Counter
         if (not counters or 'employee_count' in counters) and partner.employee_directory_enabled:
             domain = [('partner_id', '=', partner.id)]

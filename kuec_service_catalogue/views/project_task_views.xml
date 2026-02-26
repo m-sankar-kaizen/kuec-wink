@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_task_form_wink" model="ir.ui.view">
+        <field name="name">project.task.form.wink</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="WINK / Portal" name="wink_portal" invisible="not sale_order_id or not sale_order_id.wink_is_portal_request">
+                    <group string="Employees">
+                        <field name="wink_employee_ids" widget="many2many_tags" nolabel="1"/>
+                    </group>
+                    <group string="Document Submissions">
+                        <field name="document_submission_ids" nolabel="1">
+                            <list string="Documents" editable="bottom">
+                                <field name="requirement_name" readonly="1"/>
+                                <field name="order_id" optional="hide"/>
+                                <field name="attachment_id" column_invisible="True"/>
+                                <field name="filename" readonly="1"/>
+                                <field name="state" readonly="1"
+                                       decoration-success="state == 'approved'"
+                                       decoration-info="state == 'under_review'"
+                                       decoration-warning="state == 'change_required'"
+                                       decoration-danger="state == 'rejected'"/>
+                                <field name="submitted_date" readonly="1"/>
+                                <field name="coordinator_notes"/>
+                                <button name="action_view_attachment" string="View" type="object"
+                                        icon="fa-eye" invisible="not attachment_id" class="btn-secondary"/>
+                                <button name="action_download_attachment" string="Download" type="object"
+                                        icon="fa-download" invisible="not attachment_id" class="btn-primary"/>
+                                <button name="action_approve" string="Approve" type="object"
+                                        icon="fa-check" invisible="state != 'under_review'" class="btn-success"/>
+                                <button name="action_request_change" string="Change" type="object"
+                                        icon="fa-refresh" invisible="state != 'under_review'" class="btn-warning"/>
+                                <button name="action_reject" string="Reject" type="object"
+                                        icon="fa-times" invisible="state != 'under_review'" class="btn-danger"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

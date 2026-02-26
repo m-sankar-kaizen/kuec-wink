@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 
@@ -16,6 +16,13 @@ class KuecDocumentSubmission(models.Model):
         required=True,
         ondelete='cascade',
         index=True,
+    )
+    task_id = fields.Many2one(
+        'project.task',
+        string='Task',
+        ondelete='set null',
+        index=True,
+        help='Link to the delivery task. Used in backend to group documents by task.',
     )
     requirement_id = fields.Many2one(
         'kuec.service.document',
@@ -93,9 +100,9 @@ class KuecDocumentSubmission(models.Model):
         """Coordinator requests changes to the submitted document."""
         self.ensure_one()
         if not self.coordinator_notes:
-            raise UserError(
+            raise UserError(_(
                 "Please add coordinator notes explaining what needs to change."
-            )
+            ))
         self.write({
             'state': 'change_required',
             'reviewed_date': fields.Datetime.now(),
@@ -107,9 +114,9 @@ class KuecDocumentSubmission(models.Model):
         """Coordinator rejects the submitted document."""
         self.ensure_one()
         if not self.coordinator_notes:
-            raise UserError(
+            raise UserError(_(
                 "Please add a rejection reason in the coordinator notes."
-            )
+            ))
         self.write({
             'state': 'rejected',
             'reviewed_date': fields.Datetime.now(),
