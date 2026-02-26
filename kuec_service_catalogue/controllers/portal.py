@@ -131,7 +131,7 @@ class KuecCustomerPortal(CustomerPortal):
         }
         return request.render("kuec_service_catalogue.portal_my_employee_detail", values)
 
-    @http.route(['/my/employee/save'], type='http', auth="user", website=True, methods=['POST'])
+    @http.route(['/my/employee/save'], type='http', auth="user", website=True, methods=['POST'], csrf=True)
     def portal_my_employee_save(self, employee_id=None, **post):
         partner = request.env.user.partner_id.commercial_partner_id
 

@@ -251,11 +251,6 @@
                         <strong>Request submitted — pending review</strong>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
-                    <div t-if="payment_pending" class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <strong>Manual payment logged!</strong> Awaiting coordinator validation.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
-                    </div>
-
                     <div class="card shadow-sm mt-4">
                         <div class="card-header" style="background:var(--wink-primary); color:#fff;">
                             <h4 class="mb-0">Order Summary: <t t-esc="order.name"/></h4>
@@ -302,11 +297,6 @@
                             <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
                                 <div class="mt-3">
                                     <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg">Proceed to Payment</a>
-                                    <t t-if="request.params.get('payment') == 'pending'">
-                                        <div class="alert alert-warning mt-2 mb-0 py-2">
-                                            Manual payment logged. Awaiting coordinator validation.
-                                        </div>
-                                    </t>
                                 </div>
                             </t>
                             <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid">
@@ -437,13 +427,13 @@
                             <div class="card shadow-sm border-0 mb-4">
                                 <div class="card-body p-4">
                                     <h4 class="mb-4 text-center">Select Payment Method</h4>
-                                    <!-- Native Odoo Payment & Wallet Widget (payment.form in Odoo 18) -->
-                                    <t t-call="payment.form">
-                                        <t t-set="default_payment_provider_id" t-value="default_payment_provider_id"/>
-                                        <t t-set="amount" t-value="amount"/>
-                                        <t t-set="currency" t-value="currency"/>
-                                        <t t-set="partner_id" t-value="partner_id"/>
-                                    </t>
+                                    <!-- Native Odoo Payment Widget (Gateways, Wallets, Wire Transfer).
+                                         providers_sudo, payment_methods_sudo, tokens_sudo,
+                                         transaction_route, landing_route, access_token,
+                                         show_tokenize_input_mapping, amount, currency,
+                                         and partner_id are all provided by the controller
+                                         via _get_payment_values() and are in QWeb context. -->
+                                    <t t-call="payment.form"/>
                                 </div>
                             </div>
 
@@ -612,7 +602,7 @@
                                     <span t-if="req.state == 'draft'" class="badge rounded-pill text-bg-secondary"><i class="fa fa-fw fa-file-text"/> Quotation</span>
                                     <span t-if="req.state == 'sent'" class="badge rounded-pill text-bg-info"><i class="fa fa-fw fa-paper-plane"/> Quotation Sent</span>
                                     <span t-if="req.state == 'sale'" class="badge rounded-pill text-bg-success"><i class="fa fa-fw fa-check"/> Confirmed</span>
-                                    <span t-if="req.state in ['done', 'fully_activated']" class="badge rounded-pill" style="background-color: var(--wink-primary); color: #fff;"><i class="fa fa-fw fa-lock"/> Completed</span>
+                                    <span t-if="req.state == 'done'" class="badge rounded-pill" style="background-color: var(--wink-primary); color: #fff;"><i class="fa fa-fw fa-lock"/> Completed</span>
                                     <span t-if="req.state == 'cancel'" class="badge rounded-pill text-bg-danger"><i class="fa fa-fw fa-times"/> Cancelled</span>
                                 </td>
                             </tr>

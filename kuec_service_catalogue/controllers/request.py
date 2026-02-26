@@ -231,6 +231,16 @@ class WinkRequest(http.Controller):
                 })
 
 
+        # --- Retainer subscription handling (Change 4) ---
+        if product.delivery_model == 'retainer':
+            try:
+                sub_vals = {'is_subscription': True}
+                if product.wink_recurrence_id:
+                    sub_vals['recurrence_id'] = product.wink_recurrence_id.id
+                order.sudo().write(sub_vals)
+            except Exception:
+                pass
+
         is_auto_confirm = (
             product.commercial_structure == 'standalone'
             and product.request_frequency == 'one_time'
@@ -281,7 +291,6 @@ class WinkRequest(http.Controller):
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
             'product': product,
-            'payment_pending': kwargs.get('payment') == 'pending',
             'bundle_requested': kwargs.get('bundle_requested') == '1',
             'requirements': requirements,
             'sub_map': sub_map,
@@ -301,17 +310,15 @@ class WinkRequest(http.Controller):
         if order.state != 'sale' or (not order.wink_price_confirmed and order.wink_source_product_id.price_visibility == 'hidden'):
             return request.redirect(f'/my/requests/{order.id}?error=payment_not_available')
 
-        # Use native Odoo CustomerPortal controller to fetch payment providers/tokens
+        # Fetch native Odoo payment providers, methods, tokens and routing.
+        # _get_payment_values sets transaction_route via order.get_portal_url(suffix='/transaction')
+        # and landing_route, access_token — everything payment.form needs.
         portal_controller = CustomerPortal()
-        payment_values = portal_controller._get_payment_values(
-            order,
-            force_auth=True,
-            submit_tx_url='/shop/payment/transaction/{order.id}',
-        )
+        payment_values = portal_controller._get_payment_values(order)
 
         render_values = {
             'order': order,
-            **payment_values
+            **payment_values,
         }
 
         return request.render('kuec_service_catalogue.wink_payment_page_v2', render_values)
@@ -464,3 +471,4 @@ class WinkRequest(http.Controller):
             f'/my/requests/{order_id}'
             f'?bundle_requested=1'
         )
+

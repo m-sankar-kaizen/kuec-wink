@@ -55,6 +55,13 @@ class ProductTemplate(models.Model):
         default='one_time'
     )
 
+    wink_recurrence_id = fields.Many2one(
+        'sale.recurrence',
+        string='Recurrence Plan',
+        ondelete='set null',
+        help="Recurrence plan applied to portal orders for retainer services.",
+    )
+
     # Bundle
     wink_bundle_id = fields.Many2one(
         'wink.bundle',
