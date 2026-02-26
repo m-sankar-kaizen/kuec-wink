@@ -17,6 +17,7 @@
         'project',
         'portal',
         'account',
+        'payment',
         'hr',
         'web',
         'sale_project'
