@@ -383,7 +383,7 @@
             <field name="name">Sarah Johnson</field>
             <field name="full_name_arabic">سارة جونسون</field>
             <field name="gender">female</field>
-            <field name="nationality_id" ref="base.gb"/>
+            <field name="nationality_id" ref="base.uk"/>
             <field name="date_of_birth">1988-11-22</field>
             <field name="place_of_birth">London</field>
             <field name="marital_status">single</field>
