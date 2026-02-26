@@ -437,9 +437,8 @@
                             <div class="card shadow-sm border-0 mb-4">
                                 <div class="card-body p-4">
                                     <h4 class="mb-4 text-center">Select Payment Method</h4>
-                                    <!-- Native Odoo Payment & Wallet Widget -->
-                                    <t t-call="payment.checkout">
-                                        <!-- These variables are natively provided by CustomerPortal._get_payment_values() -->
+                                    <!-- Native Odoo Payment & Wallet Widget (payment.form in Odoo 18) -->
+                                    <t t-call="payment.form">
                                         <t t-set="default_payment_provider_id" t-value="default_payment_provider_id"/>
                                         <t t-set="amount" t-value="amount"/>
                                         <t t-set="currency" t-value="currency"/>
