@@ -7,13 +7,25 @@ import werkzeug.urls
 
 class WinkRequest(http.Controller):
 
+    def _parse_product_id(self, value):
+        """Parse product_id from request; returns int or None on invalid."""
+        if not value:
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
     @http.route('/my/requests/new', type='http', auth='public', website=True)
     def new_request(self, product_id=None, **kwargs):
         if not product_id:
             return request.redirect('/services')
+        pid = self._parse_product_id(product_id)
+        if pid is None:
+            return request.redirect('/services')
 
         product = request.env['product.template'].sudo().search([
-            ('id', '=', int(product_id)),
+            ('id', '=', pid),
             ('available_on_wink', '=', True)
         ], limit=1)
 
@@ -61,10 +73,11 @@ class WinkRequest(http.Controller):
     @http.route('/my/requests/register', type='http', auth='public', website=True, methods=['POST'], csrf=True)
     def register_and_request(self, **post):
         product_id = post.get('product_id')
+        pid = self._parse_product_id(product_id)
         product = request.env['product.template'].sudo().search([
-            ('id', '=', int(product_id)),
+            ('id', '=', pid),
             ('available_on_wink', '=', True)
-        ], limit=1) if product_id else None
+        ], limit=1) if pid is not None else None
 
         if not product:
             return request.redirect('/services')
@@ -139,7 +152,9 @@ class WinkRequest(http.Controller):
 
     @http.route('/my/requests/submit', type='http', auth='user', website=True, methods=['POST'], csrf=True)
     def submit_request(self, **post):
-        product_id = int(post.get('product_id', 0))
+        product_id = self._parse_product_id(post.get('product_id'))
+        if product_id is None:
+            return request.redirect('/services')
         product = request.env['product.template'].sudo().search([
             ('id', '=', product_id),
             ('available_on_wink', '=', True),
@@ -197,7 +212,10 @@ class WinkRequest(http.Controller):
         bundle_line = None
 
         if is_bundle:
-            tier_id = int(post.get('tier_id', 0))
+            try:
+                tier_id = int(post.get('tier_id', 0))
+            except (TypeError, ValueError):
+                tier_id = 0
             tier = request.env['wink.bundle.tier'].sudo().browse(tier_id)
             if not tier.exists() or tier.bundle_id != product.wink_bundle_id:
                 return request.redirect('/services')
@@ -309,6 +327,16 @@ class WinkRequest(http.Controller):
             submit_tx_url='/shop/payment/transaction/{order.id}',
         )
 
+        # --- Epic 6: Upfront Deposits Custom Logic ---
+        # Modify the payment amount if the payment term defines a fractional upfront deposit
+        if order.payment_term_id and order.payment_term_id.line_ids:
+            first_term_line = order.payment_term_id.line_ids[0]
+            # Odoo 18 uses 'value' = 'percent' and 'value_amount' for percentage
+            if first_term_line.value == 'percent' and first_term_line.value_amount < 100:
+                # Calculate the exact fractional deposit from the total amount
+                deposit_amt = order.currency_id.round(order.amount_total * (first_term_line.value_amount / 100.0))
+                payment_values['amount'] = deposit_amt
+
         # Override the landing route so Odoo returns to the request details, not sale portal
         payment_values['landing_route'] = f'/my/requests/{order.id}'
 
@@ -357,7 +385,10 @@ class WinkRequest(http.Controller):
         if not order:
             raise NotFound()
 
-        requirement_id = int(post.get('requirement_id', 0))
+        try:
+            requirement_id = int(post.get('requirement_id', 0))
+        except (TypeError, ValueError):
+            requirement_id = 0
         requirement = request.env['kuec.service.document'].sudo().browse(requirement_id)
         if not requirement.exists():
             raise NotFound()
