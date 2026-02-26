@@ -309,6 +309,9 @@ class WinkRequest(http.Controller):
             submit_tx_url='/shop/payment/transaction/{order.id}',
         )
 
+        # Override the landing route so Odoo returns to the request details, not sale portal
+        payment_values['landing_route'] = f'/my/requests/{order.id}'
+
         render_values = {
             'order': order,
             **payment_values
