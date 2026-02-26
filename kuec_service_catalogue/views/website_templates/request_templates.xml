@@ -184,12 +184,12 @@
                                                 <div class="fw-bold fs-5">
                                                     <t t-if="pricing.recurring_plan_id"><t t-esc="pricing.recurring_plan_id.name"/></t>
                                                     <t t-elif="pricing.plan_id"><t t-esc="pricing.plan_id.name"/></t>
-                                                    <t t-else=""><t t-esc="pricing.display_name"/></t>
+                                                    <t t-else=""><t t-esc="pricing.name or pricing.display_name"/></t>
                                                 </div>
                                             </div>
-                                            <div class="text-end" t-if="pricing.price">
+                                            <div class="text-end" t-if="pricing.price or pricing.list_price">
                                                 <div class="fw-bold fs-4" style="color: var(--wink-primary);">
-                                                    <t t-esc="'{:,.2f}'.format(pricing.price)"/> <t t-esc="request.env.company.currency_id.symbol"/>
+                                                    <t t-esc="'{:,.2f}'.format(pricing.price or pricing.list_price or 0)"/> <t t-esc="request.env.company.currency_id.symbol"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -466,7 +466,7 @@
                                     <t t-if="retainer_plan.recurring_plan_id"><t t-esc="retainer_plan.recurring_plan_id.name"/></t>
                                     <t t-elif="retainer_plan.plan_id"><t t-esc="retainer_plan.plan_id.name"/></t>
                                     <t t-else=""><t t-esc="retainer_plan.name"/></t>
-                                    <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price)"/> <t t-esc="order.currency_id.symbol"/></t>
+                                    <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price or retainer_plan.list_price or 0)"/> <t t-esc="order.currency_id.symbol"/></t>
                                 </p>
                             </t>
                             <div class="d-flex flex-wrap gap-2">

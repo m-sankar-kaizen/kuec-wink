@@ -74,18 +74,44 @@ class ProductTemplate(models.Model):
 
     def _wink_recurring_plan_lines(self):
         """Return native Recurring Prices (Recurring Plan + Recurring Price) for portal plan selection.
-        For retainer, the system uses recurring price based on the selected recurring plan.
-        Uses product_pricing_ids from sale_subscription when available. Returns empty list if model not loaded."""
+        Supports product.pricing (with plan_id -> sale.subscription.plan) and product links to sale.subscription.plan."""
         self.ensure_one()
-        if 'product_pricing_ids' not in self._fields:
-            try:
-                return self.env['product.pricing'].browse()
-            except KeyError:
-                return []
-        if not self.product_pricing_ids:
-            return self.product_pricing_ids
-        key = lambda p: (getattr(p, 'sequence', 0), p.id)
-        return self.product_pricing_ids.sorted(key=key)
+        # 1) One2many pricing lines on product (product.pricing or similar with plan_id)
+        for field_name in ('product_pricing_ids', 'recurring_pricing_ids', 'subscription_pricing_ids', 'pricing_ids'):
+            if field_name in self._fields:
+                lines = self[field_name]
+                if lines:
+                    key = lambda p: (getattr(p, 'sequence', 0), p.id)
+                    return lines.sorted(key=key)
+                return lines
+        try:
+            Pricing = self.env['product.pricing']
+            if 'product_tmpl_id' in Pricing._fields:
+                lines = Pricing.search([('product_tmpl_id', '=', self.id)])
+                if lines:
+                    key = lambda p: (getattr(p, 'sequence', 0), p.id)
+                    return lines.sorted(key=key)
+                return lines
+        except KeyError:
+            pass
+        # 2) sale.subscription.plan (plan_id): product linked to plans (e.g. plan_ids, subscription_plan_ids)
+        try:
+            Plan = self.env['sale.subscription.plan']
+            for field_name in ('plan_ids', 'subscription_plan_ids', 'recurring_plan_ids'):
+                if field_name in self._fields:
+                    plans = self[field_name]
+                    if plans:
+                        key = lambda p: (getattr(p, 'sequence', 0), p.id)
+                        return plans.sorted(key=key)
+                    return plans
+            # Plans with product_tmpl_id (e.g. plan line model linking plan to product)
+            if Plan._fields.get('product_tmpl_id'):
+                plans = Plan.search([('product_tmpl_id', '=', self.id)])
+                if plans:
+                    return plans.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
+        except KeyError:
+            pass
+        return []
 
     reminder_days_before = fields.Integer(
         string='Reminder Days Before Expiry',

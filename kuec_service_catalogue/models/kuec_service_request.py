@@ -42,11 +42,10 @@ class SaleOrderWink(models.Model):
         ondelete='set null',
         help='Selected when product has no Recurring Prices; else use Recurring Prices.',
     )
-    wink_recurring_pricing_id = fields.Many2one(
-        'product.pricing',
-        string='Recurring Plan (Odoo native)',
-        ondelete='set null',
-        help='Selected from product Recurring Prices tab (Recurring Plan + Recurring Price).',
+    wink_recurring_pricing_id = fields.Integer(
+        string='Recurring pricing ID (Odoo native)',
+        copy=False,
+        help='ID of the selected product.pricing record (Recurring Prices tab). Stored as integer to avoid read errors when subscription module is not loaded.',
     )
     wink_cancellation_requested = fields.Boolean(
         string='Cancellation Requested',
