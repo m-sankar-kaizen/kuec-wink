@@ -4,6 +4,8 @@
 **Feature:** Retainer/Subscription plan selection (Service Detail + Request form)  
 **Odoo 18 Enterprise Edition**
 
+**Note:** The `product.pricing` model is **not** part of this module. It is provided by Odoo’s Subscription app when available. Plan selection and savings work with whatever recurring pricing your product uses. The “Plan Features” and “Most Popular” fields are only available if your instance has `product.pricing` and you add a **custom module** that extends it with those fields (see `doc/product_pricing_extension_snippet.md` for a code snippet).
+
 ---
 
 ## STEP 2 — Backend Configuration Guide (Business Admin — No Code)
