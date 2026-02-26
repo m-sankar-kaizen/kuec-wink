@@ -7,11 +7,65 @@ class KuecCustomerPortal(CustomerPortal):
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
         partner = request.env.user.partner_id.commercial_partner_id
+        
+        # Employee Directory Counter
         if partner.employee_directory_enabled:
             domain = [('partner_id', '=', partner.id)]
             employee_count = request.env['kuec.employee.directory'].sudo().search_count(domain)
             values['employee_count'] = employee_count
+            
+        # WINK Service Requests Counter
+        request_domain = [
+            ('message_partner_ids', 'child_of', [partner.id]),
+            ('wink_is_portal_request', '=', True),
+            ('state', 'in', ['draft', 'sent', 'sale', 'done'])
+        ]
+        request_count = request.env['sale.order'].sudo().search_count(request_domain)
+        values['request_count'] = request_count
+        
         return values
+
+    @http.route(['/my/requests', '/my/requests/page/<int:page>'], type='http', auth="user", website=True)
+    def portal_my_requests(self, page=1, sortby=None, **kw):
+        partner = request.env.user.partner_id.commercial_partner_id
+        SaleOrder = request.env['sale.order'].sudo()
+
+        domain = [
+            ('message_partner_ids', 'child_of', [partner.id]),
+            ('wink_is_portal_request', '=', True),
+            ('state', 'in', ['draft', 'sent', 'sale', 'done'])
+        ]
+
+        searchbar_sortings = {
+            'date': {'label': 'Order Date', 'order': 'date_order desc'},
+            'name': {'label': 'Reference', 'order': 'name'},
+            'stage': {'label': 'Stage', 'order': 'state'},
+        }
+        if not sortby or sortby not in searchbar_sortings:
+            sortby = 'date'
+        order = searchbar_sortings[sortby]['order']
+
+        request_count = SaleOrder.search_count(domain)
+        pager = portal_pager(
+            url="/my/requests",
+            url_args={'sortby': sortby},
+            total=request_count,
+            page=page,
+            step=20
+        )
+
+        requests = SaleOrder.search(domain, order=order, limit=20, offset=pager['offset'])
+
+        values = {
+            'requests': requests,
+            'page_name': 'my_requests',
+            'pager': pager,
+            'default_url': '/my/requests',
+            'searchbar_sortings': searchbar_sortings,
+            'sortby': sortby,
+            'partner': partner,
+        }
+        return request.render("kuec_service_catalogue.portal_my_requests", values)
 
     @http.route(['/my/employees', '/my/employee', '/my/employees/page/<int:page>'], type='http', auth="user", website=True)
     def portal_my_employees(self, page=1, sortby=None, **kw):

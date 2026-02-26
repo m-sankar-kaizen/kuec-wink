@@ -316,7 +316,7 @@
                             </t>
                         </div>
                         <div class="card-footer bg-light d-flex justify-content-between">
-                            <a href="/my/orders" class="btn btn-outline-secondary">View My Requests</a>
+                            <a href="/my/requests" class="btn btn-outline-secondary">View My Requests</a>
                             <a href="/services" class="btn btn-outline-primary">Browse More Services</a>
                         </div>
                     </div>
@@ -572,6 +572,73 @@
                         </a>
                     </div>
                 </div>
+            </t>
+        </template>
+        <!-- Inject Service Requests into Portal Dashboard -->
+        <template id="portal_my_home_requests" name="Portal layout : service requests entry" inherit_id="portal.portal_my_home" customize_show="True" priority="20">
+            <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">Service Requests</t>
+                    <t t-set="url" t-value="'/my/requests'"/>
+                    <t t-set="placeholder_count" t-value="'request_count'"/>
+                    <t t-set="count" t-value="request_count"/>
+                </t>
+            </xpath>
+        </template>
+
+        <!-- Custom Service Requests List View -->
+        <template id="portal_my_requests" name="My Service Requests">
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+                <t t-call="portal.portal_searchbar">
+                    <t t-set="title">Service Requests</t>
+                </t>
+
+                <t t-if="not requests">
+                    <p class="alert alert-warning mt-4">There are currently no active service requests for your account.</p>
+                </t>
+                <t t-if="requests" t-call="portal.portal_table">
+                    <thead>
+                        <tr class="active">
+                            <th>Request #</th>
+                            <th>Order Date</th>
+                            <th>Requested Service</th>
+                            <th class="text-end">Total Amount</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="requests" t-as="req">
+                            <tr>
+                                <td>
+                                    <a t-attf-href="/my/requests/#{req.id}">
+                                        <t t-esc="req.name"/>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span t-field="req.date_order" t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td>
+                                    <span t-esc="req.wink_source_product_id.name if req.wink_source_product_id else req.order_line[0].product_id.name if req.order_line else 'Service Request'"/>
+                                    <t t-if="req.wink_bundle_tier_id">
+                                        <span class="badge ms-1" style="background-color: var(--wink-info); color: #fff;"><t t-esc="req.wink_bundle_tier_id.name"/></span>
+                                    </t>
+                                </td>
+                                <td class="text-end">
+                                    <span t-field="req.amount_total" t-options='{"widget": "monetary", "display_currency": req.pricelist_id.currency_id}'/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-if="req.state == 'draft'" class="badge rounded-pill text-bg-secondary"><i class="fa fa-fw fa-file-text"/> Quotation</span>
+                                    <span t-if="req.state == 'sent'" class="badge rounded-pill text-bg-info"><i class="fa fa-fw fa-paper-plane"/> Quotation Sent</span>
+                                    <span t-if="req.state == 'sale'" class="badge rounded-pill text-bg-success"><i class="fa fa-fw fa-check"/> Confirmed</span>
+                                    <span t-if="req.state in ['done', 'fully_activated']" class="badge rounded-pill" style="background-color: var(--wink-primary); color: #fff;"><i class="fa fa-fw fa-lock"/> Completed</span>
+                                    <span t-if="req.state == 'cancel'" class="badge rounded-pill text-bg-danger"><i class="fa fa-fw fa-times"/> Cancelled</span>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </t>
             </t>
         </template>
     </data>
