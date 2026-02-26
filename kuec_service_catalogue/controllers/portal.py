@@ -10,7 +10,7 @@ class KuecCustomerPortal(CustomerPortal):
         
         # Odoo 18 frontend workaround: Prevent /my/counters from returning custom
         # counts that crash the JS if the UI spans (.o_portal_request_count) are missing.
-        if request.path == '/my/counters':
+        if request.httprequest.path == '/my/counters':
             return values
         
         # Employee Directory Counter
