@@ -247,10 +247,10 @@ class WinkRequest(http.Controller):
             'tax_license_number': post.get('tax_license') or False,
         })
 
-        # Step 3 — Save company type for classification
+        # Step 3 — Save company type for classification (legal_entity_type matches form option values)
         company_type = post.get('company_type')
         if company_type:
-            company.sudo().write({'wink_company_type': company_type})
+            company.sudo().write({'legal_entity_type': company_type})
 
         # Step 4 — Create contact person
         contact = request.env['res.partner'].sudo().create({

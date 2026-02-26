@@ -36,18 +36,27 @@
                         <group string="Employment">
                             <field name="partner_id" context="{'default_is_company': True}"/>
                             <field name="job_title"/>
+                            <field name="full_name_arabic"/>
                             <field name="email" widget="email"/>
                             <field name="mobile" widget="phone"/>
                             <field name="gender"/>
+                            <field name="date_of_birth"/>
+                            <field name="place_of_birth"/>
+                            <field name="marital_status"/>
                             <field name="active" invisible="1"/>
                         </group>
                         <group string="Nationality &amp; ID">
                             <field name="nationality_id" options="{'no_create': True, 'no_open': True}"/>
                             <field name="passport_number"/>
+                            <field name="passport_issue_date"/>
                             <field name="passport_expiry_date"/>
+                            <field name="passport_place_of_issue"/>
+                            <field name="uid_number"/>
                         </group>
                         <group string="UAE Status">
                             <field name="uae_status"/>
+                            <field name="current_location"/>
+                            <field name="previous_uae_visa"/>
                             <field name="emirates_id" invisible="uae_status == 'none'"/>
                             <field name="visa_expiry_date" invisible="uae_status in ('none', 'citizen')"/>
                         </group>
