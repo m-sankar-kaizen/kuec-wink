@@ -24,7 +24,6 @@
                         <field name="delivery_model" widget="radio"/>
                         <field name="request_frequency" widget="radio"/>
                         <field name="project_template_id" invisible="delivery_model != 'project'"/>
-
                         <separator string="Commercial"/>
                         <field name="commercial_structure" widget="radio"/>
                         <field name="wink_bundle_id" invisible="commercial_structure != 'bundled'"/>
@@ -33,7 +32,6 @@
                         <field name="price_visibility" required="available_on_wink"/>
                         <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
                         <field name="wink_payment_term_id" invisible="delivery_model == 'retainer'"/>
-                        <field name="wink_recurrence_id" invisible="delivery_model != 'retainer'"/>
                         <separator string="Portal Configuration"/>
                         <field name="requires_employee_selection"/>
                         <field name="reminder_days_before"/>
