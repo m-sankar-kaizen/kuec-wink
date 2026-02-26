@@ -54,8 +54,49 @@ class SaleOrderWink(models.Model):
             for s in self.document_submission_ids
         }
 
+    def _wink_document_requirements(self):
+        """Document requirements to show/collect for this order.
+        For bundles: union of all child services' (entitlements') document requirements.
+        For standalone: from wink_source_product_id."""
+        product = self.wink_source_product_id
+        if self.wink_entitlement_ids:
+            # Bundle: requirements from each child service (entitlement's service product)
+            req_ids = set()
+            for ent in self.wink_entitlement_ids:
+                if ent.service_product_id:
+                    req_ids.update(ent.service_product_id.kuec_document_ids.ids)
+            return self.env['kuec.service.document'].browse(sorted(req_ids))
+        if product:
+            return product.kuec_document_ids
+        return self.env['kuec.service.document'].browse()
+
+    def _wink_get_bundle_requirement_ids(self):
+        """For bundle orders: required document requirement ids from all child services (entitlements)."""
+        requirement_ids = set()
+        for ent in self.wink_entitlement_ids:
+            if ent.service_product_id:
+                for doc in ent.service_product_id.kuec_document_ids:
+                    if doc.requirement == 'required':
+                        requirement_ids.add(doc.id)
+        return requirement_ids
+
     def _wink_all_required_docs_approved(self):
-        """Returns (bool, list of pending names). True if all required docs are approved."""
+        """Returns (bool, list of pending names). True if all required docs are approved.
+        For bundles, required docs come from child services (entitlements); for standalone, from order product."""
+        if self.wink_entitlement_ids:
+            # Bundle: required = all required docs from all child services
+            requirement_ids = self._wink_get_bundle_requirement_ids()
+            if not requirement_ids:
+                return (True, [])
+            sub_map = {s.requirement_id.id: s for s in self.document_submission_ids}
+            pending_names = []
+            for rid in requirement_ids:
+                sub = sub_map.get(rid)
+                if not sub or sub.state != 'approved':
+                    req = self.env['kuec.service.document'].browse(rid)
+                    pending_names.append(req.name or 'Unknown')
+            return (len(pending_names) == 0, pending_names)
+        # Standalone: current logic
         required = self.document_submission_ids.filtered(
             lambda d: d.is_required == 'required'
         )

@@ -62,6 +62,7 @@
                             <field name="sequence" widget="handle"/>
                             <field name="name"/>
                             <field name="service_product_id"/>
+                            <field name="wink_selected_employee_ids" widget="many2many_tags" optional="show"/>
                             <field name="qty_entitled"/>
                             <field name="qty_activated"/>
                             <field name="state"

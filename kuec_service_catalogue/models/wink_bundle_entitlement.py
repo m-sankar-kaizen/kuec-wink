@@ -60,6 +60,14 @@ class WinkBundleEntitlement(models.Model):
         string='Activated Order Lines',
         readonly=True,
     )
+    wink_selected_employee_ids = fields.Many2many(
+        'kuec.employee.directory',
+        'wink_entitlement_employee_rel',
+        'entitlement_id',
+        'employee_id',
+        string='Selected Employees',
+        help='Employees selected for this child service (bundle).',
+    )
 
     @api.depends('qty_entitled', 'qty_activated')
     def _compute_state(self):

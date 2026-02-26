@@ -16,6 +16,35 @@ class WinkRequest(http.Controller):
         except (TypeError, ValueError):
             return None
 
+    def _get_request_form_vals(self, product, errors=None, post=None):
+        """Build template values for wink_request_form (used by new_request and on validation error)."""
+        employees = request.env['kuec.employee.directory'].sudo().search([
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id)
+        ])
+        vals = {
+            'product': product,
+            'employees': employees,
+            'show_registration_banner': False,
+            'is_bundle': False,
+            'errors': errors or {},
+            'post': post or {},
+        }
+        if product.commercial_structure == 'bundled' and product.wink_bundle_id:
+            bundle = product.wink_bundle_id
+            tiers = bundle.tier_ids.sorted('sequence')
+            tier_data = []
+            for tier in tiers:
+                tier_data.append({
+                    'tier': tier,
+                    'items': tier.item_ids.sorted('sequence'),
+                })
+            vals.update({
+                'is_bundle': True,
+                'bundle': bundle,
+                'tier_data': tier_data,
+            })
+        return vals
+
     @http.route('/my/requests/new', type='http', auth='public', website=True)
     def new_request(self, product_id=None, **kwargs):
         if not product_id:
@@ -43,6 +72,8 @@ class WinkRequest(http.Controller):
                 'employees': employees,
                 'show_registration_banner': kwargs.get('registered') == '1',
                 'is_bundle': False,
+                'errors': {},
+                'post': kwargs,
             }
 
             # Bundle tier data
@@ -164,16 +195,52 @@ class WinkRequest(http.Controller):
 
         partner = request.env.user.partner_id.commercial_partner_id
 
-        qty = float(post.get('qty') or 1)
+        # Service request is per service, no quantity (always 1)
         notes = post.get('notes') or False
         start_date = post.get('start_date') or False
+        if start_date:
+            try:
+                from datetime import datetime
+                datetime.strptime(start_date, '%Y-%m-%d')
+            except (ValueError, TypeError):
+                start_date = False
         employee_ids = request.httprequest.form.getlist('employee_ids')
         employee_ids = [int(e) for e in employee_ids if str(e).isdigit()]
+
+        is_bundle = (
+            product.commercial_structure == 'bundled'
+            and product.wink_bundle_id
+        )
+
+        # Validation: employees required when product or child service requires selection
+        if not is_bundle:
+            if product.requires_employee_selection and not employee_ids:
+                vals = self._get_request_form_vals(product, errors={'employee_ids': _('Please select at least one employee for this service.')}, post=post)
+                return request.render('kuec_service_catalogue.wink_request_form', vals)
+        else:
+            try:
+                tier_id = int(post.get('tier_id', 0))
+            except (TypeError, ValueError):
+                tier_id = 0
+            tier = request.env['wink.bundle.tier'].sudo().browse(tier_id)
+            if tier.exists() and tier.bundle_id == product.wink_bundle_id:
+                missing = []
+                for idx, item in enumerate(tier.item_ids.sorted('sequence')):
+                    if item.service_product_id and item.service_product_id.requires_employee_selection:
+                        emp_ids = request.httprequest.form.getlist('employee_ids_%s_%s' % (tier.id, idx))
+                        emp_ids = [int(e) for e in emp_ids if str(e).isdigit()]
+                        if not emp_ids:
+                            missing.append(item.description or item.service_product_id.name)
+                if missing:
+                    vals = self._get_request_form_vals(product, errors={
+                        'employee_ids_bundle': _('Please select at least one employee for: %s') % ', '.join(missing)
+                    }, post=post)
+                    return request.render('kuec_service_catalogue.wink_request_form', vals)
 
         variant = product.product_variant_id
         line_vals = {
             'product_id': variant.id,
-            'product_uom_qty': qty,
+            'product_uom_qty': 1,
             'price_unit': product.list_price,
             'name': product.name,
         }
@@ -200,14 +267,11 @@ class WinkRequest(http.Controller):
 
         order = request.env['sale.order'].sudo().create(order_vals)
 
-        if employee_ids:
+        # Employees: for standalone set on order; for bundle set per entitlement below
+        if not is_bundle and employee_ids:
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
 
         # --- Bundle tier handling ---
-        is_bundle = (
-            product.commercial_structure == 'bundled'
-            and product.wink_bundle_id
-        )
         tier = None
         bundle_line = None
 
@@ -236,9 +300,10 @@ class WinkRequest(http.Controller):
             })
 
             # Create entitlement records (no SO lines yet —
-            # real lines are created when customer activates)
-            for item in tier.item_ids.sorted('sequence'):
-                request.env['wink.bundle.entitlement'].sudo().create({
+            # real lines are created when customer activates).
+            # Employees and documents are linked to each child service (entitlement).
+            for idx, item in enumerate(tier.item_ids.sorted('sequence')):
+                ent_vals = {
                     'order_id': order.id,
                     'tier_id': tier.id,
                     'service_product_id': item.service_product_id.id,
@@ -246,7 +311,13 @@ class WinkRequest(http.Controller):
                              or item.service_product_id.name),
                     'sequence': item.sequence,
                     'qty_entitled': item.qty,
-                })
+                }
+                ent = request.env['wink.bundle.entitlement'].sudo().create(ent_vals)
+                # Per–child-service employee selection (from form employee_ids_tierId_index)
+                emp_ids = request.httprequest.form.getlist('employee_ids_%s_%s' % (tier.id, idx))
+                emp_ids = [int(e) for e in emp_ids if str(e).isdigit()]
+                if emp_ids:
+                    ent.sudo().wink_selected_employee_ids = [(6, 0, emp_ids)]
 
 
         is_auto_confirm = (
@@ -287,10 +358,10 @@ class WinkRequest(http.Controller):
         if not order:
             raise NotFound()
 
-        product = order.order_line[0].product_id.product_tmpl_id if order.order_line else False
+        product = order.wink_source_product_id or (order.order_line[0].product_id.product_tmpl_id if order.order_line else False)
 
-        # Document compliance context
-        requirements = product.kuec_document_ids if product else request.env['kuec.service.document'].browse()
+        # Document compliance: for bundle = child services' docs; for standalone = product's docs
+        requirements = order._wink_document_requirements()
         submissions = request.env['kuec.document.submission'].sudo().search([
             ('order_id', '=', order_id)
         ])
@@ -316,7 +387,8 @@ class WinkRequest(http.Controller):
         if not order:
             raise NotFound()
 
-        if order.state != 'sale' or (not order.wink_price_confirmed and order.wink_source_product_id.price_visibility == 'hidden'):
+        source_product = order.wink_source_product_id
+        if order.state != 'sale' or (not order.wink_price_confirmed and source_product and source_product.price_visibility == 'hidden'):
             return request.redirect(f'/my/requests/{order.id}?error=payment_not_available')
 
         # Use native Odoo CustomerPortal controller to fetch payment providers/tokens
@@ -357,8 +429,8 @@ class WinkRequest(http.Controller):
         if not order:
             raise NotFound()
 
-        product = order.wink_source_product_id
-        requirements = product.kuec_document_ids if product else request.env['kuec.service.document'].browse()
+        # Document requirements: for bundle = child services'; for standalone = product's
+        requirements = order._wink_document_requirements()
         submissions = request.env['kuec.document.submission'].sudo().search([
             ('order_id', '=', order_id)
         ])
@@ -391,6 +463,11 @@ class WinkRequest(http.Controller):
             requirement_id = 0
         requirement = request.env['kuec.service.document'].sudo().browse(requirement_id)
         if not requirement.exists():
+            raise NotFound()
+
+        # Ensure the requirement is one of this order's (product or bundle child services)
+        allowed_requirement_ids = order._wink_document_requirements().ids
+        if allowed_requirement_ids and requirement_id not in allowed_requirement_ids:
             raise NotFound()
 
         uploaded = request.httprequest.files.get('doc_file')
