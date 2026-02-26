@@ -82,9 +82,23 @@ class WinkCatalogue(http.Controller):
         user = request.env.user
         is_authenticated = not user._is_public()
 
+        # Subscription/retainer: show plan selector when recurring_invoice or delivery_model is retainer
+        is_subscription_service = bool(
+            getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer'
+        )
+        subscription_plans = []
+        selected_plan_id = None
+        if is_subscription_service:
+            subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+            if subscription_plans:
+                selected_plan_id = subscription_plans[0]['recurrence_id']
+
         values = {
             'product': product,
             'is_authenticated': is_authenticated,
             'redirect_url': '/services/%s' % product_id,
+            'is_subscription_service': is_subscription_service,
+            'subscription_plans': subscription_plans,
+            'selected_plan_id': selected_plan_id,
         }
         return request.render('kuec_service_catalogue.wink_service_detail_page', values)

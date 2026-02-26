@@ -163,6 +163,92 @@ class ProductTemplate(models.Model):
             pass
         return []
 
+    def _recurrence_duration_months(self, recurrence):
+        """Return duration in months for a recurrence record (sale.temporal.recurrence or similar)."""
+        if not recurrence:
+            return 1
+        duration = getattr(recurrence, 'duration', 1) or 1
+        unit = (getattr(recurrence, 'unit', 'month') or 'month').lower()
+        if unit == 'year':
+            return duration * 12
+        if unit == 'month':
+            return duration
+        if unit == 'week':
+            return round(duration * 12 / 52.0, 2)
+        return duration
+
+    def _wink_subscription_plans_dicts(self, pricelist_id=False):
+        """Build subscription plan dicts for portal: plan_name, price, period_label, monthly_equivalent,
+        savings_pct, show_savings, is_most_popular, features, recurrence_id, recurrence_id_str.
+        Uses Monthly as baseline for savings; if no Monthly, use shortest period. pricelist_id=False for public."""
+        self.ensure_one()
+        lines = self.sudo()._wink_recurring_plan_lines()
+        if not lines:
+            return []
+        # Resolve recurrence and price from each line (product.pricing or similar)
+        plans_raw = []
+        for line in lines:
+            recurrence = getattr(line, 'recurrence_id', None) or getattr(line, 'recurring_plan_id', None) or getattr(line, 'plan_id', None)
+            if not recurrence:
+                continue
+            price = getattr(line, 'price', None) or getattr(line, 'recurring_price', None) or getattr(line, 'list_price', None) or 0
+            months = self._recurrence_duration_months(recurrence)
+            name = getattr(recurrence, 'name', None) or ('%s %s' % (getattr(recurrence, 'duration', 1), getattr(recurrence, 'unit', 'month')))
+            plans_raw.append({
+                'line': line,
+                'recurrence': recurrence,
+                'recurrence_id': recurrence.id,
+                'plan_name': name,
+                'price': float(price),
+                'months': months,
+                'duration': getattr(recurrence, 'duration', 1),
+                'unit': getattr(recurrence, 'unit', 'month'),
+            })
+        if not plans_raw:
+            return []
+        # Sort by duration ascending (Monthly first)
+        plans_raw.sort(key=lambda p: (p['months'], p['recurrence_id']))
+        # Period label and monthly equivalent
+        unit_labels = {'month': 'month', 'year': 'year', 'week': 'weeks'}
+        baseline_price_per_month = plans_raw[0]['price'] / plans_raw[0]['months'] if plans_raw[0]['months'] else plans_raw[0]['price']
+        result = []
+        for p in plans_raw:
+            months = p['months']
+            price = p['price']
+            monthly_equivalent = round(price / months, 2) if months else price
+            duration, unit = p['duration'], (p.get('unit') or 'month')
+            if unit == 'month':
+                period_label = 'per %s month' % duration if duration != 1 else 'per month'
+            elif unit == 'year':
+                period_label = 'per year'
+            else:
+                period_label = 'per %s %s' % (duration, unit_labels.get(unit, unit))
+            # Savings vs baseline (shortest plan)
+            savings_pct = 0
+            if months > plans_raw[0]['months'] and baseline_price_per_month > 0:
+                pct = (1 - (monthly_equivalent / baseline_price_per_month)) * 100
+                savings_pct = max(0, round(pct))
+            show_savings = savings_pct >= 1
+            # Features and most popular from product.pricing
+            line = p['line']
+            features = []
+            if getattr(line, 'kuec_plan_features', None):
+                features = [s.strip() for s in (line.kuec_plan_features or '').splitlines() if s.strip()][:6]
+            is_most_popular = bool(getattr(line, 'kuec_is_most_popular', False))
+            result.append({
+                'recurrence_id': p['recurrence_id'],
+                'recurrence_id_str': str(p['recurrence_id']),
+                'plan_name': p['plan_name'],
+                'price': price,
+                'period_label': period_label,
+                'monthly_equivalent': monthly_equivalent,
+                'savings_pct': savings_pct,
+                'show_savings': show_savings,
+                'is_most_popular': is_most_popular,
+                'features': features,
+            })
+        return result
+
     reminder_days_before = fields.Integer(
         string='Reminder Days Before Expiry',
         default=0,

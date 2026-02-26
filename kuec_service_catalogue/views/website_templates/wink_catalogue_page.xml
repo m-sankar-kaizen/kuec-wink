@@ -279,9 +279,16 @@
                         <div class="col-lg-4">
                             <div class="card shadow-sm sticky-top border-0 rounded-3" style="top: 100px; background: var(--wink-bg);">
                                 <div class="card-body p-4 text-center">
-                                    <div class="mb-4">
+                                    <!-- Price display: updated by JS when plan changes (subscription) or static -->
+                                    <div class="mb-3" id="wink-detail-price">
                                         <t t-if="product.price_visibility == 'hidden'">
                                             <h4 class="text-muted fw-bold fst-italic mb-0"><t t-esc="product.price_hidden_label"/></h4>
+                                        </t>
+                                        <t t-elif="is_subscription_service and subscription_plans">
+                                            <h2 class="fw-bold mb-0" style="color: #1F3864; font-family: 'IBM Plex Mono', monospace;" id="wink-detail-price-amount">
+                                                <t t-set="first_plan" t-value="subscription_plans[0] if subscription_plans else None"/>
+                                                <t t-if="first_plan">AED <t t-esc="'{:,.2f}'.format(first_plan['price'])"/> <t t-esc="first_plan['period_label']"/></t>
+                                            </h2>
                                         </t>
                                         <t t-else="">
                                             <h2 class="fw-bold text-primary mb-0">
@@ -289,20 +296,77 @@
                                             </h2>
                                         </t>
                                     </div>
+                                    <!-- Plan selector (v2): only when subscription and multiple plans -->
+                                    <t t-if="is_subscription_service and len(subscription_plans) > 1">
+                                        <div class="text-start mb-3">
+                                            <p class="small fw-semibold mb-2" style="font-size: 14px;">
+                                                <i class="fa fa-refresh me-1"/> Choose your plan
+                                            </p>
+                                            <p class="text-muted small mb-2">All plans include the same service — choose the billing period that suits you.</p>
+                                            <div id="wink-plan-cards" class="d-flex flex-column gap-2">
+                                                <t t-foreach="subscription_plans" t-as="plan">
+                                                    <label t-attf-class="wink-plan-card position-relative rounded p-3 text-start cursor-pointer #{'border-warning' if plan.get('is_most_popular') else ''}" t-att-data-price="'{:,.2f}'.format(plan['price'])" t-att-data-period="plan['period_label']" t-att-data-recurrence-id="plan['recurrence_id_str']">
+                                                        <input type="radio" name="selected_plan_recurrence_id" class="d-none" t-att-value="plan['recurrence_id_str']" t-att-checked="'checked' if plan['recurrence_id'] == selected_plan_id else None"/>
+                                                        <t t-if="plan.get('is_most_popular')"><span class="position-absolute top-0 end-0 badge rounded-pill me-2 mt-2" style="background: #B8960C; color: white; font-size: 11px;">Most Popular</span></t>
+                                                        <t t-if="plan.get('show_savings')"><span class="badge rounded-pill me-1" style="background: #375623; color: white; font-size: 11px;">Save <t t-esc="plan['savings_pct']"/>%</span></t>
+                                                        <div class="fw-bold mb-1" style="font-size: 16px; color: #1F3864;"><t t-esc="plan['plan_name']"/></div>
+                                                        <div class="mb-1" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: bold; color: #1F3864;">AED <t t-esc="'{:,.2f}'.format(plan['price'])"/></div>
+                                                        <div class="small text-muted mb-1"><t t-esc="plan['period_label']"/></div>
+                                                        <t t-if="plan.get('monthly_equivalent') and plan['monthly_equivalent'] != plan['price']"><div class="small" style="color: #375623;">≈ AED <t t-esc="'{:,.2f}'.format(plan['monthly_equivalent'])"/> per month</div></t>
+                                                        <t t-if="plan.get('features')"><ul class="list-unstyled small mt-2 mb-0"><t t-foreach="plan['features'][:6]" t-as="feat"><li class="mb-1"><i class="fa fa-check text-primary me-1" style="font-size: 14px; color: #2E75B6;"/><t t-esc="feat"/></li></t><t t-if="len(plan.get('features', [])) > 6"><li class="text-muted">+ more</li></t></ul></t>
+                                                    </label>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <!-- No plans configured (edge case 10.1) -->
+                                    <t t-if="is_subscription_service and not subscription_plans">
+                                        <p class="text-muted small mb-3">Pricing for this retainer service is customised per client — submit a request and our team will prepare a quote for you.</p>
+                                    </t>
                                     <div class="d-grid">
                                         <t t-if="request.env.user._is_public()">
                                             <button type="button" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">
-                                                Request Service
+                                                <t t-if="is_subscription_service and not subscription_plans">Request a Quote</t><t t-else="">Request Service</t>
                                             </button>
                                         </t>
                                         <t t-else="">
-                                            <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id">
-                                                Request Service
-                                            </a>
+                                            <t t-if="is_subscription_service and len(subscription_plans) == 1">
+                                                <a t-attf-href="/services/#{product.id}/request?plan=#{subscription_plans[0]['recurrence_id']}" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm">Request Service</a>
+                                            </t>
+                                            <t t-elif="is_subscription_service and subscription_plans">
+                                                <a href="#" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" id="wink-detail-request-btn" t-att-data-product-id="product.id" t-att-data-service-id="product.id">Request Service</a>
+                                            </t>
+                                            <t t-else="">
+                                                <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id">Request Service</a>
+                                            </t>
                                         </t>
                                     </div>
                                 </div>
                             </div>
+                            <script>
+                                (function() {
+                                    var cards = document.querySelectorAll('#wink-plan-cards .wink-plan-card');
+                                    var priceEl = document.getElementById('wink-detail-price-amount');
+                                    var btn = document.getElementById('wink-detail-request-btn');
+                                    if (cards.length &amp;&amp; priceEl) {
+                                        cards.forEach(function(card) {
+                                            card.addEventListener('click', function() {
+                                                var price = card.getAttribute('data-price');
+                                                var period = card.getAttribute('data-period');
+                                                if (price &amp;&amp; period) priceEl.innerHTML = 'AED ' + price + ' ' + period;
+                                            });
+                                        });
+                                    }
+                                    if (btn &amp;&amp; cards.length) {
+                                        btn.addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            var selected = document.querySelector('input[name="selected_plan_recurrence_id"]:checked');
+                                            var sid = btn.getAttribute('data-service-id');
+                                            if (selected &amp;&amp; sid) window.location.href = '/services/' + sid + '/request?plan=' + selected.value;
+                                        });
+                                    }
+                                })();
+                            </script>
                         </div>
                     </div>
                 </div>

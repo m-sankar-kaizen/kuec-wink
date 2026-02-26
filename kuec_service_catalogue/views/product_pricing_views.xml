@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form view for product.pricing: Plan Features and Most Popular (admin opens a pricing record) -->
+    <record id="product_pricing_form_view_kuec" model="ir.ui.view">
+        <field name="name">product.pricing.form.kuec</field>
+        <field name="model">product.pricing</field>
+        <field name="arch" type="xml">
+            <form string="Recurring Price">
+                <sheet>
+                    <group>
+                        <field name="product_tmpl_id" invisible="1" optional="hide"/>
+                        <field name="recurrence_id"/>
+                        <field name="price"/>
+                        <field name="pricelist_id" optional="hide"/>
+                        <field name="kuec_is_most_popular"/>
+                        <field name="kuec_plan_features" placeholder="Enter one feature per line. Each line becomes a bullet point in the customer portal." nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

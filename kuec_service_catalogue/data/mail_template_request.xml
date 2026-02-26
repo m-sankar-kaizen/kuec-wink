@@ -53,6 +53,62 @@
             </field>
         </record>
 
+        <!-- Customer: Service Request Confirmation (includes subscription plan when applicable) -->
+        <record id="kuec_request_confirmation_template" model="mail.template">
+            <field name="name">WINK Portal: Service Request Confirmation (Customer)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Your service request has been received — {{ object.name }}</field>
+            <field name="email_to">{{ object.partner_id.email_formatted }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <t t-set="portal_base" t-value="object.env['ir.config_parameter'].sudo().get_param('web.base.url', '')"/>
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear {{ object.partner_id.name }},<br/><br/>
+                        Thank you for submitting your service request. We have received the following details.
+                    </p>
+                    <p style="margin: 12px 0px; font-size: 13px;">
+                        <b>Request:</b> {{ object.name }}<br/>
+                        <b>Service:</b> {{ object.order_line[0].product_id.name if object.order_line else 'N/A' }}<br/>
+                        <b>Date:</b> {{ object.date_order }}
+                    </p>
+                    <t t-if="getattr(object, 'is_subscription', False) and getattr(object, 'recurrence_id', None)">
+                        <div style="margin: 16px 0px; padding: 12px; background: #f5f5f5; border-radius: 5px; border-left: 4px solid #1F4E79;">
+                            <p style="margin: 0px 0px 8px 0px; font-size: 13px; font-weight: bold;">Your Selected Plan</p>
+                            <p style="margin: 0px; font-size: 13px;">
+                                <strong><t t-esc="object.recurrence_id.name"/> Plan</strong><br/>
+                                Billing amount: <t t-esc="object.currency_id.symbol"/><t t-esc="'{:,.2f}'.format(object.amount_total)"/>
+                                <t t-set="rec" t-value="object.recurrence_id"/>
+                                <t t-if="rec and getattr(rec, 'unit', None) == 'month' and getattr(rec, 'duration', 0)">
+                                    <t t-if="rec.duration == 12"> per year</t>
+                                    <t t-elif="rec.duration == 1"> per month</t>
+                                    <t t-else=""> per <t t-esc="rec.duration"/> months</t>
+                                </t>
+                                <br/>
+                                <t t-if="rec and getattr(rec, 'unit', None) == 'month' and rec.duration and rec.duration > 1">
+                                    <t t-set="monthly_equiv" t-value="round(object.amount_total / rec.duration, 2)"/>
+                                    ≈ <t t-esc="object.currency_id.symbol"/><t t-esc="'{:,.2f}'.format(monthly_equiv)"/> per month
+                                    <br/>
+                                </t>
+                                Your subscription will begin after payment confirmation. You can manage your subscription from your portal.
+                                <br/>
+                                <a t-attf-href="{{ portal_base }}/my/subscriptions" style="color: #1F4E79;">View My Subscriptions</a>
+                            </p>
+                        </div>
+                    </t>
+                    <p style="margin: 16px 0px 0px 0px; font-size: 13px;">
+                        <b>Next steps:</b> Our team will review your request and contact you if needed. You can track the status from your portal at any time.
+                    </p>
+                    <div style="text-align: center; margin: 16px 0px;">
+                        <a t-attf-href="{{ portal_base }}/my/requests/{{ object.id }}" style="background-color: #1F4E79; padding: 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+                            View My Request
+                        </a>
+                    </div>
+                    <br/><br/>
+                    <span style="color: #666666; font-size: 11px;">The WINK Team — KUEC</span>
+                </div>
+            </field>
+        </record>
+
         <!-- Document Review Notification Template -->
         <record id="kuec_doc_review_notification" model="mail.template">
             <field name="name">WINK Portal: Document Review Update</field>

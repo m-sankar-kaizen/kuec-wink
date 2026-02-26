@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from . import product_template
+from . import product_pricing
 from . import kuec_service_document
 from . import kuec_classification
 from . import res_partner

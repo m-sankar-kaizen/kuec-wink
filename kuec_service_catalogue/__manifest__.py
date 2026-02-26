@@ -38,6 +38,7 @@
         'views/wink_bundle_views.xml',
         'views/kuec_service_faq_views.xml',
         'views/product_template_views.xml',
+        'views/product_pricing_views.xml',
         'views/res_partner_views.xml',
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
