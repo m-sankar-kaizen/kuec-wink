@@ -198,10 +198,10 @@
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <div class="fw-bold fs-5">
-                                                    <t t-if="pricing.recurring_plan_id"><t t-esc="pricing.recurring_plan_id.name"/></t>
-                                                    <t t-elif="pricing.plan_id"><t t-esc="pricing.plan_id.name"/></t>
+                                                    <t t-if="getattr(pricing, 'recurring_plan_id', None)"><t t-esc="pricing.recurring_plan_id.name"/></t>
+                                                    <t t-elif="getattr(pricing, 'plan_id', None)"><t t-esc="pricing.plan_id.name"/></t>
                                                     <t t-elif="getattr(pricing, 'recurrence_id', None)"><t t-esc="pricing.recurrence_id.name"/></t>
-                                                    <t t-else=""><t t-esc="pricing.name or pricing.display_name"/></t>
+                                                    <t t-else=""><t t-esc="getattr(pricing, 'name', None) or pricing.display_name"/></t>
                                                 </div>
                                             </div>
                                             <div class="text-end" t-if="pricing.price or pricing.list_price or getattr(pricing, 'recurring_price', None)">
@@ -512,9 +512,10 @@
                         <div class="card-body">
                             <t t-if="retainer_plan">
                                 <p class="mb-2"><strong>Current plan:</strong>
-                                    <t t-if="retainer_plan.recurring_plan_id"><t t-esc="retainer_plan.recurring_plan_id.name"/></t>
-                                    <t t-elif="retainer_plan.plan_id"><t t-esc="retainer_plan.plan_id.name"/></t>
-                                    <t t-else=""><t t-esc="retainer_plan.name"/></t>
+                                    <t t-if="getattr(retainer_plan, 'recurring_plan_id', None)"><t t-esc="retainer_plan.recurring_plan_id.name"/></t>
+                                    <t t-elif="getattr(retainer_plan, 'plan_id', None)"><t t-esc="retainer_plan.plan_id.name"/></t>
+                                    <t t-elif="getattr(retainer_plan, 'recurrence_id', None)"><t t-esc="retainer_plan.recurrence_id.name"/></t>
+                                    <t t-else=""><t t-esc="getattr(retainer_plan, 'name', None) or retainer_plan.display_name"/></t>
                                     <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price or retainer_plan.list_price or 0)"/> <t t-esc="order.currency_id.symbol"/></t>
                                 </p>
                             </t>
