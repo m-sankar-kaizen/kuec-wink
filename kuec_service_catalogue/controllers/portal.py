@@ -9,19 +9,20 @@ class KuecCustomerPortal(CustomerPortal):
         partner = request.env.user.partner_id.commercial_partner_id
         
         # Employee Directory Counter
-        if partner.employee_directory_enabled:
+        if (not counters or 'employee_count' in counters) and partner.employee_directory_enabled:
             domain = [('partner_id', '=', partner.id)]
             employee_count = request.env['kuec.employee.directory'].sudo().search_count(domain)
             values['employee_count'] = employee_count
             
         # WINK Service Requests Counter
-        request_domain = [
-            ('message_partner_ids', 'child_of', [partner.id]),
-            ('wink_is_portal_request', '=', True),
-            ('state', 'in', ['draft', 'sent', 'sale', 'done'])
-        ]
-        request_count = request.env['sale.order'].sudo().search_count(request_domain)
-        values['request_count'] = request_count
+        if not counters or 'request_count' in counters:
+            request_domain = [
+                ('message_partner_ids', 'child_of', [partner.id]),
+                ('wink_is_portal_request', '=', True),
+                ('state', 'in', ['draft', 'sent', 'sale', 'done'])
+            ]
+            request_count = request.env['sale.order'].sudo().search_count(request_domain)
+            values['request_count'] = request_count
         
         return values
 
