@@ -43,6 +43,15 @@ class WinkRequest(http.Controller):
                 'bundle': bundle,
                 'tier_data': tier_data,
             })
+        # Odoo native subscription plans: for standalone retainer OR for bundle (plan + tier)
+        if product.wink_subscription_plan_ids:
+            vals.update({
+                'subscription_plan_ids': product.wink_subscription_plan_ids,
+            })
+        if (product.delivery_model == 'retainer'
+                and product.commercial_structure != 'bundled'
+                and product.wink_subscription_plan_ids):
+            vals['is_retainer_native_plan'] = True
         return vals
 
     @http.route('/my/requests/new', type='http', auth='public', website=True)
@@ -91,6 +100,13 @@ class WinkRequest(http.Controller):
                     'bundle': bundle,
                     'tier_data': tier_data,
                 })
+            # Odoo native subscription plans (standalone retainer or bundle)
+            if product.wink_subscription_plan_ids:
+                render_vals['subscription_plan_ids'] = product.wink_subscription_plan_ids
+            if (product.delivery_model == 'retainer'
+                    and product.commercial_structure != 'bundled'
+                    and product.wink_subscription_plan_ids):
+                render_vals['is_retainer_native_plan'] = True
 
             return request.render('kuec_service_catalogue.wink_request_form', render_vals)
         else:
@@ -212,6 +228,21 @@ class WinkRequest(http.Controller):
             and product.wink_bundle_id
         )
 
+        # Validation: Odoo native plan required when product has subscription plans (retainer or bundle)
+        has_subscription_plans = bool(product.wink_subscription_plan_ids)
+        if has_subscription_plans:
+            try:
+                template_id = int(post.get('subscription_plan_id') or 0)
+            except (TypeError, ValueError):
+                template_id = 0
+            template = request.env['sale.order.template'].sudo().browse(template_id)
+            if not template.exists() or template.id not in product.wink_subscription_plan_ids.ids:
+                vals = self._get_request_form_vals(product, errors={'subscription_plan': _('Please select a plan.')}, post=post)
+                vals.setdefault('subscription_plan_ids', product.wink_subscription_plan_ids)
+                if product.delivery_model == 'retainer' and product.commercial_structure != 'bundled':
+                    vals.setdefault('is_retainer_native_plan', True)
+                return request.render('kuec_service_catalogue.wink_request_form', vals)
+
         # Validation: employees required when product or child service requires selection
         if not is_bundle:
             if product.requires_employee_selection and not employee_ids:
@@ -270,6 +301,23 @@ class WinkRequest(http.Controller):
         # Employees: for standalone set on order; for bundle set per entitlement below
         if not is_bundle and employee_ids:
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
+
+        # --- Set Odoo native subscription plan (template) when product has plans (retainer or bundle) ---
+        if has_subscription_plans:
+            try:
+                template_id = int(post.get('subscription_plan_id') or 0)
+            except (TypeError, ValueError):
+                template_id = 0
+            template = request.env['sale.order.template'].sudo().browse(template_id)
+            if template.exists() and template_id in product.wink_subscription_plan_ids.ids:
+                order.sudo().write({'wink_sale_order_template_id': template.id})
+                if hasattr(order, 'sale_order_template_id'):
+                    order.sudo().write({'sale_order_template_id': template.id})
+                if hasattr(order, '_apply_order_template'):
+                    try:
+                        order.sudo()._apply_order_template()
+                    except Exception:
+                        pass
 
         # --- Bundle tier handling ---
         tier = None
@@ -367,6 +415,16 @@ class WinkRequest(http.Controller):
         ])
         sub_map = {s.requirement_id.id: s for s in submissions}
 
+        is_retainer = product and product.delivery_model == 'retainer'
+        # Plan: native (sale.order.template) or legacy wink_retainer_plan
+        retainer_plan = order.wink_sale_order_template_id or order.wink_retainer_plan_id
+        retainer_plans_for_change = request.env['wink.retainer.plan'].browse()
+        if product and product.wink_subscription_plan_ids:
+            retainer_plans_for_change = product.wink_subscription_plan_ids  # native templates (retainer or bundle)
+        retainer_plan_has_price = False
+        if retainer_plan and getattr(retainer_plan, '_name', '') == 'wink.retainer.plan':
+            retainer_plan_has_price = bool(getattr(retainer_plan, 'price', None))
+
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
             'product': product,
@@ -374,8 +432,33 @@ class WinkRequest(http.Controller):
             'bundle_requested': kwargs.get('bundle_requested') == '1',
             'requirements': requirements,
             'sub_map': sub_map,
+            'is_retainer': is_retainer,
+            'retainer_plan': retainer_plan,
+            'retainer_plans_for_change': retainer_plans_for_change,
+            'retainer_plan_has_price': retainer_plan_has_price,
+            'retainer_cancelled': kwargs.get('retainer_cancelled') == '1',
         })
 
+
+    @http.route('/my/requests/<int:order_id>/retainer/cancel', type='http', auth='user', website=True, methods=['POST'], csrf=True)
+    def retainer_request_cancel(self, order_id, **post):
+        """Customer requests cancellation of a retainer. Sets flag; coordinator can confirm cancel."""
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+        product = order.wink_source_product_id
+        if not product or product.delivery_model != 'retainer':
+            return request.redirect(f'/my/requests/{order_id}')
+        order.sudo().write({'wink_cancellation_requested': True})
+        order.sudo().message_post(
+            body=_("Customer requested cancellation of this retainer from the portal."),
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+        return request.redirect(f'/my/requests/{order_id}?retainer_cancelled=1')
 
     @http.route('/my/requests/<int:order_id>/pay', type='http', auth='user', website=True)
     def request_payment(self, order_id, **kwargs):

@@ -122,12 +122,14 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
 
-                    <!-- Validation errors (e.g. employee selection required) -->
-                    <div t-if="errors and (errors.get('employee_ids') or errors.get('employee_ids_bundle'))" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <!-- Validation errors (e.g. employee selection required, plan required) -->
+                    <div t-if="errors and (errors.get('employee_ids') or errors.get('employee_ids_bundle') or errors.get('retainer_plan') or errors.get('subscription_plan'))" class="alert alert-danger alert-dismissible fade show" role="alert">
                         <strong>Please fix the following:</strong>
                         <ul class="mb-0 mt-2">
                             <li t-if="errors.get('employee_ids')" t-esc="errors['employee_ids']"/>
                             <li t-if="errors.get('employee_ids_bundle')" t-esc="errors['employee_ids_bundle']"/>
+                            <li t-if="errors.get('retainer_plan')" t-esc="errors['retainer_plan']"/>
+                            <li t-if="errors.get('subscription_plan')" t-esc="errors['subscription_plan']"/>
                         </ul>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
@@ -160,9 +162,30 @@
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
 
-                        <!-- Bundle Tier Selector -->
-                        <div t-if="is_bundle" class="wink-tier-selector mb-4">
+                        <!-- Odoo native subscription plan (first): for standalone retainer OR bundle -->
+                        <div t-if="subscription_plan_ids" class="wink-retainer-plan-selector mb-4">
                             <h5 class="mb-3">Select Your Plan</h5>
+                            <t t-foreach="subscription_plan_ids" t-as="plan">
+                                <div class="wink-tier-card mb-3">
+                                    <input type="radio" name="subscription_plan_id" class="d-none"
+                                           t-att-id="'subscription_plan_%s' % plan.id"
+                                           t-att-value="plan.id"
+                                           t-att-checked="'checked' if ((plan_first and not post.get('subscription_plan_id')) or str(plan.id) == str(post.get('subscription_plan_id', ''))) else None"/>
+                                    <label t-att-for="'subscription_plan_%s' % plan.id"
+                                           class="wink-tier-label card p-3 w-100 cursor-pointer">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fw-bold fs-5"><t t-esc="plan.name"/></div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.) -->
+                        <div t-if="is_bundle" class="wink-tier-selector mb-4">
+                            <h5 class="mb-3">Select Your Tier</h5>
                             <t t-foreach="tier_data" t-as="td">
                                 <div class="wink-tier-card mb-3">
                                     <input type="radio" name="tier_id" class="d-none wink-tier-radio"
@@ -345,6 +368,10 @@
                         <strong>Manual payment logged!</strong> Awaiting coordinator validation.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
+                    <div t-if="retainer_cancelled" class="alert alert-info alert-dismissible fade show" role="alert">
+                        <strong>Cancellation requested.</strong> Our team will process your request and contact you if needed.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
 
                     <div class="card shadow-sm mt-4">
                         <div class="card-header" style="background:var(--wink-primary); color:#fff;">
@@ -408,6 +435,33 @@
                         <div class="card-footer bg-light d-flex justify-content-between">
                             <a href="/my/requests" class="btn btn-outline-secondary">View My Requests</a>
                             <a href="/services" class="btn btn-outline-primary">Browse More Services</a>
+                        </div>
+                    </div>
+
+                    <!-- Retainer: current plan, upgrade/downgrade, cancel -->
+                    <div t-if="is_retainer and order.state in ('sale', 'done') and not order.wink_cancellation_requested" class="card mt-3 shadow-sm">
+                        <div class="card-header fw-bold">Manage your retainer</div>
+                        <div class="card-body">
+                            <t t-if="retainer_plan">
+                                <p class="mb-2"><strong>Current plan:</strong> <t t-esc="retainer_plan.name"/><t t-if="retainer_plan_has_price"> — <t t-esc="retainer_plan.price" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></t></p>
+                            </t>
+                            <div class="d-flex flex-wrap gap-2">
+                                <t t-if="retainer_plans_for_change and len(retainer_plans_for_change) > 1">
+                                    <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;change_from=#{order.id}" class="btn btn-outline-primary">
+                                        Upgrade / Downgrade plan
+                                    </a>
+                                </t>
+                                <form method="post" t-attf-action="/my/requests/#{order.id}/retainer/cancel" class="d-inline">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <button type="submit" class="btn btn-outline-danger">Request cancellation</button>
+                                </form>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0">Upgrade or downgrade will create a new request for the new plan. Cancellation is processed by our team.</p>
+                        </div>
+                    </div>
+                    <div t-if="is_retainer and order.wink_cancellation_requested" class="card mt-3 border-warning">
+                        <div class="card-body py-2">
+                            <span class="text-warning"><i class="fa fa-info-circle"/> Cancellation requested — our team will process it shortly.</span>
                         </div>
                     </div>
 

@@ -36,6 +36,22 @@ class SaleOrderWink(models.Model):
         string='Selected Bundle Tier',
         ondelete='set null',
     )
+    wink_retainer_plan_id = fields.Many2one(
+        'wink.retainer.plan',
+        string='Selected Retainer Plan (legacy)',
+        ondelete='set null',
+    )
+    wink_sale_order_template_id = fields.Many2one(
+        'sale.order.template',
+        string='Subscription Plan (Odoo native)',
+        ondelete='set null',
+        help='Selected plan for standalone retainer from portal.',
+    )
+    wink_cancellation_requested = fields.Boolean(
+        string='Cancellation Requested',
+        default=False,
+        help='Customer requested to cancel this retainer from the portal.',
+    )
     document_submission_ids = fields.One2many(
         'kuec.document.submission',
         'order_id',

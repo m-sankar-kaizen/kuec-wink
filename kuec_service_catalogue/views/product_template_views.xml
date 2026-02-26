@@ -24,6 +24,17 @@
                         <field name="delivery_model" widget="radio"/>
                         <field name="request_frequency" widget="radio"/>
                         <field name="project_template_id" invisible="delivery_model != 'project'"/>
+                        <field name="wink_subscription_plan_ids" invisible="delivery_model != 'retainer'"
+                               options="{'no_create': True}"
+                               help="Odoo native subscription plans. For standalone retainer: plan only. For bundle: plan + tier (Pro, Gold, etc.)."/>
+                        <field name="wink_retainer_plan_ids" invisible="delivery_model != 'retainer'" nolabel="1">
+                            <list string="Retainer plans (legacy)" editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="name"/>
+                                <field name="price"/>
+                                <field name="description"/>
+                            </list>
+                        </field>
 
                         <separator string="Commercial"/>
                         <field name="commercial_structure" widget="radio"/>
