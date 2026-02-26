@@ -5,6 +5,25 @@ from werkzeug.exceptions import NotFound
 from odoo.addons.sale.controllers.portal import CustomerPortal
 import werkzeug.urls
 
+
+def _get_product_pricing_browse(env, ids=None):
+    """Return product.pricing recordset or a sentinel that .exists() is False when model is not installed."""
+    try:
+        return env['product.pricing'].sudo().browse(ids or [])
+    except KeyError:
+        return _EmptyPricing()
+
+
+class _EmptyPricing:
+    """Sentinel when product.pricing model is not installed (e.g. subscription addon not present)."""
+
+    def exists(self):
+        return False
+
+    def __bool__(self):
+        return False
+
+
 class WinkRequest(http.Controller):
 
     def _parse_product_id(self, value):
@@ -228,7 +247,7 @@ class WinkRequest(http.Controller):
 
         # Validate selected plan/pricing (product.pricing or sale.subscription.plan)
         selected_plan = None
-        selected_pricing = request.env['product.pricing'].browse()
+        selected_pricing = _get_product_pricing_browse(request.env)
         if use_recurring_prices:
             try:
                 chosen_id = int(post.get('recurring_pricing_id') or 0)
@@ -244,7 +263,7 @@ class WinkRequest(http.Controller):
                 if not selected_plan.exists():
                     selected_plan = None
             else:
-                selected_pricing = request.env['product.pricing'].sudo().browse(chosen_id)
+                selected_pricing = _get_product_pricing_browse(request.env, [chosen_id])
                 if selected_pricing.exists():
                     selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
 
@@ -440,12 +459,9 @@ class WinkRequest(http.Controller):
         if not retainer_plan:
             pid = getattr(order, 'wink_recurring_pricing_id', None) or 0
             if pid:
-                try:
-                    rec = request.env['product.pricing'].sudo().browse(pid)
-                    if rec.exists():
-                        retainer_plan = rec
-                except KeyError:
-                    pass
+                rec = _get_product_pricing_browse(request.env, [pid])
+                if rec.exists():
+                    retainer_plan = rec
         recurring_lines = product._wink_recurring_plan_lines() if product else []
         retainer_plans_for_change = recurring_lines
         retainer_plan_has_price = bool(

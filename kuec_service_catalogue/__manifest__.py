@@ -36,6 +36,7 @@
         'data/mail_template_request.xml',
         'views/kuec_classification_views.xml',
         'views/wink_bundle_views.xml',
+        'views/kuec_service_faq_views.xml',
         'views/product_template_views.xml',
         'views/res_partner_views.xml',
         'views/res_config_settings_views.xml',

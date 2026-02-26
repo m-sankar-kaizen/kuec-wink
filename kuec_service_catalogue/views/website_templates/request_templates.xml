@@ -184,12 +184,13 @@
                                                 <div class="fw-bold fs-5">
                                                     <t t-if="pricing.recurring_plan_id"><t t-esc="pricing.recurring_plan_id.name"/></t>
                                                     <t t-elif="pricing.plan_id"><t t-esc="pricing.plan_id.name"/></t>
+                                                    <t t-elif="getattr(pricing, 'recurrence_id', None)"><t t-esc="pricing.recurrence_id.name"/></t>
                                                     <t t-else=""><t t-esc="pricing.name or pricing.display_name"/></t>
                                                 </div>
                                             </div>
-                                            <div class="text-end" t-if="pricing.price or pricing.list_price">
+                                            <div class="text-end" t-if="pricing.price or pricing.list_price or getattr(pricing, 'recurring_price', None)">
                                                 <div class="fw-bold fs-4" style="color: var(--wink-primary);">
-                                                    <t t-esc="'{:,.2f}'.format(pricing.price or pricing.list_price or 0)"/> <t t-esc="request.env.company.currency_id.symbol"/>
+                                                    <t t-esc="'{:,.2f}'.format(pricing.price or pricing.list_price or getattr(pricing, 'recurring_price', None) or 0)"/> <t t-esc="request.env.company.currency_id.symbol"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -197,9 +198,9 @@
                                 </div>
                             </t>
                         </div>
-                        <!-- When no Recurring Prices loaded (Odoo subscription / product.pricing not available to portal) -->
+                        <!-- When no plans loaded: remind admin to set Time-based / Recurring Prices on the product -->
                         <div t-if="product.delivery_model == 'retainer' and not recurring_plan_lines" class="alert alert-info py-2 mb-3">
-                            <small>Plan options (Monthly / Yearly) come from the product's <strong>Recurring Prices</strong> tab (Odoo subscription). If no plan selector appears, ensure the subscription module is installed and Recurring Prices are set—contact your administrator.</small>
+                            <small>Plan options (Monthly / Yearly) come from this product's <strong>Recurring Prices</strong> or <strong>Time-based pricing</strong> tab. Add at least one price line there and save the product—then the plan selector and price will appear here. If the tab is missing, ensure the Subscriptions app is installed.</small>
                         </div>
 
                         <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.) -->

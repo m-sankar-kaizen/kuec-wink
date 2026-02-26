@@ -76,43 +76,53 @@ class ProductTemplate(models.Model):
     )
 
     def _wink_recurring_plan_lines(self):
-        """Return native Recurring Prices (Recurring Plan + Recurring Price) for portal plan selection.
-        Supports product.pricing (with plan_id -> sale.subscription.plan) and product links to sale.subscription.plan."""
+        """Return native Recurring Prices for portal plan selection (retainer).
+        Uses sudo so portal users can see plans. Supports product.pricing (Time-based pricing)
+        and sale.subscription.plan linked to product."""
         self.ensure_one()
-        # 1) One2many pricing lines on product (product.pricing or similar with plan_id)
-        for field_name in ('product_pricing_ids', 'recurring_pricing_ids', 'subscription_pricing_ids', 'pricing_ids'):
-            if field_name in self._fields:
-                lines = self[field_name]
+        product = self.sudo()
+        # 1) One2many pricing lines on product.template (Odoo 18: pricing_ids, etc.)
+        for field_name in (
+            'pricing_ids',
+            'product_pricing_ids',
+            'recurring_pricing_ids',
+            'subscription_pricing_ids',
+            'time_based_pricing_ids',
+            'subscription_pricing_line_ids',
+            'recurring_pricing_line_ids',
+        ):
+            if field_name in product._fields:
+                lines = product[field_name]
                 if lines:
                     key = lambda p: (getattr(p, 'sequence', 0), p.id)
                     return lines.sorted(key=key)
-                return lines
+        # 2) product.pricing: search by product_tmpl_id or by product_id (variant)
         try:
-            Pricing = self.env['product.pricing']
+            Pricing = self.env['product.pricing'].sudo()
             if 'product_tmpl_id' in Pricing._fields:
-                lines = Pricing.search([('product_tmpl_id', '=', self.id)])
+                lines = Pricing.search([('product_tmpl_id', '=', product.id)])
                 if lines:
-                    key = lambda p: (getattr(p, 'sequence', 0), p.id)
-                    return lines.sorted(key=key)
-                return lines
-        except KeyError:
+                    return lines.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
+            if 'product_id' in Pricing._fields:
+                variant_ids = product.product_variant_ids.ids or (product.product_variant_id and [product.product_variant_id.id] or [])
+                if variant_ids:
+                    lines = Pricing.search([('product_id', 'in', variant_ids)])
+                    if lines:
+                        return lines.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
+        except (KeyError, AttributeError):
             pass
-        # 2) sale.subscription.plan (plan_id): product linked to plans (e.g. plan_ids, subscription_plan_ids)
+        # 3) sale.subscription.plan: product linked via Many2many or plan has product_tmpl_id
         try:
-            Plan = self.env['sale.subscription.plan']
+            Plan = self.env['sale.subscription.plan'].sudo()
             for field_name in ('plan_ids', 'subscription_plan_ids', 'recurring_plan_ids'):
-                if field_name in self._fields:
-                    plans = self[field_name]
-                    if plans:
-                        key = lambda p: (getattr(p, 'sequence', 0), p.id)
-                        return plans.sorted(key=key)
-                    return plans
-            # Plans with product_tmpl_id (e.g. plan line model linking plan to product)
+                if field_name in product._fields and product[field_name]:
+                    plans = product[field_name]
+                    return plans.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
             if Plan._fields.get('product_tmpl_id'):
-                plans = Plan.search([('product_tmpl_id', '=', self.id)])
+                plans = Plan.search([('product_tmpl_id', '=', product.id)])
                 if plans:
                     return plans.sorted(key=lambda p: (getattr(p, 'sequence', 0), p.id))
-        except KeyError:
+        except (KeyError, AttributeError):
             pass
         return []
 
