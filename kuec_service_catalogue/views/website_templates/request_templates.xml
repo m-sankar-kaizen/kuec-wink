@@ -50,10 +50,15 @@
                                             <label class="form-label">Company Type *</label>
                                             <select class="form-select" name="company_type" required="required">
                                                 <option value="">Select type...</option>
-                                                <option value="ku" t-att-selected="post.get('company_type') =='ku'">KU (Kuwait University)</option>
-                                                <option value="kuec" t-att-selected="post.get('company_type') =='kuec'">KUEC Ecosystem</option>
-                                                <option value="uae" t-att-selected="post.get('company_type') =='uae'">UAE Company</option>
-                                                <option value="outside" t-att-selected="post.get('company_type') =='outside'">Outside UAE</option>
+                                                <option value="llc" t-att-selected="post.get('company_type') =='llc'">Limited Liability Company (LLC / Ltd.)</option>
+                                                <option value="corp" t-att-selected="post.get('company_type') =='corp'">Corporation (Inc. / Corp.)</option>
+                                                <option value="plc" t-att-selected="post.get('company_type') =='plc'">Public Listed Company</option>
+                                                <option value="partnership" t-att-selected="post.get('company_type') =='partnership'">Partnership</option>
+                                                <option value="lp" t-att-selected="post.get('company_type') =='lp'">Limited Partnership (LP / LLP)</option>
+                                                <option value="gov" t-att-selected="post.get('company_type') =='gov'">Government Entity</option>
+                                                <option value="soe" t-att-selected="post.get('company_type') =='soe'">State-Owned Enterprise</option>
+                                                <option value="non_profit" t-att-selected="post.get('company_type') =='non_profit'">Non-Profit Organization</option>
+                                                <option value="other" t-att-selected="post.get('company_type') =='other'">Other</option>
                                             </select>
                                         </div>
 
@@ -117,6 +122,17 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
 
+                    <!-- Validation errors (e.g. employee selection required, plan required) -->
+                    <div t-if="errors and (errors.get('employee_ids') or errors.get('employee_ids_bundle') or errors.get('subscription_plan'))" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Please fix the following:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li t-if="errors.get('employee_ids')" t-esc="errors['employee_ids']"/>
+                            <li t-if="errors.get('employee_ids_bundle')" t-esc="errors['employee_ids_bundle']"/>
+                            <li t-if="errors.get('subscription_plan')" t-esc="errors['subscription_plan']"/>
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+
                     <!-- Service context -->
                     <div class="wink-request-context card mb-4">
                         <div class="card-body d-flex align-items-center gap-3">
@@ -129,7 +145,13 @@
                                     <t t-if="product.delivery_model == 'retainer'">Retainer</t>
                                 </span>
                                 <span class="ms-2 text-muted">
-                                    <t t-if="product.price_visibility == 'visible'">
+                                    <t t-if="product.price_visibility == 'hidden'">
+                                        <t t-esc="product.price_hidden_label"/>
+                                    </t>
+                                    <t t-elif="product.delivery_model == 'retainer'">
+                                        Price based on plan selected below
+                                    </t>
+                                    <t t-elif="product.price_visibility == 'visible'">
                                         <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': request.env.company.currency_id}"/>
                                     </t>
                                     <t t-else="">
@@ -145,12 +167,134 @@
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
 
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Quantity</label>
-                                <input type="number" class="form-control" name="qty" value="1" min="1"/>
-                            </div>
+                        <!-- Plan: Recurring price based on recurring plan (Retainer) or quotation templates -->
+                        <div t-if="recurring_plan_lines" class="wink-retainer-plan-selector mb-4">
+                            <h5 class="mb-3">Select Your Plan</h5>
+                            <p class="text-muted small mb-2">Price is based on the recurring plan you select.</p>
+                            <t t-foreach="recurring_plan_lines" t-as="pricing">
+                                <div class="wink-tier-card mb-3">
+                                    <input type="radio" name="recurring_pricing_id" class="d-none"
+                                           t-att-id="'recurring_pricing_%s' % pricing.id"
+                                           t-att-value="pricing.id"
+                                           t-att-checked="'checked' if ((pricing_first and not post.get('recurring_pricing_id')) or str(pricing.id) == str(post.get('recurring_pricing_id', ''))) else None"/>
+                                    <label t-att-for="'recurring_pricing_%s' % pricing.id"
+                                           class="wink-tier-label card p-3 w-100 cursor-pointer">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fw-bold fs-5">
+                                                    <t t-if="pricing.recurring_plan_id"><t t-esc="pricing.recurring_plan_id.name"/></t>
+                                                    <t t-elif="pricing.plan_id"><t t-esc="pricing.plan_id.name"/></t>
+                                                    <t t-else=""><t t-esc="pricing.display_name"/></t>
+                                                </div>
+                                            </div>
+                                            <div class="text-end" t-if="pricing.price">
+                                                <div class="fw-bold fs-4" style="color: var(--wink-primary);">
+                                                    <t t-esc="'{:,.2f}'.format(pricing.price)"/> <t t-esc="request.env.company.currency_id.symbol"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </t>
+                        </div>
+                        <!-- When no Recurring Prices loaded (Odoo subscription / product.pricing not available to portal) -->
+                        <div t-if="product.delivery_model == 'retainer' and not recurring_plan_lines" class="alert alert-info py-2 mb-3">
+                            <small>Plan options (Monthly / Yearly) come from the product's <strong>Recurring Prices</strong> tab (Odoo subscription). If no plan selector appears, ensure the subscription module is installed and Recurring Prices are set—contact your administrator.</small>
+                        </div>
 
+                        <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.) -->
+                        <div t-if="is_bundle" class="wink-tier-selector mb-4">
+                            <h5 class="mb-3">Select Your Tier</h5>
+                            <t t-foreach="tier_data" t-as="td">
+                                <div class="wink-tier-card mb-3">
+                                    <input type="radio" name="tier_id" class="d-none wink-tier-radio"
+                                           t-att-id="'tier_' + str(td['tier'].id)"
+                                           t-att-value="td['tier'].id"
+                                           t-att-checked="'checked' if (td_first and not post.get('tier_id')) or str(td['tier'].id) == str(post.get('tier_id', '')) else None"/>
+                                    <label t-att-for="'tier_' + str(td['tier'].id)"
+                                           class="wink-tier-label card p-3 w-100 cursor-pointer">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <div class="fw-bold fs-5">
+                                                    <t t-esc="td['tier'].name"/>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold fs-4" style="color: var(--wink-primary);">
+                                                    AED <t t-esc="'{:,.0f}'.format(td['tier'].price)"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <ul class="mb-0 ps-3" t-if="td['items']">
+                                            <t t-foreach="td['items']" t-as="item">
+                                                <li class="text-muted small">
+                                                    <t t-esc="item.description or item.service_product_id.name"/>
+                                                </li>
+                                            </t>
+                                        </ul>
+                                    </label>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Bundle: employees per child service (shown when a tier is selected) -->
+                        <div t-if="is_bundle and employees" class="mt-4" id="bundle-employees-container">
+                            <h5 class="border-bottom pb-2">Select Employees per Included Service</h5>
+                            <p class="text-muted small mb-3">Select employees for each service that requires it (for the plan you choose above).</p>
+                            <t t-foreach="tier_data" t-as="td">
+                                <div t-att-id="'tier_employees_%s' % td['tier'].id" class="tier-employees-section mb-4" t-att-style="'display:%s;' % ('block' if ((td_first and not post.get('tier_id')) or str(td['tier'].id) == str(post.get('tier_id', ''))) else 'none')">
+                                    <h6 class="text-primary"><t t-esc="td['tier'].name"/> — employees</h6>
+                                    <t t-foreach="td['items']" t-as="item">
+                                        <div t-if="item.service_product_id.requires_employee_selection" class="mb-3 ps-3 border-start border-primary bundle-item-employees">
+                                            <div class="fw-semibold mb-2"><t t-esc="item.description or item.service_product_id.name"/></div>
+                                            <div class="mb-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm wink-bundle-select-all">Select all</button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm wink-bundle-deselect-all">Deselect all</button>
+                                            </div>
+                                            <div class="row g-2">
+                                                <t t-foreach="employees" t-as="emp">
+                                                    <div class="col-md-6">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input" t-att-name="'employee_ids_%s_%s' % (td['tier'].id, item_index)" t-att-value="emp.id"/>
+                                                            <label class="form-check-label"><t t-esc="emp.name"/></label>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                            <script>
+                                (function() {
+                                    var radios = document.querySelectorAll('input.wink-tier-radio');
+                                    var sections = document.querySelectorAll('.tier-employees-section');
+                                    function updateVisibility() {
+                                        var selected = document.querySelector('input.wink-tier-radio:checked');
+                                        var tierId = selected ? selected.value : '';
+                                        sections.forEach(function(section) {
+                                            section.style.display = (section.id === 'tier_employees_' + tierId) ? 'block' : 'none';
+                                        });
+                                    }
+                                    if (radios.length) radios.forEach(function(radio) { radio.addEventListener('change', updateVisibility); });
+                                    updateVisibility();
+                                })();
+                            </script>
+                        </div>
+
+                        <!-- Start date and notes: for both bundle and standalone -->
+                        <div class="row g-3 mt-3" t-if="is_bundle">
+                            <div class="col-md-6">
+                                <label class="form-label">Requested Start Date</label>
+                                <input type="date" class="form-control" name="start_date"/>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Special Requirements / Notes</label>
+                                <textarea class="form-control" name="notes" rows="3" placeholder="Any specific requirements or notes..."/>
+                            </div>
+                        </div>
+
+                        <div class="row g-3" t-if="not is_bundle">
                             <div class="col-md-6">
                                 <label class="form-label">Requested Start Date</label>
                                 <input type="date" class="form-control" name="start_date"/>
@@ -166,7 +310,11 @@
                         <div t-if="product.requires_employee_selection" class="mt-4">
                             <h5 class="border-bottom pb-2">Select Employees for This Service</h5>
                             <t t-if="employees">
-                                <div class="row g-2">
+                                <div class="mb-2 d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm wink-select-all-employees" data-target="employee_ids">Select all</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm wink-deselect-all-employees" data-target="employee_ids">Deselect all</button>
+                                </div>
+                                <div class="row g-2" id="employee_ids_container">
                                     <t t-foreach="employees" t-as="emp">
                                         <div class="col-md-6">
                                             <div class="form-check border rounded p-3">
@@ -195,6 +343,30 @@
                             </button>
                         </div>
                     </form>
+                    <script>
+                        (function() {
+                            var form = document.querySelector('form[action="/my/requests/submit"]');
+                            if (!form) return;
+                            form.addEventListener('click', function(e) {
+                                var target = e.target;
+                                if (target.classList.contains('wink-select-all-employees')) {
+                                    e.preventDefault();
+                                    form.querySelectorAll('input[name="employee_ids"]').forEach(function(cb) { cb.checked = true; });
+                                } else if (target.classList.contains('wink-deselect-all-employees')) {
+                                    e.preventDefault();
+                                    form.querySelectorAll('input[name="employee_ids"]').forEach(function(cb) { cb.checked = false; });
+                                } else if (target.classList.contains('wink-bundle-select-all')) {
+                                    e.preventDefault();
+                                    var block = target.closest('.bundle-item-employees');
+                                    if (block) block.querySelectorAll('.form-check-input').forEach(function(cb) { cb.checked = true; });
+                                } else if (target.classList.contains('wink-bundle-deselect-all')) {
+                                    e.preventDefault();
+                                    var block = target.closest('.bundle-item-employees');
+                                    if (block) block.querySelectorAll('.form-check-input').forEach(function(cb) { cb.checked = false; });
+                                }
+                            });
+                        })();
+                    </script>
                 </div>
             </t>
         </template>
@@ -215,9 +387,13 @@
                         <strong>Manual payment logged!</strong> Awaiting coordinator validation.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
+                    <div t-if="retainer_cancelled" class="alert alert-info alert-dismissible fade show" role="alert">
+                        <strong>Cancellation requested.</strong> Our team will process your request and contact you if needed.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
 
                     <div class="card shadow-sm mt-4">
-                        <div class="card-header" style="background:var(--wink-primary); color:var(--wink-text-light)">
+                        <div class="card-header" style="background:var(--wink-primary); color:#fff;">
                             <h4 class="mb-0">Order Summary: <t t-esc="order.name"/></h4>
                         </div>
                         <div class="card-body">
@@ -248,29 +424,156 @@
                             <hr/>
 
                             <h5 class="mt-4">Next Steps</h5>
+
+                            <t t-set="tx_paid" t-value="order.transaction_ids.filtered(lambda tx: tx.state in ('authorized', 'done', 'pending'))"/>
+                            <t t-set="inv_paid" t-value="order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid'))"/>
+                            <t t-set="is_paid" t-value="tx_paid or inv_paid"/>
+
                             <t t-if="order.state in ['draft', 'sent']">
                                 <p>Our team will review your request and send you a quotation within 2 business days.</p>
                             </t>
                             <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
                                 <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
                             </t>
-                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed">
+                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
                                 <div class="mt-3">
                                     <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg">Proceed to Payment</a>
+                                    <t t-if="request.params.get('payment') == 'pending'">
+                                        <div class="alert alert-warning mt-2 mb-0 py-2">
+                                            Manual payment logged. Awaiting coordinator validation.
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid">
+                                <div class="mt-3 alert alert-success py-2 mb-0 border-0">
+                                    <i class="fa fa-check-circle"/> Payment received successfully.
                                 </div>
                             </t>
                         </div>
                         <div class="card-footer bg-light d-flex justify-content-between">
-                            <a href="/my/orders" class="btn btn-outline-secondary">View My Requests</a>
+                            <a href="/my/requests" class="btn btn-outline-secondary">View My Requests</a>
                             <a href="/services" class="btn btn-outline-primary">Browse More Services</a>
                         </div>
                     </div>
+
+                    <!-- Retainer: current plan, upgrade/downgrade, cancel -->
+                    <div t-if="is_retainer and order.state in ('sale', 'done') and not order.wink_cancellation_requested" class="card mt-3 shadow-sm">
+                        <div class="card-header fw-bold">Manage your retainer</div>
+                        <div class="card-body">
+                            <t t-if="retainer_plan">
+                                <p class="mb-2"><strong>Current plan:</strong>
+                                    <t t-if="retainer_plan.recurring_plan_id"><t t-esc="retainer_plan.recurring_plan_id.name"/></t>
+                                    <t t-elif="retainer_plan.plan_id"><t t-esc="retainer_plan.plan_id.name"/></t>
+                                    <t t-else=""><t t-esc="retainer_plan.name"/></t>
+                                    <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price)"/> <t t-esc="order.currency_id.symbol"/></t>
+                                </p>
+                            </t>
+                            <div class="d-flex flex-wrap gap-2">
+                                <t t-if="retainer_plans_for_change and len(retainer_plans_for_change) > 1">
+                                    <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;change_from=#{order.id}" class="btn btn-outline-primary">
+                                        Upgrade / Downgrade plan
+                                    </a>
+                                </t>
+                                <form method="post" t-attf-action="/my/requests/#{order.id}/retainer/cancel" class="d-inline">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <button type="submit" class="btn btn-outline-danger">Request cancellation</button>
+                                </form>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0">Upgrade or downgrade will create a new request for the new plan. Cancellation is processed by our team.</p>
+                        </div>
+                    </div>
+                    <div t-if="is_retainer and order.wink_cancellation_requested" class="card mt-3 border-warning">
+                        <div class="card-body py-2">
+                            <span class="text-warning"><i class="fa fa-info-circle"/> Cancellation requested — our team will process it shortly.</span>
+                        </div>
+                    </div>
+
+                    <!-- Compliance Documents Section -->
+                    <div t-if="requirements" class="card mt-3 shadow-sm">
+                        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                            <span>Compliance Documents</span>
+                            <a t-attf-href="/my/requests/#{order.id}/documents"
+                               class="btn btn-sm" style="background:var(--wink-primary); color:#fff; font-size:12px;">
+                                Manage Documents
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <t t-foreach="requirements" t-as="req">
+                                <t t-set="sub" t-value="sub_map.get(req.id, False)"/>
+                                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                    <div>
+                                        <span class="fw-semibold"><t t-esc="req.name"/></span>
+                                        <span t-if="req.requirement == 'required'" class="badge ms-2"
+                                              style="background:var(--wink-primary); color:#fff; font-size:10px;">Required</span>
+                                    </div>
+                                    <span t-if="not sub" class="badge bg-secondary">Not Uploaded</span>
+                                    <span t-elif="sub.state == 'approved'" class="badge bg-success">✓ Approved</span>
+                                    <span t-elif="sub.state == 'under_review'" class="badge" style="background:var(--wink-info); color:#fff;">Under Review</span>
+                                    <span t-elif="sub.state == 'change_required'" class="badge bg-warning text-dark">Change Required</span>
+                                    <span t-else="" class="badge bg-danger">Rejected</span>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Bundle Entitlements -->
+                    <div t-if="order.wink_entitlement_ids and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
+                        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                            <span>
+                                <t t-if="order.wink_bundle_tier_id">
+                                    <t t-esc="order.wink_bundle_tier_id.bundle_id.name"/>
+                                    —
+                                    <t t-esc="order.wink_bundle_tier_id.name"/> Plan
+                                </t>
+                                <t t-else="">Included Services</t>
+                            </span>
+                            <small class="text-muted fw-normal">Activate each service when ready</small>
+                        </div>
+                        <div class="card-body p-0">
+                            <div t-if="bundle_requested" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                                Service activated successfully. A project has been created for delivery.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+                            <t t-foreach="order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)" t-as="ent">
+                                <div class="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
+                                    <div>
+                                        <div class="fw-semibold"><t t-esc="ent.name"/></div>
+                                        <small class="text-muted">
+                                            Included in bundle
+                                            <t t-if="ent.qty_entitled > 1">
+                                                — <t t-esc="ent.qty_activated"/>/<t t-esc="ent.qty_entitled"/> used
+                                            </t>
+                                        </small>
+                                    </div>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <t t-if="ent.state == 'fully_activated'">
+                                            <span class="badge bg-success">✓ Activated</span>
+                                        </t>
+                                        <t t-elif="ent.state == 'available'">
+                                            <span class="badge bg-secondary">Available</span>
+                                            <form t-if="order.state in ('sale', 'done')"
+                                                  method="post"
+                                                  t-attf-action="/my/requests/#{order.id}/bundle/#{ent.id}/activate">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <button type="submit" class="btn btn-sm" style="background:var(--wink-primary);color:#fff;">Activate</button>
+                                            </form>
+                                            <t t-if="order.state not in ('sale', 'done')">
+                                                <small class="text-muted fst-italic">Available after order confirmation</small>
+                                            </t>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
                 </div>
             </t>
         </template>
 
         <!-- wink_payment_page -->
-        <template id="wink_payment_page" name="WINK Portal Payment">
+        <template id="wink_payment_page_v2" name="WINK Portal Payment">
             <t t-call="website.layout">
                 <div class="container mt-5 mb-5">
                     <h2 class="mb-4">Complete Payment for <t t-esc="order.name"/></h2>
@@ -299,48 +602,191 @@
                         </div>
 
                         <div class="col-md-7">
-                            <ul class="nav nav-tabs" id="paymentTab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab" aria-controls="online" aria-selected="true">Pay Online</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="false">Pay by Bank Transfer</button>
-                                </li>
-                            </ul>
-                            <div class="tab-content border border-top-0 p-4 bg-white" id="paymentTabContent">
-                                <div class="tab-pane fade show active" id="online" role="tabpanel" aria-labelledby="online-tab">
-                                    <p class="text-muted mb-4">Securely pay online using your credit card or saved payment methods.</p>
-                                    <t t-call="payment.checkout">
-                                        <t t-set="amount" t-value="order.amount_total"/>
-                                        <t t-set="currency" t-value="order.currency_id"/>
-                                        <t t-set="reference_prefix" t-value="order.name"/>
-                                        <t t-set="partner_id" t-value="order.partner_id.id"/>
-                                        <t t-set="access_token" t-value="order.access_token"/>
-                                        <t t-set="transaction_route" t-value="'/shop/payment/transaction/' + str(order.id)"/>
+                            <div class="card shadow-sm border-0 mb-4">
+                                <div class="card-body p-4">
+                                    <h4 class="mb-4 text-center">Select Payment Method</h4>
+                                    <!-- Native Odoo Payment & Wallet Widget (payment.form in Odoo 18) -->
+                                    <t t-call="payment.form">
+                                        <t t-set="default_payment_provider_id" t-value="default_payment_provider_id"/>
+                                        <t t-set="amount" t-value="amount"/>
+                                        <t t-set="currency" t-value="currency"/>
+                                        <t t-set="partner_id" t-value="partner_id"/>
                                     </t>
-                                </div>
-                                <div class="tab-pane fade" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                                    <h5>Bank Transfer details</h5>
-                                    <div class="bg-light p-3 rounded mb-4">
-                                        Please transfer the amount to: <br/>
-                                        <strong>Bank:</strong> KUEC Corporate Bank (Configure in Settings)<br/>
-                                        <strong>Reference:</strong> <t t-esc="order.name"/>
-                                    </div>
-                                    <form method="post" t-attf-action="/my/requests/#{order.id}/confirm-manual">
-                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                        <button type="submit" class="btn btn-primary w-100">I have made the payment</button>
-                                    </form>
                                 </div>
                             </div>
 
-                            <div class="mt-4">
+                            <div class="mt-4 text-center">
                                 <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none">
-                                    <i class="fa fa-arrow-left me-1"/> Back to Request
+                                    <i class="fa fa-arrow-left me-1"/> Back to Request Details
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
+            </t>
+        </template>
+    </data>
+
+    <data>
+        <!-- wink_document_upload_page -->
+        <template id="wink_document_upload_page" name="WINK Document Upload">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5">
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/my/orders">My Requests</a></li>
+                            <li class="breadcrumb-item"><a t-attf-href="/my/requests/#{order.id}"><t t-esc="order.name"/></a></li>
+                            <li class="breadcrumb-item active">Documents</li>
+                        </ol>
+                    </nav>
+
+                    <h3 class="mb-4">Compliance Documents — <t t-esc="order.name"/></h3>
+
+                    <!-- Upload success banner -->
+                    <div t-if="doc_uploaded" class="alert alert-success alert-dismissible fade show">
+                        Document uploaded successfully. It is now under review by our team.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+
+                    <!-- Error banners -->
+                    <div t-if="doc_error == 'no_file'" class="alert alert-danger">
+                        Please select a file to upload.
+                    </div>
+                    <div t-if="doc_error == 'bad_type'" class="alert alert-danger">
+                        Invalid file type. Accepted: PDF, JPG, PNG, Word documents.
+                    </div>
+
+                    <!-- One card per document requirement -->
+                    <t t-foreach="requirements" t-as="req">
+                        <t t-set="sub" t-value="sub_map.get(req.id)"/>
+                        <t t-set="sub_state" t-value="sub.state if sub else 'draft'"/>
+
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span class="fw-bold"><t t-esc="req.name"/></span>
+                                <span t-if="req.requirement == 'required'" class="badge"
+                                      style="background:var(--wink-primary); color:#fff;">Required</span>
+                                <span t-else="" class="badge bg-secondary">Optional</span>
+                            </div>
+                            <div class="card-body">
+                                <!-- Status badge -->
+                                <div class="mb-3">
+                                    <span t-if="sub_state == 'draft'" class="badge bg-secondary">Not Uploaded</span>
+                                    <span t-elif="sub_state == 'under_review'" class="badge" style="background:var(--wink-info); color:#fff;">Under Review</span>
+                                    <span t-elif="sub_state == 'approved'" class="badge bg-success">✓ Approved</span>
+                                    <span t-elif="sub_state == 'change_required'" class="badge bg-warning text-dark">Change Required</span>
+                                    <span t-elif="sub_state == 'rejected'" class="badge bg-danger">Rejected</span>
+                                </div>
+
+                                <!-- Coordinator notes (change/reject) -->
+                                <div t-if="sub and sub.coordinator_notes and sub_state in ('change_required', 'rejected')"
+                                     class="alert alert-warning mb-3">
+                                    <strong>Notes from our team:</strong><br/>
+                                    <t t-esc="sub.coordinator_notes"/>
+                                </div>
+
+                                <!-- Current filename -->
+                                <div t-if="sub and sub.filename" class="text-muted small mb-3">
+                                    Current file: <strong><t t-esc="sub.filename"/></strong>
+                                </div>
+
+                                <!-- Upload form (hidden if approved) -->
+                                <form t-if="sub_state != 'approved'" method="post"
+                                      t-attf-action="/my/requests/#{order.id}/documents/upload"
+                                      enctype="multipart/form-data">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="requirement_id" t-att-value="req.id"/>
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <input type="file" name="doc_file"
+                                               class="form-control form-control-sm"
+                                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"/>
+                                        <button type="submit" class="btn btn-sm"
+                                                style="background:var(--wink-primary); color:#fff; white-space:nowrap;">
+                                            <t t-if="sub_state == 'draft'">Upload</t>
+                                            <t t-else="">Re-upload</t>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Navigation -->
+                    <div class="d-flex gap-2 mt-4">
+                        <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary">
+                            Back to Request
+                        </a>
+                    </div>
+                </div>
+            </t>
+        </template>
+        <!-- Inject Service Requests into Portal Dashboard -->
+        <template id="portal_my_home_requests" name="Portal layout : service requests entry" inherit_id="portal.portal_my_home" customize_show="True" priority="20">
+            <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">Service Requests</t>
+                    <t t-set="url" t-value="'/my/requests'"/>
+                    <t t-set="placeholder_count" t-value="'request_count'"/>
+                    <t t-set="count" t-value="request_count"/>
+                </t>
+            </xpath>
+        </template>
+
+        <!-- Custom Service Requests List View -->
+        <template id="portal_my_requests" name="My Service Requests">
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+                <t t-call="portal.portal_searchbar">
+                    <t t-set="title">Service Requests</t>
+                </t>
+
+                <t t-if="not requests">
+                    <p class="alert alert-warning mt-4">There are currently no active service requests for your account.</p>
+                </t>
+                <t t-if="requests" t-call="portal.portal_table">
+                    <thead>
+                        <tr class="active">
+                            <th>Request #</th>
+                            <th>Order Date</th>
+                            <th>Requested Service</th>
+                            <th class="text-end">Total Amount</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="requests" t-as="req">
+                            <tr>
+                                <td>
+                                    <a t-attf-href="/my/requests/#{req.id}">
+                                        <t t-esc="req.name"/>
+                                    </a>
+                                </td>
+                                <td>
+                                    <span t-field="req.date_order" t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td>
+                                    <span t-esc="req.wink_source_product_id.name if req.wink_source_product_id else req.order_line[0].product_id.name if req.order_line else 'Service Request'"/>
+                                    <t t-if="req.wink_bundle_tier_id">
+                                        <span class="badge ms-1" style="background-color: var(--wink-info); color: #fff;"><t t-esc="req.wink_bundle_tier_id.name"/></span>
+                                    </t>
+                                </td>
+                                <td class="text-end">
+                                    <span t-field="req.amount_total" t-options='{"widget": "monetary", "display_currency": req.pricelist_id.currency_id}'/>
+                                </td>
+                                <td class="text-center">
+                                    <span t-if="req.state == 'draft'" class="badge rounded-pill text-bg-secondary"><i class="fa fa-fw fa-file-text"/> Quotation</span>
+                                    <span t-if="req.state == 'sent'" class="badge rounded-pill text-bg-info"><i class="fa fa-fw fa-paper-plane"/> Quotation Sent</span>
+                                    <span t-if="req.state == 'sale'" class="badge rounded-pill text-bg-success"><i class="fa fa-fw fa-check"/> Confirmed</span>
+                                    <span t-if="req.state in ['done', 'fully_activated']" class="badge rounded-pill" style="background-color: var(--wink-primary); color: #fff;"><i class="fa fa-fw fa-lock"/> Completed</span>
+                                    <span t-if="req.state == 'cancel'" class="badge rounded-pill text-bg-danger"><i class="fa fa-fw fa-times"/> Cancelled</span>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </t>
             </t>
         </template>
     </data>
