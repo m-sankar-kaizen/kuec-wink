@@ -43,9 +43,14 @@ class WinkRequest(http.Controller):
                 'bundle': bundle,
                 'tier_data': tier_data,
             })
-        # Prefer Odoo native Recurring Prices (Recurring Plan + Recurring Price tab); else quotation templates
+        # Retainer: use recurring price based on recurring plan (Recurring Prices tab); else quotation templates
         recurring_lines = product._wink_recurring_plan_lines()
-        if recurring_lines:
+        if product.delivery_model == 'retainer' and recurring_lines:
+            vals['recurring_plan_lines'] = recurring_lines
+            vals['use_recurring_prices'] = True
+        elif product.delivery_model == 'retainer' and product.wink_subscription_plan_ids:
+            vals['subscription_plan_ids'] = product.wink_subscription_plan_ids
+        elif not product.delivery_model == 'retainer' and recurring_lines:
             vals['recurring_plan_lines'] = recurring_lines
             vals['use_recurring_prices'] = True
         elif product.wink_subscription_plan_ids:
@@ -98,8 +103,14 @@ class WinkRequest(http.Controller):
                     'bundle': bundle,
                     'tier_data': tier_data,
                 })
+            # Retainer: plan selection = recurring plan + recurring price (Recurring Prices tab) or quotation templates
             recurring_lines = product._wink_recurring_plan_lines()
-            if recurring_lines:
+            if product.delivery_model == 'retainer' and recurring_lines:
+                render_vals['recurring_plan_lines'] = recurring_lines
+                render_vals['use_recurring_prices'] = True
+            elif product.delivery_model == 'retainer' and product.wink_subscription_plan_ids:
+                render_vals['subscription_plan_ids'] = product.wink_subscription_plan_ids
+            elif product.delivery_model != 'retainer' and recurring_lines:
                 render_vals['recurring_plan_lines'] = recurring_lines
                 render_vals['use_recurring_prices'] = True
             elif product.wink_subscription_plan_ids:
@@ -278,6 +289,7 @@ class WinkRequest(http.Controller):
                     return request.render('kuec_service_catalogue.wink_request_form', vals)
 
         variant = product.product_variant_id
+        # Retainer: price is based on the selected recurring plan (recurring price from Recurring Prices tab)
         price_unit = product.list_price
         selected_pricing = request.env['product.pricing'].browse()
         if use_recurring_prices:
@@ -286,8 +298,9 @@ class WinkRequest(http.Controller):
             except (TypeError, ValueError):
                 pricing_id = 0
             selected_pricing = request.env['product.pricing'].sudo().browse(pricing_id)
-            if selected_pricing.exists() and selected_pricing.id in recurring_lines.ids:
-                price_unit = getattr(selected_pricing, 'price', price_unit) or price_unit
+            if selected_pricing.exists() and hasattr(recurring_lines, 'ids') and selected_pricing.id in recurring_lines.ids:
+                # Recurring price is based on the selected recurring plan
+                price_unit = getattr(selected_pricing, 'price', None) or getattr(selected_pricing, 'recurring_price', None) or price_unit
 
         line_vals = {
             'product_id': variant.id,
@@ -457,7 +470,7 @@ class WinkRequest(http.Controller):
         is_retainer = product and product.delivery_model == 'retainer'
         # Current plan: from Recurring Prices (native) or quotation template
         retainer_plan = order.wink_recurring_pricing_id or order.wink_sale_order_template_id
-        recurring_lines = product._wink_recurring_plan_lines() if product else request.env['product.pricing'].browse()
+        recurring_lines = product._wink_recurring_plan_lines() if product else []
         if recurring_lines:
             retainer_plans_for_change = recurring_lines
         else:

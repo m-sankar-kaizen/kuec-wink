@@ -74,12 +74,18 @@ class ProductTemplate(models.Model):
 
     def _wink_recurring_plan_lines(self):
         """Return native Recurring Prices (Recurring Plan + Recurring Price) for portal plan selection.
-        Uses product_pricing_ids from sale_subscription when available."""
+        For retainer, the system uses recurring price based on the selected recurring plan.
+        Uses product_pricing_ids from sale_subscription when available. Returns empty list if model not loaded."""
         self.ensure_one()
-        if 'product_pricing_ids' in self._fields and self.product_pricing_ids:
-            key = lambda p: (getattr(p, 'sequence', 0), p.id)
-            return self.product_pricing_ids.sorted(key=key)
-        return self.env['product.pricing'].browse()
+        if 'product_pricing_ids' not in self._fields:
+            try:
+                return self.env['product.pricing'].browse()
+            except KeyError:
+                return []
+        if not self.product_pricing_ids:
+            return self.product_pricing_ids
+        key = lambda p: (getattr(p, 'sequence', 0), p.id)
+        return self.product_pricing_ids.sorted(key=key)
 
     reminder_days_before = fields.Integer(
         string='Reminder Days Before Expiry',
