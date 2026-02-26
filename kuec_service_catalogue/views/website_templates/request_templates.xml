@@ -183,38 +183,40 @@
                             </div>
                         </div>
 
-                        <!-- Plan: Recurring price based on recurring plan (Retainer) or quotation templates -->
-                        <div t-if="recurring_plan_lines" class="wink-retainer-plan-selector mb-4">
+                        <!-- Plan: Recurring price selector (uses subscription_plans dicts — safe, no ORM in QWeb) -->
+                        <div t-if="is_subscription_service and subscription_plans and not selected_plan" class="wink-retainer-plan-selector mb-4">
                             <h5 class="mb-3">Select Your Plan</h5>
-                            <p class="text-muted small mb-2">Price is based on the recurring plan you select.</p>
-                            <t t-foreach="recurring_plan_lines" t-as="pricing">
+                            <p class="text-muted small mb-2">Price is based on the plan you select.</p>
+                            <t t-foreach="subscription_plans" t-as="plan">
                                 <div class="wink-tier-card mb-3">
-                                    <input type="radio" name="recurring_pricing_id" class="d-none"
-                                           t-att-id="'recurring_pricing_%s' % pricing.id"
-                                           t-att-value="pricing.id"
-                                           t-att-checked="'checked' if ((pricing_first and not post.get('recurring_pricing_id')) or str(pricing.id) == str(post.get('recurring_pricing_id', ''))) else None"/>
-                                    <label t-att-for="'recurring_pricing_%s' % pricing.id"
+                                    <input type="radio" name="selected_recurrence_id" class="d-none wink-plan-radio"
+                                           t-att-id="'plan_%s' % plan['recurrence_id']"
+                                           t-att-value="plan['recurrence_id']"
+                                           t-att-checked="'checked' if (plan_first or str(plan['recurrence_id']) == str(post.get('selected_recurrence_id', ''))) else None"/>
+                                    <label t-att-for="'plan_%s' % plan['recurrence_id']"
                                            class="wink-tier-label card p-3 w-100 cursor-pointer">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
-                                                <div class="fw-bold fs-5">
-                                                    <t t-set="pricing_label" t-value="getattr(getattr(pricing, 'recurrence_id', None), 'name', None) or getattr(getattr(pricing, 'recurring_plan_id', None), 'name', None) or getattr(getattr(pricing, 'plan_id', None), 'name', None) or getattr(pricing, 'name', None) or pricing.display_name"/>
-                                                    <t t-esc="pricing_label"/>
-                                                </div>
+                                                <div class="fw-bold fs-5"><t t-esc="plan['plan_name']"/></div>
+                                                <div class="text-muted small"><t t-esc="plan['period_label']"/></div>
+                                                <t t-if="plan.get('show_savings')"><span class="badge bg-success mt-1">Save <t t-esc="plan['savings_pct']"/>%</span></t>
                                             </div>
-                                            <div class="text-end" t-if="pricing.price or pricing.list_price or getattr(pricing, 'recurring_price', None)">
+                                            <div class="text-end" t-if="plan['price']">
                                                 <div class="fw-bold fs-4" style="color: var(--wink-primary);">
-                                                    <t t-esc="'{:,.2f}'.format(pricing.price or pricing.list_price or getattr(pricing, 'recurring_price', None) or 0)"/> <t t-esc="request.env.company.currency_id.symbol"/>
+                                                    AED <t t-esc="'{:,.2f}'.format(plan['price'])"/>
                                                 </div>
+                                                <t t-if="plan.get('monthly_equivalent') and plan['monthly_equivalent'] != plan['price']">
+                                                    <div class="small text-success">≈ AED <t t-esc="'{:,.2f}'.format(plan['monthly_equivalent'])"/> / mo</div>
+                                                </t>
                                             </div>
                                         </div>
                                     </label>
                                 </div>
                             </t>
                         </div>
-                        <!-- When no plans loaded: remind admin to set Time-based / Recurring Prices on the product -->
-                        <div t-if="product.delivery_model == 'retainer' and not recurring_plan_lines" class="alert alert-info py-2 mb-3">
-                            <small>Plan options (Monthly / Yearly) come from this product's <strong>Recurring Prices</strong> or <strong>Time-based pricing</strong> tab. Add at least one price line there and save the product—then the plan selector and price will appear here. If the tab is missing, ensure the Subscriptions app is installed.</small>
+                        <!-- When no plans loaded: remind admin to set Recurring Prices on the product -->
+                        <div t-if="product.delivery_model == 'retainer' and not subscription_plans" class="alert alert-info py-2 mb-3">
+                            <small>Plan options (Monthly / Yearly) come from this product's <strong>Recurring Prices</strong> tab. Add at least one price line there and save the product — then the plan selector will appear here.</small>
                         </div>
 
                         <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.) -->
