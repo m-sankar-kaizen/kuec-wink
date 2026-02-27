@@ -505,9 +505,8 @@
                         <div class="card-body">
                             <t t-if="retainer_plan">
                                 <p class="mb-2"><strong>Current plan:</strong>
-                                    <t t-set="plan_label" t-value="getattr(getattr(retainer_plan, 'recurrence_id', None), 'name', None) or getattr(getattr(retainer_plan, 'recurring_plan_id', None), 'name', None) or getattr(getattr(retainer_plan, 'plan_id', None), 'name', None) or getattr(retainer_plan, 'name', None) or retainer_plan.display_name"/>
-                                    <t t-esc="plan_label"/>
-                                    <t t-if="retainer_plan_has_price"> — <t t-esc="'{:,.2f}'.format(retainer_plan.price or retainer_plan.list_price or 0)"/> <t t-esc="order.currency_id.symbol or 'AED'"/></t>
+                                    <t t-esc="retainer_plan_label or 'Current Plan'"/>
+                                    <t t-if="retainer_plan_has_price"> — <t t-esc="retainer_plan_price_str"/> <t t-esc="retainer_plan_currency_sym"/></t>
                                 </p>
                             </t>
                             <div class="d-flex flex-wrap gap-2">
@@ -562,10 +561,10 @@
                     <div t-if="order.wink_entitlement_ids and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
                         <div class="card-header fw-bold d-flex justify-content-between align-items-center">
                             <span>
-                                <t t-if="order.wink_bundle_tier_id">
-                                    <t t-esc="order.wink_bundle_tier_id.bundle_id.name"/>
-                                    —
-                                    <t t-esc="order.wink_bundle_tier_id.name"/> Plan
+                                <t t-if="bundle_tier_label">
+                                    <t t-esc="bundle_bundle_name"/>
+                                    <t t-if="bundle_bundle_name"> — </t>
+                                    <t t-esc="bundle_tier_label"/> Plan
                                 </t>
                                 <t t-else="">Included Services</t>
                             </span>

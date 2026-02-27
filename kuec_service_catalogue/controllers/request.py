@@ -615,9 +615,56 @@ class WinkRequest(http.Controller):
                 if rec.exists():
                     retainer_plan = rec
         retainer_plans_for_change = recurring_lines
-        retainer_plan_has_price = bool(
-            getattr(retainer_plan, 'price', None) or getattr(retainer_plan, 'list_price', None) or getattr(retainer_plan, 'recurring_price', None)
-        ) if retainer_plan else False
+
+        # Pre-compute ALL ORM-derived display values as plain Python strings.
+        # NEVER let QWeb templates access Many2one descriptors — in Odoo 18 they
+        # return None instead of raising AttributeError, causing TypeError in QWeb.
+        retainer_plan_label = ''
+        retainer_plan_price_str = ''
+        retainer_plan_currency_sym = 'AED'
+        if retainer_plan:
+            try:
+                retainer_plan_label = (
+                    getattr(getattr(retainer_plan, 'recurrence_id', None), 'name', None)
+                    or getattr(getattr(retainer_plan, 'recurring_plan_id', None), 'name', None)
+                    or getattr(getattr(retainer_plan, 'plan_id', None), 'name', None)
+                    or getattr(retainer_plan, 'name', None)
+                    or ''
+                )
+            except Exception:
+                retainer_plan_label = ''
+            try:
+                price_val = (
+                    getattr(retainer_plan, 'price', None)
+                    or getattr(retainer_plan, 'list_price', None)
+                    or getattr(retainer_plan, 'recurring_price', None)
+                    or 0
+                )
+                if price_val:
+                    retainer_plan_price_str = '{:,.2f}'.format(float(price_val))
+            except Exception:
+                retainer_plan_price_str = ''
+            try:
+                cur = order.currency_id
+                if cur and cur.id:
+                    retainer_plan_currency_sym = cur.symbol or 'AED'
+            except Exception:
+                retainer_plan_currency_sym = 'AED'
+
+        # Bundle tier label — pre-computed to avoid triple-chained ORM in template
+        bundle_tier_label = ''
+        bundle_bundle_name = ''
+        try:
+            tier = order.wink_bundle_tier_id
+            if tier and tier.id:
+                bundle_tier_label = tier.name or ''
+                try:
+                    bundle_bundle_name = tier.bundle_id.name or ''
+                except Exception:
+                    bundle_bundle_name = ''
+        except Exception:
+            bundle_tier_label = ''
+            bundle_bundle_name = ''
 
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
@@ -628,8 +675,13 @@ class WinkRequest(http.Controller):
             'sub_map': sub_map,
             'is_retainer': is_retainer,
             'retainer_plan': retainer_plan,
+            'retainer_plan_label': retainer_plan_label,
+            'retainer_plan_price_str': retainer_plan_price_str,
+            'retainer_plan_currency_sym': retainer_plan_currency_sym,
             'retainer_plans_for_change': retainer_plans_for_change,
-            'retainer_plan_has_price': retainer_plan_has_price,
+            'retainer_plan_has_price': bool(retainer_plan_price_str),
+            'bundle_tier_label': bundle_tier_label,
+            'bundle_bundle_name': bundle_bundle_name,
             'retainer_cancelled': kwargs.get('retainer_cancelled') == '1',
         })
 
