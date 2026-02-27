@@ -818,8 +818,9 @@
                                     <t t-if="req.wink_bundle_tier_id">
                                         <span class="badge ms-1" style="background-color: var(--wink-info); color: #fff;"><t t-esc="req.wink_bundle_tier_id.name"/></span>
                                     </t>
-                                    <t t-if="getattr(req, 'is_subscription', False) and getattr(req, 'recurrence_id', None) and req.recurrence_id.id">
-                                        <t t-set="_plan_name" t-value="req.recurrence_id.name or 'Subscription'"/>
+                                    <t t-set="_rec_id" t-value="getattr(getattr(req, 'recurrence_id', None), 'id', False)"/>
+                                    <t t-if="getattr(req, 'is_subscription', False) and _rec_id">
+                                        <t t-set="_plan_name" t-value="getattr(getattr(req, 'recurrence_id', None), 'name', None) or 'Subscription'"/>
                                         <span class="badge rounded-pill ms-1" style="background: #f3f4f6; color: #4b5563; font-size: 12px;"><i class="fa fa-refresh me-1"/><t t-esc="_plan_name"/></span>
                                     </t>
                                 </td>
