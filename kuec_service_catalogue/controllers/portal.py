@@ -62,8 +62,30 @@ class KuecCustomerPortal(CustomerPortal):
 
         requests = SaleOrder.search(domain, order=order, limit=20, offset=pager['offset'])
 
+        # Pre-compute subscription badge data as plain Python dicts — keyed by order id.
+        # This avoids any ORM field descriptor access in QWeb (which crashes in Odoo 18
+        # when computed Many2one fields like recurrence_id or is_subscription return None
+        # via their __get__ descriptor instead of raising AttributeError).
+        subscription_info = {}
+        for req in requests:
+            try:
+                is_sub = bool(req.is_subscription) if hasattr(req, 'is_subscription') else False
+            except Exception:
+                is_sub = False
+            rec_name = None
+            if is_sub:
+                try:
+                    rec = req.recurrence_id
+                    if rec and rec.id:
+                        rec_name = rec.name or None
+                except Exception:
+                    rec_name = None
+            if is_sub and rec_name:
+                subscription_info[req.id] = rec_name
+
         values = {
             'requests': requests,
+            'subscription_info': subscription_info,
             'page_name': 'my_requests',
             'pager': pager,
             'default_url': '/my/requests',

@@ -814,14 +814,13 @@
                                     <span t-field="req.date_order" t-options="{'widget': 'date'}"/>
                                 </td>
                                 <td>
-                                    <span t-esc="req.wink_source_product_id.name if req.wink_source_product_id else req.order_line[0].product_id.name if req.order_line else 'Service Request'"/>
-                                    <t t-if="req.wink_bundle_tier_id">
+                                    <span t-esc="req.wink_source_product_id.name if req.wink_source_product_id.id else (req.order_line[0].product_id.name if req.order_line else 'Service Request')"/>
+                                    <t t-if="req.wink_bundle_tier_id.id">
                                         <span class="badge ms-1" style="background-color: var(--wink-info); color: #fff;"><t t-esc="req.wink_bundle_tier_id.name"/></span>
                                     </t>
-                                    <t t-set="_rec_id" t-value="getattr(getattr(req, 'recurrence_id', None), 'id', False)"/>
-                                    <t t-if="getattr(req, 'is_subscription', False) and _rec_id">
-                                        <t t-set="_plan_name" t-value="getattr(getattr(req, 'recurrence_id', None), 'name', None) or 'Subscription'"/>
-                                        <span class="badge rounded-pill ms-1" style="background: #f3f4f6; color: #4b5563; font-size: 12px;"><i class="fa fa-refresh me-1"/><t t-esc="_plan_name"/></span>
+                                    <t t-set="_sub_plan" t-value="subscription_info.get(req.id)"/>
+                                    <t t-if="_sub_plan">
+                                        <span class="badge rounded-pill ms-1" style="background: #f3f4f6; color: #4b5563; font-size: 12px;"><i class="fa fa-refresh me-1"/><t t-esc="_sub_plan"/></span>
                                     </t>
                                 </td>
                                 <td class="text-end">
