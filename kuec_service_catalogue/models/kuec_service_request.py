@@ -70,6 +70,65 @@ class SaleOrderWink(models.Model):
         string='Bundle Entitlements',
     )
 
+    def _wink_compute_proration(self, plan_name_hint=None):
+        """Compute prorated remaining credit for the current subscription period.
+
+        Looks up the wink.subscription.plan matching plan_name_hint (or the first plan)
+        from the product's subscription group, then calls plan._compute_remaining_credit().
+
+        Returns dict from WinkSubscriptionPlan._compute_remaining_credit() or None if
+        no subscription group / plan is configured on the product.
+
+        Args:
+            plan_name_hint (str|None): plan name to look up (e.g. 'Bronze'). If None,
+                tries to find matching plan by wink_recurring_pricing_id recurrence name.
+        """
+        self.ensure_one()
+        product = self.wink_source_product_id
+        if not product:
+            return None
+        group = product.wink_subscription_group_id
+        if not group or not group.plan_ids:
+            return None
+
+        # Find the matching plan by name hint
+        plan = None
+        if plan_name_hint:
+            plan = group.plan_ids.filtered(
+                lambda p: p.name.strip().lower() == plan_name_hint.strip().lower()
+            )[:1]
+        if not plan:
+            plan = group.plan_ids.sorted('sequence')[:1]
+
+        # Determine subscription period dates from the order
+        # Odoo native: next_date = next billing date (end of current period)
+        # subscription_state: '3_progress' = active
+        end_date = None
+        start_date = None
+        try:
+            next_date = getattr(self, 'next_date', None)
+            if next_date:
+                end_date = next_date
+        except Exception:
+            pass
+        try:
+            start_date = self.wink_requested_start_date or self.date_order.date()
+        except Exception:
+            start_date = None
+
+        return plan._compute_remaining_credit(
+            subscription_start_date=start_date,
+            subscription_end_date=end_date,
+        )
+
+    def _wink_get_policy(self):
+        """Return the wink.subscription.group policy for this order's product, or None."""
+        self.ensure_one()
+        product = self.wink_source_product_id
+        if not product:
+            return None
+        return product.wink_subscription_group_id or None
+
     def _wink_get_docs_status(self):
         """Returns dict of requirement_id: submission for all submissions on this order."""
         return {

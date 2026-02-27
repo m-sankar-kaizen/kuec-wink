@@ -58,6 +58,13 @@ class ProductTemplate(models.Model):
         ondelete='set null',
         help="The bundle this product belongs to. Only for bundled services.",
     )
+    wink_subscription_group_id = fields.Many2one(
+        'wink.subscription.group',
+        string='Subscription Group',
+        ondelete='set null',
+        help='Links this retainer service to its upgrade/downgrade/cancellation policy group. '
+             'Defines standard monthly prices per plan tier for proration calculations.',
+    )
     # Odoo native subscription plans (quotation templates); used when product has no Recurring Prices
     wink_subscription_plan_ids = fields.Many2many(
         'sale.order.template',

@@ -169,14 +169,74 @@
                         </div>
                     </div>
 
-                    <!-- Upgrade/Downgrade notice banner -->
-                    <div t-if="change_from_id" class="alert alert-info mb-4 d-flex align-items-start gap-3">
-                        <i class="fa fa-exchange fa-lg mt-1"/>
-                        <div>
-                            <strong>Plan Change Request</strong><br/>
-                            You are submitting a new plan for your retainer service.
-                            <t t-if="change_from_plan_label"> Your current plan is <strong><t t-esc="change_from_plan_label"/></strong>.</t>
-                            Select your new plan below and submit — our team will process the change.
+                    <!-- Upgrade/Downgrade notice banner (Story 1.12) -->
+                    <div t-if="change_from_id" class="card border-info mb-4">
+                        <div class="card-header d-flex align-items-center gap-2" style="background:#E8F4FD; border-color:#bee5eb;">
+                            <i class="fa fa-exchange text-info"/>
+                            <strong class="text-info">Plan Change Request</strong>
+                        </div>
+                        <div class="card-body py-3">
+                            <p class="mb-2">
+                                You are submitting a plan change for your retainer service.
+                                <t t-if="change_from_plan_label">
+                                    Your current plan is <strong><t t-esc="change_from_plan_label"/></strong>.
+                                </t>
+                                Select your new plan below and submit — our team will process the change.
+                            </p>
+
+                            <!-- Proration credit (Story 1.12) -->
+                            <t t-if="change_proration">
+                                <div class="alert alert-success py-2 mb-2">
+                                    <i class="fa fa-calculator me-1"/>
+                                    <strong>Estimated Remaining Credit:</strong>
+                                    AED <t t-esc="'{:,.2f}'.format(change_proration.get('remaining_value', 0))"/>
+                                    (<t t-esc="change_proration.get('remaining_days', 0)"/> days remaining
+                                    × AED <t t-esc="'{:,.4f}'.format(change_proration.get('daily_rate', 0))"/> / day)
+                                    <br/>
+                                    <small class="text-muted">
+                                        Calculated at the standard monthly rate (AED <t t-esc="'{:,.2f}'.format(change_proration.get('monthly_std_price', 0))"/> / mo ÷ 30).
+                                        Annual discounts are forfeited on plan changes.
+                                    </small>
+                                </div>
+                            </t>
+
+                            <!-- Policy summary -->
+                            <div class="row g-2 mt-1">
+                                <t t-if="change_policy_effective_label">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <i class="fa fa-clock-o me-1"/>
+                                            <strong>Effective Date:</strong>
+                                            <t t-esc="change_policy_effective_label"/>
+                                        </small>
+                                    </div>
+                                </t>
+                                <t t-if="change_policy_credit_label">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">
+                                            <i class="fa fa-credit-card me-1"/>
+                                            <strong>Downgrade Credit:</strong>
+                                            <t t-esc="change_policy_credit_label"/>
+                                        </small>
+                                    </div>
+                                </t>
+                                <t t-if="not change_policy_allow_upgrade">
+                                    <div class="col-12">
+                                        <small class="text-danger">
+                                            <i class="fa fa-ban me-1"/>
+                                            Upgrades are not available for this service. Please contact our team.
+                                        </small>
+                                    </div>
+                                </t>
+                                <t t-if="not change_policy_allow_downgrade">
+                                    <div class="col-12">
+                                        <small class="text-danger">
+                                            <i class="fa fa-ban me-1"/>
+                                            Downgrades are not available for this service. Please contact our team.
+                                        </small>
+                                    </div>
+                                </t>
+                            </div>
                         </div>
                     </div>
 

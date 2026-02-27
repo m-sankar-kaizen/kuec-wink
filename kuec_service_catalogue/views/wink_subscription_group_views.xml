@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── wink.subscription.plan inline form (used inside group form) ──── -->
+
+    <!-- ─── wink.subscription.group — Form View ─────────────────────────── -->
+    <record id="wink_subscription_group_view_form" model="ir.ui.view">
+        <field name="name">wink.subscription.group.view.form</field>
+        <field name="model">wink.subscription.group</field>
+        <field name="arch" type="xml">
+            <form string="Subscription Group">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="E.g. HR Retainer Plans"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="plan_count" string="Plans" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="effective_date_policy"/>
+                            <field name="min_days_before_change"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Optional description of this subscription group..."/>
+
+                    <notebook>
+                        <page string="Plan Tiers" name="plans">
+                            <field name="plan_ids">
+                                <list editable="bottom" string="Plan Tiers">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name" string="Plan Name" placeholder="E.g. Bronze"/>
+                                    <field name="monthly_std_price" string="Std Monthly Price (AED)"/>
+                                    <field name="recurrence_name_hint" string="Recurrence Hint" optional="show"/>
+                                    <field name="active" widget="boolean_toggle" optional="show"/>
+                                </list>
+                            </field>
+                            <p class="text-muted small mt-2">
+                                <i class="fa fa-info-circle"/> The <strong>Standard Monthly Price</strong> is always used for proration when a customer upgrades, downgrades, or cancels — regardless of whether they are on an annual or discounted billing plan.
+                            </p>
+                        </page>
+
+                        <page string="Change Policy" name="policy">
+                            <group>
+                                <group string="Allowed Actions">
+                                    <field name="allow_upgrade"/>
+                                    <field name="allow_downgrade"/>
+                                    <field name="allow_cancellation"/>
+                                </group>
+                                <group string="Credit Policy">
+                                    <field name="downgrade_credit_policy"/>
+                                    <field name="cancellation_credit_policy"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Services Using This Group" name="products">
+                            <field name="product_ids" readonly="1">
+                                <list string="Services">
+                                    <field name="name"/>
+                                    <field name="delivery_model"/>
+                                    <field name="available_on_wink"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ─── wink.subscription.group — List View ──────────────────────────── -->
+    <record id="wink_subscription_group_view_list" model="ir.ui.view">
+        <field name="name">wink.subscription.group.view.list</field>
+        <field name="model">wink.subscription.group</field>
+        <field name="arch" type="xml">
+            <list string="Subscription Groups">
+                <field name="name"/>
+                <field name="plan_count" string="Plans"/>
+                <field name="allow_upgrade" widget="boolean_toggle" optional="show"/>
+                <field name="allow_downgrade" widget="boolean_toggle" optional="show"/>
+                <field name="allow_cancellation" widget="boolean_toggle" optional="show"/>
+                <field name="effective_date_policy" optional="show"/>
+                <field name="active" widget="boolean_toggle" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ─── Action ───────────────────────────────────────────────────────── -->
+    <record id="action_wink_subscription_group" model="ir.actions.act_window">
+        <field name="name">Subscription Groups</field>
+        <field name="res_model">wink.subscription.group</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Subscription Group!
+            </p>
+            <p>
+                Subscription groups define the upgrade / downgrade / cancellation rules and proration formula
+                for retainer services.
+            </p>
+        </field>
+    </record>
+
+    <!-- ─── Menu item under Wink Configuration ───────────────────────────── -->
+    <menuitem id="menu_wink_subscription_group"
+              name="Subscription Groups"
+              parent="menu_kuec_wink_config_root"
+              action="action_wink_subscription_group"
+              sequence="35"/>
+
+</odoo>

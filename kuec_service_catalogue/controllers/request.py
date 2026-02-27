@@ -177,6 +177,34 @@ class WinkRequest(http.Controller):
                     except Exception:
                         change_from_plan_label = ''
 
+            # Story 1.12 — proration and policy for upgrade/downgrade
+            change_proration = None          # dict from _compute_remaining_credit or None
+            change_policy = None             # wink.subscription.group record or None
+            change_policy_allow_upgrade = True
+            change_policy_allow_downgrade = True
+            change_policy_allow_cancellation = True
+            change_policy_credit_label = ''
+            change_policy_effective_label = ''
+            if change_from_order:
+                try:
+                    change_policy = change_from_order._wink_get_policy()
+                    if change_policy:
+                        change_policy_allow_upgrade = change_policy.allow_upgrade
+                        change_policy_allow_downgrade = change_policy.allow_downgrade
+                        change_policy_allow_cancellation = change_policy.allow_cancellation
+                        credit_sel = dict(change_policy._fields['downgrade_credit_policy'].selection)
+                        cancel_sel = dict(change_policy._fields['cancellation_credit_policy'].selection)
+                        change_policy_credit_label = credit_sel.get(change_policy.downgrade_credit_policy, '')
+                        change_policy_effective_label = dict(
+                            change_policy._fields['effective_date_policy'].selection
+                        ).get(change_policy.effective_date_policy, '')
+                except Exception:
+                    change_policy = None
+                try:
+                    change_proration = change_from_order._wink_compute_proration()
+                except Exception:
+                    change_proration = None
+
             render_vals = {
                 'product': product,
                 'employees': employees,
@@ -187,6 +215,13 @@ class WinkRequest(http.Controller):
                 'change_from_id': change_from_id,
                 'change_from_order': change_from_order,
                 'change_from_plan_label': change_from_plan_label,
+                # Story 1.12 proration + policy
+                'change_proration': change_proration,
+                'change_policy_allow_upgrade': change_policy_allow_upgrade,
+                'change_policy_allow_downgrade': change_policy_allow_downgrade,
+                'change_policy_allow_cancellation': change_policy_allow_cancellation,
+                'change_policy_credit_label': change_policy_credit_label,
+                'change_policy_effective_label': change_policy_effective_label,
             }
 
             # Bundle tier data

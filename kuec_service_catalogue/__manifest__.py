@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'KUEC Service Catalogue',
-    'version': '18.0.2.2.0',
+    'version': '18.0.2.3.0',
     'category': 'Sales',
     'summary': 'Service Catalogue & Business Configurability',
     'description': """
@@ -36,6 +36,7 @@
         'data/mail_template_request.xml',
         'views/kuec_classification_views.xml',
         'views/wink_bundle_views.xml',
+        'views/wink_subscription_group_views.xml',
         'views/kuec_service_faq_views.xml',
         'views/product_template_views.xml',
         'views/res_partner_views.xml',
