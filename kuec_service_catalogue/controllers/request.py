@@ -355,8 +355,12 @@ class WinkRequest(http.Controller):
             return request.render('kuec_service_catalogue.wink_request_form', vals)
 
         # Validate selected plan/pricing (product.pricing or sale.subscription.plan) — legacy recurring_pricing_id
-        selected_plan = None
-        selected_pricing = _get_product_pricing_browse(request.env)
+        # NOTE: only reset selected_plan/selected_pricing when the v2 recurrence_id path was NOT taken.
+        # If selected_recurrence_id was provided, selected_pricing and selected_plan were already
+        # set above (lines 345-346) and must NOT be overwritten here.
+        if selected_recurrence_id is None:
+            selected_plan = None
+            selected_pricing = _get_product_pricing_browse(request.env)
         if use_recurring_prices and selected_recurrence_id is None:
             try:
                 chosen_id = int(post.get('recurring_pricing_id') or 0)
@@ -418,8 +422,13 @@ class WinkRequest(http.Controller):
         price_unit = product.list_price
         if use_recurring_prices:
             if getattr(recurring_lines, '_name', None) == 'sale.subscription.plan' and selected_plan:
+                # Legacy sale.subscription.plan path
                 price_unit = getattr(selected_plan, 'price', None) or getattr(selected_plan, 'list_price', None) or price_unit
-            elif selected_pricing.exists():
+            elif selected_recurrence_id and selected_pricing and getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing.exists():
+                # v2: selected_pricing is the product.pricing line matched by recurrence_id
+                price_unit = getattr(selected_pricing, 'price', None) or getattr(selected_pricing, 'recurring_price', None) or price_unit
+            elif getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing.exists():
+                # Legacy product.pricing path
                 price_unit = getattr(selected_pricing, 'price', None) or getattr(selected_pricing, 'recurring_price', None) or price_unit
 
         line_vals = {

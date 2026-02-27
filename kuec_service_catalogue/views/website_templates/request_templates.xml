@@ -668,7 +668,12 @@
         </template>
     </data>
 
-    <data>
+    <data noupdate="0">
+        <!-- Force-delete stale ir.ui.view cache records in this data block -->
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_document_upload_page')]"/>
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.portal_my_home_requests')]"/>
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.portal_my_requests')]"/>
+
         <!-- wink_document_upload_page -->
         <template id="wink_document_upload_page" name="WINK Document Upload">
             <t t-call="website.layout">
@@ -813,9 +818,9 @@
                                     <t t-if="req.wink_bundle_tier_id">
                                         <span class="badge ms-1" style="background-color: var(--wink-info); color: #fff;"><t t-esc="req.wink_bundle_tier_id.name"/></span>
                                     </t>
-                                    <t t-if="getattr(req, 'is_subscription', False) and getattr(req, 'recurrence_id', None)">
-                                        <span class="badge rounded-pill ms-1" style="background: #f3f4f6; color: #4b5563; font-size: 12px;"><i class="fa fa-refresh me-1"/><t t-esc="req.recurrence_id.name"/> Subscription</span>
-                                        <span class="small ms-1" style="color: #2E75B6;"><t t-esc="req.amount_total" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/> / <t t-esc="req.recurrence_id.name"/></span>
+                                    <t t-if="getattr(req, 'is_subscription', False) and getattr(req, 'recurrence_id', None) and req.recurrence_id.id">
+                                        <t t-set="_plan_name" t-value="req.recurrence_id.name or 'Subscription'"/>
+                                        <span class="badge rounded-pill ms-1" style="background: #f3f4f6; color: #4b5563; font-size: 12px;"><i class="fa fa-refresh me-1"/><t t-esc="_plan_name"/></span>
                                     </t>
                                 </td>
                                 <td class="text-end">
