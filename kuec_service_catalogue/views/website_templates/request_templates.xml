@@ -169,11 +169,23 @@
                         </div>
                     </div>
 
+                    <!-- Upgrade/Downgrade notice banner -->
+                    <div t-if="change_from_id" class="alert alert-info mb-4 d-flex align-items-start gap-3">
+                        <i class="fa fa-exchange fa-lg mt-1"/>
+                        <div>
+                            <strong>Plan Change Request</strong><br/>
+                            You are submitting a new plan for your retainer service.
+                            <t t-if="change_from_plan_label"> Your current plan is <strong><t t-esc="change_from_plan_label"/></strong>.</t>
+                            Select your new plan below and submit — our team will process the change.
+                        </div>
+                    </div>
+
                     <!-- Request form -->
                     <form method="post" action="/my/requests/submit">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
                         <input t-if="selected_plan" type="hidden" name="selected_recurrence_id" t-att-value="selected_plan['recurrence_id']"/>
+                        <input t-if="change_from_id" type="hidden" name="change_from_id" t-att-value="change_from_id"/>
 
                         <!-- v2: Your Selected Plan summary (when coming from detail page with plan) -->
                         <div t-if="is_subscription_service and selected_plan" class="mb-4">

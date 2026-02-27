@@ -30,6 +30,7 @@
                         <field name="wink_recurring_pricing_id" invisible="1"/>
                         <field name="wink_sale_order_template_id" readonly="1" invisible="not wink_sale_order_template_id"/>
                         <field name="wink_cancellation_requested" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_change_from_order_id" readonly="1" invisible="not wink_change_from_order_id" string="Plan Change From"/>
                         <field name="wink_request_notes" readonly="1" colspan="2" nolabel="1"/>
                     </group>
                     <group string="Employees (standalone)" invisible="wink_entitlement_ids">

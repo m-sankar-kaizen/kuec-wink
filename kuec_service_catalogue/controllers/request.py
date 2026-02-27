@@ -145,6 +145,38 @@ class WinkRequest(http.Controller):
                 ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id)
             ])
 
+            # change_from: ID of existing retainer order being upgraded/downgraded
+            change_from_id = None
+            change_from_order = None
+            change_from_plan_label = ''
+            try:
+                change_from_id = int(kwargs.get('change_from') or 0) or None
+            except (TypeError, ValueError):
+                change_from_id = None
+            if change_from_id:
+                partner = request.env.user.partner_id.commercial_partner_id
+                change_from_order = request.env['sale.order'].sudo().search([
+                    ('id', '=', change_from_id),
+                    ('partner_id', 'child_of', partner.id),
+                    ('wink_is_portal_request', '=', True),
+                ], limit=1)
+                if not change_from_order:
+                    change_from_id = None
+                else:
+                    # Pre-compute plan label safely
+                    try:
+                        pricing_id = change_from_order.wink_recurring_pricing_id
+                        if pricing_id:
+                            pricing = _get_product_pricing_browse(request.env, [pricing_id])
+                            if pricing.exists():
+                                change_from_plan_label = (
+                                    getattr(getattr(pricing, 'recurrence_id', None), 'name', None)
+                                    or getattr(pricing, 'name', None)
+                                    or ''
+                                )
+                    except Exception:
+                        change_from_plan_label = ''
+
             render_vals = {
                 'product': product,
                 'employees': employees,
@@ -152,6 +184,9 @@ class WinkRequest(http.Controller):
                 'is_bundle': False,
                 'errors': {},
                 'post': kwargs,
+                'change_from_id': change_from_id,
+                'change_from_order': change_from_order,
+                'change_from_plan_label': change_from_plan_label,
             }
 
             # Bundle tier data
@@ -297,6 +332,22 @@ class WinkRequest(http.Controller):
             return request.redirect('/services')
 
         partner = request.env.user.partner_id.commercial_partner_id
+
+        # Upgrade/downgrade: link new order to old retainer order
+        change_from_id = None
+        change_from_order = None
+        try:
+            change_from_id = int(post.get('change_from_id') or 0) or None
+        except (TypeError, ValueError):
+            change_from_id = None
+        if change_from_id:
+            change_from_order = request.env['sale.order'].sudo().search([
+                ('id', '=', change_from_id),
+                ('partner_id', 'child_of', partner.id),
+                ('wink_is_portal_request', '=', True),
+            ], limit=1)
+            if not change_from_order:
+                change_from_id = None
 
         # Service request is per service, no quantity (always 1)
         notes = post.get('notes') or False
@@ -459,6 +510,35 @@ class WinkRequest(http.Controller):
             order_vals['wink_price_confirmed'] = True
 
         order = request.env['sale.order'].sudo().create(order_vals)
+
+        # Upgrade/downgrade: link new order → old order and post chatter note on both
+        if change_from_order:
+            order.sudo().write({'wink_change_from_order_id': change_from_order.id})
+            new_plan_label = ''
+            try:
+                if selected_recurrence_id and selected_pricing and getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing.exists():
+                    new_plan_label = getattr(getattr(selected_pricing, 'recurrence_id', None), 'name', None) or ''
+            except Exception:
+                pass
+            change_from_order.sudo().message_post(
+                body=_("Customer requested a plan change from this retainer. "
+                       "New request: <a href='/my/requests/%(new_id)s'>%(new_name)s</a>%(plan_info)s") % {
+                    'new_id': order.id,
+                    'new_name': order.name,
+                    'plan_info': f' — New plan: {new_plan_label}' if new_plan_label else '',
+                },
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
+            order.sudo().message_post(
+                body=_("This is a plan change request. Previous retainer: "
+                       "<a href='/my/requests/%(old_id)s'>%(old_name)s</a>") % {
+                    'old_id': change_from_order.id,
+                    'old_name': change_from_order.name,
+                },
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
 
         # Employees: for standalone set on order; for bundle set per entitlement below
         if not is_bundle and employee_ids:

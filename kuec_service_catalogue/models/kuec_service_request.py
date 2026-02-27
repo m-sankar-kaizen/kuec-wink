@@ -52,6 +52,13 @@ class SaleOrderWink(models.Model):
         default=False,
         help='Customer requested to cancel this retainer from the portal.',
     )
+    wink_change_from_order_id = fields.Many2one(
+        'sale.order',
+        string='Upgrade/Downgrade From',
+        ondelete='set null',
+        copy=False,
+        help='When this order is a plan upgrade or downgrade, this links to the previous retainer order.',
+    )
     document_submission_ids = fields.One2many(
         'kuec.document.submission',
         'order_id',
