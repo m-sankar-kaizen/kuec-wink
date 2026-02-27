@@ -470,15 +470,77 @@
         <!-- Already have active subscription for this service (edge case 10.3) -->
         <template id="wink_request_already_subscription" name="Already Have Subscription">
             <t t-call="website.layout">
-                <div class="container mt-5 mb-5">
-                    <div class="alert alert-info">
-                        <h4 class="alert-heading">You already have an active subscription</h4>
-                        <p class="mb-0">You already have an active subscription for <strong><t t-esc="product.name"/></strong>. You can manage it from your portal.</p>
+                <div class="container mt-5 mb-5" style="max-width:680px;">
+
+                    <!-- Header -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header py-3" style="background:var(--wink-primary,#1F4E79); color:#fff;">
+                            <h4 class="mb-0">
+                                <i class="fa fa-check-circle me-2"/>
+                                Active Retainer: <t t-esc="product.name"/>
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1">
+                                You already have an active retainer for <strong><t t-esc="product.name"/></strong>.
+                            </p>
+                            <p class="text-muted small mb-0">
+                                Reference: <strong><t t-esc="order.name"/></strong>
+                                <t t-if="allow_upgrade or allow_downgrade or allow_cancel">
+                                    — use the options below to change or cancel your plan.
+                                </t>
+                            </p>
+                        </div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <a href="/my/subscriptions" class="btn btn-primary">View My Subscriptions</a>
-                        <a href="/my/support/new" class="btn btn-outline-secondary">Contact Support</a>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+
+                        <!-- Upgrade / Downgrade -->
+                        <t t-if="allow_upgrade or allow_downgrade">
+                            <a t-att-href="'/my/requests/new?product_id=' + str(product.id) + '&amp;change_from=' + str(order.id)"
+                               class="btn btn-primary">
+                                <i class="fa fa-exchange me-1"/>
+                                Upgrade / Downgrade Plan
+                            </a>
+                        </t>
+
+                        <!-- Cancellation -->
+                        <t t-if="allow_cancel">
+                            <form method="post" t-att-action="'/my/requests/' + str(order.id) + '/retainer/cancel'" class="d-inline">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <button type="submit" class="btn btn-outline-danger"
+                                        onclick="return confirm('Are you sure you want to request cancellation of this retainer?')">
+                                    <i class="fa fa-times-circle me-1"/>
+                                    Request Cancellation
+                                </button>
+                            </form>
+                        </t>
+
+                        <!-- View in portal -->
+                        <a t-att-href="'/my/requests/' + str(order.id)" class="btn btn-outline-secondary">
+                            <i class="fa fa-eye me-1"/>
+                            View My Request
+                        </a>
                     </div>
+
+                    <!-- Policy blocked notice -->
+                    <t t-if="not allow_upgrade and not allow_downgrade and not allow_cancel">
+                        <div class="alert alert-warning">
+                            <i class="fa fa-lock me-2"/>
+                            Plan changes and cancellations for this service must be requested through our support team.
+                            <a href="/contactus" class="alert-link ms-1">Contact us</a>
+                        </div>
+                    </t>
+
+                    <!-- Min days notice -->
+                    <t t-if="min_days_notice and min_days_notice > 0">
+                        <p class="text-muted small">
+                            <i class="fa fa-info-circle me-1"/>
+                            Plan changes require at least <strong><t t-esc="min_days_notice"/> days</strong> advance notice.
+                        </p>
+                    </t>
+
                 </div>
             </t>
         </template>

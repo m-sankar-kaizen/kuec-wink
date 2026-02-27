@@ -95,9 +95,27 @@ class WinkRequest(http.Controller):
                 ('order_line.product_id.product_tmpl_id', '=', product.id),
             ], limit=1)
             if active:
+                # Pre-compute policy flags safely — no ORM calls in QWeb
+                _allow_upgrade = True
+                _allow_downgrade = True
+                _allow_cancel = True
+                _min_days = 0
+                try:
+                    policy = active._wink_get_policy()
+                    if policy:
+                        _allow_upgrade = bool(policy.allow_upgrade)
+                        _allow_downgrade = bool(policy.allow_downgrade)
+                        _allow_cancel = bool(policy.allow_cancellation)
+                        _min_days = int(policy.min_days_before_change or 0)
+                except Exception:
+                    pass
                 return request.render('kuec_service_catalogue.wink_request_already_subscription', {
                     'product': product,
                     'order': active,
+                    'allow_upgrade': _allow_upgrade,
+                    'allow_downgrade': _allow_downgrade,
+                    'allow_cancel': _allow_cancel,
+                    'min_days_notice': _min_days,
                 })
         plan_param = kwargs.get('plan')
         recurrence_id = None
@@ -146,6 +164,7 @@ class WinkRequest(http.Controller):
             ])
 
             # change_from: ID of existing retainer order being upgraded/downgraded
+            # Parse early so we can bypass the "already subscribed" guard when this is set
             change_from_id = None
             change_from_order = None
             change_from_plan_label = ''
@@ -176,6 +195,39 @@ class WinkRequest(http.Controller):
                                 )
                     except Exception:
                         change_from_plan_label = ''
+
+            # Edge case 10.3: already has active retainer for this service
+            # Only block when this is NOT an upgrade/downgrade (change_from_id not set)
+            if not change_from_id and (getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer'):
+                partner_chk = request.env.user.partner_id.commercial_partner_id
+                active_sub = request.env['sale.order'].sudo().search([
+                    ('partner_id', 'child_of', partner_chk.id),
+                    ('is_subscription', '=', True),
+                    ('subscription_state', '=', '3_progress'),
+                    ('order_line.product_id.product_tmpl_id', '=', product.id),
+                ], limit=1)
+                if active_sub:
+                    _allow_upgrade = True
+                    _allow_downgrade = True
+                    _allow_cancel = True
+                    _min_days = 0
+                    try:
+                        policy = active_sub._wink_get_policy()
+                        if policy:
+                            _allow_upgrade = bool(policy.allow_upgrade)
+                            _allow_downgrade = bool(policy.allow_downgrade)
+                            _allow_cancel = bool(policy.allow_cancellation)
+                            _min_days = int(policy.min_days_before_change or 0)
+                    except Exception:
+                        pass
+                    return request.render('kuec_service_catalogue.wink_request_already_subscription', {
+                        'product': product,
+                        'order': active_sub,
+                        'allow_upgrade': _allow_upgrade,
+                        'allow_downgrade': _allow_downgrade,
+                        'allow_cancel': _allow_cancel,
+                        'min_days_notice': _min_days,
+                    })
 
             # Story 1.12 — proration and policy for upgrade/downgrade
             change_proration = None          # dict from _compute_remaining_credit or None
