@@ -1,0 +1,335 @@
+// UI-LOV-001, UI-LOV-004, UI-LOV-005, UI-LOV-020 — Lovable parity (portal only)
+
+/* ── Semantic classes (same names as Lovable where possible) ── */
+.page-header {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--wink-text-dark);
+    margin-bottom: 0.25rem;
+}
+.page-subtitle {
+    font-size: 0.9rem;
+    color: var(--wink-muted);
+    margin-bottom: 1.5rem;
+}
+.touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.text-muted-foreground {
+    color: var(--wink-muted) !important;
+}
+.border-border {
+    border-color: var(--wink-border) !important;
+}
+
+/* UI-LOV-004 Gradient header (Order Summary, Service CTA, Ticket card, mobile CTA bar) */
+.kuec-gradient {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #1a4a7a 100%);
+    color: #fff !important;
+    border: none;
+}
+
+/* UI-LOV-001 Premium card */
+.card-premium {
+    background: #fff;
+    border: 1px solid var(--wink-border);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.rounded-2xl { border-radius: 16px; }
+.rounded-xl { border-radius: 12px; }
+
+/* UI-LOV-020 Layout & spacing (Tailwind equivalents) */
+.wink-portal-container {
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1rem;
+}
+@media (min-width: 768px) {
+    .wink-portal-container { padding: 1.5rem; }
+}
+@media (min-width: 992px) {
+    .wink-portal-container {
+        max-width: 1152px;
+        padding: 2rem;
+    }
+}
+.space-y-6 > * + * { margin-top: 1.5rem; }
+.p-4 { padding: 1rem; }
+.p-6 { padding: 1.5rem; }
+.p-8 { padding: 2rem; }
+
+/* UI-LOV-005 Badge variants (Status, Payment, Type, Document) */
+.badge-wink-status-quotation {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+}
+.badge-wink-status-salesorder {
+    background-color: #e3f2fd;
+    color: var(--wink-primary);
+    border: 1px solid #90caf9;
+}
+.badge-wink-payment-locked {
+    background-color: #fff8e1;
+    color: #f57c00;
+}
+.badge-wink-payment-due {
+    background-color: #ffebee;
+    color: #c62828;
+}
+.badge-wink-payment-paid {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+.badge-wink-type-retainer {
+    background-color: #e3f2fd;
+    color: var(--wink-primary);
+}
+.badge-wink-type-onetime {
+    background-color: #f5f5f5;
+    color: #616161;
+}
+.badge-wink-doc-required {
+    background-color: var(--wink-primary);
+    color: #fff;
+    font-size: 0.75rem;
+}
+.badge-wink-doc-optional {
+    background-color: #e0e0e0;
+    color: #424242;
+}
+
+/* Department colored badges (Lovable palette) */
+.badge-wink-dept-purple { background-color: #f3e5f5; color: #7b1fa2; }
+.badge-wink-dept-cyan { background-color: #e0f7fa; color: #00838f; }
+.badge-wink-dept-rose { background-color: #fce4ec; color: #c2185b; }
+.badge-wink-dept-warning { background-color: #fff3e0; color: #ef6c00; }
+.badge-wink-dept-success { background-color: #e8f5e9; color: #2e7d32; }
+
+/* Alert/banner variants for Request Detail */
+.alert-wink-locked {
+    background-color: #fff8e1;
+    border-color: #ffc107;
+    color: #856404;
+}
+.alert-wink-due {
+    background-color: #e3f2fd;
+    border-color: var(--wink-info);
+    color: #0d47a1;
+}
+.alert-wink-paid {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+    color: #1b5e20;
+}
+
+/* Sticky CTA bar (mobile Service Detail) */
+.wink-cta-bar-mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #1a4a7a 100%);
+    color: #fff;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+.wink-cta-bar-mobile .btn {
+    width: 100%;
+    padding: 12px 24px;
+    font-weight: 600;
+}
+
+/* Hide table on mobile, show cards */
+@media (max-width: 767px) {
+    .wink-requests-table-wrap .table {
+        display: none;
+    }
+    .wink-requests-cards {
+        display: block;
+    }
+}
+@media (min-width: 768px) {
+    .wink-requests-cards {
+        display: none;
+    }
+}
+
+/* Upload zone (New Ticket, etc.) */
+.border-dashed { border-style: dashed !important; }
+
+/* Empty state */
+.wink-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--wink-muted);
+}
+.wink-empty-state .fa {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+/* CAT-1, CAT-2, CAT-10 — Service Catalogue hero & container */
+.wink-catalogue-hero {
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.wink-catalogue-hero.kuec-gradient {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #1a4a7a 100%);
+    color: #fff;
+}
+.wink-catalogue-hero .form-control,
+.wink-catalogue-hero .input-group-text {
+    border-radius: 12px;
+}
+.wink-catalogue-container {
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1rem;
+}
+@media (min-width: 768px) {
+    .wink-catalogue-container { padding: 1.5rem; }
+}
+@media (min-width: 992px) {
+    .wink-catalogue-container { padding: 2rem; }
+}
+
+/* CAT-5 — Department strip on service cards (left border); default for unknown slugs */
+.wink-service-card.wink-dept-strip {
+    border-left-width: 4px;
+    border-left-style: solid;
+    border-left-color: var(--wink-primary);
+}
+.wink-dept-strip.wink-dept-legal { border-left-color: #7b1fa2; }
+.wink-dept-strip.wink-dept-it { border-left-color: #00838f; }
+.wink-dept-strip.wink-dept-hr { border-left-color: #c2185b; }
+.wink-dept-strip.wink-dept-finance { border-left-color: #ef6c00; }
+.wink-dept-strip.wink-dept-business-development,
+.wink-dept-strip.wink-dept-business-dev { border-left-color: #2e7d32; }
+.wink-dept-strip.wink-dept-marketing { border-left-color: #5e35b1; }
+.wink-dept-strip.wink-dept-operations { border-left-color: #00695c; }
+
+/* CAT-2 optional hero pattern overlay (enable by adding .wink-hero-pattern to hero) */
+.wink-catalogue-hero.wink-hero-pattern {
+    position: relative;
+}
+.wink-catalogue-hero.wink-hero-pattern::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='0.5' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* CAT-9 mobile filter offcanvas (bottom sheet) */
+.wink-filter-offcanvas.offcanvas-bottom {
+    height: 70vh;
+    border-radius: 16px 16px 0 0;
+}
+
+/* CAT-6 description clamp */
+.wink-line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* G-2 — Card selected state (wizard) */
+.wink-card-selectable {
+    transition: border-color 0.2s, background-color 0.2s;
+}
+.wink-card-selectable .wink-card-selected-check {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    opacity: 0;
+    color: var(--wink-primary);
+    font-size: 1.25rem;
+}
+.wink-card-selected {
+    border: 2px solid var(--wink-primary) !important;
+    background-color: rgba(33, 150, 243, 0.06);
+}
+.wink-card-selected .wink-card-selected-check {
+    opacity: 1;
+}
+
+/* CR-5 employee card avatar (initials) */
+.wink-avatar-initials {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--wink-primary);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* UI-BUG-005b (FB-005.4): Plan/tier card selected state */
+.wink-plan-card:has(input:checked),
+.wink-tier-card:has(input:checked) .wink-tier-label {
+    border-color: var(--wink-primary) !important;
+    border-width: 2px;
+    background-color: rgba(31, 78, 121, 0.06);
+}
+
+/* UI-BUG-001 (FB-001h): Diagonal folded-corner ribbon (like screenshot)
+   Use a standard 75x75 clipped corner so ribbon is visible and inside the card */
+.wink-service-card,
+.wink-catalogue-page-detail {
+    position: relative;
+    overflow: hidden;
+}
+.wink-ribbon-wrapper {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 75px;
+    height: 75px;
+    overflow: hidden;
+    z-index: 10;
+    pointer-events: none;
+}
+.wink-ribbon {
+    position: relative;
+    display: block;
+    left: -20px;
+    top: 18px;
+    width: 140px;
+    padding: 4px 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #fff !important;
+    text-align: center;
+    white-space: nowrap;
+    transform: rotate(45deg);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    /* default if no inline background */
+    background: var(--wink-primary);
+}
+
+/* Tag badges: pill style with backend color */
+.wink-tag-badge {
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+}

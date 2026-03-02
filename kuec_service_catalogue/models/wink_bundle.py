@@ -74,6 +74,18 @@ class WinkBundleTier(models.Model):
         for rec in self:
             rec.item_count = len(rec.item_ids)
 
+    def action_open_tier_services(self):
+        """Open this tier form so the user can add/edit included services."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'wink.bundle.tier',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'current',
+            'context': {'form_view_initial_mode': 'edit'},
+        }
+
 
 class WinkBundleTierItem(models.Model):
     _name = 'wink.bundle.tier.item'

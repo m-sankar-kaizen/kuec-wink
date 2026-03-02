@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- RET-003, RET-007 -->
 <odoo>
     <record id="sale_order_form_kuec_wink" model="ir.ui.view">
         <field name="name">sale.order.form.inherit.kuec.wink</field>
@@ -6,6 +7,16 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
+                <button name="action_view_source_subscription"
+                        string="Source Subscription"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="not wink_change_from_order_id"/>
+                <button name="action_view_cancellation_credit_note"
+                        string="Credit Note"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="not wink_cancellation_credit_note_id"/>
                 <button name="action_kuec_finalize_price"
                         string="Finalize &amp; Unlock Payment"
                         type="object"
@@ -24,13 +35,25 @@
                 <page string="Portal Request" name="portal_request" invisible="not wink_is_portal_request">
                     <group string="Request details" col="2">
                         <field name="wink_source_product_id" readonly="1"/>
+                        <field name="wink_plan_id" options="{'no_create': True}" help="Plan tier (e.g. Bronze) for proration: remaining value = (monthly_std_price ÷ 30) × remaining_days"/>
                         <field name="wink_requested_start_date" readonly="1"/>
                         <field name="wink_price_confirmed" readonly="1"/>
                         <field name="wink_bundle_tier_id" readonly="1" invisible="not wink_bundle_tier_id"/>
                         <field name="wink_recurring_pricing_id" invisible="1"/>
                         <field name="wink_sale_order_template_id" readonly="1" invisible="not wink_sale_order_template_id"/>
                         <field name="wink_cancellation_requested" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_requested_date" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_reason" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_effective_date" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_processed_by" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_processed_date" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_credit_note_id" readonly="1" invisible="not wink_cancellation_credit_note_id" options="{'no_create': True}"/>
                         <field name="wink_change_from_order_id" readonly="1" invisible="not wink_change_from_order_id" string="Plan Change From"/>
+                        <field name="wink_change_type" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_proration_credit" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_proration_charge" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_plan_change_target_plan_id" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_plan_change_effective_date" readonly="1" invisible="not wink_change_type"/>
                         <field name="wink_request_notes" readonly="1" colspan="2" nolabel="1"/>
                     </group>
                     <group string="Employees (standalone)" invisible="wink_entitlement_ids">
@@ -89,5 +112,30 @@
                 </page>
             </xpath>
         </field>
+    </record>
+
+    <!-- RET-007: Search filter for cancellation requests -->
+    <record id="sale_order_search_inherit_wink" model="ir.ui.view">
+        <field name="name">sale.order.search.inherit.wink</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <filter name="my_sale_orders_filter" position="after">
+                <separator/>
+                <filter string="Cancellation Requested" name="wink_cancellation_requested" domain="[('wink_cancellation_requested', '=', True)]"/>
+            </filter>
+        </field>
+    </record>
+
+    <!-- RET-007: Server action to mark cancellation as processed -->
+    <record id="action_wink_process_cancellation" model="ir.actions.server">
+        <field name="name">Mark Cancellation Processed</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">records.action_wink_mark_cancellation_processed()
+action = {}</field>
+        <field name="groups_id" eval="[(4, ref('kuec_portal_foundation.group_kuec_coordinator'))]"/>
     </record>
 </odoo>

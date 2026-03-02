@@ -8,6 +8,17 @@ from odoo.tools.translate import _
 class SaleOrderLineBundle(models.Model):
     _inherit = 'sale.order.line'
 
+    # WF-BND-001: employees per activation (stored on activated line)
+    wink_selected_employee_ids = fields.Many2many(
+        'kuec.employee.directory',
+        'wink_sol_employee_rel',
+        'sale_line_id',
+        'employee_id',
+        string='Activation Employees',
+        help='Employees selected for this specific activation line. '
+             'Used by WINK portal bundle workflow.',
+    )
+
     wink_entitlement_id = fields.Many2one(
         'wink.bundle.entitlement',
         string='Bundle Entitlement',

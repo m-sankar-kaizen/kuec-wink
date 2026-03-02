@@ -89,7 +89,8 @@ class WinkBundleEntitlement(models.Model):
             else:
                 rec.state = 'available'
 
-    def action_activate(self):
+    # WF-BND-001 / WF-BND-002 / WF-BND-005: per-activation employees & docs
+    def action_activate(self, employee_ids=None):
         """
         Customer or coordinator activates one unit of this
         entitlement. Creates a real sale.order.line on the
@@ -97,17 +98,32 @@ class WinkBundleEntitlement(models.Model):
         to create the Project/Task automatically.
         """
         self.ensure_one()
-        if self.qty_activated >= self.qty_entitled:
-            raise UserError(_(
-                "This service has already been fully activated."
-            ))
-
         order = self.order_id
+
+        # No limit on reactivation: customer can activate as many times as needed
         if order.state not in ('sale', 'done'):
             raise UserError(_(
                 "The order must be confirmed before activating "
                 "bundle services."
             ))
+
+        # WF-BND-002: Required documents per activated service
+        ok_docs, missing_docs = order._wink_required_docs_approved_for_product(
+            self.service_product_id
+        )
+        if not ok_docs:
+            raise UserError(_(
+                "You cannot activate this service yet because some required "
+                "documents are missing or not approved: %s. Please upload "
+                "and get approval from the Documents section of your request."
+            ) % ", ".join(missing_docs))
+
+        # WF-BND-001: Require employees when service needs selection
+        if getattr(self.service_product_id, 'requires_employee_selection', False):
+            if not employee_ids:
+                raise UserError(_(
+                    "Please select at least one employee to activate this service."
+                ))
 
         # Get the product variant
         variant = self.service_product_id.product_variant_ids[:1]
@@ -117,28 +133,52 @@ class WinkBundleEntitlement(models.Model):
             ) % {'name': self.service_product_id.name})
 
         # Create a real SO line — Odoo natively creates
-        # Project/Task because the SO is already confirmed
-        new_line = self.env['sale.order.line'].sudo().create({
+        # Project/Task because the SO is already confirmed.
+        # Reactivation: 2nd+ activations get distinct line/task name (e.g. "Service (2)")
+        activation_num = self.qty_activated + 1
+        line_name = self.name if activation_num <= 1 else _('%s (%s)') % (self.name, activation_num)
+        line_vals = {
             'order_id': order.id,
             'product_id': variant.id,
             'product_uom_qty': 1,
             'price_unit': 0.0,
-            'name': self.name,
+            'name': line_name,
             'wink_entitlement_id': self.id,
-        })
+        }
+        new_line = self.env['sale.order.line'].sudo().create(line_vals)
+
+        # WF-BND-001: store employees per activated line
+        if employee_ids:
+            new_line.wink_selected_employee_ids = [(6, 0, list(map(int, employee_ids)))]
 
         self.sudo().write({
             'qty_activated': self.qty_activated + 1,
         })
 
-        order.message_post(
-            body=(
-                f"Bundle service <strong>{self.name}</strong> "
-                f"activated ({self.qty_activated}/{self.qty_entitled}). "
-                f"Order line #{new_line.id} created."
-            ),
-            message_type='comment',
-            subtype_xmlid='mail.mt_note',
-        )
+        # WF-BND-001 / WF-BND-005: log activation with employees
+        try:
+            employee_names = []
+            if employee_ids:
+                emps = self.env['kuec.employee.directory'].sudo().browse(
+                    list(map(int, employee_ids))
+                )
+                employee_names = [e.name for e in emps if e.exists()]
+            user_name = self.env.user.partner_id.name or self.env.user.name or ''
+            msg = (
+                "Bundle service <strong>%s</strong> activated "
+                "(activation #%s). Order line #%s created."
+            ) % (self.name, self.qty_activated, new_line.id)
+            if employee_names:
+                msg += " Employees: %s." % ", ".join(employee_names)
+            if user_name:
+                msg += " Activated from portal by %s." % user_name
+            order.message_post(
+                body=msg,
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
+        except Exception:
+            # Never block activation on logging issues
+            pass
 
         return new_line

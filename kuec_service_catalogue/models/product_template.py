@@ -75,6 +75,14 @@ class ProductTemplate(models.Model):
         help='Used for portal plan selection only if Recurring Prices tab is empty. Prefer Recurring Prices (Odoo native).',
     )
 
+    # Portal tags vs ribbon: separate single ribbon tag for clearer UX
+    wink_ribbon_tag_id = fields.Many2one(
+        'product.tag',
+        string='Ribbon (Portal)',
+        domain=[('is_ribbon', '=', True)],
+        help='Single ribbon tag shown as the diagonal ribbon on the Wink portal card and detail page.',
+    )
+
     def _wink_recurring_plan_lines(self):
         """Return native Recurring Prices for portal plan selection (retainer).
         Uses sudo so portal users can see plans. Discovers the Recurring Prices One2many
@@ -217,10 +225,12 @@ class ProductTemplate(models.Model):
             price = p['price']
             monthly_equivalent = round(price / months, 2) if months else price
             duration, unit = p['duration'], (p.get('unit') or 'month')
-            if unit == 'month':
-                period_label = 'per %s month' % duration if duration != 1 else 'per month'
-            elif unit == 'year':
+            unit = str(unit).lower() if unit else 'month'
+            # FB-005: per plan — yearly shows "per year", monthly "per month"
+            if unit == 'year' or (unit == 'month' and int(duration or 0) >= 12):
                 period_label = 'per year'
+            elif unit == 'month':
+                period_label = 'per %s month' % duration if duration != 1 else 'per month'
             else:
                 period_label = 'per %s %s' % (duration, unit_labels.get(unit, unit))
             # Savings vs baseline (shortest plan)

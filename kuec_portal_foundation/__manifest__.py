@@ -36,6 +36,7 @@
     'assets': {
         'web.assets_frontend': [
             'kuec_portal_foundation/static/src/scss/wink_theme.scss',
+            'kuec_portal_foundation/static/src/scss/wink_portal_lovable.scss',
         ],
     },
     'installable': True,

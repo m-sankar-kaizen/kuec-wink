@@ -12,7 +12,6 @@
     'depends': [
         'kuec_portal_foundation',
         'sale_management',
-        'website_sale',
         'project',
         'portal',
         'account',
@@ -20,7 +19,7 @@
         'hr',
         'web',
         'web_tour',
-        'sale_project'
+        'sale_project',
     ],
     'data': [
         'security/kuec_service_catalogue_security.xml',
@@ -42,7 +41,7 @@
         'views/res_partner_views.xml',
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
-        'views/website_templates/kuec_catalogue_templates.xml',
+        'views/portal_components.xml',
         'views/website_templates/employee_portal_templates.xml',
         'views/website_templates/request_templates.xml',
         'views/kuec_employee_directory_views.xml',
@@ -64,4 +63,6 @@
     'installable': True,
     'application': False,
     'license': 'LGPL-3',
+    # ISSUE-001: Post-init hook for employee directory empty-string normalization (ORM only).
+    'post_init_hook': 'post_init_hook',
 }

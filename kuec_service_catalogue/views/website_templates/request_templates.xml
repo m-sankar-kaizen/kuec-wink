@@ -7,6 +7,98 @@
         <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_request_form')]"/>
         <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_request_confirmation')]"/>
         <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_request_already_subscription')]"/>
+        <delete model="ir.ui.view" search="[('key','=','kuec_service_catalogue.wink_request_wizard')]"/>
+
+        <!-- CR-1, CR-2 Step 0: Choose Service (wizard entry) -->
+        <template id="wink_request_wizard" name="Create Request — Choose Service">
+            <t t-call="website.layout">
+                <div class="wink-portal-container mt-4 mb-5">
+                    <h1 class="page-header">Create New Request</h1>
+                    <p class="page-subtitle text-muted mb-4">Select a service to get started.</p>
+                    <!-- CR-2 Stepper: step 0 active -->
+                    <div class="wink-stepper-row mb-4">
+                        <div class="wink-stage-node wink-current">
+                            <div class="wink-node-dot"><i class="fa fa-circle" style="font-size:10px;"/></div>
+                            <span class="wink-node-label">Service</span>
+                        </div>
+                        <div class="wink-stage-connector wink-pending flex-grow-1"/>
+                        <div class="wink-stage-node">
+                            <div class="wink-node-dot"/>
+                            <span class="wink-node-label">Configure</span>
+                        </div>
+                        <div class="wink-stage-connector wink-pending flex-grow-1"/>
+                        <div class="wink-stage-node">
+                            <div class="wink-node-dot"/>
+                            <span class="wink-node-label">Employees</span>
+                        </div>
+                        <div class="wink-stage-connector wink-pending flex-grow-1"/>
+                        <div class="wink-stage-node">
+                            <div class="wink-node-dot"/>
+                            <span class="wink-node-label">Review</span>
+                        </div>
+                    </div>
+                    <!-- CR-3 Step 0: service grid, selectable cards -->
+                    <form method="get" action="/my/requests/new" id="wizard-step0-form">
+                        <input type="hidden" name="step" value="1"/>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <input type="text" name="search" class="form-control" placeholder="Search services..." t-att-value="search or ''"/>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-outline-secondary">Search</button>
+                            </div>
+                        </div>
+                        <div class="row g-4" id="wizard-service-cards">
+                            <t t-foreach="products" t-as="p">
+                                <t t-set="slug" t-value="product_dept_slugs.get(p.id, '')"/>
+                                <div class="col-md-4 col-sm-6">
+                                    <label class="d-block mb-0 cursor-pointer wizard-service-card-label">
+                                        <input type="radio" name="product_id" t-att-value="p.id" class="d-none wizard-service-radio" required="required"/>
+                                        <t t-set="strip_class" t-value="('wink-dept-strip wink-dept-' + slug) if slug else ''"/>
+                                        <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative wink-card-selectable ' + strip_class">
+                                            <span class="wink-card-selected-check"><i class="fa fa-check-circle"/></span>
+                                            <div class="card-body d-flex flex-column">
+                                                <h5 class="card-title fw-bold mb-2"><t t-esc="p.name"/></h5>
+                                                <p class="card-text text-muted small flex-grow-1 mb-3 wink-line-clamp-2"><t t-esc="short_descs.get(p.id, '')"/></p>
+                                                <t t-if="p.department_ids">
+                                                    <span class="badge border text-dark mb-2"><t t-esc="p.department_ids[0].name"/></span>
+                                                </t>
+                                                <div class="mt-auto pt-2">
+                                                    <span class="text-muted small" t-if="p.price_visibility == 'hidden'" t-esc="p.price_hidden_label"/>
+                                                    <span t-else="" class="fw-bold" t-esc="p.list_price" t-options="{'widget': 'monetary', 'display_currency': request.website.currency_id if request.website else request.env.company.currency_id}"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary rounded-xl touch-target">Next: Configure</button>
+                        </div>
+                    </form>
+                    <script>
+                        (function() {
+                            var form = document.getElementById('wizard-step0-form');
+                            if (!form) return;
+                            var radios = form.querySelectorAll('input.wizard-service-radio');
+                            var labels = form.querySelectorAll('label.wizard-service-card-label');
+                            function updateSelection() {
+                                labels.forEach(function(l) {
+                                    var card = l.querySelector('.wink-card-selectable');
+                                    if (!card) return;
+                                    var r = l.querySelector('input[type="radio"]');
+                                    if (r &amp;&amp; r.checked) card.classList.add('wink-card-selected');
+                                    else card.classList.remove('wink-card-selected');
+                                });
+                            }
+                            radios.forEach(function(r) { r.addEventListener('change', updateSelection); });
+                            updateSelection();
+                        })();
+                    </script>
+                </div>
+            </t>
+        </template>
 
         <!-- wink_registration_form -->
         <template id="wink_registration_form" name="Request a Service — Create Your Account">
@@ -41,21 +133,21 @@
                                     <h5 class="mt-2 mb-3 border-bottom pb-2">Company Information</h5>
                                     <div class="row g-3">
                                         <div class="col-12">
-                                            <label class="form-label fw-bold">Company Name *</label>
-                                            <input type="text" class="form-control" t-attf-class="form-control #{' is-invalid' if errors.get('company_name') else ''}" name="company_name" t-att-value="post.get('company_name','')" required="required"/>
+                                            <label class="form-label fw-bold" for="register_company_name">Company Name *</label>
+                                            <input id="register_company_name" type="text" class="form-control" t-attf-class="form-control #{' is-invalid' if errors.get('company_name') else ''}" name="company_name" t-att-value="post.get('company_name','')" required="required"/>
                                             <div t-if="errors.get('company_name')" class="invalid-feedback">
                                                 <t t-esc="errors.get('company_name')"/>
                                             </div>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label">Company Email</label>
-                                            <input type="email" class="form-control" name="company_email" t-att-value="post.get('company_email', '')"/>
+                                            <label class="form-label" for="register_company_email">Company Email</label>
+                                            <input id="register_company_email" type="email" class="form-control" name="company_email" t-att-value="post.get('company_email', '')"/>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label">Company Type *</label>
-                                            <select class="form-select" name="company_type" required="required">
+                                            <label class="form-label" for="register_company_type">Company Type *</label>
+                                            <select id="register_company_type" class="form-select" name="company_type" required="required">
                                                 <option value="">Select type...</option>
                                                 <option value="llc" t-att-selected="post.get('company_type') =='llc'">Limited Liability Company (LLC / Ltd.)</option>
                                                 <option value="corp" t-att-selected="post.get('company_type') =='corp'">Corporation (Inc. / Corp.)</option>
@@ -70,34 +162,34 @@
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label">Trade License No.</label>
-                                            <input type="text" class="form-control" name="trade_license" t-att-value="post.get('trade_license', '')"/>
+                                            <label class="form-label" for="register_trade_license">Trade License No.</label>
+                                            <input id="register_trade_license" type="text" class="form-control" name="trade_license" t-att-value="post.get('trade_license', '')"/>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label">Tax Registration No.</label>
-                                            <input type="text" class="form-control" name="tax_license" t-att-value="post.get('tax_license', '')"/>
+                                            <label class="form-label" for="register_tax_license">Tax Registration No.</label>
+                                            <input id="register_tax_license" type="text" class="form-control" name="tax_license" t-att-value="post.get('tax_license', '')"/>
                                         </div>
                                     </div>
 
                                     <h5 class="mt-4 mb-3 border-bottom pb-2">Contact Person</h5>
                                     <div class="row g-3">
                                         <div class="col-12">
-                                            <label class="form-label fw-bold">Full Name *</label>
-                                            <input type="text" class="form-control" name="contact_name" t-att-value="post.get('contact_name', '')" required="required"/>
+                                            <label class="form-label fw-bold" for="register_contact_name">Full Name *</label>
+                                            <input id="register_contact_name" type="text" class="form-control" name="contact_name" t-att-value="post.get('contact_name', '')" required="required"/>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold">Email Address *</label>
-                                            <input type="email" t-attf-class="form-control #{' is-invalid' if errors.get('contact_email') else ''}" name="contact_email" t-att-value="post.get('contact_email', '')" required="required"/>
+                                            <label class="form-label fw-bold" for="register_contact_email">Email Address *</label>
+                                            <input id="register_contact_email" type="email" t-attf-class="form-control #{' is-invalid' if errors.get('contact_email') else ''}" name="contact_email" t-att-value="post.get('contact_email', '')" required="required"/>
                                             <div t-if="errors.get('contact_email')" class="invalid-feedback">
                                                 <t t-esc="errors.get('contact_email')"/>
                                             </div>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold">Phone Number *</label>
-                                            <input type="tel" class="form-control" name="contact_phone" t-att-value="post.get('contact_phone', '')" required="required"/>
+                                            <label class="form-label fw-bold" for="register_contact_phone">Phone Number *</label>
+                                            <input id="register_contact_phone" type="tel" class="form-control" name="contact_phone" t-att-value="post.get('contact_phone', '')" required="required"/>
                                         </div>
                                     </div>
 
@@ -112,6 +204,29 @@
                                         <a t-attf-href="/web/login?redirect=/my/requests/new?product_id=#{product.id}">Sign in here</a>
                                     </p>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- UI-BUG-002 (FB-002): Thank-you page after registration — avoids sending user to login and duplicate signup -->
+        <template id="wink_register_thanks" name="Account Created — Sign In to Continue">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 col-lg-6">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header text-white text-center py-4" style="background:var(--wink-primary);">
+                                    <i class="fa fa-check-circle fa-3x mb-2"/>
+                                    <h4 class="mb-0">Account Created</h4>
+                                </div>
+                                <div class="card-body p-4 text-center">
+                                    <p class="mb-3">We've sent you an email to set your password. You don't need to create a new account — we've already created one for you.</p>
+                                    <p class="text-muted small mb-4">When you're ready, sign in below to continue your service request.</p>
+                                    <a t-att-href="login_url" class="btn btn-primary btn-lg rounded-xl touch-target" style="background:var(--wink-primary); border-color:var(--wink-primary);">Sign in to continue your request</a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -140,6 +255,95 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
 
+                    <!-- CR-2 Wizard stepper; UI-BUG-003 (FB-003): hide Employees step when not required -->
+                    <t t-if="step">
+                        <div class="wink-stepper-row mb-4">
+                            <div class="wink-stage-node" t-att-class="'wink-done' if step >= 1 else ''">
+                                <div class="wink-node-dot"><i t-if="step >= 1" class="fa fa-check"/></div>
+                                <span class="wink-node-label">Service</span>
+                            </div>
+                            <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 2 else 'wink-pending'"/>
+                            <div class="wink-stage-node" t-att-class="'wink-done' if step > 1 else ('wink-current' if step == 1 else '')">
+                                <div class="wink-node-dot"><i t-if="step > 1" class="fa fa-check"/><i t-if="step == 1" class="fa fa-circle" style="font-size:10px;"/></div>
+                                <span class="wink-node-label">Configure</span>
+                            </div>
+                            <t t-if="product.requires_employee_selection">
+                                <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 3 else 'wink-pending'"/>
+                                <div class="wink-stage-node" t-att-class="'wink-current' if step == 2 else ('wink-done' if step > 2 else '')">
+                                    <div class="wink-node-dot"><i t-if="step > 2" class="fa fa-check"/><i t-if="step == 2" class="fa fa-circle" style="font-size:10px;"/></div>
+                                    <span class="wink-node-label">Employees</span>
+                                </div>
+                                <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 3 else 'wink-pending'"/>
+                            </t>
+                            <t t-if="not product.requires_employee_selection">
+                                <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 3 else 'wink-pending'"/>
+                            </t>
+                            <div class="wink-stage-node" t-att-class="'wink-current' if step == 3 else ''">
+                                <div class="wink-node-dot"><i t-if="step == 3" class="fa fa-circle" style="font-size:10px;"/></div>
+                                <span class="wink-node-label">Review</span>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- CR-6 Step 3: Review + Submit form (Type, Tier, Plan, employee name badges) -->
+                    <t t-if="step == 3 and wizard_draft">
+                        <div class="card-premium rounded-2xl p-4 mb-4">
+                            <h5 class="fw-bold mb-3"><i class="fa fa-clipboard-list me-1"/> Review Your Request</h5>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4 text-muted">Service</dt>
+                                <dd class="col-sm-8"><t t-esc="product.name"/></dd>
+                                <dt class="col-sm-4 text-muted">Type</dt>
+                                <dd class="col-sm-8"><t t-esc="review_display.get('type_label') or '—'"/></dd>
+                                <t t-if="review_display.get('tier_name')">
+                                    <dt class="col-sm-4 text-muted">Tier</dt>
+                                    <dd class="col-sm-8"><t t-esc="review_display.get('tier_name')"/></dd>
+                                </t>
+                                <t t-if="review_display.get('plan_name')">
+                                    <dt class="col-sm-4 text-muted">Plan</dt>
+                                    <dd class="col-sm-8"><t t-esc="review_display.get('plan_name')"/></dd>
+                                </t>
+                                <dt class="col-sm-4 text-muted">Start Date</dt>
+                                <dd class="col-sm-8"><t t-esc="wizard_draft.get('start_date') or '—'"/></dd>
+                                <dt class="col-sm-4 text-muted">Notes</dt>
+                                <dd class="col-sm-8"><t t-esc="wizard_draft.get('notes') or '—'"/></dd>
+                                <dt class="col-sm-4 text-muted">Employees</dt>
+                                <dd class="col-sm-8">
+                                    <t t-if="review_display.get('employee_names')">
+                                        <span class="d-flex flex-wrap gap-1">
+                                            <t t-foreach="review_display.get('employee_names')" t-as="ename">
+                                                <span class="badge bg-primary rounded-pill"><t t-esc="ename"/></span>
+                                            </t>
+                                        </span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="text-muted">—</span>
+                                    </t>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle me-2"/> A coordinator will review your request and confirm pricing if needed.
+                        </div>
+                        <form method="post" action="/my/requests/submit">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" name="product_id" t-att-value="wizard_draft.get('product_id')"/>
+                            <input type="hidden" name="start_date" t-att-value="wizard_draft.get('start_date')"/>
+                            <input type="hidden" name="notes" t-att-value="wizard_draft.get('notes')"/>
+                            <input type="hidden" name="selected_recurrence_id" t-att-value="wizard_draft.get('selected_recurrence_id')"/>
+                            <input type="hidden" name="tier_id" t-att-value="wizard_draft.get('tier_id')"/>
+                            <input type="hidden" name="change_from_id" t-att-value="wizard_draft.get('change_from_id')"/>
+                            <t t-foreach="wizard_draft.get('employee_ids', [])" t-as="eid">
+                                <input type="hidden" name="employee_ids" t-att-value="eid"/>
+                            </t>
+                            <div class="d-flex gap-2">
+                                <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;step=#{2 if product.requires_employee_selection else 1}" class="btn btn-outline-secondary rounded-xl">Back</a>
+                                <button type="submit" class="btn btn-primary rounded-xl touch-target">Submit Request</button>
+                            </div>
+                        </form>
+                    </t>
+
+                    <!-- Step 1 (Configure) and legacy full form: show when step is 1 or not set. Step 2 (Employees only) shown when step == 2; UI-BUG-003: step 2 only if requires_employee_selection -->
+                    <t t-if="step != 3">
                     <!-- Service context -->
                     <div class="wink-request-context card mb-4">
                         <div class="card-body d-flex align-items-center gap-3">
@@ -159,7 +363,7 @@
                                         Price based on plan selected below
                                     </t>
                                     <t t-elif="product.price_visibility == 'visible'">
-                                        <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': request.env.company.currency_id}"/>
+                                        <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': request.website.currency_id if request.website else request.env.company.currency_id}"/>
                                     </t>
                                     <t t-else="">
                                         <t t-esc="product.price_hidden_label"/>
@@ -191,7 +395,7 @@
                                     <strong>Estimated Remaining Credit:</strong>
                                     AED <t t-esc="'{:,.2f}'.format(change_proration.get('remaining_value', 0))"/>
                                     (<t t-esc="change_proration.get('remaining_days', 0)"/> days remaining
-                                    × AED <t t-esc="'{:,.4f}'.format(change_proration.get('daily_rate', 0))"/> / day)
+                                    × AED <t t-esc="'{:,.2f}'.format(change_proration.get('daily_rate', 0))"/> / day)
                                     <br/>
                                     <small class="text-muted">
                                         Calculated at the standard monthly rate (AED <t t-esc="'{:,.2f}'.format(change_proration.get('monthly_std_price', 0))"/> / mo ÷ 30).
@@ -240,10 +444,61 @@
                         </div>
                     </div>
 
-                    <!-- Request form -->
-                    <form method="post" action="/my/requests/submit">
+                    <!-- CR-5 Step 2 only: employees form; UI-BUG-003 (FB-003): show only when product requires employee selection -->
+                    <t t-if="step == 2 and product.requires_employee_selection">
+                        <form method="post" action="/my/requests/new" id="wizard-step2-employees-form">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" name="product_id" t-att-value="product.id"/>
+                            <input type="hidden" name="next_step" value="3"/>
+                            <h5 class="mb-3"><i class="fa fa-users me-1"/> Select Employees <span id="wizard-emp-count-badge" class="badge bg-primary ms-2"><t t-esc="len(wizard_draft.get('employee_ids') or [])"/> selected</span></h5>
+                            <t t-if="employees">
+                                <div class="row g-2 mb-3" id="wizard-employees-list">
+                                    <t t-foreach="employees" t-as="emp">
+                                        <t t-set="initials" t-value="''.join([(n[0] or '').upper() for n in (emp.name or '').split()[:2]]) or '?'"/>
+                                        <div class="col-md-6">
+                                            <div class="form-check border rounded p-3 wink-employee-card d-flex align-items-center gap-3">
+                                                <input type="checkbox" class="form-check-input wizard-emp-cb" t-att-id="'wizard_emp_%s' % emp.id" name="employee_ids" t-att-value="emp.id" t-att-checked="emp.id in (wizard_draft.get('employee_ids') or [])"/>
+                                                <span class="wink-avatar-initials rounded-circle flex-shrink-0" t-att-title="emp.name"><t t-esc="initials"/></span>
+                                                <label class="form-check-label flex-grow-1 mb-0" t-att-for="'wizard_emp_%s' % emp.id">
+                                                    <strong class="d-block"><t t-esc="emp.name"/></strong>
+                                                    <span class="text-muted small" t-if="emp.job_title"><t t-esc="emp.job_title"/></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="alert alert-warning">No employees in your directory. <a href="/my/employees">Add employees</a> first.</div>
+                            </t>
+                            <div class="d-flex gap-2">
+                                <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;step=1" class="btn btn-outline-secondary rounded-xl">Back</a>
+                                <button type="submit" class="btn btn-primary rounded-xl touch-target">Next: Review</button>
+                            </div>
+                        </form>
+                        <script>
+                            (function() {
+                                var form = document.getElementById('wizard-step2-employees-form');
+                                if (!form) return;
+                                var badge = document.getElementById('wizard-emp-count-badge');
+                                var cbs = form.querySelectorAll('input.wizard-emp-cb');
+                                function updateCount() {
+                                    var n = 0;
+                                    cbs.forEach(function(cb) { if (cb.checked) n++; });
+                                    if (badge) badge.textContent = n + ' selected';
+                                }
+                                cbs.forEach(function(cb) { cb.addEventListener('change', updateCount); });
+                                updateCount();
+                            })();
+                        </script>
+                    </t>
+
+                    <!-- Request form (step 1 or legacy): Configure and optionally employees -->
+                    <t t-if="step != 2">
+                    <form method="post" t-att-action="'/my/requests/new' if step == 1 else '/my/requests/submit'">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
+                        <input t-if="step == 1" type="hidden" name="next_step" value="2"/>
                         <input t-if="selected_plan" type="hidden" name="selected_recurrence_id" t-att-value="selected_plan['recurrence_id']"/>
                         <input t-if="change_from_id" type="hidden" name="change_from_id" t-att-value="change_from_id"/>
 
@@ -298,11 +553,11 @@
                             <small>Plan options (Monthly / Yearly) come from this product's <strong>Recurring Prices</strong> tab. Add at least one price line there and save the product — then the plan selector will appear here.</small>
                         </div>
 
-                        <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.) -->
+                        <!-- Bundle Tier Selector (tiers: Pro, Gold, etc.); selected tier price overrides displayed total -->
                         <div t-if="is_bundle" class="wink-tier-selector mb-4">
                             <h5 class="mb-3">Select Your Tier</h5>
                             <t t-foreach="tier_data" t-as="td">
-                                <div class="wink-tier-card mb-3">
+                                <div class="wink-tier-card mb-3" t-att-data-tier-price="'{:,.2f}'.format(td['tier'].price)">
                                     <input type="radio" name="tier_id" class="d-none wink-tier-radio"
                                            t-att-id="'tier_' + str(td['tier'].id)"
                                            t-att-value="td['tier'].id"
@@ -331,6 +586,32 @@
                                     </label>
                                 </div>
                             </t>
+                            <!-- UI-BUG-005f (FB-005.8): Bundle total = selected tier price (updated by JS when tier changes) -->
+                            <t t-if="bundle_total_tier">
+                                <div class="mt-3 p-3 rounded border bg-light" id="wink-bundle-total-block" t-att-data-currency="(request.website.currency_id if request.website else request.env.company.currency_id).symbol or 'AED'">
+                                    <strong>Bundle total:</strong> <span id="wink-bundle-total-amount"><t t-esc="(request.website.currency_id if request.website else request.env.company.currency_id).symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(bundle_total_tier.price)"/></span>
+                                </div>
+                                <script>
+                                    (function() {
+                                        var block = document.getElementById('wink-bundle-total-block');
+                                        var amountEl = document.getElementById('wink-bundle-total-amount');
+                                        if (!block || !amountEl) return;
+                                        var currency = block.getAttribute('data-currency') || 'AED';
+                                        function updateBundleTotal() {
+                                            var checked = document.querySelector('input.wink-tier-radio:checked');
+                                            var card = checked ? checked.closest('.wink-tier-card') : null;
+                                            if (card) {
+                                                var price = card.getAttribute('data-tier-price');
+                                                if (price != null) amountEl.textContent = currency + ' ' + price;
+                                            }
+                                        }
+                                        document.querySelectorAll('input.wink-tier-radio').forEach(function(radio) {
+                                            radio.addEventListener('change', updateBundleTotal);
+                                        });
+                                        updateBundleTotal();
+                                    })();
+                                </script>
+                            </t>
                         </div>
 
                         <!-- Bundle: employees per child service (shown when a tier is selected) -->
@@ -351,8 +632,8 @@
                                                 <t t-foreach="employees" t-as="emp">
                                                     <div class="col-md-6">
                                                         <div class="form-check">
-                                                            <input type="checkbox" class="form-check-input" t-att-name="'employee_ids_%s_%s' % (td['tier'].id, item_index)" t-att-value="emp.id"/>
-                                                            <label class="form-check-label"><t t-esc="emp.name"/></label>
+                                                            <input type="checkbox" class="form-check-input" t-att-id="'bundle_emp_%s_%s_%s' % (td['tier'].id, item_index, emp.id)" t-att-name="'employee_ids_%s_%s' % (td['tier'].id, item_index)" t-att-value="emp.id"/>
+                                                            <label class="form-check-label" t-att-for="'bundle_emp_%s_%s_%s' % (td['tier'].id, item_index, emp.id)"><t t-esc="emp.name"/></label>
                                                         </div>
                                                     </div>
                                                 </t>
@@ -381,30 +662,30 @@
                         <!-- Start date and notes: for both bundle and standalone -->
                         <div class="row g-3 mt-3" t-if="is_bundle">
                             <div class="col-md-6">
-                                <label class="form-label">Requested Start Date</label>
-                                <input type="date" class="form-control" name="start_date"/>
+                                <label class="form-label" for="request_start_date_bundle"><i class="fa fa-calendar me-1 text-muted"/> Requested Start Date</label>
+                                <input id="request_start_date_bundle" type="date" class="form-control" name="start_date"/>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Special Requirements / Notes</label>
-                                <textarea class="form-control" name="notes" rows="3" placeholder="Any specific requirements or notes..."/>
+                                <label class="form-label" for="request_notes_bundle"><i class="fa fa-sticky-note me-1 text-muted"/> Special Requirements / Notes</label>
+                                <textarea id="request_notes_bundle" class="form-control" name="notes" rows="3" placeholder="Any specific requirements or notes..."/>
                             </div>
                         </div>
 
                         <div class="row g-3" t-if="not is_bundle">
                             <div class="col-md-6">
-                                <label class="form-label">Requested Start Date</label>
-                                <input type="date" class="form-control" name="start_date"/>
+                                <label class="form-label" for="request_start_date"><i class="fa fa-calendar me-1 text-muted"/> Requested Start Date</label>
+                                <input id="request_start_date" type="date" class="form-control" name="start_date"/>
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label">Special Requirements / Notes</label>
-                                <textarea class="form-control" name="notes" rows="4" placeholder="Any specific requirements or notes for this request..."/>
+                                <label class="form-label" for="request_notes"><i class="fa fa-sticky-note me-1 text-muted"/> Special Requirements / Notes</label>
+                                <textarea id="request_notes" class="form-control" name="notes" rows="4" placeholder="Any specific requirements or notes for this request..."/>
                             </div>
                         </div>
 
-                        <!-- Employee selection — conditional -->
-                        <div t-if="product.requires_employee_selection" class="mt-4">
-                            <h5 class="border-bottom pb-2">Select Employees for This Service</h5>
+                        <!-- Employee selection — conditional (hidden when step==1, shown when no step or step==2) -->
+                        <div t-if="product.requires_employee_selection and step != 1" class="mt-4">
+                            <h5 class="border-bottom pb-2"><i class="fa fa-users me-1 text-muted"/> Select Employees for This Service</h5>
                             <t t-if="employees">
                                 <div class="mb-2 d-flex gap-2 flex-wrap">
                                     <button type="button" class="btn btn-outline-secondary btn-sm wink-select-all-employees" data-target="employee_ids">Select all</button>
@@ -414,8 +695,8 @@
                                     <t t-foreach="employees" t-as="emp">
                                         <div class="col-md-6">
                                             <div class="form-check border rounded p-3">
-                                                <input type="checkbox" class="form-check-input" name="employee_ids" t-att-value="emp.id"/>
-                                                <label class="form-check-label">
+                                                <input type="checkbox" class="form-check-input" t-att-id="'request_emp_%s' % emp.id" name="employee_ids" t-att-value="emp.id"/>
+                                                <label class="form-check-label" t-att-for="'request_emp_%s' % emp.id">
                                                     <strong><t t-esc="emp.name"/></strong><br/>
                                                     <small class="text-muted"><t t-esc="emp.passport_number or 'No passport on file'"/></small>
                                                 </label>
@@ -433,12 +714,16 @@
                         </div>
 
                         <div class="mt-4 d-flex gap-2">
-                            <a t-attf-href="/services/#{product.id}" class="btn btn-outline-secondary">Back</a>
-                            <button type="submit" class="btn btn-primary" style="background:var(--wink-primary); border-color:var(--wink-primary)">
-                                Submit Request
+                            <a t-attf-href="/my/requests/new" t-if="step == 1" class="btn btn-outline-secondary rounded-xl">Back</a>
+                            <a t-attf-href="/services/#{product.id}" t-if="not step" class="btn btn-outline-secondary rounded-xl">Back</a>
+                            <button type="submit" class="btn btn-primary rounded-xl touch-target" style="background:var(--wink-primary); border-color:var(--wink-primary)">
+                                <t t-if="step == 1 and product.requires_employee_selection">Next: Employees</t>
+                                <t t-elif="step == 1">Next: Review</t>
+                                <t t-else="">Submit Request</t>
                             </button>
                         </div>
                     </form>
+                    </t>
                     <script>
                         (function() {
                             var form = document.querySelector('form[action="/my/requests/submit"]');
@@ -463,6 +748,7 @@
                             });
                         })();
                     </script>
+            </t>
                 </div>
             </t>
         </template>
@@ -496,25 +782,22 @@
                     <!-- Action buttons -->
                     <div class="d-flex flex-wrap gap-3 mb-4">
 
-                        <!-- Upgrade / Downgrade -->
+                        <!-- RET-006: Upgrade / Downgrade → change-plan page -->
                         <t t-if="allow_upgrade or allow_downgrade">
-                            <a t-att-href="'/my/requests/new?product_id=' + str(product.id) + '&amp;change_from=' + str(order.id)"
+                            <a t-att-href="'/my/requests/' + str(order.id) + '/retainer/change-plan'"
                                class="btn btn-primary">
                                 <i class="fa fa-exchange me-1"/>
-                                Upgrade / Downgrade Plan
+                                Change Plan
                             </a>
                         </t>
 
-                        <!-- Cancellation -->
+                        <!-- RET-006: Cancellation → preview page -->
                         <t t-if="allow_cancel">
-                            <form method="post" t-att-action="'/my/requests/' + str(order.id) + '/retainer/cancel'" class="d-inline">
-                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                <button type="submit" class="btn btn-outline-danger"
-                                        onclick="return confirm('Are you sure you want to request cancellation of this retainer?')">
-                                    <i class="fa fa-times-circle me-1"/>
-                                    Request Cancellation
-                                </button>
-                            </form>
+                            <a t-att-href="'/my/requests/' + str(order.id) + '/retainer/cancel/preview'"
+                               class="btn btn-outline-danger">
+                                <i class="fa fa-times-circle me-1"/>
+                                Request Cancellation
+                            </a>
                         </t>
 
                         <!-- View in portal -->
@@ -528,16 +811,21 @@
                     <t t-if="not allow_upgrade and not allow_downgrade and not allow_cancel">
                         <div class="alert alert-warning">
                             <i class="fa fa-lock me-2"/>
-                            Plan changes and cancellations for this service must be requested through our support team.
-                            <a href="/contactus" class="alert-link ms-1">Contact us</a>
+                            <t t-if="change_disallowed_message">
+                                <t t-esc="change_disallowed_message"/>
+                            </t>
+                            <t t-else="">
+                                Plan changes and cancellations for this service must be requested through our support team.
+                                <a href="/contactus" class="alert-link ms-1">Contact us</a>
+                            </t>
                         </div>
                     </t>
 
-                    <!-- Min days notice -->
-                    <t t-if="min_days_notice and min_days_notice > 0">
+                    <!-- Min days notice (when changes are still allowed) -->
+                    <t t-if="min_days_notice and min_days_notice > 0 and (allow_upgrade or allow_downgrade or allow_cancel)">
                         <p class="text-muted small">
                             <i class="fa fa-info-circle me-1"/>
-                            Plan changes require at least <strong><t t-esc="min_days_notice"/> days</strong> advance notice.
+                            Plan changes require at least <strong><t t-esc="min_days_notice"/> days</strong> before period end.
                         </p>
                     </t>
 
@@ -549,8 +837,56 @@
         <template id="wink_request_confirmation" name="Service Request Confirmation">
             <t t-call="website.layout">
                 <div class="container mt-5 mb-5">
-                    <div t-if="order.state == 'sale'" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <!-- UI-007 Breadcrumbs -->
+                    <nav aria-label="breadcrumb" class="wink-breadcrumb mb-3">
+                        <ol class="breadcrumb bg-transparent p-0">
+                            <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/my/requests">My Requests</a></li>
+                            <li class="breadcrumb-item active" aria-current="page"><t t-esc="order.name"/></li>
+                        </ol>
+                    </nav>
+                    <!-- CR-8, UI-013 Request Submitted success block (Lovable parity) -->
+                    <div t-if="submitted" class="text-center py-4 mb-4">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;background:#d1e7dd;">
+                            <i class="fa fa-check-circle text-success" style="font-size:32px;"/>
+                        </div>
+                        <h1 class="h3 fw-bold mb-2">Request Submitted!</h1>
+                        <p class="text-muted mb-4">Your request for <strong><t t-esc="product.name if product else (order.order_line[0].product_id.name if order.order_line else '')"/></strong> has been submitted successfully. Your coordinator will review it and set the pricing.</p>
+                        <div class="card card-premium rounded-2xl text-start mb-4 mx-auto" style="max-width:480px;">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-2">What happens next?</h6>
+                                <ul class="mb-0 ps-3">
+                                    <li>Your coordinator will review your request</li>
+                                    <li>Once the price is confirmed, you'll see it on your request</li>
+                                    <li>You can then approve, reject, or discuss the quote</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                            <a href="/my/requests" class="btn btn-outline-secondary rounded-xl touch-target">View My Requests</a>
+                            <a href="/services" class="btn btn-primary rounded-xl touch-target">Browse More Services</a>
+                        </div>
+                    </div>
+                    <t t-if="not submitted">
+                    <div t-if="is_closed_or_cancelled" class="alert alert-secondary alert-dismissible fade show" role="alert">
+                        <strong>This request has been closed.</strong>
+                        <t t-if="close_reason_name"> (<t t-esc="close_reason_name"/>)</t>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-elif="order.state == 'sale' and not is_paid" class="alert alert-info alert-dismissible fade show" role="alert">
+                        <strong>Quote approved — complete your payment</strong>
+                        <t t-if="order.wink_price_confirmed"> to confirm your request.</t>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-elif="order.state == 'sale' and is_paid" class="alert alert-success alert-dismissible fade show" role="alert">
                         <strong>Your request has been confirmed!</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-elif="order.state in ['draft', 'sent']" class="alert alert-info alert-dismissible fade show" role="alert">
+                        <strong t-if="not order.wink_price_confirmed">Quote — pending coordinator</strong>
+                        <strong t-else="">Quote — pending your approval</strong>
+                        <t t-if="not order.wink_price_confirmed"> Your coordinator will set the price. Once set, you can approve, reject, or discuss.</t>
+                        <t t-else=""> Price is set. You can approve this quote to proceed, or reject it.</t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
                     <div t-else="" class="alert alert-info alert-dismissible fade show" role="alert">
@@ -561,36 +897,71 @@
                         <strong>Manual payment logged!</strong> Awaiting coordinator validation.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
-                    <div t-if="retainer_cancelled" class="alert alert-info alert-dismissible fade show" role="alert">
+                    <div t-if="retainer_cancelled and not is_closed_or_cancelled" class="alert alert-info alert-dismissible fade show" role="alert">
                         <strong>Cancellation requested.</strong> Our team will process your request and contact you if needed.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
+                    <div t-if="quote_rejected" class="alert alert-secondary alert-dismissible fade show" role="alert">
+                        <strong>You have rejected this quote.</strong> If you change your mind, please submit a new request from the services page.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-if="quote_error == 'price_not_confirmed'" class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Price not yet set.</strong> Your coordinator must set the price before you can approve this quote.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-if="quote_error == 'cancel_not_allowed'" class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Cancellation not allowed.</strong>
+                        <t t-if="quote_message"><t t-esc="quote_message"/></t>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                    <div t-if="quote_error == 'change_not_allowed'" class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>Plan change not allowed.</strong>
+                        <t t-if="quote_message"><t t-esc="quote_message"/></t>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
 
-                    <div class="card shadow-sm mt-4">
-                        <div class="card-header" style="background:var(--wink-primary); color:#fff;">
+                    <!-- UI-LOV-010 Summary card: premium + gradient header + status badge -->
+                    <div class="card card-premium card-wink-summary shadow-sm mt-4 rounded-2xl overflow-hidden">
+                        <div class="card-header kuec-gradient text-white py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h4 class="mb-0">Order Summary: <t t-esc="order.name"/></h4>
+                            <t t-if="not is_closed_or_cancelled">
+                                <span t-if="order.state in ('draft', 'sent')" class="badge badge-wink-status-quotation rounded-pill">Quotation</span>
+                                <span t-if="order.state in ('sale', 'done')" class="badge badge-wink-status-salesorder rounded-pill">Sales Order</span>
+                            </t>
+                            <span t-if="is_closed_or_cancelled" class="badge bg-secondary rounded-pill" t-esc="close_reason_name"/>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-6">
                             <div class="row mb-3">
-                                <div class="col-sm-4 text-muted fw-bold">Service</div>
+                                <div class="col-sm-4 text-muted fw-bold text-uppercase small">SERVICE</div>
                                 <div class="col-sm-8"><t t-esc="product.name if product else (order.order_line[0].product_id.name if order.order_line else 'N/A')"/></div>
                             </div>
                             <div class="row mb-3">
-                                <div class="col-sm-4 text-muted fw-bold">Requested Start</div>
+                                <div class="col-sm-4 text-muted fw-bold text-uppercase small">REQUESTED START</div>
                                 <div class="col-sm-8"><t t-esc="order.wink_requested_start_date or 'N/A'"/></div>
                             </div>
                             <div class="row mb-3">
-                                <div class="col-sm-4 text-muted fw-bold">Status</div>
-                                <div class="col-sm-8"><t t-esc="dict(order._fields['state'].selection).get(order.state)"/></div>
+                                <div class="col-sm-4 text-muted fw-bold text-uppercase small">STATUS</div>
+                                <div class="col-sm-8">
+                                    <t t-if="is_closed_or_cancelled">
+                                        <span class="text-muted"><t t-esc="close_reason_name"/></span>
+                                    </t>
+                                    <t t-else="">
+                                        <t t-esc="dict(order._fields['state'].selection).get(order.state)"/>
+                                    </t>
+                                </div>
                             </div>
                             <div class="row mb-3">
-                                <div class="col-sm-4 text-muted fw-bold">Amount Due</div>
+                                <div class="col-sm-4 text-muted fw-bold text-uppercase small">AMOUNT DUE</div>
                                 <div class="col-sm-8">
                                     <t t-if="not order.wink_price_confirmed">
                                         <span class="text-warning"><i class="fa fa-clock-o"/> Pending coordinator confirmation</span>
                                     </t>
                                     <t t-else="">
-                                        <b style="font-size: 1.25rem;"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></b>
+                                        <!-- UI-BUG-004 (FB-004): show remaining balance after partial payment -->
+                                        <b style="font-size: 1.25rem;"><t t-esc="amount_due_display" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></b>
+                                        <t t-if="has_partial_payment">
+                                            <span class="text-muted small ms-2">(remaining of <t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>)</span>
+                                        </t>
                                     </t>
                                 </div>
                             </div>
@@ -605,26 +976,68 @@
                             <t t-set="inv_paid" t-value="order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid'))"/>
                             <t t-set="is_paid" t-value="tx_paid or inv_paid"/>
 
-                            <t t-if="order.state in ['draft', 'sent']">
-                                <p>Our team will review your request and send you a quotation within 2 business days.</p>
+                            <t t-if="is_closed_or_cancelled">
+                                <p class="text-muted">This request has been closed. If you have any questions, please contact your coordinator.</p>
+                            </t>
+                            <t t-elif="order.state in ['draft', 'sent'] and not order.wink_price_confirmed">
+                                <p>Your coordinator will set the price for this request. Once the price is set you will see it here and can <strong>approve</strong> (to confirm and pay), <strong>reject</strong>, or discuss with the team.</p>
+                            </t>
+                            <t t-elif="order.state in ['draft', 'sent'] and order.wink_price_confirmed">
+                                <p>Your coordinator has set the price. You can approve this quote to confirm and proceed to payment, or reject it.</p>
+                                <div class="mt-3 d-flex flex-wrap gap-2">
+                                    <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <button type="submit" class="btn btn-success btn-lg">Approve quote</button>
+                                    </form>
+                                    <form method="post" t-attf-action="/my/requests/#{order.id}/reject" class="d-inline">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <button type="submit" class="btn btn-outline-danger">Reject quote</button>
+                                    </form>
+                                </div>
+                                <p class="text-muted small mt-2 mb-0">You can also contact your coordinator to discuss this quote before deciding.</p>
                             </t>
                             <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
                                 <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
                             </t>
                             <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
-                                <div class="mt-3">
-                                    <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg">Proceed to Payment</a>
+                                <div class="mt-3 p-4 rounded-3 border border-2" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">Complete your payment</h6>
+                                            <p class="text-muted small mb-0">Amount due: <strong class="text-dark"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
+                                        </div>
+                                        <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-4">
+                                            <i class="fa fa-credit-card me-2"/> Proceed to Payment
+                                        </a>
+                                    </div>
                                     <t t-if="request.params.get('payment') == 'pending'">
-                                        <div class="alert alert-warning mt-2 mb-0 py-2">
-                                            Manual payment logged. Awaiting coordinator validation.
+                                        <div class="alert alert-warning mt-3 mb-0 py-2">
+                                            <i class="fa fa-clock-o me-1"/> Manual payment logged. Awaiting coordinator validation.
                                         </div>
                                     </t>
                                 </div>
                             </t>
-                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid">
+                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid and not is_closed_or_cancelled">
                                 <div class="mt-3 alert alert-success py-2 mb-0 border-0">
                                     <i class="fa fa-check-circle"/> Payment received successfully.
                                 </div>
+                                <!-- UI-BUG-004 (FB-004): partial payment — show remaining amount, due date, and Pay remaining button -->
+                                <t t-if="has_partial_payment and amount_due_display > 0">
+                                    <div class="mt-3 p-4 rounded-3 border border-2" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-bold">Amount remaining to pay</h6>
+                                                <p class="text-muted small mb-0">Due: <strong class="text-dark"><t t-esc="amount_due_display" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
+                                                <t t-if="next_due_date">
+                                                    <p class="text-muted small mb-0 mt-1">Due date: <strong><t t-esc="next_due_date" t-options="{'widget': 'date'}"/></strong></p>
+                                                </t>
+                                            </div>
+                                            <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-4">
+                                                <i class="fa fa-credit-card me-2"/> Pay remaining
+                                            </a>
+                                        </div>
+                                    </div>
+                                </t>
                             </t>
                         </div>
                         <div class="card-footer bg-light d-flex justify-content-between">
@@ -633,33 +1046,87 @@
                         </div>
                     </div>
 
-                    <!-- Retainer: current plan, upgrade/downgrade, cancel -->
-                    <div t-if="is_retainer and order.state in ('sale', 'done') and not order.wink_cancellation_requested" class="card mt-3 shadow-sm">
-                        <div class="card-header fw-bold">Manage your retainer</div>
-                        <div class="card-body">
-                            <t t-if="retainer_plan">
-                                <p class="mb-2"><strong>Current plan:</strong>
-                                    <t t-esc="retainer_plan_label or 'Current Plan'"/>
-                                    <t t-if="retainer_plan_has_price"> — <t t-esc="retainer_plan_price_str"/> <t t-esc="retainer_plan_currency_sym"/></t>
-                                </p>
-                            </t>
-                            <div class="d-flex flex-wrap gap-2">
-                                <t t-if="retainer_plans_for_change and len(retainer_plans_for_change) > 1">
-                                    <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;change_from=#{order.id}" class="btn btn-outline-primary">
-                                        Upgrade / Downgrade plan
-                                    </a>
+                    <!-- WF-BND-004: Bundle Entitlements (Package) — directly after Order Summary; hide when request is closed/cancelled -->
+                    <div t-if="order.wink_entitlement_ids and not is_closed_or_cancelled and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
+                        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                            <span>
+                                <t t-if="bundle_tier_label">
+                                    <t t-esc="bundle_bundle_name"/>
+                                    <t t-if="bundle_bundle_name"> — </t>
+                                    <t t-esc="bundle_tier_label"/> Plan
                                 </t>
-                                <form method="post" t-attf-action="/my/requests/#{order.id}/retainer/cancel" class="d-inline">
-                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                    <button type="submit" class="btn btn-outline-danger">Request cancellation</button>
-                                </form>
-                            </div>
-                            <p class="text-muted small mt-2 mb-0">Upgrade or downgrade will create a new request for the new plan. Cancellation is processed by our team.</p>
+                                <t t-else="">Included Services</t>
+                            </span>
+                            <small class="text-muted fw-normal">Activate each service when ready</small>
                         </div>
-                    </div>
-                    <div t-if="is_retainer and order.wink_cancellation_requested" class="card mt-3 border-warning">
-                        <div class="card-body py-2">
-                            <span class="text-warning"><i class="fa fa-info-circle"/> Cancellation requested — our team will process it shortly.</span>
+                        <div class="card-body p-0">
+                            <div t-if="bundle_requested" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                                Service activated successfully. A project has been created for delivery.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+                            <div t-if="activation_error" class="alert alert-warning alert-dismissible fade show mx-3 mt-3">
+                                <!-- WF-BND-002 -->
+                                <t t-esc="activation_error"/>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+                            <t t-foreach="order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)" t-as="ent">
+                                <div class="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
+                                    <div>
+                                        <div class="fw-semibold"><t t-esc="ent.name"/></div>
+                                        <small class="text-muted">
+                                            Included in bundle
+                                            <t t-if="ent.qty_activated > 0">
+                                                — <t t-esc="ent.qty_activated"/> activation(s)
+                                            </t>
+                                        </small>
+                                        <!-- WF-BND-004: per-activation status; index label for clarity (reactivation = Activation 2, etc.) -->
+                                        <t t-if="bundle_activation_map.get(ent.id)">
+                                            <div class="mt-2 small d-flex flex-column gap-1">
+                                                <t t-foreach="bundle_activation_map.get(ent.id)" t-as="act">
+                                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                                        <span class="text-muted">
+                                                            <t t-if="act.get('index')">
+                                                                <t t-esc="'Activation %s' % act.get('index')"/>: <t t-esc="act.get('name') or 'Service'"/>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <t t-esc="act.get('name') or 'Activation'"/>
+                                                            </t>
+                                                        </span>
+                                                        <span t-if="act.get('is_complete')" class="badge bg-success">Complete</span>
+                                                        <span t-else="" class="badge bg-warning text-dark">In progress</span>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <t t-if="ent.qty_activated > 0">
+                                            <span class="badge bg-success">✓ Activated</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge bg-secondary">Available</span>
+                                        </t>
+                                        <!-- No limit on reactivation: always show Activate when order confirmed -->
+                                        <t t-if="order.state in ('sale', 'done')">
+                                            <t t-if="ent.service_product_id.requires_employee_selection">
+                                                <a t-attf-href="/my/requests/#{order.id}/bundle/#{ent.id}/activate"
+                                                   class="btn btn-sm"
+                                                   style="background:var(--wink-primary);color:#fff;">Activate</a>
+                                            </t>
+                                            <t t-else="">
+                                                <form method="post"
+                                                      t-attf-action="/my/requests/#{order.id}/bundle/#{ent.id}/activate">
+                                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                    <button type="submit" class="btn btn-sm" style="background:var(--wink-primary);color:#fff;">Activate</button>
+                                                </form>
+                                            </t>
+                                        </t>
+                                        <t t-if="order.state not in ('sale', 'done')">
+                                            <small class="text-muted fst-italic">Available after order confirmation</small>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
                         </div>
                     </div>
 
@@ -691,57 +1158,70 @@
                         </div>
                     </div>
 
-                    <!-- Bundle Entitlements -->
-                    <div t-if="order.wink_entitlement_ids and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
-                        <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-                            <span>
-                                <t t-if="bundle_tier_label">
-                                    <t t-esc="bundle_bundle_name"/>
-                                    <t t-if="bundle_bundle_name"> — </t>
-                                    <t t-esc="bundle_tier_label"/> Plan
-                                </t>
-                                <t t-else="">Included Services</t>
-                            </span>
-                            <small class="text-muted fw-normal">Activate each service when ready</small>
+                    <!-- UI-012 Activity &amp; Updates -->
+                    <div t-if="activity_items" class="card mt-3 shadow-sm border-0">
+                        <div class="card-header py-3 border-bottom" style="background:#fff;">
+                            <span class="fw-bold" style="font-size:15px;">Activity &amp; Updates</span>
                         </div>
-                        <div class="card-body p-0">
-                            <div t-if="bundle_requested" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
-                                Service activated successfully. A project has been created for delivery.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
-                            </div>
-                            <t t-foreach="order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)" t-as="ent">
-                                <div class="d-flex justify-content-between align-items-center px-3 py-3 border-bottom">
-                                    <div>
-                                        <div class="fw-semibold"><t t-esc="ent.name"/></div>
-                                        <small class="text-muted">
-                                            Included in bundle
-                                            <t t-if="ent.qty_entitled > 1">
-                                                — <t t-esc="ent.qty_activated"/>/<t t-esc="ent.qty_entitled"/> used
-                                            </t>
-                                        </small>
-                                    </div>
-                                    <div class="d-flex gap-2 align-items-center">
-                                        <t t-if="ent.state == 'fully_activated'">
-                                            <span class="badge bg-success">✓ Activated</span>
-                                        </t>
-                                        <t t-elif="ent.state == 'available'">
-                                            <span class="badge bg-secondary">Available</span>
-                                            <form t-if="order.state in ('sale', 'done')"
-                                                  method="post"
-                                                  t-attf-action="/my/requests/#{order.id}/bundle/#{ent.id}/activate">
-                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                                <button type="submit" class="btn btn-sm" style="background:var(--wink-primary);color:#fff;">Activate</button>
-                                            </form>
-                                            <t t-if="order.state not in ('sale', 'done')">
-                                                <small class="text-muted fst-italic">Available after order confirmation</small>
-                                            </t>
-                                        </t>
+                        <div class="card-body py-2 px-4">
+                            <t t-foreach="activity_items" t-as="act">
+                                <div class="wink-timeline-item">
+                                    <span t-att-class="'wink-timeline-icon' + (' wink-icon-system' if act.get('type') == 'system' else '')">
+                                        <i t-att-class="'fa ' + (act.get('icon') or ('fa-cog' if act.get('type') == 'system' else 'fa-paper-plane'))"/>
+                                    </span>
+                                    <div class="wink-timeline-body">
+                                        <div class="wink-timeline-text"><t t-esc="act.get('text', '')"/></div>
+                                        <span class="wink-timeline-time" t-if="act.get('date')">
+                                            <t t-esc="act.get('date')" t-options="{'widget': 'datetime'}"/>
+                                        </span>
                                     </div>
                                 </div>
                             </t>
                         </div>
                     </div>
 
+                    <!-- Retainer: current plan, upgrade/downgrade, cancel — only after payment (hide when closed) -->
+                    <div t-if="is_retainer and is_paid and not is_closed_or_cancelled and order.state in ('sale', 'done') and not order.wink_cancellation_requested" class="card mt-3 shadow-sm">
+                        <div class="card-header d-flex align-items-center py-3" style="background:var(--wink-primary,#1F4E79); color:#fff;">
+                            <i class="fa fa-cog me-2"/> Manage your retainer
+                        </div>
+                        <div class="card-body">
+                            <t t-if="retainer_plan">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="badge rounded-pill me-2" style="background:#e9ecef; color:#495057; font-size:0.9rem;">
+                                        <i class="fa fa-refresh me-1"/> <t t-esc="retainer_plan_label or 'Current Plan'"/>
+                                        <t t-if="retainer_plan_has_price"> — <t t-esc="retainer_plan_price_str"/> <t t-esc="retainer_plan_currency_sym"/></t>
+                                    </span>
+                                </div>
+                            </t>
+                            <div class="d-flex flex-wrap gap-2">
+                                <t t-if="retainer_allow_plan_change">
+                                    <a t-attf-href="/my/requests/#{order.id}/retainer/change-plan" class="btn btn-outline-primary">
+                                        <i class="fa fa-exchange me-1"/> Change plan
+                                    </a>
+                                </t>
+                                <a t-attf-href="/my/requests/#{order.id}/retainer/cancel/preview" class="btn btn-outline-danger">
+                                    <i class="fa fa-times-circle me-1"/> Request cancellation
+                                </a>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0"><i class="fa fa-info-circle me-1"/> Change plan shows proration before you commit. Cancellation shows refund amount before you confirm.</p>
+                        </div>
+                    </div>
+                    <div t-if="is_retainer and order.wink_cancellation_requested and not is_closed_or_cancelled" class="card mt-3 border-warning">
+                        <div class="card-body py-2">
+                            <span class="text-warning"><i class="fa fa-info-circle"/> Cancellation requested — our team will process it shortly.</span>
+                            <t t-if="cancellation_proration">
+                                <div class="mt-2 pt-2 border-top border-warning">
+                                    <strong>Refund (at standard monthly rate):</strong>
+                                    <t t-if="cancellation_credit_policy_label"> <t t-esc="cancellation_credit_policy_label"/> — </t>
+                                    <strong><t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(cancellation_proration.get('remaining_value', 0))"/></strong>
+                                    <span class="text-muted small">(<t t-esc="cancellation_proration.get('remaining_days', 0)"/> days × <t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(cancellation_proration.get('daily_rate', 0))"/>/day)</span>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    </t>
                 </div>
             </t>
         </template>
@@ -913,63 +1393,362 @@
             </xpath>
         </template>
 
-        <!-- Custom Service Requests List View -->
+        <!-- UI-LOV-006, UI-LOV-008 My Requests: premium card, filters row, empty state -->
         <template id="portal_my_requests" name="My Service Requests">
             <t t-call="portal.portal_layout">
                 <t t-set="breadcrumbs_searchbar" t-value="True"/>
 
-                <t t-call="portal.portal_searchbar">
-                    <t t-set="title">Service Requests</t>
-                </t>
+                <div class="wink-portal-container">
+                    <div class="page-header">My Requests</div>
+                    <p class="page-subtitle mb-4">Track all your service requests and their status.</p>
 
-                <t t-if="not requests">
-                    <p class="alert alert-warning mt-4">There are currently no active service requests for your account.</p>
-                </t>
-                <t t-if="requests" t-call="portal.portal_table">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-4">
+                        <a href="/services" class="btn btn-primary touch-target">
+                            <i class="fa fa-plus me-1"/> New Request
+                        </a>
+                    </div>
+
+                    <!-- Epic4-MR, UI-LOV-006 Filters row (wired to controller) -->
+                    <form method="get" action="/my/requests" class="d-flex flex-wrap gap-2 align-items-center mb-4">
+                        <div class="input-group flex-grow-1" style="max-width: 320px;">
+                            <span class="input-group-text bg-white"><i class="fa fa-search text-muted"/></span>
+                            <input type="search" name="search" class="form-control" placeholder="Search by ID or service name..." t-att-value="filter_search or ''"/>
+                        </div>
+                        <select name="status" class="form-select form-select-sm" style="width: auto;">
+                            <option value="" t-att-selected="not filter_status">All Status</option>
+                            <option value="quotation" t-att-selected="filter_status == 'quotation'">Quotation</option>
+                            <option value="sale" t-att-selected="filter_status == 'sale'">Sales Order</option>
+                            <option value="cancel" t-att-selected="filter_status == 'cancel'">Cancelled</option>
+                        </select>
+                        <select name="type" class="form-select form-select-sm" style="width: auto;">
+                            <option value="" t-att-selected="not filter_type">All Types</option>
+                            <option value="retainer" t-att-selected="filter_type == 'retainer'">Retainer</option>
+                            <option value="onetime" t-att-selected="filter_type == 'onetime'">One-time</option>
+                        </select>
+                        <select name="payment" class="form-select form-select-sm" style="width: auto;">
+                            <option value="" t-att-selected="not filter_payment">All Payment</option>
+                            <option value="locked" t-att-selected="filter_payment == 'locked'">Locked</option>
+                            <option value="due" t-att-selected="filter_payment == 'due'">Due</option>
+                            <option value="paid" t-att-selected="filter_payment == 'paid'">Paid</option>
+                        </select>
+                        <select name="sort" class="form-select form-select-sm" style="width: auto;">
+                            <option value="latest" t-att-selected="(filter_sort or 'latest') == 'latest'">Latest</option>
+                            <option value="oldest" t-att-selected="filter_sort == 'oldest'">Oldest</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Apply</button>
+                    </form>
+
+                    <t t-if="not requests">
+                        <div class="card card-premium rounded-2xl">
+                            <div class="card-body">
+                                <div class="wink-empty-state">
+                                    <i class="fa fa-inbox d-block"/>
+                                    <p class="mb-3">There are currently no active service requests for your account.</p>
+                                    <a href="/services" class="btn btn-primary">Create Request</a>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-if="requests">
+                    <!-- Epic4-MR Mobile: card list (visible only &lt; md) -->
+                    <div class="card card-premium rounded-2xl d-md-none mb-3 wink-requests-cards">
+                        <div class="card-body p-0">
+                            <t t-foreach="requests" t-as="req">
+                                <t t-set="extra" t-value="request_extra.get(req.id, {})"/>
+                                <t t-set="req_type" t-value="extra.get('type', 'onetime')"/>
+                                <t t-set="req_payment" t-value="extra.get('payment', 'due')"/>
+                                <a t-attf-href="/my/requests/#{req.id}" class="d-block border-bottom p-3 text-decoration-none text-dark">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <span class="fw-bold"><t t-esc="req.name"/></span>
+                                            <span class="text-muted small d-block"><t t-esc="req.wink_source_product_id.name if req.wink_source_product_id else (req.order_line[0].product_id.name if req.order_line else 'Service Request')"/></span>
+                                        </div>
+                                        <span t-field="req.amount_total" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/>
+                                    </div>
+                                    <div class="mt-2">
+                                        <span t-if="req_type == 'retainer'" class="badge badge-wink-type-retainer rounded-pill me-1">Retainer</span>
+                                        <span t-if="req_type == 'onetime'" class="badge badge-wink-type-onetime rounded-pill me-1">One-time</span>
+                                        <span t-if="req.state in ('draft', 'sent')" class="badge badge-wink-status-quotation rounded-pill me-1"><i class="fa fa-fw fa-circle small"/> Quotation</span>
+                                        <span t-if="req.state in ('sale', 'done')" class="badge badge-wink-status-salesorder rounded-pill me-1"><i class="fa fa-fw fa-circle small"/> Sales Order</span>
+                                        <span t-if="req_payment == 'locked'" class="badge badge-wink-payment-locked rounded-pill">Locked</span>
+                                        <span t-if="req_payment == 'due'" class="badge badge-wink-payment-due rounded-pill">Due</span>
+                                        <span t-if="req_payment == 'paid'" class="badge badge-wink-payment-paid rounded-pill">Paid</span>
+                                    </div>
+                                </a>
+                            </t>
+                        </div>
+                    </div>
+                    <!-- Desktop: table (hidden on mobile) -->
+                    <div class="card card-premium rounded-2xl overflow-hidden wink-requests-table-wrap d-none d-md-block">
+                        <div class="card-body p-0">
+                <t t-call="portal.portal_table">
                     <thead>
                         <tr class="active">
-                            <th>Request #</th>
+                            <th>REQUEST #</th>
                             <th>Order Date</th>
-                            <th>Requested Service</th>
+                            <th>Service</th>
+                            <th>Type</th>
                             <th class="text-end">Total Amount</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center">Payment</th>
                         </tr>
                     </thead>
                     <tbody>
                         <t t-foreach="requests" t-as="req">
+                            <t t-set="extra" t-value="request_extra.get(req.id, {})"/>
+                            <t t-set="req_type" t-value="extra.get('type', 'onetime')"/>
+                            <t t-set="req_payment" t-value="extra.get('payment', 'due')"/>
                             <tr>
                                 <td>
-                                    <a t-attf-href="/my/requests/#{req.id}">
-                                        <t t-esc="req.name"/>
-                                    </a>
+                                    <a t-attf-href="/my/requests/#{req.id}" class="fw-bold"><t t-esc="req.name"/></a>
                                 </td>
-                                <td>
-                                    <span t-field="req.date_order" t-options="{'widget': 'date'}"/>
-                                </td>
+                                <td><span t-field="req.date_order" t-options="{'widget': 'date'}"/></td>
                                 <td>
                                     <span t-esc="req.wink_source_product_id.name if req.wink_source_product_id.id else (req.order_line[0].product_id.name if req.order_line else 'Service Request')"/>
-                                    <t t-if="req.wink_bundle_tier_id.id">
-                                        <span class="badge ms-1" style="background-color: var(--wink-info); color: #fff;"><t t-esc="req.wink_bundle_tier_id.name"/></span>
-                                    </t>
-                                    <t t-set="_sub_plan" t-value="subscription_info.get(req.id)"/>
-                                    <t t-if="_sub_plan">
-                                        <span class="badge rounded-pill ms-1" style="background: #f3f4f6; color: #4b5563; font-size: 12px;"><i class="fa fa-refresh me-1"/><t t-esc="_sub_plan"/></span>
-                                    </t>
                                 </td>
-                                <td class="text-end">
-                                    <span t-field="req.amount_total" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/>
+                                <td>
+                                    <span t-if="req_type == 'retainer'" class="badge badge-wink-type-retainer rounded-pill">Retainer</span>
+                                    <span t-if="req_type == 'onetime'" class="badge badge-wink-type-onetime rounded-pill">One-time</span>
+                                </td>
+                                <td class="text-end"><span t-field="req.amount_total" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/></td>
+                                <td class="text-center">
+                                    <span t-if="req.state in ('draft', 'sent')" class="badge badge-wink-status-quotation rounded-pill"><i class="fa fa-fw fa-circle small"/> Quotation</span>
+                                    <span t-if="req.state in ('sale', 'done')" class="badge badge-wink-status-salesorder rounded-pill"><i class="fa fa-fw fa-circle small"/> Sales Order</span>
+                                    <span t-if="req.state == 'cancel'" class="badge bg-danger rounded-pill">Cancelled</span>
                                 </td>
                                 <td class="text-center">
-                                    <span t-if="req.state == 'draft'" class="badge rounded-pill text-bg-secondary"><i class="fa fa-fw fa-file-text"/> Quotation</span>
-                                    <span t-if="req.state == 'sent'" class="badge rounded-pill text-bg-info"><i class="fa fa-fw fa-paper-plane"/> Quotation Sent</span>
-                                    <span t-if="req.state == 'sale'" class="badge rounded-pill text-bg-success"><i class="fa fa-fw fa-check"/> Confirmed</span>
-                                    <span t-if="req.state in ['done', 'fully_activated']" class="badge rounded-pill" style="background-color: var(--wink-primary); color: #fff;"><i class="fa fa-fw fa-lock"/> Completed</span>
-                                    <span t-if="req.state == 'cancel'" class="badge rounded-pill text-bg-danger"><i class="fa fa-fw fa-times"/> Cancelled</span>
+                                    <span t-if="req_payment == 'locked'" class="badge badge-wink-payment-locked rounded-pill">Locked</span>
+                                    <span t-if="req_payment == 'due'" class="badge badge-wink-payment-due rounded-pill">Due</span>
+                                    <span t-if="req_payment == 'paid'" class="badge badge-wink-payment-paid rounded-pill">Paid</span>
                                 </td>
                             </tr>
                         </t>
                     </tbody>
                 </t>
+                        </div>
+                    </div>
+                    </t>
+                </div>
+            </t>
+        </template>
+
+        <!-- RET-006: Plan change page with proration preview -->
+        <template id="wink_retainer_change_plan" name="Change Plan">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5" style="max-width:900px;">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header py-3" style="background:var(--wink-primary,#1F4E79); color:#fff;">
+                            <h4 class="mb-0"><i class="fa fa-exchange me-2"/>Change Plan — <t t-esc="product.name"/></h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">Current plan: <strong><t t-esc="source_plan.name"/></strong> (AED <t t-esc="'{:,.2f}'.format(source_plan.monthly_std_price)"/>/month standard)</p>
+                            <p class="text-muted small">Select a new plan below. Proration is calculated at standard monthly rate; annual discount is forfeited on change.</p>
+                            <p class="text-muted small mb-0"><strong>Effective:</strong> <t t-if="policy and policy.effective_date_policy == 'next_cycle'">Next billing cycle</t><t t-else="">Immediate</t> — <t t-if="policy and policy.effective_date_policy == 'next_cycle'">change applies at next renewal (no cron; coordinator may schedule).</t><t t-else="">change applies now.</t></p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <t t-foreach="target_plans_data" t-as="tpd">
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100" t-att-class="'border-warning' if not tpd['policy_ok'] else ''">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <strong><t t-esc="tpd['plan'].name"/></strong>
+                                        <span t-if="tpd['change_type'] == 'upgrade'" class="badge bg-success">Upgrade</span>
+                                        <span t-elif="tpd['change_type'] == 'downgrade'" class="badge bg-info">Downgrade</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-2">AED <t t-esc="'{:,.2f}'.format(tpd['plan'].monthly_std_price)"/>/month (standard)</p>
+                                        <t t-if="not tpd['policy_ok']">
+                                            <p class="text-warning small mb-2"><t t-esc="tpd['policy_message']"/></p>
+                                        </t>
+                                        <t t-elif="tpd['proration'] and not tpd['proration'].get('error')">
+                                            <t t-if="tpd['change_type'] == 'upgrade'">
+                                                <p class="mb-1"><strong>You will pay:</strong> <t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(tpd['proration'].get('net_amount', 0))"/></p>
+                                                <p class="text-muted small mb-0">Proration for <t t-esc="tpd['proration'].get('remaining_days', 0)"/> remaining days</p>
+                                            </t>
+                                            <t t-elif="tpd['change_type'] == 'downgrade'">
+                                                <p class="mb-1"><strong>Credit:</strong> <t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(max(0, tpd['proration'].get('proration_credit', 0) - tpd['proration'].get('proration_charge', 0)))"/> <t t-if="tpd['credit_policy_label']">(<t t-esc="tpd['credit_policy_label']"/>)</t></p>
+                                                <p class="text-muted small mb-0"><t t-esc="tpd['proration'].get('remaining_days', 0)"/> remaining days</p>
+                                            </t>
+                                        </t>
+                                        <t t-elif="not tpd['price_visible']">
+                                            <p class="text-warning mb-0">Price pending coordinator</p>
+                                        </t>
+                                        <form t-if="tpd['policy_ok']" method="post" t-attf-action="/my/requests/#{order.id}/retainer/change-plan" class="mt-2">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <input type="hidden" name="target_plan_id" t-att-value="tpd['plan'].id"/>
+                                            <button type="submit" class="btn btn-primary btn-sm w-100">Switch to <t t-esc="tpd['plan'].name"/></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary">Back to request</a>
+                </div>
+            </t>
+        </template>
+
+        <!-- RET-006: Cancellation preview page -->
+        <template id="wink_retainer_cancel_preview" name="Cancel Retainer — Preview">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5" style="max-width:600px;">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header py-3" style="background:var(--wink-primary,#1F4E79); color:#fff;">
+                            <h4 class="mb-0"><i class="fa fa-times-circle me-2"/>Request Cancellation</h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2">Service: <strong><t t-esc="product.name"/></strong></p>
+                            <t t-if="end_date">
+                                <p class="mb-1">Subscription ends: <strong><t t-esc="end_date"/></strong></p>
+                            </t>
+                            <p class="text-muted small mb-2" t-if="effective_date_policy"><strong>Effective:</strong> <t t-if="effective_date_policy == 'next_cycle'">Next billing cycle</t><t t-else="">Immediate</t> — <t t-if="effective_date_policy == 'next_cycle'">cancellation applies at next renewal (coordinator may schedule).</t><t t-else="">cancellation applies now.</t></p>
+                            <t t-if="proration">
+                                <p class="mb-1">Remaining days: <strong><t t-esc="proration.get('remaining_days', 0)"/></strong></p>
+                                <p class="mb-2"><strong>Policy:</strong> <t t-esc="policy_label"/></p>
+                                <p class="mb-3" t-if="show_refund">
+                                    <strong>Amount:</strong> <t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(proration.get('remaining_value', 0))"/>
+                                    <span class="text-muted small">(<t t-esc="'{:,.2f}'.format(proration.get('daily_rate', 0))"/> × <t t-esc="proration.get('remaining_days', 0)"/> days)</span>
+                                </p>
+                                <p t-else="" class="mb-3 text-muted">No refund will be issued.</p>
+                            </t>
+                            <form method="post" t-attf-action="/my/requests/#{order.id}/retainer/cancel">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="mb-3">
+                                    <label class="form-label" for="cancel_reason">Reason (optional)</label>
+                                    <textarea id="cancel_reason" name="reason" class="form-control" rows="2" placeholder="Let us know why you're cancelling..."/>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-danger">Confirm cancellation</button>
+                                    <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary">Back</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- WF-BND-001: Bundle activation form when employee selection required -->
+        <template id="wink_bundle_activate_form" name="Activate Bundle Service">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5" style="max-width:600px;">
+                    <div class="card card-premium border-0 shadow-sm rounded-2xl overflow-hidden">
+                        <div class="card-header kuec-gradient text-white py-3 px-4">
+                            <h4 class="mb-0"><i class="fa fa-play-circle me-2"/>Activate service</h4>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="mb-2">Service: <strong><t t-esc="entitlement.name"/></strong></p>
+                            <p class="text-muted small mb-3">
+                                <t t-esc="entitlement.qty_activated"/>/<t t-esc="entitlement.qty_entitled"/> used
+                            </p>
+                            <t t-if="not docs_ok">
+                                <div class="alert alert-warning mb-3">
+                                    <strong>Required documents missing or not approved:</strong>
+                                    <ul class="mb-0 mt-1">
+                                        <t t-foreach="pending_docs" t-as="doc_name">
+                                            <li><t t-esc="doc_name"/></li>
+                                        </t>
+                                    </ul>
+                                    <a t-attf-href="/my/requests/#{order.id}/documents" class="btn btn-sm btn-outline-warning mt-2">Upload in Documents</a>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <p class="fw-semibold mb-2">Select employees for this activation</p>
+                                <form method="post" t-attf-action="/my/requests/#{order.id}/bundle/#{entitlement.id}/activate">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <div class="mb-3">
+                                        <t t-foreach="employees" t-as="emp">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" t-att-id="'emp_'+str(emp.id)" t-att-name="employee_ids" t-att-value="emp.id"/>
+                                                <label class="form-check-label" t-att-for="'emp_'+str(emp.id)"><t t-esc="emp.name"/></label>
+                                            </div>
+                                        </t>
+                                        <t t-if="not employees">
+                                            <p class="text-muted small">No employees in your directory. Add employees in your account to select them here.</p>
+                                        </t>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary" style="background:var(--wink-primary);border-color:var(--wink-primary);">Activate</button>
+                                        <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary">Back to request</a>
+                                    </div>
+                                </form>
+                            </t>
+                            <t t-if="docs_ok and not employees">
+                                <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary">Back to request</a>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- Epic4-NT, UI-LOV-019 New Support Ticket (Category, Priority, dashed dropzone, full-width Submit) -->
+        <template id="wink_portal_new_ticket" name="New Support Ticket">
+            <t t-call="portal.portal_layout">
+                <div class="wink-portal-container">
+                    <h1 class="page-header">New Support Ticket</h1>
+                    <p class="page-subtitle">Submit a request and our team will get back to you.</p>
+
+                    <t t-if="request.httprequest.args.get('error') == 'required'">
+                        <div class="alert alert-warning mb-4">Subject and Description are required.</div>
+                    </t>
+                    <t t-if="request.httprequest.args.get('error') == 'file_type'">
+                        <div class="alert alert-warning mb-4">Invalid file type. Allowed: PDF, JPG, PNG, DOC, DOCX (max 10 MB).</div>
+                    </t>
+                    <t t-if="request.httprequest.args.get('error') == 'create'">
+                        <div class="alert alert-danger mb-4">Could not create ticket. Please try again.</div>
+                    </t>
+
+                    <div class="card card-premium rounded-2xl overflow-hidden shadow-sm">
+                        <div class="card-header kuec-gradient text-white py-3 px-4">
+                            <span class="fw-bold">Create Ticket</span>
+                        </div>
+                        <div class="card-body p-4 p-md-5">
+                            <form method="post" action="/my/ticket/submit" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold" for="ticket_subject">Subject</label>
+                                    <input type="text" id="ticket_subject" name="subject" class="form-control" placeholder="Brief summary of your request" required="required" t-att-value="request.httprequest.args.get('subject', '')"/>
+                                </div>
+                                <t t-if="ticket_categories">
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold" for="ticket_category">Category</label>
+                                        <select id="ticket_category" name="category_id" class="form-select">
+                                            <option value="">— Select —</option>
+                                            <t t-foreach="ticket_categories" t-as="cat">
+                                                <option t-att-value="cat.id" t-esc="cat.name"/>
+                                            </t>
+                                        </select>
+                                    </div>
+                                </t>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold" for="ticket_priority">Priority</label>
+                                    <select id="ticket_priority" name="priority" class="form-select">
+                                        <option value="0">Low</option>
+                                        <option value="1" selected="selected">Normal</option>
+                                        <option value="2">High</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold" for="ticket_description">Description</label>
+                                    <textarea id="ticket_description" name="description" class="form-control" rows="5" placeholder="Describe your issue or request in detail..." required="required"></textarea>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">Attachment</label>
+                                    <div class="wink-upload-zone border border-2 border-dashed rounded-xl p-4 text-center position-relative" id="ticket-dropzone" onclick="document.getElementById('ticket_file_input').click()">
+                                        <input type="file" id="ticket_file_input" name="attachment" class="d-none" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"/>
+                                        <p class="text-muted mb-1"><i class="fa fa-cloud-upload fa-2x"/></p>
+                                        <p class="text-muted small mb-0">Click to upload or drag and drop</p>
+                                        <p class="text-muted small mb-0">PDF, JPG, PNG, DOC, DOCX (max 10 MB)</p>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-xl touch-target">Submit Ticket</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </t>
         </template>
     </data>

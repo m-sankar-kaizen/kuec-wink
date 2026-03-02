@@ -6,15 +6,7 @@
         <record id="kuec_payment_term_full" model="account.payment.term">
             <field name="name">WINK — Full Payment</field>
             <field name="note">Full payment due at time of order.</field>
-            <!-- In Odoo 18, the balance is implicitly the remaining amount or calculated by default line -->
-            <field name="line_ids" eval="[
-                (0, 0, {
-                    'value': 'percent',
-                    'value_amount': 100.0,
-                    'delay_type': 'days_after',
-                    'nb_days': 0
-                })
-            ]"/>
+            <field name="line_ids" eval="[Command.clear(), Command.create({'value': 'percent', 'value_amount': 100.0, 'nb_days': 0})]"/>
         </record>
 
         <!-- 50% Deposit / 50% Delivery -->
@@ -22,18 +14,9 @@
             <field name="name">WINK — 50% Deposit, 50% on Delivery</field>
             <field name="note">50% deposit at order, balance on delivery.</field>
             <field name="line_ids" eval="[
-                (0, 0, {
-                    'value': 'percent',
-                    'value_amount': 50.0,
-                    'delay_type': 'days_after',
-                    'nb_days': 0
-                }),
-                (0, 0, {
-                    'value': 'percent',
-                    'value_amount': 50.0,
-                    'delay_type': 'days_after',
-                    'nb_days': 30
-                })
+                Command.clear(),
+                Command.create({'value': 'percent', 'value_amount': 50.0, 'nb_days': 0}),
+                Command.create({'value': 'percent', 'value_amount': 50.0, 'nb_days': 30})
             ]"/>
         </record>
 
@@ -42,18 +25,9 @@
             <field name="name">WINK — 30% Deposit, 70% on Delivery</field>
             <field name="note">30% due at order, 70% due on delivery.</field>
             <field name="line_ids" eval="[
-                (0, 0, {
-                    'value': 'percent',
-                    'value_amount': 30.0,
-                    'delay_type': 'days_after',
-                    'nb_days': 0
-                }),
-                (0, 0, {
-                    'value': 'percent',
-                    'value_amount': 70.0,
-                    'delay_type': 'days_after',
-                    'nb_days': 30
-                })
+                Command.clear(),
+                Command.create({'value': 'percent', 'value_amount': 30.0, 'nb_days': 0}),
+                Command.create({'value': 'percent', 'value_amount': 70.0, 'nb_days': 30})
             ]"/>
         </record>
 

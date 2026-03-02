@@ -35,14 +35,17 @@
                                     <field name="name" string="Plan Name" placeholder="E.g. Bronze"/>
                                     <field name="monthly_std_price" string="Std Monthly Price (AED)"/>
                                     <field name="recurrence_name_hint" string="Recurrence Hint" optional="show"/>
+                                    <field name="pricing_model" optional="hide"/>
+                                    <field name="pricing_id" optional="hide"/>
                                     <field name="active" widget="boolean_toggle" optional="show"/>
                                 </list>
                             </field>
                             <p class="text-muted small mt-2">
-                                <i class="fa fa-info-circle"/> The <strong>Standard Monthly Price</strong> is always used for proration when a customer upgrades, downgrades, or cancels — regardless of whether they are on an annual or discounted billing plan.
+                                <i class="fa fa-info-circle"/> <strong>Proration:</strong> When each service has Odoo Recurring Prices, proration uses the actual price per service (normalized to monthly). Otherwise, the Standard Monthly Price above is used as fallback. Link plans via Recurrence Hint or Pricing ID for multi-service support.
                             </p>
                         </page>
 
+                        <!-- RET-002 -->
                         <page string="Change Policy" name="policy">
                             <group>
                                 <group string="Allowed Actions">
@@ -54,6 +57,12 @@
                                     <field name="downgrade_credit_policy"/>
                                     <field name="cancellation_credit_policy"/>
                                 </group>
+                            </group>
+                            <group string="Approval Requirements">
+                                <field name="upgrade_requires_approval"/>
+                                <field name="downgrade_requires_approval"/>
+                                <field name="cancellation_requires_approval"/>
+                                <field name="min_days_before_cancellation"/>
                             </group>
                         </page>
 

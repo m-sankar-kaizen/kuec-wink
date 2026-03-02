@@ -29,11 +29,14 @@ class ProjectTaskWink(models.Model):
             if not task.sale_order_id or not task.sale_order_id.wink_is_portal_request:
                 continue
             order = task.sale_order_id
-            # Copy employees from order or from entitlement (bundle activation line)
+            # WF-BND-001: prefer employees on activated line (sale_line.wink_selected_employee_ids), else entitlement, else order
             employee_ids = []
             sale_line = getattr(task, 'sale_line_id', None)
             if sale_line and getattr(sale_line, 'wink_entitlement_id', None):
-                employee_ids = sale_line.wink_entitlement_id.wink_selected_employee_ids.ids
+                if getattr(sale_line, 'wink_selected_employee_ids', None) and sale_line.wink_selected_employee_ids:
+                    employee_ids = sale_line.wink_selected_employee_ids.ids
+                if not employee_ids:
+                    employee_ids = sale_line.wink_entitlement_id.wink_selected_employee_ids.ids
             if not employee_ids:
                 employee_ids = order.wink_selected_employee_ids.ids
             if employee_ids:
@@ -64,10 +67,18 @@ class ProjectTaskWink(models.Model):
                     if (old_stage.id != new_stage.id
                             and old_stage.sequence <= 10
                             and new_stage.sequence > old_stage.sequence):
-                        all_approved, pending = task.sale_order_id._wink_all_required_docs_approved()
+                        # WF-BND-003: for activated bundle lines, check docs for that line's product only
+                        order = task.sale_order_id
+                        all_approved = True
+                        pending_names = []
+                        sale_line = getattr(task, 'sale_line_id', None)
+                        if sale_line and getattr(sale_line, 'wink_entitlement_id', None):
+                            product_tmpl = sale_line.product_id.product_tmpl_id
+                            all_approved, pending_names = order._wink_required_docs_approved_for_product(product_tmpl)
+                        else:
+                            # ISSUE-003: pending is always a list of document name strings.
+                            all_approved, pending_names = order._wink_all_required_docs_approved()
                         if not all_approved:
-                            # requirement_name can be False; ensure join receives strings
-                            pending_names = [str(p or _('Unknown')) for p in pending]
                             raise UserError(_(
                                 "Compliance Hard-Gate: You cannot move this task out of the 'New' stage because the customer has missing or unapproved documents: %s"
                             ) % ", ".join(pending_names))

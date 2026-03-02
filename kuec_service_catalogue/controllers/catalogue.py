@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 from odoo import http
 from odoo.http import request
 from odoo.tools import html2plaintext
@@ -47,21 +48,49 @@ class WinkCatalogue(http.Controller):
             else:
                 short_descs[p.id] = ''
 
-        # Sidebar data
+        # Sidebar data (CAT-4, CAT-5: departments with product count per department)
         departments = request.env['kuec.department'].sudo().search([('active', '=', True)])
+        base_domain = [
+            ('available_on_wink', '=', True),
+            ('sale_ok', '=', True),
+            ('active', '=', True)
+        ]
+        dept_counts = {}
+        for dept in departments:
+            dept_domain = base_domain + [('department_ids', 'in', [dept.id])]
+            dept_counts[dept.id] = Product.search_count(dept_domain)
         natures = request.env['kuec.service.nature'].sudo().search([('active', '=', True)])
         delivery_models = Product._fields['delivery_model'].selection
 
+        cur_dept = [int(d) for d in department_ids if d.isdigit()]
+        cur_nature = [int(n) for n in nature_ids if n.isdigit()]
+        active_filter_count = len(cur_dept) + len(cur_nature) + (1 if delivery_model else 0)
+
+        # CAT-5: department slug per product for strip/badge color class; slugify robustly
+        product_dept_slugs = {}
+        for p in products:
+            if p.department_ids:
+                raw = (p.department_ids[0].name or '').lower()
+                slug = raw.replace('&', 'and').replace(' ', '-')
+                slug = re.sub(r'[^a-z0-9-]', '', slug)
+                slug = re.sub(r'-+', '-', slug).strip('-')
+                product_dept_slugs[p.id] = slug or 'other'
+            else:
+                product_dept_slugs[p.id] = ''
+
         values = {
             'products': products,
+            'product_dept_slugs': product_dept_slugs,
             'departments': departments,
+            'dept_counts': dept_counts,
             'natures': natures,
             'delivery_models': delivery_models,
             'current_filters': {
-                'department_ids': [int(d) for d in department_ids if d.isdigit()],
-                'nature_ids': [int(n) for n in nature_ids if n.isdigit()],
+                'department_ids': cur_dept,
+                'nature_ids': cur_nature,
                 'delivery_model': delivery_model,
             },
+            'active_filter_count': active_filter_count,
             'search': search,
             'short_descs': short_descs,
         }
@@ -88,10 +117,16 @@ class WinkCatalogue(http.Controller):
         )
         subscription_plans = []
         selected_plan_id = None
+        display_plan = None  # FB-005: plan to show in main price (selected or first)
         if is_subscription_service:
             subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
             if subscription_plans:
                 selected_plan_id = subscription_plans[0]['recurrence_id']
+                display_plan = subscription_plans[0]
+                for p in subscription_plans:
+                    if p['recurrence_id'] == selected_plan_id:
+                        display_plan = p
+                        break
 
         values = {
             'product': product,
@@ -100,5 +135,6 @@ class WinkCatalogue(http.Controller):
             'is_subscription_service': is_subscription_service,
             'subscription_plans': subscription_plans,
             'selected_plan_id': selected_plan_id,
+            'display_plan': display_plan,
         }
         return request.render('kuec_service_catalogue.wink_service_detail_page', values)

@@ -108,14 +108,4 @@ class KuecEmployeeDirectory(models.Model):
             vals['emirates_id'] = False
         return super().write(vals)
 
-    def _auto_init(self):
-        """On upgrade: normalize empty strings to NULL so existing DB data doesn't
-        violate uniqueness checks (PostgreSQL treats '' as a distinct value from NULL)."""
-        res = super()._auto_init()
-        self.env.cr.execute(
-            "UPDATE kuec_employee_directory SET passport_number = NULL WHERE passport_number = ''"
-        )
-        self.env.cr.execute(
-            "UPDATE kuec_employee_directory SET emirates_id = NULL WHERE emirates_id = ''"
-        )
-        return res
+    # ISSUE-001: Empty-string normalization moved to post_init_hook (ORM only; no raw SQL).

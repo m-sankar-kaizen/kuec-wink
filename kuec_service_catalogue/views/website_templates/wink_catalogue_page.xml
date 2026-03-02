@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Service Card Snippet -->
+    <!-- CAT-6 Service card: dept strip, POPULAR badge, Details / Request -->
     <template id="wink_service_card" name="WINK Service Card">
-        <div class="card h-100 wink-service-card shadow-sm position-relative">
-            <t t-set="ribbon_tags" t-value="product.product_tag_ids.filtered(lambda t: t.is_ribbon)"/>
-            <t t-if="ribbon_tags">
-                <span class="badge" t-esc="ribbon_tags[0].name" style="position: absolute; top: 10px; right: 10px; background: var(--wink-primary); color: var(--wink-text-light); z-index: 10; padding: 4px 8px; font-weight: bold; font-size: 0.8em;"/>
+        <t t-set="dept_slug" t-value="dept_slug if dept_slug else ''"/>
+        <t t-set="strip_class" t-value="(' wink-dept-strip wink-dept-' + dept_slug) if dept_slug else ''"/>
+        <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative' + strip_class">
+            <!-- UI-BUG-001 (FB-001h): Diagonal ribbon on card; backend color + visible folded-corner -->
+            <t t-if="product.wink_ribbon_tag_id">
+                <div class="wink-ribbon-wrapper">
+                    <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
+                </div>
             </t>
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title fw-bold mb-2">
                     <a t-attf-href="/services/#{product.id}" class="text-dark text-decoration-none"><t t-esc="product.name"/></a>
                 </h5>
                 
-                <p class="card-text text-muted small flex-grow-1 mb-3">
+                <p class="card-text text-muted small flex-grow-1 mb-3 wink-line-clamp-2">
                     <t t-if="short_descs and product.id in short_descs">
                         <t t-esc="short_descs.get(product.id, '')"/>
                     </t>
@@ -44,8 +48,8 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-1 mb-3">
-                    <t t-foreach="product.product_tag_ids.filtered(lambda t: not t.is_ribbon)" t-as="tag">
-                        <span class="badge bg-secondary"><t t-esc="tag.name"/></span>
+                    <t t-foreach="product.product_tag_ids" t-as="tag">
+                        <span t-att-class="'badge wink-tag-badge' + ('' if tag.color else ' bg-secondary')" t-att-style="tag.color and ('background-color: %s; color: #fff; border: none;' % tag.color) or ''"><t t-esc="tag.name"/></span>
                     </t>
                 </div>
 
@@ -61,12 +65,12 @@
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex">
-                    <a t-attf-href="/services/#{product.id}" class="btn btn-outline-secondary btn-sm w-100">View Details</a>
+                    <a t-attf-href="/services/#{product.id}" class="btn btn-wink-ghost btn-sm">Details</a>
                     <t t-if="request.env.user._is_public()">
-                        <button type="button" class="btn btn-primary btn-sm w-100 wink-request-btn" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">Request Service</button>
+                        <button type="button" class="btn btn-wink-primary btn-sm wink-request-btn" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">Request <i class="fa fa-arrow-right ms-1"/></button>
                     </t>
                     <t t-else="">
-                        <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-primary btn-sm w-100 wink-request-btn" t-att-data-product-id="product.id">Request Service</a>
+                        <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-wink-primary btn-sm wink-request-btn" t-att-data-product-id="product.id">Request <i class="fa fa-arrow-right ms-1"/></a>
                     </t>
                 </div>
             </div>
@@ -95,15 +99,16 @@
     </template>
 
     <!-- Catalogue Page Details -->
+    <!-- CAT-1, CAT-2, CAT-10 Service Catalogue: hero (kuec-gradient), search, container, filters, empty state -->
     <template id="wink_catalogue_page" name="WINK Service Catalogue">
         <t t-call="website.layout">
             <div id="wrap" class="oe_structure oe_empty">
-                <div class="container py-5">
-                    
-                    <div class="wink-catalogue-header mb-4">
-                        <h1 class="fw-bold mb-3">Our Services</h1>
-                        <form method="get" action="/services" class="d-flex w-100" style="max-width: 500px;">
-                            <input type="text" name="search" placeholder="Search services..." class="form-control" t-att-value="search or ''"/>
+                <div class="wink-catalogue-container">
+                    <!-- CAT-1, CAT-2 Hero: gradient, optional pattern overlay -->
+                    <div class="wink-catalogue-hero kuec-gradient rounded-2xl wink-hero-pattern">
+                        <h1 class="page-header text-white mb-2">Service Catalogue</h1>
+                        <p class="page-subtitle text-white opacity-90 mb-4">Browse and request professional services tailored for your business needs.</p>
+                        <form method="get" action="/services" class="d-flex w-100 flex-column flex-md-row gap-2" style="max-width: 520px;">
                             <t t-foreach="current_filters.get('department_ids', [])" t-as="d_id">
                                 <input type="hidden" name="department_ids" t-att-value="d_id"/>
                             </t>
@@ -111,72 +116,138 @@
                                 <input type="hidden" name="nature_ids" t-att-value="n_id"/>
                             </t>
                             <input type="hidden" name="delivery_model" t-att-value="current_filters.get('delivery_model')" t-if="current_filters.get('delivery_model')"/>
-                            <input type="hidden" name="commercial_structure" t-att-value="current_filters.get('commercial_structure')" t-if="current_filters.get('commercial_structure')"/>
-                            
-                            <button type="submit" class="btn btn-primary ms-2 px-4">Search</button>
+                            <div class="input-group flex-grow-1">
+                                <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
+                                <input type="text" name="search" placeholder="Search services by name or keyword..." class="form-control border-start-0" t-att-value="search or ''"/>
+                            </div>
+                            <button type="submit" class="btn btn-light btn-md rounded-xl">Search</button>
                         </form>
-                        <button class="btn btn-outline-secondary d-md-none mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#winkSidebarCollapse" aria-expanded="false" aria-controls="winkSidebarCollapse">
-                            Show Filters
-                            <t t-set="active_filters_count" t-value="len(current_filters.get('department_ids', [])) + len(current_filters.get('nature_ids', [])) + (1 if current_filters.get('delivery_model') else 0) + (1 if current_filters.get('commercial_structure') else 0)"/>
-                            <span t-if="active_filters_count > 0" class="badge bg-primary ms-1" t-esc="active_filters_count"/>
+                    </div>
+
+                    <!-- CAT-3, CAT-9 Mobile filter trigger: opens offcanvas drawer (bottom sheet) -->
+                    <div class="d-md-none mb-3">
+                        <button class="btn btn-outline-secondary w-100 touch-target" type="button" data-bs-toggle="offcanvas" data-bs-target="#winkFilterOffcanvas" aria-controls="winkFilterOffcanvas">
+                            <i class="fa fa-sliders me-2"/> Filters
+                            <t t-if="active_filter_count > 0">
+                                <span class="badge bg-primary ms-2" t-esc="active_filter_count"/>
+                            </t>
                         </button>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-3 wink-filter-sidebar collapse d-md-block" id="winkSidebarCollapse">
-                            <form method="get" action="/services" id="wink-filter-form" class="bg-white border rounded p-3">
+                    <!-- CAT-9 Mobile filter offcanvas (same FilterContent as sidebar) -->
+                    <div class="offcanvas offcanvas-bottom wink-filter-offcanvas d-md-none" tabindex="-1" id="winkFilterOffcanvas" aria-labelledby="winkFilterOffcanvasLabel">
+                        <div class="offcanvas-header border-bottom">
+                            <h6 class="offcanvas-title fw-bold" id="winkFilterOffcanvasLabel"><i class="fa fa-filter me-1"/> Filters</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"/>
+                        </div>
+                        <div class="offcanvas-body">
+                            <form method="get" action="/services" id="wink-filter-form-mobile">
                                 <input type="hidden" name="search" t-att-value="search or ''"/>
-                                
                                 <div class="wink-filter-group mb-4">
-                                    <h6 class="fw-bold mb-2 border-bottom pb-2">Department</h6>
+                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
                                     <t t-foreach="departments" t-as="dept">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input wink-filter-checkbox" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
-                                            <label class="form-check-label text-muted"><t t-esc="dept.name"/></label>
+                                            <input type="checkbox" class="form-check-input" t-att-id="'filter_dept_mob_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
+                                            <label class="form-check-label text-muted" t-att-for="'filter_dept_mob_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
                                         </div>
                                     </t>
                                 </div>
-
                                 <div class="wink-filter-group mb-4">
-                                    <h6 class="fw-bold mb-2 border-bottom pb-2">Service Nature</h6>
+                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
                                     <t t-foreach="natures" t-as="nature">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input wink-filter-checkbox" name="nature_ids" t-att-value="nature.id" t-att-checked="nature.id in current_filters.get('nature_ids', [])"/>
-                                            <label class="form-check-label text-muted"><t t-esc="nature.name"/></label>
+                                            <input type="checkbox" class="form-check-input" t-att-id="'filter_nature_mob_%s' % nature.id" name="nature_ids" t-att-value="nature.id" t-att-checked="nature.id in current_filters.get('nature_ids', [])"/>
+                                            <label class="form-check-label text-muted" t-att-for="'filter_nature_mob_%s' % nature.id"><t t-esc="nature.name"/></label>
                                         </div>
                                     </t>
                                 </div>
-
                                 <div class="wink-filter-group mb-4">
-                                    <h6 class="fw-bold mb-2 border-bottom pb-2">Delivery Model</h6>
+                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Delivery Model</h6>
                                     <t t-foreach="delivery_models" t-as="dm">
                                         <div class="form-check">
-                                            <input type="radio" class="form-check-input" name="delivery_model" t-att-value="dm[0]" t-att-checked="current_filters.get('delivery_model') == dm[0]"/>
-                                            <label class="form-check-label text-muted"><t t-esc="dm[1]"/></label>
+                                            <input type="radio" class="form-check-input" t-att-id="'filter_delivery_mob_%s' % dm[0]" name="delivery_model" t-att-value="dm[0]" t-att-checked="current_filters.get('delivery_model') == dm[0]"/>
+                                            <label class="form-check-label text-muted" t-att-for="'filter_delivery_mob_%s' % dm[0]"><t t-esc="dm[1]"/></label>
                                         </div>
                                     </t>
                                 </div>
-
-                                <a href="/services" class="btn btn-outline-secondary btn-sm w-100">Clear Filters</a>
+                                <t t-if="active_filter_count > 0">
+                                    <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear All Filters (<t t-esc="active_filter_count"/>)</a>
+                                </t>
+                                <t t-else="">
+                                    <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear Filters</a>
+                                </t>
+                                <button type="submit" class="btn btn-primary w-100 mt-2">Apply Filters</button>
                             </form>
                         </div>
+                    </div>
 
-                        <div class="col-md-9 pt-3 pt-md-0">
-                            <p class="text-muted small mb-3"><t t-esc="len(products)"/> service(s) found</p>
+                    <div class="row">
+                        <!-- CAT-4 Desktop sidebar: card-premium, counts, Clear All Filters (N); hidden on mobile (filter in offcanvas) -->
+                        <div class="col-md-3 wink-filter-sidebar d-none d-md-block" id="winkSidebarCollapse">
+                            <div class="card-premium rounded-2xl p-4 sticky-top">
+                                <form method="get" action="/services" id="wink-filter-form">
+                                    <input type="hidden" name="search" t-att-value="search or ''"/>
+                                    <h6 class="fw-bold mb-3 border-bottom pb-2"><i class="fa fa-filter me-1"/> Filters</h6>
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
+                                        <t t-foreach="departments" t-as="dept">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input wink-filter-checkbox" t-att-id="'filter_dept_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
+                                                <label class="form-check-label text-muted" t-att-for="'filter_dept_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
+                                        <t t-foreach="natures" t-as="nature">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input wink-filter-checkbox" t-att-id="'filter_nature_%s' % nature.id" name="nature_ids" t-att-value="nature.id" t-att-checked="nature.id in current_filters.get('nature_ids', [])"/>
+                                                <label class="form-check-label text-muted" t-att-for="'filter_nature_%s' % nature.id"><t t-esc="nature.name"/></label>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Delivery Model</h6>
+                                        <t t-foreach="delivery_models" t-as="dm">
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" t-att-id="'filter_delivery_%s' % dm[0]" name="delivery_model" t-att-value="dm[0]" t-att-checked="current_filters.get('delivery_model') == dm[0]"/>
+                                                <label class="form-check-label text-muted" t-att-for="'filter_delivery_%s' % dm[0]"><t t-esc="dm[1]"/></label>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <t t-if="active_filter_count > 0">
+                                        <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear All Filters (<t t-esc="active_filter_count"/>)</a>
+                                    </t>
+                                    <t t-else="">
+                                        <a href="/services" class="btn btn-outline-secondary btn-sm w-100">Clear Filters</a>
+                                    </t>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="col-md-9 pt-3 pt-md-0 space-y-6">
+                            <p class="text-muted small mb-3">Showing <t t-esc="len(products)"/> service<t t-if="len(products) != 1">s</t></p>
                             <div class="row g-4" id="wink-services-grid">
                                 <t t-if="products">
                                     <t t-foreach="products" t-as="product">
+                                        <t t-set="dept_slug" t-value="product_dept_slugs.get(product.id, '')"/>
                                         <div class="col-md-4 col-sm-6 col-12">
                                             <t t-call="kuec_service_catalogue.wink_service_card">
                                                 <t t-set="product" t-value="product"/>
+                                                <t t-set="dept_slug" t-value="dept_slug"/>
                                             </t>
                                         </div>
                                     </t>
                                 </t>
                                 <t t-else="">
-                                    <div class="col-12 text-center py-5">
-                                        <p class="text-muted mb-3">No services found matching your filters.</p>
-                                        <a href="/services" class="btn btn-outline-primary">Clear Filters</a>
+                                    <!-- CAT-8 Empty state -->
+                                    <div class="col-12">
+                                        <div class="wink-empty-state card-premium rounded-2xl p-6">
+                                            <i class="fa fa-search d-block"/>
+                                            <h6 class="fw-bold text-dark mb-2">No services found</h6>
+                                            <p class="text-muted mb-3">Try adjusting your search or filters.</p>
+                                            <a href="/services" class="btn btn-outline-primary">Clear all filters</a>
+                                        </div>
                                     </div>
                                 </t>
                             </div>
@@ -205,14 +276,16 @@
 
                     <div class="row mt-4">
                         <div class="col-lg-8 pe-lg-5">
-                            <div class="mb-4 position-relative">
-                                <t t-set="ribbon_tags" t-value="product.product_tag_ids.filtered(lambda t: t.is_ribbon)"/>
-                                <t t-if="ribbon_tags">
-                                    <span class="badge mb-2 d-inline-block" t-esc="ribbon_tags[0].name" style="background: var(--wink-primary); color: var(--wink-text-light); padding: 5px 10px; font-size: 0.9em;"/>
+                            <div class="mb-4 position-relative wink-catalogue-page-detail">
+                                <!-- UI-BUG-001 (FB-001h): Diagonal ribbon on detail; backend color -->
+                                <t t-if="product.wink_ribbon_tag_id">
+                                    <div class="wink-ribbon-wrapper">
+                                        <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
+                                    </div>
                                 </t>
                                 <h1 class="fw-bold text-dark mb-3"><t t-esc="product.name"/></h1>
                                 
-                                <div class="d-flex flex-wrap gap-2 mb-4">
+                                <div class="d-flex flex-wrap gap-2 mb-2">
                                     <t t-if="product.department_ids">
                                         <span class="badge border text-dark fs-6 fw-normal"><t t-esc="product.department_ids[0].name"/></span>
                                     </t>
@@ -226,6 +299,19 @@
                                         <span class="badge border text-dark fs-6 fw-normal"><t t-esc="dict(product._fields['commercial_structure'].selection).get(product.commercial_structure, '')"/></span>
                                     </t>
                                 </div>
+                                <!-- Tags: badges use backend tag color -->
+                                <t t-if="product.product_tag_ids or product.wink_ribbon_tag_id">
+                                    <div class="d-flex flex-wrap gap-1 mb-0">
+                                        <t t-foreach="product.product_tag_ids" t-as="tag">
+                                            <span t-att-class="'badge wink-tag-badge fs-6 fw-normal' + ('' if tag.color else ' bg-secondary')" t-att-style="tag.color and ('background-color: %s; color: #fff; border: none;' % tag.color) or ''"><t t-esc="tag.name"/></span>
+                                        </t>
+                                        <t t-if="product.wink_ribbon_tag_id">
+                                            <span t-att-class="'badge wink-tag-badge fs-6 fw-normal'" t-att-style="product.wink_ribbon_tag_id.color and ('background-color: %s; color: #fff; border: none;' % product.wink_ribbon_tag_id.color) or 'background: rgba(31, 78, 121, 0.12); color: #1F4E79; border: 1px solid var(--wink-primary);'">
+                                                <i class="fa fa-bookmark me-1"/> <t t-esc="product.wink_ribbon_tag_id.name"/>
+                                            </span>
+                                        </t>
+                                    </div>
+                                </t>
                             </div>
 
                             <div class="mb-5 oe_structure">
@@ -277,17 +363,26 @@
                         </div>
 
                         <div class="col-lg-4">
-                            <div class="card shadow-sm sticky-top border-0 rounded-3" style="top: 100px; background: var(--wink-bg);">
+                            <!-- UI-LOV-016 Right CTA: premium card with gradient header -->
+                            <div class="card card-premium shadow-sm sticky-top border-0 rounded-2xl overflow-hidden d-none d-lg-block" style="top: 100px;">
+                                <div class="card-header kuec-gradient text-white py-3 px-4 text-center">
+                                    <t t-if="is_subscription_service and subscription_plans">
+                                        <span class="small d-block opacity-90">Starting at</span>
+                                        <span class="fw-bold fs-4">AED <t t-esc="'{:,.2f}'.format(subscription_plans[0]['price'])"/></span>
+                                    </t>
+                                    <t t-if="not is_subscription_service or not subscription_plans">
+                                        <span class="fw-bold">Get a Quote</span>
+                                    </t>
+                                </div>
                                 <div class="card-body p-4 text-center">
-                                    <!-- Price display: updated by JS when plan changes (subscription) or static -->
+                                    <!-- Price display: FB-005 show selected plan (monthly vs yearly), updated by JS when plan changes -->
                                     <div class="mb-3" id="wink-detail-price">
                                         <t t-if="product.price_visibility == 'hidden'">
                                             <h4 class="text-muted fw-bold fst-italic mb-0"><t t-esc="product.price_hidden_label"/></h4>
                                         </t>
                                         <t t-elif="is_subscription_service and subscription_plans">
                                             <h2 class="fw-bold mb-0" style="color: #1F3864; font-family: 'IBM Plex Mono', monospace;" id="wink-detail-price-amount">
-                                                <t t-set="first_plan" t-value="subscription_plans[0] if subscription_plans else None"/>
-                                                <t t-if="first_plan">AED <t t-esc="'{:,.2f}'.format(first_plan['price'])"/> <t t-esc="first_plan['period_label']"/></t>
+                                                <t t-if="display_plan">AED <t t-esc="'{:,.2f}'.format(display_plan['price'])"/> <t t-esc="display_plan['period_label']"/></t>
                                             </h2>
                                         </t>
                                         <t t-else="">
@@ -368,6 +463,11 @@
                                 })();
                             </script>
                         </div>
+                    </div>
+
+                    <!-- UI-LOV-017 Mobile sticky CTA bar -->
+                    <div class="wink-cta-bar-mobile d-lg-none">
+                        <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-light btn-lg fw-bold" t-att-data-product-id="product.id">Request Service</a>
                     </div>
                 </div>
             </div>

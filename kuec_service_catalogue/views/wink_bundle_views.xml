@@ -29,6 +29,7 @@
                                     <field name="name"/>
                                     <field name="price"/>
                                     <field name="item_count" string="Services"/>
+                                    <button name="action_open_tier_services" type="object" string="Add / edit services" class="btn-link" icon="fa-arrow-right"/>
                                 </list>
                             </field>
                         </page>

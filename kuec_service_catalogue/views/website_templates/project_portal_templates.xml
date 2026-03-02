@@ -1,46 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="wink_portal_task_stages"
-              inherit_id="project.portal_my_task"
-              priority="15">
-        <xpath expr="//div[hasclass('o_portal_sidebar')]" position="before">
-            <div class="wink-delivery-panel mb-4" t-if="task.project_id">
-                <h6 class="wink-panel-label">Delivery Progress</h6>
-
-                <t t-set="visible_stages"
-                   t-value="task.project_id.type_ids.filtered(lambda s: s.portal_visible).sorted(key=lambda s: s.sequence)"/>
-
-                <div t-if="visible_stages"
-                     class="wink-stage-bar d-flex align-items-center flex-wrap gap-1">
-                    <t t-foreach="visible_stages" t-as="vstage">
-                        <t t-set="is_done"
-                           t-value="vstage.sequence &lt;= task.stage_id.sequence"/>
-                        <t t-set="is_current"
-                           t-value="vstage.id == task.stage_id.id"/>
-                        <div t-attf-class="wink-stage-node #{'wink-done' if is_done else ''} #{'wink-current' if is_current else ''}">
-                            <div class="wink-node-dot"/>
-                            <span class="wink-node-label">
-                                <t t-esc="vstage.name"/>
-                            </span>
-                        </div>
-                        <div t-if="not vstage_last" class="wink-stage-connector"/>
-                    </t>
-                </div>
-
-                <div t-else="" class="text-muted small mt-2">
-                    No progress stages configured yet.
-                </div>
-
-                <div class="mt-2">
-                    <span class="badge" style="background: var(--wink-primary); color: #fff;">
-                        <t t-esc="task.stage_id.name"/>
-                    </span>
-                    <span t-if="not task.stage_id.portal_visible"
-                          class="ms-2 text-muted small">
-                        In progress
-                    </span>
-                </div>
-            </div>
-        </xpath>
-    </template>
+    <!-- Delivery Progress panel removed from portal task view per latest UX spec -->
 </odoo>
