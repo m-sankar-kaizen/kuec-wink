@@ -6,7 +6,7 @@
         <t t-set="dept_slug" t-value="dept_slug if dept_slug else ''"/>
         <t t-set="strip_class" t-value="(' wink-dept-strip wink-dept-' + dept_slug) if dept_slug else ''"/>
         <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative' + strip_class">
-            <!-- UI-BUG-001 (FB-001h): Diagonal ribbon on card; backend color + visible folded-corner -->
+            <!-- UI-TAG-001 (FB-001h): Diagonal ribbon on card; backend color + visible folded-corner -->
             <t t-if="product.wink_ribbon_tag_id">
                 <div class="wink-ribbon-wrapper">
                     <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
@@ -47,8 +47,9 @@
                     </t>
                 </div>
 
+                <!-- UI-TAG-002 -->
                 <div class="d-flex flex-wrap gap-1 mb-3">
-                    <t t-foreach="product.product_tag_ids" t-as="tag">
+                    <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
                         <span t-att-class="'badge wink-tag-badge' + ('' if tag.color else ' bg-secondary')" t-att-style="tag.color and ('background-color: %s; color: #fff; border: none;' % tag.color) or ''"><t t-esc="tag.name"/></span>
                     </t>
                 </div>
@@ -277,7 +278,7 @@
                     <div class="row mt-4">
                         <div class="col-lg-8 pe-lg-5">
                             <div class="mb-4 position-relative wink-catalogue-page-detail">
-                                <!-- UI-BUG-001 (FB-001h): Diagonal ribbon on detail; backend color -->
+                                <!-- UI-TAG-001 (FB-001h): Diagonal ribbon on detail; backend color -->
                                 <t t-if="product.wink_ribbon_tag_id">
                                     <div class="wink-ribbon-wrapper">
                                         <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
@@ -300,9 +301,10 @@
                                     </t>
                                 </div>
                                 <!-- Tags: badges use backend tag color -->
+                                <!-- UI-TAG-002 -->
                                 <t t-if="product.product_tag_ids or product.wink_ribbon_tag_id">
                                     <div class="d-flex flex-wrap gap-1 mb-0">
-                                        <t t-foreach="product.product_tag_ids" t-as="tag">
+                                        <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
                                             <span t-att-class="'badge wink-tag-badge fs-6 fw-normal' + ('' if tag.color else ' bg-secondary')" t-att-style="tag.color and ('background-color: %s; color: #fff; border: none;' % tag.color) or ''"><t t-esc="tag.name"/></span>
                                         </t>
                                         <t t-if="product.wink_ribbon_tag_id">
