@@ -46,7 +46,7 @@ class WinkRequest(http.Controller):
             'product': product,
             'employees': employees,
             'show_registration_banner': False,
-            'is_bundle': False,
+            'wink_is_bundle': False,
             'errors': errors or {},
             'post': post or {},
         }
@@ -56,7 +56,7 @@ class WinkRequest(http.Controller):
             tier_data = []
             for tier in tiers:
                 tier_data.append({'tier': tier, 'items': tier.item_ids.sorted('sequence')})
-            vals.update({'is_bundle': True, 'bundle': bundle, 'tier_data': tier_data})
+            vals.update({'wink_is_bundle': True, 'bundle': bundle, 'tier_data': tier_data})
 
         # Plan selection: Odoo subscription only (Recurring Prices tab)
         recurring_lines = product._wink_recurring_plan_lines()
@@ -458,8 +458,8 @@ class WinkRequest(http.Controller):
             # CR-6: review step display (type_label, tier_name, plan_name, employee_names)
             review_display = {'type_label': '', 'tier_name': '', 'plan_name': '', 'employee_names': []}
             if step == 3 and wizard_draft:
-                is_bundle = product.commercial_structure == 'bundled' and product.wink_bundle_id
-                if is_bundle:
+                wink_is_bundle = product.commercial_structure == 'bundled' and product.wink_bundle_id
+                if wink_is_bundle:
                     review_display['type_label'] = 'Bundle'
                     tier_id = wizard_draft.get('tier_id')
                     if tier_id:
@@ -499,7 +499,7 @@ class WinkRequest(http.Controller):
                 'product': product,
                 'employees': employees,
                 'show_registration_banner': kwargs.get('registered') == '1',
-                'is_bundle': False,
+                'wink_is_bundle': False,
                 'errors': {},
                 'post': post_data,
                 'step': step,
@@ -537,7 +537,7 @@ class WinkRequest(http.Controller):
                 if not selected_tier_for_total and tier_data:
                     selected_tier_for_total = tier_data[0]['tier']
                 render_vals.update({
-                    'is_bundle': True,
+                    'wink_is_bundle': True,
                     'bundle': bundle,
                     'tier_data': tier_data,
                     'bundle_total_tier': selected_tier_for_total,
@@ -763,7 +763,7 @@ class WinkRequest(http.Controller):
         employee_ids = request.httprequest.form.getlist('employee_ids')
         employee_ids = [int(e) for e in employee_ids if str(e).isdigit()]
 
-        is_bundle = (
+        wink_is_bundle = (
             product.commercial_structure == 'bundled'
             and product.wink_bundle_id
         )
@@ -773,11 +773,11 @@ class WinkRequest(http.Controller):
             tier_id = int(post.get('tier_id', 0))
         except (TypeError, ValueError):
             tier_id = 0
-        if is_bundle and tier_id:
+        if wink_is_bundle and tier_id:
             tier = request.env['wink.bundle.tier'].sudo().browse(tier_id)
 
         variant = product.product_variant_id
-        if is_bundle and getattr(tier, 'exists', lambda: False)() and tier.exists() and tier.product_variant_id:
+        if wink_is_bundle and getattr(tier, 'exists', lambda: False)() and tier.exists() and tier.product_variant_id:
             variant = tier.product_variant_id
 
         # Plan: Odoo subscription only (Recurring Prices)
@@ -795,13 +795,13 @@ class WinkRequest(http.Controller):
         
         selected_recurrence_id = None
         # FIX: Allow processing selected_pricing_id even if product doesn't have direct recurring lines (e.g. bundle tiers)
-        if (is_subscription_service or is_bundle) and selected_pricing_id is not None:
+        if (is_subscription_service or wink_is_bundle) and selected_pricing_id is not None:
             # Find pricing line by ID primarily
             pricing_line = None
             
             # If it's a bundle, the pricing lines might come from child services or related matrix
             # But we can try to browse it directly if we have the ID and it's a valid pricing model
-            if not recurring_lines and is_bundle:
+            if not recurring_lines and wink_is_bundle:
                 # For bundles, selected_pricing_id is expected to be a product.pricing or sale.subscription.pricing ID
                 # We try to browse commonly used pricing models
                 for model in ['product.pricing', 'sale.subscription.pricing']:
@@ -896,7 +896,7 @@ class WinkRequest(http.Controller):
                         selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
 
         # Validation: employees required when product or child service requires selection
-        if not is_bundle:
+        if not wink_is_bundle:
             if product.requires_employee_selection and not employee_ids:
                 vals = self._get_request_form_vals(product, errors={'employee_ids': _('Please select at least one employee for this service.')}, post=post)
                 return request.render('kuec_service_catalogue.wink_request_form', vals)
@@ -922,10 +922,10 @@ class WinkRequest(http.Controller):
 
         # variant is already determined above based on tier
         price_unit = variant.list_price if variant else product.list_price
-        if is_bundle and 'tier' in locals() and tier and getattr(tier, 'exists', lambda: False)() and tier.price:
+        if wink_is_bundle and 'tier' in locals() and tier and getattr(tier, 'exists', lambda: False)() and tier.price:
             price_unit = tier.price
 
-        if use_recurring_prices or is_bundle:
+        if use_recurring_prices or wink_is_bundle:
             if getattr(recurring_lines, '_name', None) == 'sale.subscription.plan' and selected_plan:
                 # Legacy sale.subscription.plan path
                 price_unit = getattr(selected_plan, 'price', None) or getattr(selected_plan, 'list_price', None) or price_unit
@@ -1000,11 +1000,11 @@ class WinkRequest(http.Controller):
             )
 
         # Employees: for standalone set on order; for bundle set per entitlement below
-        if not is_bundle and employee_ids:
+        if not wink_is_bundle and employee_ids:
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
 
         # --- Set plan_id (sale.subscription.plan), recurrence_id, is_subscription, wink_recurring_pricing_id on order ---
-        if use_recurring_prices or is_bundle:
+        if use_recurring_prices or wink_is_bundle:
             if selected_plan and getattr(selected_plan, '_name', None) == 'sale.subscription.plan':
                 write_vals = {}
                 if hasattr(order, 'plan_id'):
@@ -1058,7 +1058,7 @@ class WinkRequest(http.Controller):
         tier = None
         bundle_line = None
 
-        if is_bundle:
+        if wink_is_bundle:
             try:
                 tier_id = int(post.get('tier_id', 0))
             except (TypeError, ValueError):
@@ -1534,12 +1534,12 @@ class WinkRequest(http.Controller):
                         current_recurrence_id = rec.id
                     break
 
-        is_bundle = (product.commercial_structure == 'bundled' and product.wink_bundle_id)
-        current_tier = order.wink_bundle_tier_id if is_bundle else None
+        wink_is_bundle = (product.commercial_structure == 'bundled' and product.wink_bundle_id)
+        current_tier = order.wink_bundle_tier_id if wink_is_bundle else None
 
         target_plans_data = []
 
-        if is_bundle:
+        if wink_is_bundle:
             # Bundle: Cross all available tiers with all available plans
             tiers = product.wink_bundle_id.tier_ids.sorted('sequence')
             for tier in tiers:

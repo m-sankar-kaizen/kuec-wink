@@ -12,8 +12,8 @@
                     <label for="available_on_wink"/>
                 </span>
                 <span class="d-inline-block">
-                    <field name="is_bundle"/>
-                    <label for="is_bundle"/>
+                    <field name="wink_is_bundle"/>
+                    <label for="wink_is_bundle"/>
                 </span>
             </xpath>
 
@@ -26,12 +26,12 @@
                         <field name="nature_id"/>
 
                         <separator string="Delivery"/>
-                        <field name="delivery_model" widget="radio" readonly="is_bundle or commercial_structure == 'bundled'"/>
-                        <field name="request_frequency" widget="radio" invisible="is_bundle"/>
+                        <field name="delivery_model" widget="radio" readonly="wink_is_bundle or commercial_structure == 'bundled'"/>
+                        <field name="request_frequency" widget="radio" invisible="wink_is_bundle"/>
                         <field name="project_template_id" invisible="delivery_model != 'project'"/>
-                        <separator string="Commercial" invisible="is_bundle"/>
-                        <field name="commercial_structure" widget="radio" invisible="is_bundle"/>
-                        <field name="wink_bundle_id" invisible="commercial_structure == 'bundled' and not is_bundle"/>
+                        <separator string="Commercial" invisible="wink_is_bundle"/>
+                        <field name="commercial_structure" widget="radio" invisible="wink_is_bundle"/>
+                        <field name="wink_bundle_id" invisible="commercial_structure == 'bundled' and not wink_is_bundle"/>
                         <field name="wink_subscription_group_id" invisible="delivery_model != 'retainer'"/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
@@ -39,7 +39,7 @@
                         <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
                         <field name="wink_payment_term_id" invisible="delivery_model == 'retainer'"/>
                         <separator string="Portal Configuration"/>
-                        <field name="requires_employee_selection" invisible="is_bundle"/>
+                        <field name="requires_employee_selection" invisible="wink_is_bundle"/>
                         <field name="reminder_days_before"/>
                         <separator string="Tags &amp; Ribbon (Portal)"/>
                         <field name="product_tag_ids" widget="many2many_tags" placeholder="Tags shown on portal cards and detail"/>
@@ -67,7 +67,7 @@
                     </group>
                 </page>
 
-                <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink or type != 'service' or not sale_ok or is_bundle">
+                <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink or type != 'service' or not sale_ok or wink_is_bundle">
                     <field name="kuec_document_ids" widget="one2many">
                         <list string="Documents" editable="bottom">
                             <field name="sequence" widget="handle"/>

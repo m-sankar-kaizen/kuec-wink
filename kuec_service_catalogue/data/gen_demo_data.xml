@@ -916,7 +916,7 @@
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="available_on_wink">True</field>
-            <field name="is_bundle">True</field>
+            <field name="wink_is_bundle">True</field>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">standalone</field>
             <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>

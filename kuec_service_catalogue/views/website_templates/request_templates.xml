@@ -503,7 +503,7 @@
                         <input t-if="change_from_id" type="hidden" name="change_from_id" t-att-value="change_from_id"/>
 
                         <!-- v2: Your Selected Plan summary (when coming from detail page with plan, non-bundle only) -->
-                        <div t-if="is_subscription_service and selected_plan and not is_bundle" class="mb-4">
+                        <div t-if="is_subscription_service and selected_plan and not wink_is_bundle" class="mb-4">
                             <h5 class="mb-2"><i class="fa fa-calendar-check-o me-1"/> Selected Plan</h5>
                             <div class="card border-primary mb-2">
                                 <div class="card-body">
@@ -520,7 +520,7 @@
                         <!-- ====================================================
                              BUNDLE PRICING: Step 1 → Cycle, Step 2 → Tier
                              ================================================= -->
-                        <div t-if="is_bundle and billing_cycles" class="wink-bundle-configurator mb-4">
+                        <div t-if="wink_is_bundle and billing_cycles" class="wink-bundle-configurator mb-4">
 
                             <!-- Pass the pricing matrix to JS as JSON -->
                             <script t-ignore="1">
@@ -695,7 +695,7 @@
                         </div>
 
                         <!-- OLD plan selector: only shown for non-bundle retainers -->
-                        <div t-if="is_subscription_service and not is_bundle and subscription_plans and not selected_plan" class="wink-retainer-plan-selector mb-4">
+                        <div t-if="is_subscription_service and not wink_is_bundle and subscription_plans and not selected_plan" class="wink-retainer-plan-selector mb-4">
                             <h5 class="mb-3">Select Your Plan</h5>
                             <p class="text-muted small mb-2">Price is based on the plan you select.</p>
                             <t t-foreach="subscription_plans" t-as="plan">
@@ -731,7 +731,7 @@
                         </div>
 
                         <!-- Bundle: employees per child service (shown when a tier is selected) -->
-                        <div t-if="is_bundle and employees" class="mt-4" id="bundle-employees-container">
+                        <div t-if="wink_is_bundle and employees" class="mt-4" id="bundle-employees-container">
                             <h5 class="border-bottom pb-2">Select Employees per Included Service</h5>
                             <p class="text-muted small mb-3">Select employees for each service that requires it (for the plan you choose above).</p>
                             <t t-foreach="tier_data" t-as="td">

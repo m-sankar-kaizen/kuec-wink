@@ -350,7 +350,7 @@
             <field name="type">service</field>
             <field name="sale_ok">True</field>
             <field name="available_on_wink">False</field>
-            <field name="is_bundle">True</field>
+            <field name="wink_is_bundle">True</field>
             <field name="list_price">1800.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
             <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>

@@ -19,6 +19,7 @@ class SaleOrderLineBundle(models.Model):
              'Used by WINK portal bundle workflow.',
     )
 
+    wink_entitlement_wink_is_bundle = fields.Boolean(related='product_id.wink_is_bundle', store=True)
     wink_entitlement_id = fields.Many2one(
         'wink.bundle.entitlement',
         string='Bundle Entitlement',

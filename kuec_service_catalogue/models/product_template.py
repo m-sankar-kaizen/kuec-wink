@@ -10,7 +10,7 @@ class ProductTemplate(models.Model):
         string='Available on Wink',
         help="Check this box to make this service available on the Wink portal."
     )
-    is_bundle = fields.Boolean(
+    wink_is_bundle = fields.Boolean(
         string='Is a Bundle Template?',
         help="Check this if this product template is acting as a parent wrapper for a bundle package."
     )
@@ -87,9 +87,9 @@ class ProductTemplate(models.Model):
         help='Single ribbon tag shown as the diagonal ribbon on the Wink portal card and detail page.',
     )
 
-    @api.onchange('is_bundle')
-    def _onchange_is_bundle(self):
-        if self.is_bundle:
+    @api.onchange('wink_is_bundle')
+    def _onchange_wink_is_bundle(self):
+        if self.wink_is_bundle:
             self.delivery_model = 'retainer'
             self.recurring_invoice = True
             self.commercial_structure = False
