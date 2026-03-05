@@ -49,6 +49,7 @@ class WinkBundleEntitlement(models.Model):
         [
             ('available', 'Available'),
             ('fully_activated', 'Fully Activated'),
+            ('expired', 'Expired'),
         ],
         string='Status',
         compute='_compute_state',
@@ -81,10 +82,12 @@ class WinkBundleEntitlement(models.Model):
         if employees:
             self.wink_selected_employee_ids = [(6, 0, employees.ids)]
 
-    @api.depends('qty_entitled', 'qty_activated')
+    @api.depends('qty_entitled', 'qty_activated', 'order_id.state')
     def _compute_state(self):
         for rec in self:
-            if rec.qty_activated >= rec.qty_entitled:
+            if rec.order_id and rec.order_id.state == 'cancel':
+                rec.state = 'expired'
+            elif rec.qty_activated >= rec.qty_entitled:
                 rec.state = 'fully_activated'
             else:
                 rec.state = 'available'
@@ -105,6 +108,11 @@ class WinkBundleEntitlement(models.Model):
             raise UserError(_(
                 "The order must be confirmed before activating "
                 "bundle services."
+            ))
+
+        if self.state == 'expired' or order.state == 'cancel':
+            raise UserError(_(
+                "This bundle is no longer active. You cannot activate services from a cancelled or expired bundle."
             ))
 
         # WF-BND-002: Required documents per activated service

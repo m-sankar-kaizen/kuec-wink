@@ -368,7 +368,7 @@
                             <!-- UI-LOV-016 Right CTA: premium card with gradient header -->
                             <div class="card card-premium shadow-sm sticky-top border-0 rounded-2xl overflow-hidden d-none d-lg-block" style="top: 100px;">
                                 <div class="card-header kuec-gradient text-white py-3 px-4 text-center">
-                                    <t t-if="is_subscription_service and subscription_plans">
+                                    <t t-if="is_subscription_service and subscription_plans and product.commercial_structure != 'bundled'">
                                         <span class="small d-block opacity-90">Starting at</span>
                                         <span class="fw-bold fs-4">AED <t t-esc="'{:,.2f}'.format(subscription_plans[0]['price'])"/></span>
                                     </t>
@@ -382,7 +382,7 @@
                                         <t t-if="product.price_visibility == 'hidden'">
                                             <h4 class="text-muted fw-bold fst-italic mb-0"><t t-esc="product.price_hidden_label"/></h4>
                                         </t>
-                                        <t t-elif="is_subscription_service and subscription_plans">
+                                        <t t-elif="is_subscription_service and subscription_plans and product.commercial_structure != 'bundled'">
                                             <h2 class="fw-bold mb-0" style="color: #1F3864; font-family: 'IBM Plex Mono', monospace;" id="wink-detail-price-amount">
                                                 <t t-if="display_plan">AED <t t-esc="'{:,.2f}'.format(display_plan['price'])"/> <t t-esc="display_plan['period_label']"/></t>
                                             </h2>
@@ -393,8 +393,8 @@
                                             </h2>
                                         </t>
                                     </div>
-                                    <!-- Plan selector (v2): only when subscription and multiple plans -->
-                                    <t t-if="is_subscription_service and len(subscription_plans) > 1">
+                                    <!-- Plan selector (v2): only when subscription and multiple plans, not for bundles -->
+                                    <t t-if="is_subscription_service and len(subscription_plans) > 1 and product.commercial_structure != 'bundled'">
                                         <div class="text-start mb-3">
                                             <p class="small fw-semibold mb-2" style="font-size: 14px;">
                                                 <i class="fa fa-refresh me-1"/> Choose your plan
@@ -417,8 +417,14 @@
                                         </div>
                                     </t>
                                     <!-- No plans configured (edge case 10.1) -->
-                                    <t t-if="is_subscription_service and not subscription_plans">
+                                    <t t-if="is_subscription_service and not subscription_plans and product.commercial_structure != 'bundled'">
                                         <p class="text-muted small mb-3">Pricing for this retainer service is customised per client — submit a request and our team will prepare a quote for you.</p>
+                                    </t>
+                                    <t t-if="product.commercial_structure == 'bundled'">
+                                        <div class="alert alert-info py-3 mb-4 border-0" style="background-color: #f8f9fa;">
+                                            <p class="mb-0 fw-semibold" style="color: #1F3864;"><i class="fa fa-sliders me-2"/> Select your tier and billing cycle on the next step.</p>
+                                            <p class="small text-muted mb-0 mt-1">This service is offered in different tiers. Review the options and configure your package during checkout.</p>
+                                        </div>
                                     </t>
                                     <div class="d-grid">
                                         <t t-if="request.env.user._is_public()">
@@ -427,7 +433,10 @@
                                             </button>
                                         </t>
                                         <t t-else="">
-                                            <t t-if="is_subscription_service and len(subscription_plans) == 1">
+                                            <t t-if="product.commercial_structure == 'bundled'">
+                                                <a t-attf-href="/services/#{product.id}/request" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm">Configure Package</a>
+                                            </t>
+                                            <t t-elif="is_subscription_service and len(subscription_plans) == 1">
                                                 <a t-attf-href="/services/#{product.id}/request?plan=#{subscription_plans[0]['recurrence_id']}" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm">Request Service</a>
                                             </t>
                                             <t t-elif="is_subscription_service and subscription_plans">

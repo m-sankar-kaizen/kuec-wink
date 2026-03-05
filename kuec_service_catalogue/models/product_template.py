@@ -142,18 +142,25 @@ class ProductTemplate(models.Model):
                 continue
             try:
                 Pricing = self.env[model_name].sudo()
-                if 'product_tmpl_id' in Pricing._fields:
-                    lines = Pricing.search([('product_tmpl_id', '=', product.id)])
+                tmpl_field = 'product_tmpl_id' if 'product_tmpl_id' in Pricing._fields else ('product_template_id' if 'product_template_id' in Pricing._fields else None)
+                if tmpl_field:
+                    lines = Pricing.search([(tmpl_field, '=', product.id)])
                     if lines:
                         return _sort_lines(lines)
+                variant_ids = product.product_variant_ids.ids or (
+                    [product.product_variant_id.id] if product.product_variant_id else []
+                )
                 if 'product_id' in Pricing._fields:
-                    variant_ids = product.product_variant_ids.ids or (
-                        [product.product_variant_id.id] if product.product_variant_id else []
-                    )
-                    if variant_ids:
-                        lines = Pricing.search([('product_id', 'in', variant_ids)])
-                        if lines:
-                            return _sort_lines(lines)
+                    var_domain = [('product_id', 'in', variant_ids)]
+                elif 'product_variant_ids' in Pricing._fields:
+                    var_domain = [('product_variant_ids', 'in', variant_ids)]
+                else:
+                    var_domain = []
+
+                if variant_ids and var_domain:
+                    lines = Pricing.search(var_domain)
+                    if lines:
+                        return _sort_lines(lines)
             except KeyError:
                 continue
 
@@ -193,6 +200,14 @@ class ProductTemplate(models.Model):
         lines = self.sudo()._wink_recurring_plan_lines()
         if not lines:
             return []
+        # Resolve currency: pricelist > company
+        if pricelist_id:
+            pricelist = self.env['product.pricelist'].sudo().browse(pricelist_id)
+            currency = pricelist.currency_id if pricelist.exists() else self.env.company.currency_id
+        else:
+            currency = self.env.company.currency_id
+        currency_symbol = currency.symbol or currency.name or 'AED'
+        currency_name = currency.name or 'AED'
         # Resolve recurrence and price from each line (product.pricing or similar)
         plans_raw = []
         for line in lines:
@@ -202,6 +217,25 @@ class ProductTemplate(models.Model):
             price = getattr(line, 'price', None) or getattr(line, 'recurring_price', None) or getattr(line, 'list_price', None) or 0
             months = self._recurrence_duration_months(recurrence)
             name = getattr(recurrence, 'name', None) or ('%s %s' % (getattr(recurrence, 'duration', 1), getattr(recurrence, 'unit', 'month')))
+            
+            variant_id = None
+            variant_attribute_names = []
+            if hasattr(line, 'product_variant_ids') and line.product_variant_ids and len(self.product_variant_ids) > 1:
+                v = line.product_variant_ids[0]
+                variant_id = v.id
+                variant_attribute_names = v.product_template_attribute_value_ids.mapped('name')
+                if self.commercial_structure != 'bundled':
+                    variant_name = ", ".join(variant_attribute_names)
+                    if variant_name:
+                        name = f"{variant_name} ({name})"
+            elif hasattr(line, 'product_id') and line.product_id and len(self.product_variant_ids) > 1:
+                v = line.product_id
+                variant_id = v.id
+                variant_attribute_names = v.product_template_attribute_value_ids.mapped('name')
+                if self.commercial_structure != 'bundled':
+                    variant_name = ", ".join(variant_attribute_names)
+                    if variant_name:
+                        name = f"{variant_name} ({name})"
             plans_raw.append({
                 'line': line,
                 'recurrence': recurrence,
@@ -211,6 +245,8 @@ class ProductTemplate(models.Model):
                 'months': months,
                 'duration': getattr(recurrence, 'duration', 1),
                 'unit': getattr(recurrence, 'unit', 'month'),
+                'variant_id': variant_id,
+                'variant_attribute_names': variant_attribute_names,
             })
         if not plans_raw:
             return []
@@ -224,15 +260,34 @@ class ProductTemplate(models.Model):
             months = p['months']
             price = p['price']
             monthly_equivalent = round(price / months, 2) if months else price
-            duration, unit = p['duration'], (p.get('unit') or 'month')
-            unit = str(unit).lower() if unit else 'month'
-            # FB-005: per plan — yearly shows "per year", monthly "per month"
-            if unit == 'year' or (unit == 'month' and int(duration or 0) >= 12):
-                period_label = 'per year'
-            elif unit == 'month':
-                period_label = 'per %s month' % duration if duration != 1 else 'per month'
+            # Derive period_label from billing_period (relativedelta) or plan name
+            billing_period = getattr(recurrence, 'billing_period', None)
+            if billing_period:
+                years = getattr(billing_period, 'years', 0) or 0
+                months = getattr(billing_period, 'months', 0) or 0
+                if years >= 1:
+                    period_label = 'per year' if years == 1 else 'per %d years' % years
+                elif months >= 12:
+                    period_label = 'per year'
+                elif months == 3:
+                    period_label = 'per quarter'
+                elif months == 6:
+                    period_label = 'per 6 months'
+                elif months > 1:
+                    period_label = 'per %d months' % months
+                else:
+                    period_label = 'per month'
             else:
-                period_label = 'per %s %s' % (duration, unit_labels.get(unit, unit))
+                # Fallback: derive from plan name string
+                plan_name_lower = name.lower()
+                if 'year' in plan_name_lower or 'annual' in plan_name_lower:
+                    period_label = 'per year'
+                elif 'quarter' in plan_name_lower:
+                    period_label = 'per quarter'
+                elif 'semi' in plan_name_lower or '6 month' in plan_name_lower:
+                    period_label = 'per 6 months'
+                else:
+                    period_label = 'per month'
             # Savings vs baseline (shortest plan)
             savings_pct = 0
             if months > plans_raw[0]['months'] and baseline_price_per_month > 0:
@@ -246,6 +301,8 @@ class ProductTemplate(models.Model):
                 features = [s.strip() for s in (line.kuec_plan_features or '').splitlines() if s.strip()][:6]
             is_most_popular = bool(getattr(line, 'kuec_is_most_popular', False))
             result.append({
+                'variant_id': p.get('variant_id'),
+                'pricing_id': p['line'].id,
                 'recurrence_id': p['recurrence_id'],
                 'recurrence_id_str': str(p['recurrence_id']),
                 'plan_name': p['plan_name'],
@@ -256,6 +313,10 @@ class ProductTemplate(models.Model):
                 'show_savings': show_savings,
                 'is_most_popular': is_most_popular,
                 'features': features,
+                'currency_symbol': currency_symbol,
+                'currency_name': currency_name,
+                'variant_id': p.get('variant_id'),
+                'variant_attribute_names': p.get('variant_attribute_names', []),
             })
         return result
 

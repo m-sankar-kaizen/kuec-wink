@@ -303,7 +303,28 @@
             <field name="sequence">20</field>
         </record>
 
-        <!-- SERVICE 8 -->
+        <!-- SERVICE 8: IT Support (Bundle Retainer with Variants) -->
+        <record id="kuec_demo_attr_tier" model="product.attribute">
+            <field name="name">Tier</field>
+            <field name="create_variant">always</field>
+        </record>
+        <record id="kuec_demo_attr_val_essential" model="product.attribute.value">
+            <field name="name">Essential</field>
+            <field name="attribute_id" ref="kuec_demo_attr_tier"/>
+        </record>
+        <record id="kuec_demo_attr_val_premium" model="product.attribute.value">
+            <field name="name">Premium</field>
+            <field name="attribute_id" ref="kuec_demo_attr_tier"/>
+        </record>
+
+        <!-- The underlying bundle definition -->
+        <record id="kuec_demo_bundle_it" model="wink.bundle">
+            <field name="name">IT Support Packages</field>
+            <field name="description">Managed IT support and infrastructure.</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- Service Product for the Bundle -->
         <record id="kuec_demo_svc_it_support" model="product.template">
             <field name="name">IT Support - Monthly Retainer</field>
             <field name="type">service</field>
@@ -314,10 +335,90 @@
             <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">bundled</field>
+            <field name="wink_bundle_id" ref="kuec_demo_bundle_it"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">7</field>
             <field name="wink_description"><![CDATA[<p>Dedicated monthly IT support retainer covering helpdesk tickets, on-site visits, software troubleshooting, and infrastructure maintenance with guaranteed SLA response times.</p>]]></field>
+        </record>
+
+        <!-- Variant Attribute Lines to generate the physical variants -->
+        <record id="kuec_demo_it_support_attr_line" model="product.template.attribute.line">
+            <field name="product_tmpl_id" ref="kuec_demo_svc_it_support"/>
+            <field name="attribute_id" ref="kuec_demo_attr_tier"/>
+            <field name="value_ids" eval="[(6, 0, [ref('kuec_demo_attr_val_essential'), ref('kuec_demo_attr_val_premium')])]"/>
+        </record>
+
+        <!-- Child Services to include in the bundle -->
+        <record id="kuec_demo_svc_helpdesk" model="product.template">
+            <field name="name">Remote Helpdesk Ticket</field>
+            <field name="type">service</field>
+            <field name="sale_ok">False</field>
+        </record>
+        <record id="kuec_demo_svc_onsite" model="product.template">
+            <field name="name">On-Site Support Visit</field>
+            <field name="type">service</field>
+            <field name="sale_ok">False</field>
+        </record>
+
+        <!-- Bundle Tiers mapping back to variants isn't purely declarable in XML easily directly 
+             if variants are dynamically generated. We will use a python script or default price.
+             Wait, Odoo allows mapping to dynamically created variants using unique lookups, but we can do our best.
+             For demo purposes, we will leave product_variant_id empty and let the UI fallback to standard if not found, 
+             OR we can just provide the Tier definitions and WINK pricing.
+        -->
+        <record id="kuec_demo_tier_essential" model="wink.bundle.tier">
+            <field name="bundle_id" ref="kuec_demo_bundle_it"/>
+            <field name="name">Essential Plan</field>
+            <field name="sequence">10</field>
+            <field name="price">1500.00</field> <!-- fallback legacy price -->
+        </record>
+        <record id="kuec_demo_tier_essential_item1" model="wink.bundle.tier.item">
+            <field name="tier_id" ref="kuec_demo_tier_essential"/>
+            <field name="service_product_id" ref="kuec_demo_svc_helpdesk"/>
+            <field name="qty">10</field>
+            <field name="description">10 Remote Helpdesk Tickets / Month</field>
+        </record>
+
+        <record id="kuec_demo_tier_premium" model="wink.bundle.tier">
+            <field name="bundle_id" ref="kuec_demo_bundle_it"/>
+            <field name="name">Premium Plan</field>
+            <field name="sequence">20</field>
+            <field name="price">3000.00</field>
+        </record>
+        <record id="kuec_demo_tier_premium_item1" model="wink.bundle.tier.item">
+            <field name="tier_id" ref="kuec_demo_tier_premium"/>
+            <field name="service_product_id" ref="kuec_demo_svc_helpdesk"/>
+            <field name="qty">30</field>
+            <field name="description">30 Remote Helpdesk Tickets / Month</field>
+        </record>
+        <record id="kuec_demo_tier_premium_item2" model="wink.bundle.tier.item">
+            <field name="tier_id" ref="kuec_demo_tier_premium"/>
+            <field name="service_product_id" ref="kuec_demo_svc_onsite"/>
+            <field name="qty">4</field>
+            <field name="description">4 On-Site Visits / Month</field>
+        </record>
+
+        <!-- Recurring Prices setup (requires a subscription group and plans) -->
+        <record id="kuec_demo_sub_group" model="wink.subscription.group">
+            <field name="name">Standard Retainer Plans</field>
+        </record>
+        <record id="kuec_demo_plan_monthly" model="wink.subscription.plan">
+            <field name="name">Monthly</field>
+            <field name="group_id" ref="kuec_demo_sub_group"/>
+            <field name="sequence">10</field>
+        </record>
+        <record id="kuec_demo_plan_annual" model="wink.subscription.plan">
+            <field name="name">Annually</field>
+            <field name="group_id" ref="kuec_demo_sub_group"/>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Link IT Support to the Group -->
+        <record id="kuec_demo_svc_it_support_update" model="product.template">
+            <field name="id" ref="kuec_demo_svc_it_support"/>
+            <field name="wink_subscription_group_id" ref="kuec_demo_sub_group"/>
+            <field name="recurring_invoice">True</field>
         </record>
 
         <!-- ============================================== -->

@@ -55,37 +55,49 @@ class WinkRequest(http.Controller):
             tiers = bundle.tier_ids.sorted('sequence')
             tier_data = []
             for tier in tiers:
-                tier_data.append({
-                    'tier': tier,
-                    'items': tier.item_ids.sorted('sequence'),
-                })
-            post_dict = post or {}
-            post_tier_id = post_dict.get('tier_id')
-            selected_tier = None
-            if post_tier_id and tier_data:
-                for td in tier_data:
-                    if str(td['tier'].id) == str(post_tier_id):
-                        selected_tier = td['tier']
-                        break
-            if not selected_tier and tier_data:
-                selected_tier = tier_data[0]['tier']
-            vals.update({
-                'is_bundle': True,
-                'bundle': bundle,
-                'tier_data': tier_data,
-                'bundle_total_tier': selected_tier,
-            })
-        # Plan selection: Odoo subscription only (Recurring Prices tab), no quotation template
+                tier_data.append({'tier': tier, 'items': tier.item_ids.sorted('sequence')})
+            vals.update({'is_bundle': True, 'bundle': bundle, 'tier_data': tier_data})
+
+        # Plan selection: Odoo subscription only (Recurring Prices tab)
         recurring_lines = product._wink_recurring_plan_lines()
         if recurring_lines:
             vals['recurring_plan_lines'] = recurring_lines
             vals['use_recurring_prices'] = True
-        # v2: subscription_plans dicts + selected_plan (for request form confirmation UI)
+
         is_sub = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
         vals['is_subscription_service'] = is_sub
         if is_sub:
-            vals['subscription_plans'] = product._wink_subscription_plans_dicts(pricelist_id=False)
-            vals['selected_plan'] = None  # caller can override
+            subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+            vals['subscription_plans'] = subscription_plans
+            vals['selected_plan'] = None  # bundles must NOT pre-select
+
+            if product.commercial_structure == 'bundled':
+                # Build billing_cycles (unique recurring plans, ordered by duration)
+                seen_cycles = {}
+                billing_cycles = []
+                for p in subscription_plans:
+                    rid = p.get('recurrence_id')
+                    if rid and rid not in seen_cycles:
+                        seen_cycles[rid] = True
+                        billing_cycles.append({
+                            'recurrence_id': rid,
+                            'recurrence_id_str': str(rid),
+                            'name': p.get('plan_name', ''),
+                            'period_label': p.get('period_label', ''),
+                        })
+                # pricing_matrix keyed by "recurrence_id|variant_id" -> plan dict
+                pricing_matrix = {}
+                for p in subscription_plans:
+                    rid = p.get('recurrence_id')
+                    vid = p.get('variant_id')
+                    if rid:
+                        if vid:
+                            pricing_matrix['%s|%s' % (rid, vid)] = p
+                        # Also index by variant attribute names (lowercase) for robust matching
+                        for attr_name in p.get('variant_attribute_names', []):
+                            pricing_matrix['%s|%s' % (rid, attr_name.lower().strip())] = p
+                vals['billing_cycles'] = billing_cycles
+                vals['pricing_matrix'] = pricing_matrix
         return vals
 
     @http.route(['/services/<int:service_id>/request'], type='http', auth='user', website=True)
@@ -143,19 +155,19 @@ class WinkRequest(http.Controller):
                     'min_days_notice': _min_days,
                     'change_disallowed_message': _change_disallowed_message,
                 })
-        plan_param = kwargs.get('plan')
-        recurrence_id = None
-        if plan_param is not None:
+        pricing_param = kwargs.get('pricing_id') or kwargs.get('plan')
+        pricing_id = None
+        if pricing_param is not None:
             try:
-                recurrence_id = int(plan_param)
+                pricing_id = int(pricing_param)
             except (TypeError, ValueError):
-                recurrence_id = None
+                pricing_id = None
         subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
         selected_plan = None
         if subscription_plans:
-            if recurrence_id is not None:
+            if pricing_id is not None:
                 for p in subscription_plans:
-                    if p['recurrence_id'] == recurrence_id:
+                    if p.get('pricing_id') == pricing_id or p['recurrence_id'] == pricing_id:
                         selected_plan = p
                         break
             if not selected_plan:
@@ -164,7 +176,7 @@ class WinkRequest(http.Controller):
         vals['is_subscription_service'] = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
         vals['subscription_plans'] = subscription_plans
         vals['selected_plan'] = selected_plan
-        vals['post'] = dict(kwargs, plan=selected_plan['recurrence_id'] if selected_plan else None)
+        vals['post'] = dict(kwargs, selected_pricing_id=selected_plan['pricing_id'] if selected_plan else None)
         return request.render('kuec_service_catalogue.wink_request_form', vals)
 
     def _wizard_draft_key(self):
@@ -203,7 +215,7 @@ class WinkRequest(http.Controller):
                     'product_id': pid,
                     'start_date': kwargs.get('start_date') or request.httprequest.form.get('start_date') or '',
                     'notes': kwargs.get('notes') or request.httprequest.form.get('notes') or '',
-                    'selected_recurrence_id': kwargs.get('selected_recurrence_id') or request.httprequest.form.get('selected_recurrence_id') or '',
+                    'selected_pricing_id': kwargs.get('selected_pricing_id') or request.httprequest.form.get('selected_pricing_id') or '',
                     'tier_id': kwargs.get('tier_id') or request.httprequest.form.get('tier_id') or '',
                     'change_from_id': kwargs.get('change_from_id') or request.httprequest.form.get('change_from_id') or '',
                 }
@@ -435,12 +447,12 @@ class WinkRequest(http.Controller):
                     review_display['tier_name'] = ''
                     if getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer':
                         review_display['type_label'] = 'Retainer'
-                        rec_id = wizard_draft.get('selected_recurrence_id')
+                        rec_id = wizard_draft.get('selected_pricing_id')
                         plan_name = ''
                         try:
                             plans = product._wink_subscription_plans_dicts(pricelist_id=False)
                             for p in (plans or []):
-                                if str(p.get('recurrence_id')) == str(rec_id):
+                                if str(p.get('pricing_id')) == str(rec_id) or str(p.get('recurrence_id')) == str(rec_id):
                                     plan_name = p.get('plan_name', '')
                                     break
                         except Exception:
@@ -507,26 +519,42 @@ class WinkRequest(http.Controller):
             if recurring_lines:
                 render_vals['recurring_plan_lines'] = recurring_lines
                 render_vals['use_recurring_prices'] = True
-            # v2: subscription_plans + selected_plan from ?plan= (when coming from detail page)
+
             is_sub = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
             render_vals['is_subscription_service'] = is_sub
             if is_sub:
                 subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
                 render_vals['subscription_plans'] = subscription_plans
-                plan_param = kwargs.get('plan')
-                selected_plan = None
-                if plan_param is not None and subscription_plans:
-                    try:
-                        rid = int(plan_param)
-                        for p in subscription_plans:
-                            if p['recurrence_id'] == rid:
-                                selected_plan = p
-                                break
-                    except (TypeError, ValueError):
-                        pass
-                if not selected_plan and subscription_plans:
-                    selected_plan = subscription_plans[0]
-                render_vals['selected_plan'] = selected_plan
+                render_vals['selected_plan'] = None  # bundles never pre-select
+
+                if product.commercial_structure == 'bundled':
+                    seen_cycles = {}
+                    billing_cycles = []
+                    for p in subscription_plans:
+                        rid = p.get('recurrence_id')
+                        if rid and rid not in seen_cycles:
+                            seen_cycles[rid] = True
+                            billing_cycles.append({
+                                'recurrence_id': rid,
+                                'recurrence_id_str': str(rid),
+                                'name': p.get('plan_name', ''),
+                                'period_label': p.get('period_label', ''),
+                            })
+                    pricing_matrix = {}
+                    for p in subscription_plans:
+                        rid = p.get('recurrence_id')
+                        vid = p.get('variant_id')
+                        if rid:
+                            if vid:
+                                pricing_matrix['%s|%s' % (rid, vid)] = p
+                            # Also index by variant attribute names (lowercase) for robust matching
+                            for attr_name in p.get('variant_attribute_names', []):
+                                pricing_matrix['%s|%s' % (rid, attr_name.lower().strip())] = p
+                    render_vals['billing_cycles'] = billing_cycles
+                    render_vals['pricing_matrix'] = pricing_matrix
+                else:
+                    if not render_vals.get('selected_plan') and subscription_plans:
+                        render_vals['selected_plan'] = subscription_plans[0]
 
             return request.render('kuec_service_catalogue.wink_request_form', render_vals)
         else:
@@ -677,26 +705,73 @@ class WinkRequest(http.Controller):
             and product.wink_bundle_id
         )
 
+        tier = None
+        try:
+            tier_id = int(post.get('tier_id', 0))
+        except (TypeError, ValueError):
+            tier_id = 0
+        if is_bundle and tier_id:
+            tier = request.env['wink.bundle.tier'].sudo().browse(tier_id)
+
+        variant = product.product_variant_id
+        if is_bundle and getattr(tier, 'exists', lambda: False)() and tier.exists() and tier.product_variant_id:
+            variant = tier.product_variant_id
+
         # Plan: Odoo subscription only (Recurring Prices)
         recurring_lines = product._wink_recurring_plan_lines()
         use_recurring_prices = bool(recurring_lines)
         is_subscription_service = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
 
-        # v2: validate selected_recurrence_id (from request form) — price always from server
-        selected_recurrence_id = None
+        # v2: validate selected_pricing_id (from request form) — price always from server
+        selected_pricing_id = None
         try:
-            selected_recurrence_id = int(post.get('selected_recurrence_id') or 0) or None
+            # Check both field names as they might vary between standalone and bundle forms
+            selected_pricing_id = int(post.get('selected_pricing_id') or post.get('selected_recurrence_id') or 0) or None
         except (TypeError, ValueError):
             pass
-        if is_subscription_service and use_recurring_prices and selected_recurrence_id is not None:
-            # Find pricing line for this product + recurrence_id
+        
+        selected_recurrence_id = None
+        # FIX: Allow processing selected_pricing_id even if product doesn't have direct recurring lines (e.g. bundle tiers)
+        if (is_subscription_service or is_bundle) and selected_pricing_id is not None:
+            # Find pricing line by ID primarily
             pricing_line = None
-            for line in recurring_lines:
-                rec_id = getattr(getattr(line, 'recurrence_id', None), 'id', None) or getattr(getattr(line, 'plan_id', None), 'id', None) or getattr(getattr(line, 'recurring_plan_id', None), 'id', None)
-                if rec_id == selected_recurrence_id:
-                    pricing_line = line
-                    break
-            if not pricing_line:
+            
+            # If it's a bundle, the pricing lines might come from child services or related matrix
+            # But we can try to browse it directly if we have the ID and it's a valid pricing model
+            if not recurring_lines and is_bundle:
+                # For bundles, selected_pricing_id is expected to be a product.pricing or sale.subscription.pricing ID
+                # We try to browse commonly used pricing models
+                for model in ['product.pricing', 'sale.subscription.pricing']:
+                    try:
+                        p = request.env[model].sudo().browse(selected_pricing_id)
+                        if p.exists():
+                            pricing_line = p
+                            break
+                    except Exception:
+                        continue
+            else:
+                for line in recurring_lines:
+                    # If exact pricing match
+                    if line.id == selected_pricing_id:
+                        pricing_line = line
+                        break
+                    # Fallback to recurrence ID if legacy
+                    rec_id = getattr(line, 'recurrence_id', getattr(line, 'plan_id', getattr(line, 'recurring_plan_id', None)))
+                    if getattr(rec_id, 'id', rec_id) == selected_pricing_id:
+                        pricing_line = line
+                        break
+
+            if pricing_line:
+                selected_pricing = pricing_line
+                # Force variant overwrite if pricing line maps to a specific variant
+                if getattr(selected_pricing, 'product_id', False) and selected_pricing.product_id.id != product.product_variant_id.id:
+                    variant = selected_pricing.product_id
+                    
+                recurrence_ref = getattr(pricing_line, 'recurrence_id', getattr(pricing_line, 'plan_id', getattr(pricing_line, 'recurring_plan_id', None)))
+                selected_recurrence_id = getattr(recurrence_ref, 'id', recurrence_ref)
+                selected_plan = recurrence_ref
+            elif use_recurring_prices:
+                # If it's a subscription but no valid plan found
                 vals = self._get_request_form_vals(product, errors={'subscription_plan': _('Invalid plan selected — please choose a plan to continue.')}, post=post)
                 vals['recurring_plan_lines'] = recurring_lines
                 vals['use_recurring_prices'] = True
@@ -704,9 +779,7 @@ class WinkRequest(http.Controller):
                 vals['subscription_plans'] = product._wink_subscription_plans_dicts(pricelist_id=False)
                 vals['selected_plan'] = vals['subscription_plans'][0] if vals['subscription_plans'] else None
                 return request.render('kuec_service_catalogue.wink_request_form', vals)
-            selected_pricing = pricing_line
-            selected_plan = getattr(pricing_line, 'recurrence_id', None) or getattr(pricing_line, 'plan_id', None) or getattr(pricing_line, 'recurring_plan_id', None)
-        elif is_subscription_service and use_recurring_prices and not selected_recurrence_id:
+        elif is_subscription_service and use_recurring_prices and not selected_pricing_id:
             # Plan required but not provided
             vals = self._get_request_form_vals(product, errors={'subscription_plan': _('Please select a billing plan to continue.')}, post=post)
             vals['recurring_plan_lines'] = recurring_lines
@@ -781,18 +854,21 @@ class WinkRequest(http.Controller):
                     }, post=post)
                     return request.render('kuec_service_catalogue.wink_request_form', vals)
 
-        variant = product.product_variant_id
-        price_unit = product.list_price
+        # variant is already determined above based on tier
+        price_unit = variant.list_price if variant else product.list_price
         if use_recurring_prices:
             if getattr(recurring_lines, '_name', None) == 'sale.subscription.plan' and selected_plan:
                 # Legacy sale.subscription.plan path
                 price_unit = getattr(selected_plan, 'price', None) or getattr(selected_plan, 'list_price', None) or price_unit
-            elif selected_recurrence_id and selected_pricing and getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing.exists():
-                # v2: selected_pricing is the product.pricing line matched by recurrence_id
-                price_unit = getattr(selected_pricing, 'price', None) or getattr(selected_pricing, 'recurring_price', None) or price_unit
-            elif getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing.exists():
-                # Legacy product.pricing path
-                price_unit = getattr(selected_pricing, 'price', None) or getattr(selected_pricing, 'recurring_price', None) or price_unit
+            elif selected_pricing and getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing.exists():
+                # v2: selected_pricing is the pricing record (product.pricing or sale.subscription.pricing)
+                # Odoo 18 often uses 'price' (related/computed) or 'recurring_price'
+                price_unit = (
+                    getattr(selected_pricing, 'price', 0.0) or 
+                    getattr(selected_pricing, 'recurring_price', 0.0) or 
+                    getattr(selected_pricing, 'list_price', 0.0) or 
+                    price_unit
+                )
 
         line_vals = {
             'product_id': variant.id,
@@ -921,15 +997,21 @@ class WinkRequest(http.Controller):
             if not tier.exists() or tier.bundle_id != product.wink_bundle_id:
                 return request.redirect('/services')
 
-            # Find the bundle product line and override name/price
+            # Find the bundle product line and override name (keep price_unit native pricing)
             bundle_line = order.order_line.filtered(
                 lambda l: l.product_id.product_tmpl_id.id == product.id
             )[:1]
             if bundle_line:
+                bundle_line_name = f"{variant.name}" if variant and variant.name != product.name else product.name
+                
                 bundle_line.sudo().write({
-                    'price_unit': tier.price,
-                    'name': f"{product.name} — {tier.name}",
+                    'name': f"{bundle_line_name} — {tier.name}",
                 })
+                # if pricing is not subscription and tier has legacy price and variant list_price is 0
+                if not use_recurring_prices and tier.price and not (variant and variant.list_price):
+                    bundle_line.sudo().write({
+                        'price_unit': tier.price,
+                    })
 
             # Save tier on order
             order.sudo().write({
@@ -1382,30 +1464,125 @@ class WinkRequest(http.Controller):
                         current_recurrence_id = rec.id
                     break
 
+        is_bundle = (product.commercial_structure == 'bundled' and product.wink_bundle_id)
+        current_tier = order.wink_bundle_tier_id if is_bundle else None
+
         target_plans_data = []
-        for plan in group.plan_ids:
-            if plan.id == source_plan.id:
-                continue
-            change_type = Service.classify_change(source_plan, plan)
-            if not change_type:
-                continue
-            ok_pol, pol_msg = Service.validate_policy(order, plan, change_type)
-            proration = Service.compute_proration(order, plan, group.effective_date_policy or 'immediate') if ok_pol else None
-            pricing_rec, rec_id, price_visible = self._resolve_plan_pricing(product, plan, current_recurrence_id)
-            policy = group
-            credit_label = dict(policy._fields['downgrade_credit_policy'].selection).get(policy.downgrade_credit_policy, '') if change_type == 'downgrade' else ''
-            target_plans_data.append({
-                'plan': plan,
-                'change_type': change_type,
-                'proration': proration,
-                'policy_ok': ok_pol,
-                'policy_message': pol_msg,
-                'pricing_record': pricing_rec,
-                'recurrence_id': rec_id,
-                'price_visible': price_visible and (not product.price_visibility or product.price_visibility == 'visible'),
-                'credit_policy_label': credit_label,
-                'effective_date_policy': group.effective_date_policy or 'immediate',
-            })
+
+        if is_bundle:
+            # Bundle: Cross all available tiers with all available plans
+            tiers = product.wink_bundle_id.tier_ids.sorted('sequence')
+            for tier in tiers:
+                for plan in group.plan_ids:
+                    # Skip the exact current combination
+                    if plan.id == source_plan.id and current_tier and tier.id == current_tier.id:
+                        continue
+                    
+                    # For upgrade/downgrade classification, if plan is the same, use tier price to determine.
+                    # As a shortcut, the service uses source_plan and target_plan; we'll enrich this in the engine later or just rely on price difference in 'change_type'.
+                    # For UI presentation, we can evaluate proration directly.
+                    change_type = Service.classify_change(source_plan, plan) # Note: this standard classification only checks freq length. For tiers it might say 'same'.
+                    
+                    # Determine pseudo change_type based on tier sequence if plan is the same
+                    if change_type == 'same' and current_tier:
+                        if tier.sequence > current_tier.sequence:
+                            change_type = 'upgrade'
+                        elif tier.sequence < current_tier.sequence:
+                            change_type = 'downgrade'
+
+                    if not change_type:
+                        continue
+
+                    # Overwrite pricing record search to simulate "tier + plan"
+                    # Pricing line must match tier.product_variant_id and plan
+                    pricing_rec, rec_id, price_visible = self._resolve_plan_pricing(product, plan, current_recurrence_id)
+                    # We actually need to re-resolve pricing specific to the tier's variant
+                    tier_variant = tier.product_variant_id or product.product_variant_id
+                    
+                    actual_pricing_line = None
+                    for line in product._wink_recurring_plan_lines():
+                        if hasattr(line, 'product_id') and line.product_id and line.product_id.id != tier_variant.id:
+                            continue
+                        r_id = getattr(getattr(line, 'recurrence_id', None), 'id', None) or getattr(getattr(line, 'plan_id', None), 'id', None) or getattr(getattr(line, 'recurring_plan_id', None), 'id', None)
+                        
+                        target_r_id = getattr(getattr(plan, 'pricing_id', None), 'recurrence_id', None)
+                        plan_r_id = getattr(getattr(plan.pricing_id, 'recurrence_id', None), 'id', None) if plan.pricing_id else None
+                        
+                        # Match by recurrence
+                        if r_id and ((rec_id and r_id == rec_id) or (plan.recurrence_name_hint and plan.recurrence_name_hint.lower() in getattr(getattr(line, 'recurrence_id', None), 'name', '').lower())):
+                            actual_pricing_line = line
+                            break
+
+                    monthly_price = 0
+                    if actual_pricing_line:
+                        price_val = getattr(actual_pricing_line, 'price', None) or getattr(actual_pricing_line, 'recurring_price', None) or 0
+                        recurrence = getattr(actual_pricing_line, 'recurrence_id', None) or getattr(actual_pricing_line, 'plan_id', None)
+                        months = product._recurrence_duration_months(recurrence)
+                        if months:
+                            monthly_price = price_val / months
+                    
+                    # If we couldn't find a pricing line for this tier+plan combination, skip it
+                    if not actual_pricing_line:
+                        continue
+
+                    class DummyPlan:
+                        def __init__(self, p, t, mp):
+                            self.id = p.id
+                            self.name = f"{t.name} — {p.name}"
+                            self.monthly_std_price = mp
+                            self._original_plan = p
+                    
+                    dummy_plan = DummyPlan(plan, tier, monthly_price)
+                    
+                    # Temporary override for validation/proration
+                    ok_pol, pol_msg = Service.validate_policy(order, plan, change_type)
+                    
+                    # We must pass the variant to compute_proration if WINK supports it, or let it rely on standard
+                    # Actually compute_proration takes `target_plan` and uses its `monthly_std_price`. We will monkey-patch target_plan or let it use the base plan and just display approximate credit here.
+                    proration = Service.compute_proration(order, plan, group.effective_date_policy or 'immediate') if ok_pol else None
+                    
+                    policy = group
+                    credit_label = dict(policy._fields['downgrade_credit_policy'].selection).get(policy.downgrade_credit_policy, '') if change_type == 'downgrade' else ''
+                    
+                    target_plans_data.append({
+                        'plan': dummy_plan,
+                        'tier_id': tier.id,
+                        'change_type': change_type,
+                        'proration': proration,
+                        'policy_ok': ok_pol,
+                        'policy_message': pol_msg,
+                        'pricing_record': actual_pricing_line,
+                        'recurrence_id': rec_id,
+                        'price_visible': price_visible and (not product.price_visibility or product.price_visibility == 'visible'),
+                        'credit_policy_label': credit_label,
+                        'effective_date_policy': group.effective_date_policy or 'immediate',
+                    })
+
+        else:
+            for plan in group.plan_ids:
+                if plan.id == source_plan.id:
+                    continue
+                change_type = Service.classify_change(source_plan, plan)
+                if not change_type:
+                    continue
+                ok_pol, pol_msg = Service.validate_policy(order, plan, change_type)
+                proration = Service.compute_proration(order, plan, group.effective_date_policy or 'immediate') if ok_pol else None
+                pricing_rec, rec_id, price_visible = self._resolve_plan_pricing(product, plan, current_recurrence_id)
+                policy = group
+                credit_label = dict(policy._fields['downgrade_credit_policy'].selection).get(policy.downgrade_credit_policy, '') if change_type == 'downgrade' else ''
+                target_plans_data.append({
+                    'plan': plan,
+                    'tier_id': None,
+                    'change_type': change_type,
+                    'proration': proration,
+                    'policy_ok': ok_pol,
+                    'policy_message': pol_msg,
+                    'pricing_record': pricing_rec,
+                    'recurrence_id': rec_id,
+                    'price_visible': price_visible and (not product.price_visibility or product.price_visibility == 'visible'),
+                    'credit_policy_label': credit_label,
+                    'effective_date_policy': group.effective_date_policy or 'immediate',
+                })
 
         return request.render('kuec_service_catalogue.wink_retainer_change_plan', {
             'order': order,
@@ -1434,11 +1611,31 @@ class WinkRequest(http.Controller):
         if not target_plan.exists() or target_plan.group_id != product.wink_subscription_group_id:
             return request.redirect(f'/my/requests/{order_id}/retainer/change-plan?error=invalid_plan')
 
+        target_tier = None
+        if product.commercial_structure == 'bundled' and product.wink_bundle_id:
+            try:
+                target_tier_id = int(post.get('target_tier_id') or 0)
+                if target_tier_id:
+                    target_tier = request.env['wink.bundle.tier'].sudo().browse(target_tier_id)
+                    if not target_tier.exists() or target_tier.bundle_id != product.wink_bundle_id:
+                        return request.redirect(f'/my/requests/{order_id}/retainer/change-plan?error=invalid_tier')
+            except (TypeError, ValueError):
+                pass
+
         Service = request.env['wink.retainer.change.service'].sudo()
         source_plan = order.wink_plan_id or product.wink_subscription_group_id.plan_ids.sorted('sequence')[:1]
         change_type = Service.classify_change(source_plan, target_plan)
+
+        if target_tier:
+            current_tier = order.wink_bundle_tier_id
+            if change_type == 'same' and current_tier:
+                if target_tier.sequence > current_tier.sequence:
+                    change_type = 'upgrade'
+                elif target_tier.sequence < current_tier.sequence:
+                    change_type = 'downgrade'
+
         if not change_type:
-            return request.redirect(f'/my/requests/{order_id}/retainer/change-plan?error=invalid_plan')
+            return request.redirect(f'/my/requests/{order_id}/retainer/change-plan?error=invalid_change')
         ok, msg = Service.validate_policy(order, target_plan, change_type)
         if not ok:
             return request.redirect(f'/my/requests/{order_id}/retainer/change-plan?error=policy&message=%s' % werkzeug.urls.url_quote(msg or ''))
@@ -1446,7 +1643,20 @@ class WinkRequest(http.Controller):
         proration = Service.compute_proration(order, target_plan, product.wink_subscription_group_id.effective_date_policy or 'immediate')
         if proration.get('error'):
             return request.redirect(f'/my/requests/{order_id}/retainer/change-plan?error=proration')
+
         pricing_rec, recurrence_id, _ = self._resolve_plan_pricing(product, target_plan)
+
+        # Overwrite pricing if bundle
+        if target_tier:
+            tier_variant = target_tier.product_variant_id or product.product_variant_id
+            for line in product._wink_recurring_plan_lines():
+                if hasattr(line, 'product_id') and line.product_id and line.product_id.id != tier_variant.id:
+                    continue
+                r_id = getattr(getattr(line, 'recurrence_id', None), 'id', None) or getattr(getattr(line, 'plan_id', None), 'id', None) or getattr(getattr(line, 'recurring_plan_id', None), 'id', None)
+                if recurrence_id and r_id == recurrence_id:
+                    pricing_rec = line
+                    break
+
         if not pricing_rec and not recurrence_id:
             return request.redirect(f'/my/requests/{order_id}/retainer/change-plan?error=no_pricing')
 
@@ -1468,6 +1678,32 @@ class WinkRequest(http.Controller):
         )
         if requires_approval or price_hidden:
             new_order.sudo().write({'wink_price_confirmed': False})
+            
+        if target_tier:
+            new_order.sudo().write({'wink_bundle_tier_id': target_tier.id})
+            # Override line title based on bundle tier variant or name
+            bundle_line = new_order.order_line.filtered(lambda l: l.product_id.product_tmpl_id.id == product.id)[:1]
+            if bundle_line:
+                variant = target_tier.product_variant_id
+                bundle_line_name = variant.name if variant and variant.name != product.name else product.name
+                bundle_line.sudo().write({
+                    'product_id': variant.id if variant else bundle_line.product_id.id,
+                    'name': f"{bundle_line_name} — {target_tier.name}",
+                })
+
+            # Create new entitlement records for the new tier on the upgraded/downgraded order
+            for idx, item in enumerate(target_tier.item_ids.sorted('sequence')):
+                ent_vals = {
+                    'order_id': new_order.id,
+                    'tier_id': target_tier.id,
+                    'service_product_id': item.service_product_id.id,
+                    'name': (item.description or item.service_product_id.name),
+                    'sequence': item.sequence,
+                    'qty_entitled': item.qty,
+                    'qty_activated': 0,
+                }
+                request.env['wink.bundle.entitlement'].sudo().create(ent_vals)
+
         return request.redirect(f'/my/requests/{new_order.id}?plan_change_submitted=1')
 
     @http.route('/my/requests/<int:order_id>/retainer/cancel/preview', type='http', auth='user', website=True)

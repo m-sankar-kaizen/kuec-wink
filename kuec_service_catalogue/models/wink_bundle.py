@@ -46,6 +46,12 @@ class WinkBundleTier(models.Model):
         ondelete='cascade',
         index=True,
     )
+    product_variant_id = fields.Many2one(
+        'product.product',
+        string='Mapped Product Variant',
+        help="Map this tier to a specific product variant so Odoo's native Recurring Prices can be used.",
+        ondelete='restrict',
+    )
     name = fields.Char(
         string='Tier Name',
         required=True,
@@ -55,9 +61,9 @@ class WinkBundleTier(models.Model):
         default=10,
     )
     price = fields.Float(
-        string='Price',
-        required=True,
+        string='Price (Legacy)',
         digits=(10, 2),
+        help="Legacy static price. For retainers, native product variant pricing is used instead.",
     )
     item_ids = fields.One2many(
         'wink.bundle.tier.item',
