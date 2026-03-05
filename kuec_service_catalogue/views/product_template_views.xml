@@ -5,11 +5,16 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
-            <!-- Add available_on_wink to General Information page under sale part -->
-            <xpath expr="//group[@name='sale']" position="inside">
-                <group invisible="type != 'service' or not sale_ok">
-                    <field name="available_on_wink" widget="boolean_toggle"/>
-                </group>
+            <!-- Move Available on Wink and Is Bundle to the top options div -->
+            <xpath expr="//div[@name='options']" position="inside">
+                <span class="d-inline-block">
+                    <field name="available_on_wink"/>
+                    <label for="available_on_wink"/>
+                </span>
+                <span class="d-inline-block">
+                    <field name="is_bundle"/>
+                    <label for="is_bundle"/>
+                </span>
             </xpath>
 
             <!-- WF-BUG-001: Wink and Required Documents only for sellable services; hide when Can be Sold unchecked or type != service -->
@@ -18,7 +23,7 @@
                     <group name="wink_core_settings">
                         <separator string="Classification"/>
                         <field name="department_ids" widget="many2many_tags"/>
-                        <field name="nature_ids" widget="many2many_tags"/>
+                        <field name="nature_id"/>
 
                         <separator string="Delivery"/>
                         <field name="delivery_model" widget="radio"/>
@@ -34,7 +39,7 @@
                         <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
                         <field name="wink_payment_term_id" invisible="delivery_model == 'retainer'"/>
                         <separator string="Portal Configuration"/>
-                        <field name="requires_employee_selection"/>
+                        <field name="requires_employee_selection" invisible="is_bundle"/>
                         <field name="reminder_days_before"/>
                         <separator string="Tags &amp; Ribbon (Portal)"/>
                         <field name="product_tag_ids" widget="many2many_tags" placeholder="Tags shown on portal cards and detail"/>
@@ -62,7 +67,7 @@
                     </group>
                 </page>
 
-                <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink or type != 'service' or not sale_ok">
+                <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink or type != 'service' or not sale_ok or is_bundle">
                     <field name="kuec_document_ids" widget="one2many">
                         <list string="Documents" editable="bottom">
                             <field name="sequence" widget="handle"/>
@@ -84,7 +89,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='categ_id']" position="after">
                 <field name="department_ids" string="Wink Department"/>
-                <field name="nature_ids" string="Wink Service Nature"/>
+                <field name="nature_id" string="Wink Service Nature"/>
             </xpath>
             <xpath expr="//filter[@name='filter_to_sell']" position="after">
                 <separator/>
@@ -92,7 +97,7 @@
             </xpath>
             <xpath expr="//filter[@name='categ_id']" position="after">
                 <filter string="Wink Department" name="groupby_department" context="{'group_by': 'department_ids'}"/>
-                <filter string="Wink Service Nature" name="groupby_nature" context="{'group_by': 'nature_ids'}"/>
+                <filter string="Wink Service Nature" name="groupby_nature" context="{'group_by': 'nature_id'}"/>
             </xpath>
         </field>
     </record>

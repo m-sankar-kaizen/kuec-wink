@@ -25,9 +25,9 @@ class WinkCatalogue(http.Controller):
         if department_ids:
             domain.append(('department_ids', 'in', [int(d) for d in department_ids if d.isdigit()]))
             
-        nature_ids = request.httprequest.args.getlist('nature_ids')
-        if nature_ids:
-            domain.append(('nature_ids', 'in', [int(n) for n in nature_ids if n.isdigit()]))
+        nature_id = request.httprequest.args.get('nature_id')
+        if nature_id and nature_id.isdigit():
+            domain.append(('nature_id', '=', int(nature_id)))
 
         delivery_model = kwargs.get('delivery_model')
         if delivery_model:
@@ -63,7 +63,7 @@ class WinkCatalogue(http.Controller):
         delivery_models = Product._fields['delivery_model'].selection
 
         cur_dept = [int(d) for d in department_ids if d.isdigit()]
-        cur_nature = [int(n) for n in nature_ids if n.isdigit()]
+        cur_nature = int(nature_id) if nature_id and nature_id.isdigit() else None
         active_filter_count = len(cur_dept) + len(cur_nature) + (1 if delivery_model else 0)
 
         # CAT-5: department slug per product for strip/badge color class; slugify robustly
@@ -87,7 +87,7 @@ class WinkCatalogue(http.Controller):
             'delivery_models': delivery_models,
             'current_filters': {
                 'department_ids': cur_dept,
-                'nature_ids': cur_nature,
+                'nature_id': cur_nature,
                 'delivery_model': delivery_model,
             },
             'active_filter_count': active_filter_count,

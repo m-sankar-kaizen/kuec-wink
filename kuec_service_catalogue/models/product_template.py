@@ -10,6 +10,10 @@ class ProductTemplate(models.Model):
         string='Available on Wink',
         help="Check this box to make this service available on the Wink portal."
     )
+    is_bundle = fields.Boolean(
+        string='Is a Bundle Template?',
+        help="Check this if this product template is acting as a parent wrapper for a bundle package."
+    )
 
     kuec_document_ids = fields.One2many(
         'kuec.service.document',
@@ -22,9 +26,9 @@ class ProductTemplate(models.Model):
         'kuec.department',
         string='Departments'
     )
-    nature_ids = fields.Many2many(
+    nature_id = fields.Many2one(
         'kuec.service.nature',
-        string='Service Natures'
+        string='Service Nature'
     )
     delivery_model = fields.Selection(
         selection=[
@@ -82,6 +86,16 @@ class ProductTemplate(models.Model):
         domain=[('is_ribbon', '=', True)],
         help='Single ribbon tag shown as the diagonal ribbon on the Wink portal card and detail page.',
     )
+
+    @api.onchange('commercial_structure')
+    def _onchange_commercial_structure(self):
+        if self.commercial_structure == 'bundled':
+            self.available_on_wink = False
+
+    @api.onchange('delivery_model')
+    def _onchange_delivery_model(self):
+        if self.delivery_model == 'retainer':
+            self.recurring_invoice = True
 
     def _wink_recurring_plan_lines(self):
         """Return native Recurring Prices for portal plan selection (retainer).

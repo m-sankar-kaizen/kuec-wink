@@ -38,7 +38,7 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">1500.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_legal')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
             <field name="price_visibility">visible</field>
@@ -86,7 +86,7 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">3200.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
             <field name="price_visibility">visible</field>
@@ -122,7 +122,7 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">2500.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_hr')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">flexible</field>
             <field name="price_visibility">visible</field>
@@ -152,7 +152,7 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">0.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_legal')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
             <field name="price_visibility">hidden</field>
@@ -195,7 +195,7 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">800.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_finance')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">flexible</field>
             <field name="price_visibility">visible</field>
@@ -232,7 +232,7 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">0.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_bd')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
             <field name="price_visibility">hidden</field>
@@ -256,7 +256,7 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">650.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_hr')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">bundled</field>
             <field name="price_visibility">visible</field>
@@ -329,10 +329,11 @@
             <field name="name">IT Support - Monthly Retainer</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
-            <field name="available_on_wink">True</field>
+            <field name="available_on_wink">False</field>
+            <field name="is_bundle">True</field>
             <field name="list_price">1800.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">bundled</field>
             <field name="wink_bundle_id" ref="kuec_demo_bundle_it"/>

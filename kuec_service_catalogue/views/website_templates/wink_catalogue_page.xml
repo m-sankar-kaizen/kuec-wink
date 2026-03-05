@@ -113,8 +113,9 @@
                             <t t-foreach="current_filters.get('department_ids', [])" t-as="d_id">
                                 <input type="hidden" name="department_ids" t-att-value="d_id"/>
                             </t>
-                            <t t-foreach="current_filters.get('nature_ids', [])" t-as="n_id">
-                                <input type="hidden" name="nature_ids" t-att-value="n_id"/>
+                            <t t-if="current_filters.get('nature_id')">
+                                <input type="hidden" name="nature_id" t-att-value="current_filters.get('nature_id')"/>
+                            </t>
                             </t>
                             <input type="hidden" name="delivery_model" t-att-value="current_filters.get('delivery_model')" t-if="current_filters.get('delivery_model')"/>
                             <div class="input-group flex-grow-1">
@@ -155,10 +156,10 @@
                                 </div>
                                 <div class="wink-filter-group mb-4">
                                     <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
-                                    <t t-foreach="natures" t-as="nature">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" t-att-id="'filter_nature_mob_%s' % nature.id" name="nature_ids" t-att-value="nature.id" t-att-checked="nature.id in current_filters.get('nature_ids', [])"/>
-                                            <label class="form-check-label text-muted" t-att-for="'filter_nature_mob_%s' % nature.id"><t t-esc="nature.name"/></label>
+                                    <t t-foreach="request.env['kuec.service.nature'].sudo().search([])" t-as="nature">
+                                        <div class="form-check my-2 d-flex align-items-center">
+                                            <input type="radio" class="form-check-input" t-att-id="'filter_nature_mob_%s' % nature.id" name="nature_id" t-att-value="nature.id" t-att-checked="nature.id == current_filters.get('nature_id')"/>
+                                            <label class="form-check-label ms-2" t-att-for="'filter_nature_mob_%s' % nature.id" t-esc="nature.name"/>
                                         </div>
                                     </t>
                                 </div>
@@ -202,7 +203,7 @@
                                         <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
                                         <t t-foreach="natures" t-as="nature">
                                             <div class="form-check">
-                                                <input type="checkbox" class="form-check-input wink-filter-checkbox" t-att-id="'filter_nature_%s' % nature.id" name="nature_ids" t-att-value="nature.id" t-att-checked="nature.id in current_filters.get('nature_ids', [])"/>
+                                            <input type="radio" class="form-check-input wink-filter-checkbox" t-att-id="'filter_nature_%s' % nature.id" name="nature_id" t-att-value="nature.id" t-att-checked="nature.id == current_filters.get('nature_id')"/>
                                                 <label class="form-check-label text-muted" t-att-for="'filter_nature_%s' % nature.id"><t t-esc="nature.name"/></label>
                                             </div>
                                         </t>

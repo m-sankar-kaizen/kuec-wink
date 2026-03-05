@@ -107,13 +107,10 @@ class WinkBundleTierItem(models.Model):
     )
     service_product_id = fields.Many2one(
         'product.template',
-        string='Service',
+        string='Service Application',
         required=True,
         ondelete='restrict',
-        domain=[
-            ('available_on_wink', '=', True),
-            ('commercial_structure', '!=', 'bundled'),
-        ],
+        domain=[('type', '=', 'service'), ('commercial_structure', 'in', ['bundled', 'flexible'])],
     )
     sequence = fields.Integer(
         default=10,
