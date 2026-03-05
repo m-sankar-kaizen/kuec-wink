@@ -116,7 +116,6 @@
                             <t t-if="current_filters.get('nature_id')">
                                 <input type="hidden" name="nature_id" t-att-value="current_filters.get('nature_id')"/>
                             </t>
-                            </t>
                             <input type="hidden" name="delivery_model" t-att-value="current_filters.get('delivery_model')" t-if="current_filters.get('delivery_model')"/>
                             <div class="input-group flex-grow-1">
                                 <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
