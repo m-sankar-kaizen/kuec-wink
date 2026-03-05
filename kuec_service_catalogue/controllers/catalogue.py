@@ -64,7 +64,7 @@ class WinkCatalogue(http.Controller):
 
         cur_dept = [int(d) for d in department_ids if d.isdigit()]
         cur_nature = int(nature_id) if nature_id and nature_id.isdigit() else None
-        active_filter_count = len(cur_dept) + len(cur_nature) + (1 if delivery_model else 0)
+        active_filter_count = len(cur_dept) + (1 if cur_nature else 0) + (1 if delivery_model else 0)
 
         # CAT-5: department slug per product for strip/badge color class; slugify robustly
         product_dept_slugs = {}
