@@ -23,4 +23,4 @@ class TestWinkPages(HttpCase):
         self.assertEqual(response.status_code, 200, '/services should return 200')
         # Ensure WINK catalogue content is present
         html = response.text
-        self.assertIn('wink-catalogue-header', html, 'Page should contain WINK catalogue header')
+        self.assertIn('wink-catalogue-hero', html, 'Page should contain WINK catalogue header')

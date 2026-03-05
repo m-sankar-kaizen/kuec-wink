@@ -18,7 +18,7 @@ registry.category("web_tour.tours").add("wink_guest_tour", {
     url: "/services",
     steps: () => [
         {
-            trigger: ".wink-catalogue-header",
+            trigger: ".wink-catalogue-hero",
             content: "Welcome to WINK — KUEC's Shared Services Portal. Let us show you around.",
             run: () => { },
         },

@@ -59,7 +59,6 @@ class TestWinkRetainerChangeService(TransactionCase):
             'sale_ok': True,
             'wink_subscription_group_id': cls.group.id,
         })
-        cls.product.create_variant_ids()
 
     def _create_order(self, plan=None, next_date=None, **kw):
         """Create a minimal sale order for testing."""
