@@ -790,7 +790,10 @@ class WinkRequest(http.Controller):
             if pricing_line:
                 selected_pricing = pricing_line
                 # Force variant overwrite if pricing line maps to a specific variant
-                if getattr(selected_pricing, 'product_id', False) and selected_pricing.product_id.id != product.product_variant_id.id:
+                if hasattr(selected_pricing, 'product_variant_ids') and selected_pricing.product_variant_ids:
+                    if variant.id not in selected_pricing.product_variant_ids.ids:
+                        variant = selected_pricing.product_variant_ids[0]
+                elif getattr(selected_pricing, 'product_id', False) and selected_pricing.product_id.id != variant.id:
                     variant = selected_pricing.product_id
                     
                 recurrence_ref = getattr(pricing_line, 'recurrence_id', getattr(pricing_line, 'plan_id', getattr(pricing_line, 'recurring_plan_id', None)))

@@ -238,6 +238,7 @@ class ProductTemplate(models.Model):
                         name = f"{variant_name} ({name})"
             plans_raw.append({
                 'line': line,
+                'pricing_id': line.id,
                 'recurrence': recurrence,
                 'recurrence_id': recurrence.id,
                 'plan_name': name,
