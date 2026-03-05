@@ -637,7 +637,7 @@
                                             }
 
                                             // If this card is selected, update the hidden pricing input
-                                            if (card.classList.contains('selected') && plan) {
+                                             if (card.classList.contains('selected') &amp;&amp; plan) {
                                                 pricingInput.value = plan.pricing_id;
                                             }
                                         });
@@ -651,7 +651,7 @@
                                         var summaryText = document.getElementById('wink-summary-text');
                                         var submitBtn = document.getElementById('wink-request-submit-btn');
 
-                                        if (selectedCard && selectedCard.dataset.pricingId) {
+                                        if (selectedCard &amp;&amp; selectedCard.dataset.pricingId) {
                                             pricingInput.value = selectedCard.dataset.pricingId;
                                             summaryText.textContent = 'Selected: ' + selectedCard.dataset.tierName + ' (' + (toggle.checked ? 'Annual' : 'Monthly') + ')';
                                             if (bottomBar) bottomBar.classList.add('visible');
@@ -666,7 +666,7 @@
 
                                     document.querySelectorAll('.wink-tier-card-premium').forEach(function(card) {
                                         card.addEventListener('click', function() {
-                                            document.querySelectorAll('.wink-tier-card-premium').forEach(c => c.classList.remove('selected'));
+                                            document.querySelectorAll('.wink-tier-card-premium').forEach(function(c) { c.classList.remove('selected'); });
                                             card.classList.add('selected');
                                             var radio = card.querySelector('.wink-tier-radio');
                                             if (radio) radio.checked = true;
@@ -675,11 +675,17 @@
                                             if (typeof updateVisibility === 'function') updateVisibility();
                                             // Handle global step management if script in template is available
                                             var globalRadio = document.querySelector('input.wink-tier-radio[value="' + card.dataset.tierId + '"]');
-                                            if (globalRadio && globalRadio !== radio) globalRadio.checked = true;
+                                            if (globalRadio &amp;&amp; globalRadio !== radio) globalRadio.checked = true;
 
                                             updateAll();
                                         });
                                     });
+
+                                    // Initial load
+                                    setTimeout(updateAll, 100);
+                                })();
+                            </script>
+                        </div>
                         <div t-if="is_subscription_service and not wink_is_bundle and subscription_plans and not selected_plan" class="wink-retainer-plan-selector mb-4">
                             <h5 class="mb-3">Select Your Plan</h5>
                             <p class="text-muted small mb-2">Price is based on the plan you select.</p>
