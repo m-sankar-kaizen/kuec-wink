@@ -24,6 +24,26 @@
         <record id="kuec_demo_dept_bd" model="kuec.department">
             <field name="name">Business Development</field>
         </record>
+        
+        <record id="kuec_demo_dept_visa" model="kuec.department">
+            <field name="name">Visa and Insurance</field>
+        </record>
+        
+        <record id="kuec_demo_dept_pro" model="kuec.department">
+            <field name="name">PRO Services</field>
+        </record>
+        
+        <record id="kuec_demo_dept_procurement" model="kuec.department">
+            <field name="name">Procurement</field>
+        </record>
+        
+        <record id="kuec_demo_dept_fm" model="kuec.department">
+            <field name="name">Facility Management &amp; General Services</field>
+        </record>
+        
+        <record id="kuec_demo_dept_marketing" model="kuec.department">
+            <field name="name">Marketing &amp; Public Relations</field>
+        </record>
 
 
         <!-- ============================================== -->

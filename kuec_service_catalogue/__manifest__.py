@@ -30,7 +30,6 @@
         'data/kuec_tag_data.xml',
         'data/mail_template_data.xml',
         'data/ir_cron_data.xml',
-        'data/kuec_tour_data.xml',
         'data/kuec_payment_terms_data.xml',
         'data/mail_template_request.xml',
         'views/kuec_classification_views.xml',
@@ -53,11 +52,11 @@
     ],
     'demo': [
         'data/demo_data.xml',
+        'data/gen_demo_data.xml',
     ],
     'assets': {
         'web.assets_frontend': [
             'kuec_service_catalogue/static/src/js/wink_catalogue.js',
-            'kuec_service_catalogue/static/src/js/wink_tour.js',
         ],
     },
     'installable': True,

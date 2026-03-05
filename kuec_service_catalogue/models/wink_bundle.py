@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 
 class WinkBundle(models.Model):
@@ -98,6 +99,12 @@ class WinkBundleTierItem(models.Model):
     _description = 'WINK Bundle Tier Item'
     _order = 'sequence, id'
 
+    _sql_constraints = [
+        ('unique_service_per_tier',
+         'UNIQUE(tier_id, service_product_id)',
+         'Each service can only appear once per tier.'),
+    ]
+
     tier_id = fields.Many2one(
         'wink.bundle.tier',
         string='Tier',
@@ -111,6 +118,7 @@ class WinkBundleTierItem(models.Model):
         required=True,
         ondelete='restrict',
         domain=[('type', '=', 'service'), ('commercial_structure', 'in', ['bundled', 'flexible'])],
+        help="Select a service to include in this tier. Each service can only appear once per tier.",
     )
     sequence = fields.Integer(
         default=10,
@@ -124,3 +132,18 @@ class WinkBundleTierItem(models.Model):
         required=True,
         help="Number of times this service is included in the bundle tier.",
     )
+
+    @api.constrains('tier_id', 'service_product_id')
+    def _check_unique_service_per_tier(self):
+        for rec in self:
+            duplicates = self.search_count([
+                ('tier_id', '=', rec.tier_id.id),
+                ('service_product_id', '=', rec.service_product_id.id),
+                ('id', '!=', rec.id),
+            ])
+            if duplicates:
+                raise ValidationError(
+                    _('The service "%s" is already included in tier "%s". '
+                      'Each service can only appear once per tier.')
+                    % (rec.service_product_id.name, rec.tier_id.name)
+                )
