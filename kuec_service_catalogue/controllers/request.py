@@ -530,26 +530,52 @@ class WinkRequest(http.Controller):
                 if product.commercial_structure == 'bundled':
                     seen_cycles = {}
                     billing_cycles = []
-                    for p in subscription_plans:
-                        rid = p.get('recurrence_id')
-                        if rid and rid not in seen_cycles:
-                            seen_cycles[rid] = True
-                            billing_cycles.append({
-                                'recurrence_id': rid,
-                                'recurrence_id_str': str(rid),
-                                'name': p.get('plan_name', ''),
-                                'period_label': p.get('period_label', ''),
-                            })
                     pricing_matrix = {}
-                    for p in subscription_plans:
-                        rid = p.get('recurrence_id')
-                        vid = p.get('variant_id')
-                        if rid:
-                            if vid:
-                                pricing_matrix['%s|%s' % (rid, vid)] = p
-                            # Also index by variant attribute names (lowercase) for robust matching
-                            for attr_name in p.get('variant_attribute_names', []):
-                                pricing_matrix['%s|%s' % (rid, attr_name.lower().strip())] = p
+                    
+                    if not subscription_plans and product.wink_subscription_group_id:
+                        # Fallback: construct cycles and matrix from Group plans and Tier legacy prices
+                        for p in product.wink_subscription_group_id.plan_ids:
+                            billing_cycles.append({
+                                'recurrence_id': p.id,
+                                'recurrence_id_str': str(p.id),
+                                'name': p.name,
+                                'period_label': '/' + p.name.lower(),
+                            })
+                            if tier_data:
+                                for td in tier_data:
+                                    tier = td['tier']
+                                    vid = str(tier.product_variant_id.id) if tier.product_variant_id else 'None'
+                                    fake_plan = {
+                                        'plan_name': p.name,
+                                        'price': tier.price,
+                                        'period_label': '/' + p.name.lower(),
+                                        'currency_symbol': 'AED',
+                                        'pricing_id': p.id,
+                                    }
+                                    if vid != 'None':
+                                        pricing_matrix['%s|%s' % (p.id, vid)] = fake_plan
+                                    pricing_matrix['%s|%s' % (p.id, tier.name.lower().strip())] = fake_plan
+                    else:
+                        for p in subscription_plans:
+                            rid = p.get('recurrence_id')
+                            if rid and rid not in seen_cycles:
+                                seen_cycles[rid] = True
+                                billing_cycles.append({
+                                    'recurrence_id': rid,
+                                    'recurrence_id_str': str(rid),
+                                    'name': p.get('plan_name', ''),
+                                    'period_label': p.get('period_label', ''),
+                                })
+                        for p in subscription_plans:
+                            rid = p.get('recurrence_id')
+                            vid = p.get('variant_id')
+                            if rid:
+                                if vid:
+                                    pricing_matrix['%s|%s' % (rid, vid)] = p
+                                # Also index by variant attribute names (lowercase) for robust matching
+                                for attr_name in p.get('variant_attribute_names', []):
+                                    pricing_matrix['%s|%s' % (rid, attr_name.lower().strip())] = p
+                    
                     render_vals['billing_cycles'] = billing_cycles
                     render_vals['pricing_matrix'] = pricing_matrix
                 else:
@@ -856,6 +882,9 @@ class WinkRequest(http.Controller):
 
         # variant is already determined above based on tier
         price_unit = variant.list_price if variant else product.list_price
+        if is_bundle and 'tier' in locals() and tier and getattr(tier, 'exists', lambda: False)() and tier.price:
+            price_unit = tier.price
+
         if use_recurring_prices or is_bundle:
             if getattr(recurring_lines, '_name', None) == 'sale.subscription.plan' and selected_plan:
                 # Legacy sale.subscription.plan path
