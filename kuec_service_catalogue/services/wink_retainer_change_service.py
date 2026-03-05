@@ -121,7 +121,6 @@ class WinkRetainerChangeService(models.AbstractModel):
             proration_credit, proration_charge, net_amount, effective_date,
             currency, error (str or None)
         """
-        self.ensure_one()
         source_order.ensure_one()
         target_plan.ensure_one()
 
@@ -227,7 +226,6 @@ class WinkRetainerChangeService(models.AbstractModel):
         """RET-004: Create new sale.order for plan change.
         Sets wink_change_from_order_id, wink_change_type, proration fields.
         message_post on both source and new order."""
-        self.ensure_one()
         source_order.ensure_one()
         target_plan.ensure_one()
 

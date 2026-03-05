@@ -155,6 +155,34 @@ class WinkRequest(http.Controller):
                     'min_days_notice': _min_days,
                     'change_disallowed_message': _change_disallowed_message,
                 })
+
+        # Phase 2: One-Time request frequency guard
+        if product.request_frequency == 'one_time':
+            Order = request.env['sale.order'].sudo()
+            partner = request.env.user.partner_id.commercial_partner_id
+            # 1. Check for existing confirmed orders or active requests
+            existing = Order.search([
+                ('partner_id', 'child_of', partner.id),
+                ('state', 'not in', ['cancel']),
+                ('order_line.product_id.product_tmpl_id', '=', product.id),
+            ], limit=1)
+            
+            # 2. Check for bundle entitlements (available or activated)
+            if not existing:
+                Entitlement = request.env['wink.bundle.entitlement'].sudo()
+                ent = Entitlement.search([
+                    ('order_id.partner_id', 'child_of', partner.id),
+                    ('order_id.state', 'not in', ['draft', 'sent', 'cancel']),
+                    ('service_product_id', '=', product.id),
+                ], limit=1)
+                if ent:
+                    existing = ent.order_id
+            
+            if existing:
+                return request.render('kuec_service_catalogue.wink_request_already_requested', {
+                    'product': product,
+                    'order': existing,
+                })
         pricing_param = kwargs.get('pricing_id') or kwargs.get('plan')
         pricing_id = None
         if pricing_param is not None:

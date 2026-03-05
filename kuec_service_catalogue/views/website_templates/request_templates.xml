@@ -868,6 +868,47 @@
         </template>
 
         <!-- Already have active subscription for this service (edge case 10.3) -->
+        <template id="wink_request_already_requested" name="Already Requested">
+            <t t-call="website.layout">
+                <div class="container mt-5 mb-5" style="max-width:680px;">
+
+                    <!-- Header -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header py-3" style="background:var(--wink-primary,#1F4E79); color:#fff;">
+                            <h4 class="mb-0">
+                                <i class="fa fa-info-circle me-2"/>
+                                Service Already Requested: <t t-esc="product.name"/>
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1">
+                                You have already requested <strong><t t-esc="product.name"/></strong>.
+                            </p>
+                            <p class="text-muted small mb-0">
+                                This is a <strong>One-Time service</strong> and can only be requested once.
+                                <t t-if="order">
+                                    Your existing request reference is <strong><t t-esc="order.name"/></strong>.
+                                </t>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <t t-if="order">
+                            <a t-attf-href="/my/requests/{{order.id}}" class="btn btn-primary btn-md rounded-xl">
+                                <i class="fa fa-file-text-o me-2"/> View Existing Request
+                            </a>
+                        </t>
+                        <a href="/services" class="btn btn-outline-secondary btn-md rounded-xl">
+                            <i class="fa fa-th me-2"/> Back to Catalogue
+                        </a>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- Already have active subscription for this service (edge case 10.3) -->
         <template id="wink_request_already_subscription" name="Already Have Subscription">
             <t t-call="website.layout">
                 <div class="container mt-5 mb-5" style="max-width:680px;">

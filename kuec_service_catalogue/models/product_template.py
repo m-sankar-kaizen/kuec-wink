@@ -103,8 +103,11 @@ class ProductTemplate(models.Model):
 
     @api.onchange('delivery_model')
     def _onchange_delivery_model(self):
+        """Native Odoo 18 Subscription Configuration based on delivery model selection."""
         if self.delivery_model == 'retainer':
             self.recurring_invoice = True
+        elif self.delivery_model == 'project':
+            self.recurring_invoice = False
 
     def _wink_recurring_plan_lines(self):
         """Return native Recurring Prices for portal plan selection (retainer).
@@ -381,13 +384,4 @@ class ProductTemplate(models.Model):
         help="When enabled, the customer must select one or more employees from their directory when submitting a service request for this service."
     )
 
-    @api.onchange('delivery_model')
-    def _onchange_delivery_model_subscription(self):
-        """Native Odoo 18 Subscription Configuration."""
-        for template in self:
-            if template.delivery_model == 'retainer':
-                if 'recurring_invoice' in template._fields:
-                    template.recurring_invoice = True
-            elif template.delivery_model == 'project':
-                if 'recurring_invoice' in template._fields:
-                    template.recurring_invoice = False
+

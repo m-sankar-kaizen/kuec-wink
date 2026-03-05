@@ -115,6 +115,12 @@ class WinkBundleEntitlement(models.Model):
                 "This bundle is no longer active. You cannot activate services from a cancelled or expired bundle."
             ))
 
+        # Phase 2: One-Time service activation guard
+        if self.service_product_id.request_frequency == 'one_time' and self.qty_activated >= 1:
+            raise UserError(_(
+                "The service '%s' is a One-Time service and has already been activated."
+            ) % self.service_product_id.name)
+
         # WF-BND-002: Required documents per activated service
         ok_docs, missing_docs = order._wink_required_docs_approved_for_product(
             self.service_product_id

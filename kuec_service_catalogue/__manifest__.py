@@ -18,7 +18,6 @@
         'payment',
         'hr',
         'web',
-        'web_tour',
         'sale_project',
     ],
     'data': [
