@@ -153,9 +153,9 @@ class WinkRetainerChangeService(models.AbstractModel):
                 source_plan = group.plan_ids.sorted('sequence')[:1]
 
         # Resolve monthly prices: Odoo pricing (per service) first, else plan.monthly_std_price
-        current_monthly, _ = self._resolve_monthly_price_for_proration(source_order, source_plan, product, pricing_record=None)
-        target_pricing, _ = self._resolve_plan_pricing_record(product, target_plan)
-        target_monthly, _ = self._resolve_monthly_price_for_proration(source_order, target_plan, product, pricing_record=target_pricing)
+        current_monthly, current_source = self._resolve_monthly_price_for_proration(source_order, source_plan, product, pricing_record=None)
+        target_pricing, target_rec_id = self._resolve_plan_pricing_record(product, target_plan)
+        target_monthly, target_source = self._resolve_monthly_price_for_proration(source_order, target_plan, product, pricing_record=target_pricing)
 
         result['current_monthly_std_price'] = current_monthly
         result['target_monthly_std_price'] = target_monthly

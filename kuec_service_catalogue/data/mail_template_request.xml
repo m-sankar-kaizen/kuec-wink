@@ -8,6 +8,8 @@
         <delete model="mail.template" search="[('name','=','WINK Portal: New Service Request')]"/>
         <delete model="mail.template" search="[('name','=','WINK Portal: Service Request Confirmation (Customer)')]"/>
         <delete model="mail.template" search="[('name','=','WINK Portal: Document Review Update')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: Cancellation Request Confirmation (Customer)')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: New Cancellation Request (Coordinator)')]"/>
 
         <!-- Welcome Email Template -->
         <record id="kuec_portal_welcome_email_v5" model="mail.template">
@@ -130,6 +132,61 @@
                 </div>
             </field>
             <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- Customer: Cancellation Request Confirmation -->
+        <record id="kuec_cancellation_confirmation_template" model="mail.template">
+            <field name="name">WINK Portal: Cancellation Request Confirmation (Customer)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Retainer Cancellation Received — {{ object.name }}</field>
+            <field name="email_to">{{ object.partner_id.email_formatted }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear {{ object.partner_id.name }},<br/><br/>
+                        We have received your request to cancel the retainer service <strong>{{ object.wink_source_product_id.name }}</strong> (Ref: {{ object.name }}).
+                    </p>
+                    <p style="margin: 12px 0px; font-size: 13px;">
+                        <b>Effective Date:</b> {{ object.wink_cancellation_effective_date }}<br/>
+                        <b>Reason:</b> {{ object.wink_cancellation_reason or 'Not specified' }}
+                    </p>
+                    <p style="margin: 16px 0px 0px 0px; font-size: 13px;">
+                        <b>Next steps:</b> Our team will process your request shortly. You will receive a final confirmation and credit note (if applicable) once processed.
+                    </p>
+                    <div style="text-align: center; margin: 16px 0px;">
+                        <a t-att-href="object.env['ir.config_parameter'].sudo().get_param('web.base.url', '') + '/my/requests/' + str(object.id)"
+                           style="background-color: #1F4E79; padding: 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+                            View Request Details
+                        </a>
+                    </div>
+                    <br/><br/>
+                    <span style="color: #666666; font-size: 11px;">The WINK Team — KUEC</span>
+                </div>
+            </field>
+        </record>
+
+        <!-- Coordinator: New Cancellation Request -->
+        <record id="kuec_coordinator_cancellation_notification" model="mail.template">
+            <field name="name">WINK Portal: New Cancellation Request (Coordinator)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Cancellation Requested — {{ object.name }}</field>
+            <field name="email_to">{{ ','.join([e for e in object.env.ref('kuec_portal_foundation.group_kuec_coordinator').users.mapped('email') if e]) }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        A customer has requested to cancel their retainer service.<br/><br/>
+                        <b>Customer:</b> {{ object.partner_id.name }}<br/>
+                        <b>Service:</b> {{ object.wink_source_product_id.name }}<br/>
+                        <b>Effective Date:</b> {{ object.wink_cancellation_effective_date }}<br/>
+                        <b>Reason:</b> {{ object.wink_cancellation_reason or 'N/A' }}<br/><br/>
+                        <div style="text-align: center; margin: 16px 0px 16px 0px;">
+                            <a t-att-href="'/web#id=' + str(object.id) + '&amp;model=sale.order&amp;view_type=form'" style="background-color: #d9534f; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                Review in Odoo
+                            </a>
+                        </div>
+                    </p>
+                </div>
+            </field>
         </record>
     </data>
 </odoo>

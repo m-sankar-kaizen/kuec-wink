@@ -41,7 +41,7 @@
                                 </list>
                             </field>
                             <p class="text-muted small mt-2">
-                                <i class="fa fa-info-circle"/> <strong>Proration:</strong> When each service has Odoo Recurring Prices, proration uses the actual price per service (normalized to monthly). Otherwise, the Standard Monthly Price above is used as fallback. Link plans via Recurrence Hint or Pricing ID for multi-service support.
+                                <i class="fa fa-info-circle" title="Proration Information"/> <strong>Proration:</strong> When each service has Odoo Recurring Prices, proration uses the actual price per service (normalized to monthly). Otherwise, the Standard Monthly Price above is used as fallback. Link plans via Recurrence Hint or Pricing ID for multi-service support.
                             </p>
                         </page>
 

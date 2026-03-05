@@ -697,9 +697,18 @@ class WinkRequest(http.Controller):
             'groups_id': [(6, 0, [portal_group.id])],
         })
 
-        # Step 6 — Send password reset email (uses Odoo's native reset flow)
+        # Step 6 — Send password reset email (uses branded WINK template with token)
         try:
-            new_user.sudo().action_reset_password()
+            # signup_prepare generates the token and expiry date on the user/partner
+            new_user.sudo().partner_id.signup_prepare()
+            reset_url = new_user.sudo().partner_id.signup_url
+            
+            welcome_template = request.env.ref('kuec_service_catalogue.kuec_portal_welcome_email_v5', raise_if_not_found=False)
+            if welcome_template:
+                welcome_template.sudo().with_context(reset_url=reset_url).send_mail(new_user.partner_id.id, force_send=True)
+            else:
+                # Fallback to native if custom template missing
+                new_user.sudo().action_reset_password()
         except Exception:
             pass  # Non-blocking: user can always reset later
 
@@ -1765,6 +1774,17 @@ class WinkRequest(http.Controller):
                 }
                 request.env['wink.bundle.entitlement'].sudo().create(ent_vals)
 
+        # Notify coordinator and customer of plan change
+        try:
+            coord_template = request.env.ref('kuec_service_catalogue.kuec_coordinator_notification_email_v5', raise_if_not_found=False)
+            if coord_template:
+                coord_template.sudo().send_mail(new_order.id, force_send=True)
+            cust_template = request.env.ref('kuec_service_catalogue.kuec_request_confirmation_template', raise_if_not_found=False)
+            if cust_template:
+                cust_template.sudo().send_mail(new_order.id, force_send=True)
+        except Exception:
+            pass
+
         return request.redirect(f'/my/requests/{new_order.id}?plan_change_submitted=1')
 
     @http.route('/my/requests/<int:order_id>/retainer/cancel/preview', type='http', auth='user', website=True)
@@ -1834,6 +1854,17 @@ class WinkRequest(http.Controller):
             message_type='comment',
             subtype_xmlid='mail.mt_note',
         )
+        # Notify coordinator and customer of cancellation request
+        try:
+            coord_template = request.env.ref('kuec_service_catalogue.kuec_coordinator_cancellation_notification', raise_if_not_found=False)
+            if coord_template:
+                coord_template.sudo().send_mail(order.id, force_send=True)
+            cust_template = request.env.ref('kuec_service_catalogue.kuec_cancellation_confirmation_template', raise_if_not_found=False)
+            if cust_template:
+                cust_template.sudo().send_mail(order.id, force_send=True)
+        except Exception:
+            pass
+
         return request.redirect(f'/my/requests/{order_id}?retainer_cancelled=1')
 
     @http.route('/my/requests/<int:order_id>/pay', type='http', auth='user', website=True)

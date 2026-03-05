@@ -438,8 +438,7 @@
         </record>
 
         <!-- Link IT Support to the Group -->
-        <record id="kuec_demo_svc_it_support_update" model="product.template">
-            <field name="id" ref="kuec_demo_svc_it_support"/>
+        <record id="kuec_demo_svc_it_support" model="product.template">
             <field name="wink_subscription_group_id" ref="kuec_demo_sub_group"/>
             <field name="recurring_invoice">True</field>
         </record>
