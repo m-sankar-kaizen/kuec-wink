@@ -87,10 +87,19 @@ class ProductTemplate(models.Model):
         help='Single ribbon tag shown as the diagonal ribbon on the Wink portal card and detail page.',
     )
 
+    @api.onchange('is_bundle')
+    def _onchange_is_bundle(self):
+        if self.is_bundle:
+            self.delivery_model = 'retainer'
+            self.recurring_invoice = True
+            self.commercial_structure = False
+
     @api.onchange('commercial_structure')
     def _onchange_commercial_structure(self):
         if self.commercial_structure == 'bundled':
             self.available_on_wink = False
+            self.delivery_model = 'retainer'
+            self.recurring_invoice = True
 
     @api.onchange('delivery_model')
     def _onchange_delivery_model(self):

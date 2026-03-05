@@ -26,12 +26,12 @@
                         <field name="nature_id"/>
 
                         <separator string="Delivery"/>
-                        <field name="delivery_model" widget="radio"/>
-                        <field name="request_frequency" widget="radio"/>
+                        <field name="delivery_model" widget="radio" readonly="is_bundle or commercial_structure == 'bundled'"/>
+                        <field name="request_frequency" widget="radio" invisible="is_bundle"/>
                         <field name="project_template_id" invisible="delivery_model != 'project'"/>
-                        <separator string="Commercial"/>
-                        <field name="commercial_structure" widget="radio"/>
-                        <field name="wink_bundle_id" invisible="commercial_structure != 'bundled'"/>
+                        <separator string="Commercial" invisible="is_bundle"/>
+                        <field name="commercial_structure" widget="radio" invisible="is_bundle"/>
+                        <field name="wink_bundle_id" invisible="commercial_structure == 'bundled' and not is_bundle"/>
                         <field name="wink_subscription_group_id" invisible="delivery_model != 'retainer'"/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
