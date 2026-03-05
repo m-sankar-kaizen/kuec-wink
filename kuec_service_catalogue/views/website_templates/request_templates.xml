@@ -515,186 +515,171 @@
                                     <a t-attf-href="/services/#{product.id}" class="small">Change Plan (back to service)</a>
                                 </div>
                             </div>
-                        </div>
 
                         <!-- ====================================================
                              BUNDLE PRICING: Step 1 → Cycle, Step 2 → Tier
                              ================================================= -->
-                        <div t-if="wink_is_bundle and billing_cycles" class="wink-bundle-configurator mb-4">
-
-                            <!-- Pass the pricing matrix to JS as JSON -->
-                            <script t-ignore="1">
-                                var WINK_PRICING_MATRIX = <t t-out="json.dumps(pricing_matrix) if pricing_matrix else '{}'"/>;
-                            </script>
-
-                            <!-- Step 1: Billing Cycle -->
-                            <h5 class="mb-2"><span class="badge rounded-pill me-2" style="background:#1F3864;color:#fff;">1</span>Billing Cycle</h5>
-                            <div class="d-flex flex-wrap gap-2 mb-4" id="wink-cycle-btns">
-                                <t t-foreach="billing_cycles" t-as="cyc">
-                                    <input type="radio" name="bundle_recurrence_id" class="d-none wink-cycle-radio"
-                                           t-att-id="'cyc_' + cyc['recurrence_id_str']"
-                                           t-att-value="cyc['recurrence_id_str']"
-                                           t-att-checked="'checked' if cyc_first else None"/>
-                                    <label t-att-for="'cyc_' + cyc['recurrence_id_str']"
-                                           class="btn btn-outline-primary wink-cycle-btn px-4 py-2 rounded-pill fw-semibold">
-                                        <t t-esc="cyc['name']"/>
-                                    </label>
-                                </t>
+                        <!-- ====================================================
+                             PREMIUM BUNDLE CONFIGURATOR
+                             ================================================= -->
+                        <div t-if="wink_is_bundle and billing_cycles" class="wink-bundle-configurator mb-5">
+                            
+                            <!-- Billing Toggle: Monthly vs Annual -->
+                            <div class="wink-billing-toggle-wrapper">
+                                <span class="wink-toggle-label active" id="label-monthly">Monthly</span>
+                                <label class="wink-switch">
+                                    <input type="checkbox" id="wink-billing-cycle-toggle" t-att-disabled="'disabled' if not annual_cycle else None"/>
+                                    <span class="wink-slider"></span>
+                                </label>
+                                <span class="wink-toggle-label" id="label-annual">Annual</span>
+                                <span t-if="annual_cycle" class="badge bg-success rounded-pill ms-2">Save 20%</span>
                             </div>
 
-                            <!-- Step 2: Tier Cards -->
-                            <h5 class="mb-2"><span class="badge rounded-pill me-2" style="background:#1F3864;color:#fff;">2</span>Select Tier</h5>
-                            <div class="row g-3 mb-3" id="wink-tier-cards">
+                            <!-- Tier Comparison Grid -->
+                            <div class="wink-tier-grid">
                                 <t t-foreach="tier_data" t-as="td">
-                                    <div class="col-md-6">
-                                        <div class="card h-100 wink-tier-option" style="cursor:pointer;"
-                                             t-att-data-variant-id="td['tier'].product_variant_id.id"
-                                             t-att-data-tier-id="td['tier'].id"
-                                             t-att-data-tier-name="td['tier'].name">
-                                            <input type="radio" name="tier_id" class="d-none wink-tier-radio"
-                                                   t-att-id="'tier_' + str(td['tier'].id)"
-                                                   t-att-value="td['tier'].id"
-                                                   t-att-checked="'checked' if td_first else None"/>
-                                            <label t-att-for="'tier_' + str(td['tier'].id)" class="card-body d-block cursor-pointer mb-0">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div>
-                                                        <div class="fw-bold fs-5 mb-1"><t t-esc="td['tier'].name"/></div>
-                                                        <ul class="list-unstyled small text-muted mb-0" t-if="td['items']">
-                                                            <t t-foreach="td['items'][:4]" t-as="item">
-                                                                <li><i class="fa fa-check text-success me-1"/><t t-esc="item.description or item.service_product_id.name"/></li>
-                                                            </t>
-                                                        </ul>
-                                                    </div>
-                                                    <div class="text-end ms-3">
-                                                        <div class="fw-bold fs-4 wink-tier-price" style="color:var(--wink-primary);white-space:nowrap;">—</div>
-                                                        <div class="small text-muted wink-tier-period"></div>
-                                                    </div>
-                                                </div>
-                                            </label>
+                                    <div class="wink-tier-card-premium" 
+                                         t-att-data-tier-id="td['tier'].id"
+                                         t-att-data-variant-id="td['tier'].product_variant_id.id"
+                                         t-att-data-tier-name="td['tier'].name">
+                                        
+                                        <div class="wink-tier-badge">Selected</div>
+                                        
+                                        <div class="wink-tier-header">
+                                            <div class="wink-tier-name" t-esc="td['tier'].name"/>
+                                            <div class="wink-tier-price-wrapper">
+                                                <span class="wink-tier-currency">AED</span>
+                                                <span class="wink-tier-amount">—</span>
+                                                <span class="wink-tier-period">/mo</span>
+                                            </div>
                                         </div>
+
+                                        <div class="wink-tier-description" t-esc="td['tier'].description or 'Comprehensive service bundle.'"/>
+
+                                        <ul class="wink-tier-features">
+                                            <t t-foreach="td['items']" t-as="item">
+                                                <li class="wink-tier-feature-item">
+                                                    <i class="fa fa-check-circle"/>
+                                                    <span>
+                                                        <t t-esc="item.description or item.service_product_id.name"/>
+                                                        <t t-if="item.qty > 1"> (<t t-esc="item.qty"/>x)</t>
+                                                    </span>
+                                                </li>
+                                            </t>
+                                        </ul>
+
+                                        <button type="button" class="btn btn-outline-primary wink-select-btn touch-target">
+                                            Select <t t-esc="td['tier'].name"/>
+                                        </button>
+                                        
+                                        <!-- Hidden Radio for standard submission -->
+                                        <input type="radio" name="tier_id" class="d-none wink-tier-radio" 
+                                               t-att-id="'tier_radio_' + str(td['tier'].id)" 
+                                               t-att-value="td['tier'].id"/>
                                     </div>
                                 </t>
                             </div>
 
-                            <!-- Selected Summary -->
-                            <div class="p-3 rounded border bg-light mb-3" id="wink-bundle-summary">
-                                <strong>Your selection:</strong> <span id="wink-bundle-summary-text" class="text-primary fw-semibold">—</span>
-                            </div>
-
-                            <!-- Hidden input that submits the exact pricing_id -->
+                            <!-- Hidden State Management -->
+                            <input type="hidden" name="bundle_recurrence_id" id="wink-hidden-recurrence-id" 
+                                   t-att-value="billing_cycles[0]['recurrence_id_str'] if billing_cycles else ''"/>
                             <input type="hidden" name="selected_pricing_id" id="wink-selected-pricing-id" value=""/>
 
-                            <style>
-                                .wink-cycle-radio:checked + .wink-cycle-btn { background: #1F3864; color: #fff; border-color: #1F3864; }
-                                .wink-tier-radio:checked + label.card-body { outline: 2px solid #1F3864; }
-                                .wink-tier-option:hover { box-shadow: 0 0 0 2px #1F3864; }
-                            </style>
-
-                            <script>
-                                (function(){
-                                    var matrix = (typeof WINK_PRICING_MATRIX !== 'undefined') ? WINK_PRICING_MATRIX : {};
-                                    var summaryEl = document.getElementById('wink-bundle-summary-text');
+                            <!-- Logic: Matrix and Dynamic Updates -->
+                            <script t-ignore="1">
+                                (function() {
+                                    var matrix = <t t-out="json.dumps(pricing_matrix) if pricing_matrix else '{}'"/>;
+                                    var cycles = <t t-out="json.dumps(billing_cycles) if billing_cycles else '[]'"/>;
+                                    
+                                    // Utility to find specific cycle ids
+                                    var monthlyCycle = <t t-out="json.dumps(monthly_cycle) if monthly_cycle else 'null'"/>;
+                                    var annualCycle = <t t-out="json.dumps(annual_cycle) if annual_cycle else 'null'"/>;
+                                    
+                                    var toggle = document.getElementById('wink-billing-cycle-toggle');
+                                    var recurrenceInput = document.getElementById('wink-hidden-recurrence-id');
                                     var pricingInput = document.getElementById('wink-selected-pricing-id');
-                                    var submitBtn = document.getElementById('wink-request-submit-btn');
+                                    var labelMonthly = document.getElementById('label-monthly');
+                                    var labelAnnual = document.getElementById('label-annual');
 
-                                    function getSelectedCycle() {
-                                        var r = document.querySelector('input.wink-cycle-radio:checked');
-                                        return r ? r.value : null;
-                                    }
-                                    function getSelectedTier() {
-                                        var r = document.querySelector('input.wink-tier-radio:checked');
-                                        if (!r) return {id: null, variantId: null, name: ''};
-                                        var card = r.closest('[data-variant-id]');
-                                        return {
-                                            id: card ? card.getAttribute('data-tier-id') : null,
-                                            variantId: card ? card.getAttribute('data-variant-id') : null,
-                                            name: card ? card.getAttribute('data-tier-name') : ''
-                                        };
-                                    }
-                                    function updatePrices() {
-                                        var cycleId = getSelectedCycle();
-                                        var tier = getSelectedTier();
-                                        // Update each tier card price
-                                        document.querySelectorAll('.wink-tier-option').forEach(function(card) {
-                                            var variantId = card.getAttribute('data-variant-id');
-                                            var tierName = (card.getAttribute('data-tier-name') || '').toLowerCase().trim();
-                                            
-                                            // 1. Try direct lookup by variantId or tierName
-                                            var plan = matrix[cycleId + '|' + variantId] || matrix[cycleId + '|' + tierName];
-                                            
-                                            // 2. Try iterative lookup: check if any plan's attributes match the tier name
-                                            if (!plan) {
-                                                for (var key in matrix) {
-                                                    if (key.startsWith(cycleId + '|')) {
-                                                        var p = matrix[key];
-                                                        var attrs = (p.variant_attribute_names || []).map(function(a){ return a.toLowerCase().trim(); });
-                                                        if (attrs.indexOf(tierName) !== -1 || (tierName === 'sliver' &amp;&amp; attrs.indexOf('silver') !== -1)) {
-                                                            plan = p; break;
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            var priceEl = card.querySelector('.wink-tier-price');
-                                            var periodEl = card.querySelector('.wink-tier-period');
-                                            var sym = plan ? (plan.currency_symbol || plan.currency_name || '') : '';
-                                            if (priceEl) priceEl.textContent = plan ? (sym + ' ' + Number(plan.price).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})) : '—';
-                                            if (periodEl) periodEl.textContent = plan ? plan.period_label : '';
-                                        });
-                                        // Update summary and hidden pricing id
-                                        var tier2 = getSelectedTier();
-                                        var tierName2 = (tier2.name || '').toLowerCase().trim();
-                                        var key2 = cycleId + '|' + tier2.variantId;
+                                    function updateAll() {
+                                        var isAnnual = toggle.checked;
+                                        var activeCycle = isAnnual ? (annualCycle || monthlyCycle) : monthlyCycle;
+                                        var activeCycleId = activeCycle.recurrence_id_str;
                                         
-                                        var planSelected = matrix[key2] || matrix[cycleId + '|' + tierName2];
-                                        if (!planSelected) {
-                                            for (var key in matrix) {
-                                                if (key.startsWith(cycleId + '|')) {
-                                                    var p = matrix[key];
-                                                    var attrs = (p.variant_attribute_names || []).map(function(a){ return a.toLowerCase().trim(); });
-                                                    if (attrs.indexOf(tierName2) !== -1 || (tierName2 === 'sliver' &amp;&amp; attrs.indexOf('silver') !== -1)) {
-                                                        planSelected = p; break;
+                                        recurrenceInput.value = activeCycleId;
+                                        labelMonthly.classList.toggle('active', !isAnnual);
+                                        labelAnnual.classList.toggle('active', isAnnual);
+
+                                        document.querySelectorAll('.wink-tier-card-premium').forEach(function(card) {
+                                            var variantId = card.dataset.variantId;
+                                            var tierName = (card.dataset.tierName || '').toLowerCase().trim();
+                                            var plan = matrix[activeCycleId + '|' + variantId] || matrix[activeCycleId + '|' + tierName];
+
+                                            if (!plan) {
+                                                // Robust fallback for attribute matching
+                                                for (var key in matrix) {
+                                                    if (key.startsWith(activeCycleId + '|')) {
+                                                        var p = matrix[key];
+                                                        var attrs = (p.variant_attribute_names || []).map(a => a.toLowerCase().trim());
+                                                        if (attrs.includes(tierName)) { plan = p; break; }
                                                     }
                                                 }
                                             }
-                                        }
 
-                                        if (summaryEl) {
-                                            if (planSelected) {
-                                                var sym2 = planSelected.currency_symbol || planSelected.currency_name || '';
-                                                summaryEl.textContent = tier2.name + ' — ' + planSelected.plan_name + ' — ' + sym2 + ' ' + Number(planSelected.price).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) + ' ' + planSelected.period_label;
+                                            var amountEl = card.querySelector('.wink-tier-amount');
+                                            var periodEl = card.querySelector('.wink-tier-period');
+                                            if (plan) {
+                                                amountEl.textContent = Number(plan.price).toLocaleString('en-US', {minimumFractionDigits:0});
+                                                periodEl.textContent = plan.period_label;
+                                                card.dataset.pricingId = plan.pricing_id;
                                             } else {
-                                                summaryEl.textContent = '—';
+                                                amountEl.textContent = '—';
                                             }
-                                        }
-                                        if (pricingInput) pricingInput.value = planSelected ? planSelected.pricing_id : '';
-                                        if (submitBtn) {
-                                            if (planSelected) {
-                                                submitBtn.disabled = false;
-                                                submitBtn.style.opacity = '1';
-                                                submitBtn.title = '';
-                                            } else {
-                                                submitBtn.disabled = true;
-                                                submitBtn.style.opacity = '0.5';
-                                                submitBtn.title = 'Please select a valid tier and billing cycle';
+
+                                            // If this card is selected, update the hidden pricing input
+                                            if (card.classList.contains('selected') && plan) {
+                                                pricingInput.value = plan.pricing_id;
                                             }
+                                        });
+
+                                        updateSummary();
+                                    }
+
+                                    function updateSummary() {
+                                        var selectedCard = document.querySelector('.wink-tier-card-premium.selected');
+                                        var bottomBar = document.getElementById('wink-floating-summary');
+                                        var summaryText = document.getElementById('wink-summary-text');
+                                        var submitBtn = document.getElementById('wink-request-submit-btn');
+
+                                        if (selectedCard && selectedCard.dataset.pricingId) {
+                                            pricingInput.value = selectedCard.dataset.pricingId;
+                                            summaryText.textContent = 'Selected: ' + selectedCard.dataset.tierName + ' (' + (toggle.checked ? 'Annual' : 'Monthly') + ')';
+                                            if (bottomBar) bottomBar.classList.add('visible');
+                                            if (submitBtn) submitBtn.disabled = false;
+                                        } else {
+                                            if (bottomBar) bottomBar.classList.remove('visible');
+                                            if (submitBtn) submitBtn.disabled = true;
                                         }
                                     }
-                                    document.querySelectorAll('input.wink-cycle-radio').forEach(function(r){ r.addEventListener('change', updatePrices); });
-                                    document.querySelectorAll('input.wink-tier-radio').forEach(function(r){ r.addEventListener('change', updatePrices); });
-                                    // Make the whole card clickable
-                                    document.querySelectorAll('.wink-tier-option').forEach(function(card) {
-                                        card.addEventListener('click', function(){
-                                            var radio = card.querySelector('input.wink-tier-radio');
-                                            if (radio) { radio.checked = true; updatePrices(); }
+
+                                    toggle.addEventListener('change', updateAll);
+
+                                    document.querySelectorAll('.wink-tier-card-premium').forEach(function(card) {
+                                        card.addEventListener('click', function() {
+                                            document.querySelectorAll('.wink-tier-card-premium').forEach(c => c.classList.remove('selected'));
+                                            card.classList.add('selected');
+                                            var radio = card.querySelector('.wink-tier-radio');
+                                            if (radio) radio.checked = true;
+                                            
+                                            // Trigger employee section update if needed
+                                            if (typeof updateVisibility === 'function') updateVisibility();
+                                            // Handle global step management if script in template is available
+                                            var globalRadio = document.querySelector('input.wink-tier-radio[value="' + card.dataset.tierId + '"]');
+                                            if (globalRadio && globalRadio !== radio) globalRadio.checked = true;
+
+                                            updateAll();
                                         });
                                     });
-                                    setTimeout(updatePrices, 50);
-                                })();
-                            </script>
-                        </div>
-
-                        <!-- OLD plan selector: only shown for non-bundle retainers -->
                         <div t-if="is_subscription_service and not wink_is_bundle and subscription_plans and not selected_plan" class="wink-retainer-plan-selector mb-4">
                             <h5 class="mb-3">Select Your Plan</h5>
                             <p class="text-muted small mb-2">Price is based on the plan you select.</p>
@@ -827,7 +812,7 @@
                             </t>
                         </div>
 
-                        <div class="mt-4 d-flex gap-2">
+                        <div class="mt-4 d-flex gap-2 mb-5">
                             <a t-attf-href="/my/requests/new" t-if="step == 1" class="btn btn-outline-secondary rounded-xl">Back</a>
                             <a t-attf-href="/services/#{product.id}" t-if="not step" class="btn btn-outline-secondary rounded-xl">Back</a>
                             <button type="submit" id="wink-request-submit-btn" class="btn btn-primary rounded-xl touch-target" style="background:var(--wink-primary); border-color:var(--wink-primary)">
@@ -837,6 +822,24 @@
                             </button>
                         </div>
                     </form>
+
+                    <!-- Floating Summary Bar (Bundle Only for now) -->
+                    <div id="wink-floating-summary" class="wink-bottom-bar d-flex align-items-center">
+                        <div class="container d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-primary-light p-2" style="background:rgba(0,85,183,0.1);">
+                                    <i class="fa fa-shopping-basket text-primary"/>
+                                </div>
+                                <div>
+                                    <div class="small text-muted fw-bold text-uppercase" style="font-size:0.7rem; letter-spacing:0.05em;">Current Selection</div>
+                                    <div id="wink-summary-text" class="fw-bold text-dark">—</div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="document.getElementById('wink-request-submit-btn').click()" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                Continue <i class="fa fa-arrow-right ms-2"/>
+                            </button>
+                        </div>
+                    </div>
                     </t>
                     <script>
                         (function() {

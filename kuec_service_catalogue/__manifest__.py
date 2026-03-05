@@ -55,6 +55,7 @@
     ],
     'assets': {
         'web.assets_frontend': [
+            'kuec_service_catalogue/static/src/css/wink_bundle.css',
             'kuec_service_catalogue/static/src/js/wink_catalogue.js',
         ],
     },

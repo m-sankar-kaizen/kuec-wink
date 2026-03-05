@@ -606,7 +606,20 @@ class WinkRequest(http.Controller):
                     
                     render_vals['billing_cycles'] = billing_cycles
                     render_vals['pricing_matrix'] = pricing_matrix
-                else:
+                    
+                    # Pre-identify cycles for the toggle
+                    monthly = None
+                    annual = None
+                    for c in billing_cycles:
+                        name = (c.get('name') or '').lower()
+                        if 'month' in name:
+                            monthly = c
+                        elif 'annual' in name or 'year' in name:
+                            annual = c
+                    if not monthly and billing_cycles:
+                        monthly = billing_cycles[0]
+                    render_vals['monthly_cycle'] = monthly
+                    render_vals['annual_cycle'] = annual
                     if not render_vals.get('selected_plan') and subscription_plans:
                         render_vals['selected_plan'] = subscription_plans[0]
 
