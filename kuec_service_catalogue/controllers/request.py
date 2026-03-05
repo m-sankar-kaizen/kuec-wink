@@ -856,7 +856,7 @@ class WinkRequest(http.Controller):
 
         # variant is already determined above based on tier
         price_unit = variant.list_price if variant else product.list_price
-        if use_recurring_prices:
+        if use_recurring_prices or is_bundle:
             if getattr(recurring_lines, '_name', None) == 'sale.subscription.plan' and selected_plan:
                 # Legacy sale.subscription.plan path
                 price_unit = getattr(selected_plan, 'price', None) or getattr(selected_plan, 'list_price', None) or price_unit
@@ -869,6 +869,7 @@ class WinkRequest(http.Controller):
                     getattr(selected_pricing, 'list_price', 0.0) or 
                     price_unit
                 )
+
 
         line_vals = {
             'product_id': variant.id,
@@ -934,7 +935,7 @@ class WinkRequest(http.Controller):
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
 
         # --- Set plan_id (sale.subscription.plan), recurrence_id, is_subscription, wink_recurring_pricing_id on order ---
-        if use_recurring_prices:
+        if use_recurring_prices or is_bundle:
             if selected_plan and getattr(selected_plan, '_name', None) == 'sale.subscription.plan':
                 write_vals = {}
                 if hasattr(order, 'plan_id'):
