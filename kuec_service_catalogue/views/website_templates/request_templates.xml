@@ -525,6 +525,11 @@
                              ================================================= -->
                         <div t-if="wink_is_bundle and billing_cycles" class="wink-bundle-configurator mb-5">
                             
+                            <!-- Help Alert from Ref -->
+                            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center gap-3 p-3 mb-4 rounded-3" style="background:#f0f7ff; color:#1e40af;">
+                                <i class="fa fa-info-circle fa-lg"/>
+                                <span class="fw-medium">Learn more about how <t t-esc="product.name"/> billing works</span>
+                            </div>
                             <!-- Billing Toggle: Monthly vs Annual -->
                             <div class="wink-billing-toggle-wrapper">
                                 <span class="wink-toggle-label active" id="label-monthly">Monthly</span>
@@ -544,23 +549,47 @@
                                          t-att-data-variant-id="td['tier'].product_variant_id.id"
                                          t-att-data-tier-name="td['tier'].name">
                                         
-                                        <div class="wink-tier-badge">Selected</div>
-                                        
-                                        <div class="wink-tier-header">
-                                            <div class="wink-tier-name" t-esc="td['tier'].name"/>
-                                            <div class="wink-tier-price-wrapper">
-                                                <span class="wink-tier-currency">AED</span>
-                                                <span class="wink-tier-amount">—</span>
-                                                <span class="wink-tier-period">/mo</span>
-                                            </div>
+                                        <!-- Secondary Badge from Ref -->
+                                        <div class="wink-tier-secondary-badge">
+                                            <t t-if="td_index == 0">No User Minimum</t>
+                                            <t t-elif="td_index == 1">No User Minimum</t>
+                                            <t t-elif="td_index == 2">Over 50 Users</t>
+                                            <t t-else="">Over 100 Users</t>
                                         </div>
 
-                                        <div class="wink-tier-description" t-esc="td['tier'].description or 'Comprehensive service bundle.'"/>
+                                        <div class="wink-tier-icon-box">
+                                            <t t-if="td_index == 0"><i class="fa fa-line-chart"/></t>
+                                            <t t-elif="td_index == 1"><i class="fa fa-clock-o"/></t>
+                                            <t t-elif="td_index == 2"><i class="fa fa-area-chart"/></t>
+                                            <t t-else=""><i class="fa fa-infinity"/></t>
+                                        </div>
+                                        
+                                        <div class="wink-tier-name" t-esc="td['tier'].name"/>
+                                        
+                                        <div class="wink-tier-price-wrapper">
+                                            <div class="wink-tier-amount-row">
+                                                <span class="wink-tier-amount">—</span>
+                                            </div>
+                                            <span class="wink-tier-price-subtext">Per seat / a month. Billed <span class="wink-cycle-label">monthly</span>.</span>
+                                        </div>
+
+                                        <button type="button" t-attf-class="wink-select-btn touch-target #{'wink-btn-primary' if td_index &lt; 2 else 'wink-btn-outline'}">
+                                            <t t-if="td_index &lt; 2">Subscribe</t>
+                                            <t t-else="">Contact Sales</t>
+                                        </button>
+
+                                        <!-- Feature Progression Header -->
+                                        <div class="wink-tier-progression-header">
+                                            <t t-if="td_index == 0"><t t-esc="td['tier'].name"/> Plan includes:</t>
+                                            <t t-else="">Includes <t t-esc="tier_data[td_index-1]['tier'].name"/> Features, plus:</t>
+                                        </div>
 
                                         <ul class="wink-tier-features">
+                                            <!-- Logic: only show features that are NOT in the previous tier to avoid redundancy and match "plus" logic -->
+                                            <t t-set="prev_features" t-value="[i.service_product_id.id for i in tier_data[td_index-1]['items']] if td_index > 0 else []"/>
                                             <t t-foreach="td['items']" t-as="item">
-                                                <li class="wink-tier-feature-item">
-                                                    <i class="fa fa-check-circle"/>
+                                                <li t-if="item.service_product_id.id not in prev_features" class="wink-tier-feature-item">
+                                                    <i class="fa fa-check"/>
                                                     <span>
                                                         <t t-esc="item.description or item.service_product_id.name"/>
                                                         <t t-if="item.qty > 1"> (<t t-esc="item.qty"/>x)</t>
@@ -568,10 +597,6 @@
                                                 </li>
                                             </t>
                                         </ul>
-
-                                        <button type="button" class="btn btn-outline-primary wink-select-btn touch-target">
-                                            Select <t t-esc="td['tier'].name"/>
-                                        </button>
                                         
                                         <!-- Hidden Radio for standard submission -->
                                         <input type="radio" name="tier_id" class="d-none wink-tier-radio" 
@@ -579,6 +604,22 @@
                                                t-att-value="td['tier'].id"/>
                                     </div>
                                 </t>
+                            </div>
+
+                            <!-- Footer Links from Ref -->
+                            <div class="row mt-5 pt-4 border-top border-light g-4">
+                                <div class="col-md-4">
+                                    <div class="fw-bold small text-dark mb-1">Not sure which one to choose?</div>
+                                    <a href="#" class="text-primary small fw-bold">See All Features and Compare Plans</a>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="fw-bold small text-dark mb-1">Can't see your plan on this page?</div>
+                                    <div class="text-muted small">You might be on a legacy plan.</div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="fw-bold small text-dark mb-1">Canceling your plan?</div>
+                                    <a href="#" class="text-muted small">Unsubscribe</a>
+                                </div>
                             </div>
 
                             <!-- Hidden State Management -->
@@ -628,10 +669,11 @@
                                             }
 
                                             var amountEl = card.querySelector('.wink-tier-amount');
-                                            var periodEl = card.querySelector('.wink-tier-period');
+                                            var cycleEl = card.querySelector('.wink-cycle-label');
                                             if (plan) {
-                                                amountEl.textContent = Number(plan.price).toLocaleString('en-US', {minimumFractionDigits:0});
-                                                periodEl.textContent = plan.period_label;
+                                                var symbol = plan.currency_symbol || 'AED';
+                                                amountEl.textContent = symbol + ' ' + Number(plan.price).toLocaleString('en-US', {minimumFractionDigits:2});
+                                                if (cycleEl) cycleEl.textContent = isAnnual ? 'annually' : 'monthly';
                                                 card.dataset.pricingId = plan.pricing_id;
                                             } else {
                                                 amountEl.textContent = '—';
@@ -664,6 +706,8 @@
                                     }
 
                                     toggle.addEventListener('change', updateAll);
+                                    labelMonthly.addEventListener('click', function() { toggle.checked = false; updateAll(); });
+                                    labelAnnual.addEventListener('click', function() { toggle.checked = true; updateAll(); });
 
                                     document.querySelectorAll('.wink-tier-card-premium').forEach(function(card) {
                                         card.addEventListener('click', function() {
