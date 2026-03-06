@@ -256,7 +256,7 @@
                     </div>
 
                     <!-- CR-2 Wizard stepper; UI-BUG-003 (FB-003): hide Employees step when not required -->
-                    <t t-if="step">
+                    <t t-if="step and not wink_is_bundle">
                         <div class="wink-stepper-row mb-4">
                             <div class="wink-stage-node" t-att-class="'wink-done' if step >= 1 else ''">
                                 <div class="wink-node-dot"><i t-if="step >= 1" class="fa fa-check"/></div>
@@ -525,11 +525,6 @@
                              ================================================= -->
                         <div t-if="wink_is_bundle and billing_cycles" class="wink-bundle-configurator mb-5">
                             
-                            <!-- Help Alert from Ref -->
-                            <div class="alert alert-info border-0 shadow-sm d-flex align-items-center gap-3 p-3 mb-4 rounded-3" style="background:#f0f7ff; color:#1e40af;">
-                                <i class="fa fa-info-circle fa-lg"/>
-                                <span class="fw-medium">Learn more about how <t t-esc="product.name"/> billing works</span>
-                            </div>
                             <!-- Billing Toggle: Monthly vs Annual -->
                             <div class="wink-billing-toggle-wrapper">
                                 <span class="wink-toggle-label active" id="label-monthly">Monthly</span>
@@ -549,33 +544,15 @@
                                          t-att-data-variant-id="td['tier'].product_variant_id.id"
                                          t-att-data-tier-name="td['tier'].name">
                                         
-                                        <!-- Secondary Badge from Ref -->
-                                        <div class="wink-tier-secondary-badge">
-                                            <t t-if="td_index == 0">No User Minimum</t>
-                                            <t t-elif="td_index == 1">No User Minimum</t>
-                                            <t t-elif="td_index == 2">Over 50 Users</t>
-                                            <t t-else="">Over 100 Users</t>
-                                        </div>
-
-                                        <div class="wink-tier-icon-box">
-                                            <t t-if="td_index == 0"><i class="fa fa-line-chart"/></t>
-                                            <t t-elif="td_index == 1"><i class="fa fa-clock-o"/></t>
-                                            <t t-elif="td_index == 2"><i class="fa fa-area-chart"/></t>
-                                            <t t-else=""><i class="fa fa-infinity"/></t>
-                                        </div>
-                                        
-                                        <div class="wink-tier-name" t-esc="td['tier'].name"/>
-                                        
                                         <div class="wink-tier-price-wrapper">
                                             <div class="wink-tier-amount-row">
                                                 <span class="wink-tier-amount">—</span>
                                             </div>
-                                            <span class="wink-tier-price-subtext">Per seat / a month. Billed <span class="wink-cycle-label">monthly</span>.</span>
+                                            <span class="wink-tier-price-subtext">Billed <span class="wink-cycle-label">monthly</span>.</span>
                                         </div>
 
-                                        <button type="button" t-attf-class="wink-select-btn touch-target #{'wink-btn-primary' if td_index &lt; 2 else 'wink-btn-outline'}">
-                                            <t t-if="td_index &lt; 2">Subscribe</t>
-                                            <t t-else="">Contact Sales</t>
+                                        <button type="button" class="wink-select-btn touch-target wink-btn-primary">
+                                            Subscribe
                                         </button>
 
                                         <!-- Feature Progression Header -->
@@ -584,11 +561,12 @@
                                             <t t-else="">Includes <t t-esc="tier_data[td_index-1]['tier'].name"/> Features, plus:</t>
                                         </div>
 
-                                        <ul class="wink-tier-features">
+                                        <ul class="wink-tier-features" t-attf-id="features_#{td['tier'].id}">
                                             <!-- Logic: only show features that are NOT in the previous tier to avoid redundancy and match "plus" logic -->
                                             <t t-set="prev_features" t-value="[i.service_product_id.id for i in tier_data[td_index-1]['items']] if td_index > 0 else []"/>
-                                            <t t-foreach="td['items']" t-as="item">
-                                                <li t-if="item.service_product_id.id not in prev_features" class="wink-tier-feature-item">
+                                            <t t-set="tier_items" t-value="[item for item in td['items'] if item.service_product_id.id not in prev_features]"/>
+                                            <t t-foreach="tier_items" t-as="item">
+                                                <li t-attf-class="wink-tier-feature-item #{'d-none tiered-feature' if item_index >= 10 else ''}">
                                                     <i class="fa fa-check"/>
                                                     <span>
                                                         <t t-esc="item.description or item.service_product_id.name"/>
@@ -596,6 +574,9 @@
                                                     </span>
                                                 </li>
                                             </t>
+                                            <li t-if="len(tier_items) > 10" class="wink-tier-feature-item mt-2">
+                                                <a href="#" class="wink-show-all-features small fw-bold" t-att-data-tier-id="td['tier'].id">See All Features</a>
+                                            </li>
                                         </ul>
                                         
                                         <!-- Hidden Radio for standard submission -->
@@ -606,21 +587,6 @@
                                 </t>
                             </div>
 
-                            <!-- Footer Links from Ref -->
-                            <div class="row mt-5 pt-4 border-top border-light g-4">
-                                <div class="col-md-4">
-                                    <div class="fw-bold small text-dark mb-1">Not sure which one to choose?</div>
-                                    <a href="#" class="text-primary small fw-bold">See All Features and Compare Plans</a>
-                                </div>
-                                <div class="col-md-4 text-center">
-                                    <div class="fw-bold small text-dark mb-1">Can't see your plan on this page?</div>
-                                    <div class="text-muted small">You might be on a legacy plan.</div>
-                                </div>
-                                <div class="col-md-4 text-end">
-                                    <div class="fw-bold small text-dark mb-1">Canceling your plan?</div>
-                                    <a href="#" class="text-muted small">Unsubscribe</a>
-                                </div>
-                            </div>
 
                             <!-- Hidden State Management -->
                             <input type="hidden" name="bundle_recurrence_id" id="wink-hidden-recurrence-id" 
@@ -693,15 +659,18 @@
                                         var bottomBar = document.getElementById('wink-floating-summary');
                                         var summaryText = document.getElementById('wink-summary-text');
                                         var submitBtn = document.getElementById('wink-request-submit-btn');
+                                        var floatBtn = document.getElementById('wink-floating-continue-btn');
 
                                         if (selectedCard &amp;&amp; selectedCard.dataset.pricingId) {
                                             pricingInput.value = selectedCard.dataset.pricingId;
                                             summaryText.textContent = 'Selected: ' + selectedCard.dataset.tierName + ' (' + (toggle.checked ? 'Annual' : 'Monthly') + ')';
                                             if (bottomBar) bottomBar.classList.add('visible');
                                             if (submitBtn) submitBtn.disabled = false;
+                                            if (floatBtn) floatBtn.disabled = false;
                                         } else {
                                             if (bottomBar) bottomBar.classList.remove('visible');
                                             if (submitBtn) submitBtn.disabled = true;
+                                            if (floatBtn) floatBtn.disabled = true;
                                         }
                                     }
 
@@ -728,6 +697,27 @@
 
                                     // Initial load
                                     setTimeout(updateAll, 100);
+
+                                    var floatBtn = document.getElementById('wink-floating-continue-btn');
+                                    if (floatBtn) {
+                                        floatBtn.addEventListener('click', function() {
+                                            var form = floatBtn.closest('form');
+                                            if (form) form.submit();
+                                        });
+                                    }
+
+                                    // Point 6: Show all features logic
+                                    document.querySelectorAll('.wink-show-all-features').forEach(function(link) {
+                                        link.addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            var tierId = link.dataset.tierId;
+                                            var container = document.getElementById('features_' + tierId);
+                                            container.querySelectorAll('.tiered-feature').forEach(function(item) {
+                                                item.classList.remove('d-none');
+                                            });
+                                            link.parentElement.remove();
+                                        });
+                                    });
                                 })();
                             </script>
                         </div>
@@ -811,9 +801,9 @@
                             </script>
                         </div>
 
-                        <!-- Common Fields: Start Date and Notes -->
+                        <!-- Common Fields: Notes Only for Bundles (Start Date hidden/default today) -->
                         <div class="row g-3 mt-4 pt-3 border-top">
-                            <div class="col-md-6">
+                            <div t-if="not wink_is_bundle" class="col-md-6">
                                 <label class="form-label text-danger fw-bold" for="request_start_date">
                                     <i class="fa fa-calendar me-1"/> Requested Start Date *
                                 </label>
@@ -822,6 +812,8 @@
                                        t-att-value="post.get('start_date') or ''"/>
                                 <div class="form-text">When would you like this service to begin?</div>
                             </div>
+                            <!-- Hidden input for bundles to ensure start_date is sent if needed, but logic also in controller -->
+                            <input t-if="wink_is_bundle" type="hidden" name="start_date" t-att-value="datetime.date.today().strftime('%Y-%m-%d')"/>
 
                             <div class="col-12">
                                 <label class="form-label fw-bold" for="request_notes">

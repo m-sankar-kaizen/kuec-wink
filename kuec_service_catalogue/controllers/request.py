@@ -767,15 +767,15 @@ class WinkRequest(http.Controller):
             if not change_from_order:
                 change_from_id = None
 
-        # Service request is per service, no quantity (always 1)
+        from datetime import date
         notes = post.get('notes') or False
-        start_date = post.get('start_date') or False
+        start_date = post.get('start_date') or date.today().strftime('%Y-%m-%d')
         if start_date:
             try:
                 from datetime import datetime
                 datetime.strptime(start_date, '%Y-%m-%d')
             except (ValueError, TypeError):
-                start_date = False
+                start_date = date.today().strftime('%Y-%m-%d')
         employee_ids = request.httprequest.form.getlist('employee_ids')
         employee_ids = [int(e) for e in employee_ids if str(e).isdigit()]
 
