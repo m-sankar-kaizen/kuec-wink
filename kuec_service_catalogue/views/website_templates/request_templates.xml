@@ -551,7 +551,9 @@
                                             <span class="wink-tier-price-subtext">Billed <span class="wink-cycle-label">monthly</span>.</span>
                                         </div>
 
-                                        <button type="button" class="wink-select-btn touch-target wink-btn-primary">
+                                        <button type="submit" name="tier_id" t-att-value="td['tier'].id"
+                                                t-attf-class="wink-select-btn touch-target wink-subscribe-btn #{'wink-btn-primary' if td['tier'].is_most_popular else 'wink-btn-outline'}"
+                                                t-att-data-tier-id="td['tier'].id">
                                             Subscribe
                                         </button>
 
@@ -579,10 +581,7 @@
                                             </li>
                                         </ul>
                                         
-                                        <!-- Hidden Radio for standard submission -->
-                                        <input type="radio" name="tier_id" class="d-none wink-tier-radio" 
-                                               t-att-id="'tier_radio_' + str(td['tier'].id)" 
-                                               t-att-value="td['tier'].id"/>
+                                        <!-- Tier ID stored in data-tier-id, submitted via single hidden input -->
                                     </div>
                                 </t>
                             </div>
@@ -643,6 +642,14 @@
                                                 card.dataset.pricingId = plan.pricing_id;
                                             } else {
                                                 amountEl.textContent = '—';
+                                                card.dataset.pricingId = '';
+                                            }
+
+                                            // Disable Subscribe when no pricing for current cycle
+                                            var subBtn = card.querySelector('.wink-subscribe-btn');
+                                            if (subBtn) {
+                                                subBtn.disabled = !plan;
+                                                subBtn.style.opacity = plan ? '1' : '0.4';
                                             }
 
                                             // If this card is selected, update the hidden pricing input
@@ -651,45 +658,48 @@
                                             }
                                         });
 
-                                        updateSummary();
-                                    }
-
-                                    function updateSummary() {
-                                        var selectedCard = document.querySelector('.wink-tier-card-premium.selected');
-                                        var bottomBar = document.getElementById('wink-floating-summary');
-                                        var summaryText = document.getElementById('wink-summary-text');
-                                        var submitBtn = document.getElementById('wink-request-submit-btn');
-                                        var floatBtn = document.getElementById('wink-floating-continue-btn');
-
-                                        if (selectedCard &amp;&amp; selectedCard.dataset.pricingId) {
-                                            pricingInput.value = selectedCard.dataset.pricingId;
-                                            summaryText.textContent = 'Selected: ' + selectedCard.dataset.tierName + ' (' + (toggle.checked ? 'Annual' : 'Monthly') + ')';
-                                            if (bottomBar) bottomBar.classList.add('visible');
-                                            if (submitBtn) submitBtn.disabled = false;
-                                            if (floatBtn) floatBtn.disabled = false;
-                                        } else {
-                                            if (bottomBar) bottomBar.classList.remove('visible');
-                                            if (submitBtn) submitBtn.disabled = true;
-                                            if (floatBtn) floatBtn.disabled = true;
-                                        }
                                     }
 
                                     toggle.addEventListener('change', updateAll);
                                     labelMonthly.addEventListener('click', function() { toggle.checked = false; updateAll(); });
                                     labelAnnual.addEventListener('click', function() { toggle.checked = true; updateAll(); });
 
+                                    // Subscribe buttons: set pricing hidden input before native submit.
+                                    // The button itself carries name="tier_id" value="{id}" so tier is
+                                    // automatically included in the POST by the browser.
+                                    document.querySelectorAll('.wink-subscribe-btn').forEach(function(btn) {
+                                        btn.addEventListener('click', function() {
+                                            var card = btn.closest('.wink-tier-card-premium');
+                                            if (!card) return;
+
+                                            // Set pricing from this card's current billing cycle
+                                            if (card.dataset.pricingId) {
+                                                pricingInput.value = card.dataset.pricingId;
+                                            }
+
+                                            // Ensure next_step is set to advance wizard
+                                            var form = btn.closest('form');
+                                            if (form) {
+                                                var nextStepInput = form.querySelector('input[name="next_step"]');
+                                                if (nextStepInput) nextStepInput.value = '2';
+                                            }
+                                            // Let native type="submit" handle form submission
+                                        });
+                                    });
+
+                                    // Card click just highlights (visual selection), doesn't submit
                                     document.querySelectorAll('.wink-tier-card-premium').forEach(function(card) {
-                                        card.addEventListener('click', function() {
+                                        card.addEventListener('click', function(e) {
+                                            // Don't trigger on Subscribe button clicks
+                                            if (e.target.closest('.wink-subscribe-btn')) return;
+
                                             document.querySelectorAll('.wink-tier-card-premium').forEach(function(c) { c.classList.remove('selected'); });
                                             card.classList.add('selected');
-                                            var radio = card.querySelector('.wink-tier-radio');
-                                            if (radio) radio.checked = true;
-                                            
-                                            // Trigger employee section update if needed
-                                            if (typeof updateVisibility === 'function') updateVisibility();
-                                            // Handle global step management if script in template is available
-                                            var globalRadio = document.querySelector('input.wink-tier-radio[value="' + card.dataset.tierId + '"]');
-                                            if (globalRadio &amp;&amp; globalRadio !== radio) globalRadio.checked = true;
+
+                                            // Update hidden pricing input on card click
+                                            if (card.dataset.pricingId) {
+                                                pricingInput.value = card.dataset.pricingId;
+                                            }
 
                                             updateAll();
                                         });
@@ -697,14 +707,6 @@
 
                                     // Initial load
                                     setTimeout(updateAll, 100);
-
-                                    var floatBtn = document.getElementById('wink-floating-continue-btn');
-                                    if (floatBtn) {
-                                        floatBtn.addEventListener('click', function() {
-                                            var form = floatBtn.closest('form');
-                                            if (form) form.submit();
-                                        });
-                                    }
 
                                     // Point 6: Show all features logic
                                     document.querySelectorAll('.wink-show-all-features').forEach(function(link) {
@@ -866,23 +868,6 @@
                         </div>
                     </form>
 
-                    <!-- Floating Summary Bar (Bundle Only for now) -->
-                    <div id="wink-floating-summary" class="wink-bottom-bar d-flex align-items-center">
-                        <div class="container d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-primary-light p-2" style="background:rgba(0,85,183,0.1);">
-                                    <i class="fa fa-shopping-basket text-primary"/>
-                                </div>
-                                <div>
-                                    <div class="small text-muted fw-bold text-uppercase" style="font-size:0.7rem; letter-spacing:0.05em;">Current Selection</div>
-                                    <div id="wink-summary-text" class="fw-bold text-dark">—</div>
-                                </div>
-                            </div>
-                            <button type="button" onclick="window.location.href='/my/requests/new?product_id=' + document.querySelector('input[name=\'product_id\']').value + '&amp;step=3'" class="btn btn-primary rounded-pill px-4 fw-bold">
-                                Continue <i class="fa fa-arrow-right ms-2"/>
-                            </button>
-                        </div>
-                    </div>
                     </t>
                     <script>
                         (function() {
@@ -1973,6 +1958,101 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- U-3: Inject My Bundles into Portal Dashboard -->
+        <template id="portal_my_home_bundles" name="Portal layout : bundles entry" inherit_id="portal.portal_my_home" customize_show="True" priority="25">
+            <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">My Bundles</t>
+                    <t t-set="url" t-value="'/my/bundles'"/>
+                    <t t-set="placeholder_count" t-value="'bundle_count'"/>
+                    <t t-set="count" t-value="bundle_count"/>
+                </t>
+            </xpath>
+        </template>
+
+        <!-- U-3: Entitlement Dashboard /my/bundles -->
+        <template id="portal_my_bundles" name="My Bundles — Entitlement Dashboard">
+            <t t-call="website.layout">
+                <div class="container mt-4 mb-5 wink-bundles-dashboard">
+                    <h1 class="page-header mb-1">My Bundles</h1>
+                    <p class="text-muted mb-4">Track your bundle subscriptions and activate included services.</p>
+
+                    <t t-if="not bundle_data">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <i class="fa fa-cube fa-3x text-muted mb-3 d-block"/>
+                                <h5 class="fw-bold mb-2">No active bundles</h5>
+                                <p class="text-muted mb-3">You don't have any active bundle subscriptions yet.</p>
+                                <a href="/services" class="btn btn-primary">Browse Services</a>
+                            </div>
+                        </div>
+                    </t>
+
+                    <t t-foreach="bundle_data" t-as="bd">
+                        <div class="card shadow-sm mb-4 border-0">
+                            <div class="card-header d-flex justify-content-between align-items-center py-3" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none;">
+                                <div>
+                                    <h5 class="mb-0 fw-bold"><t t-esc="bd['bundle_name']"/></h5>
+                                    <small class="opacity-75" t-if="bd['tier_name']"><t t-esc="bd['tier_name']"/> Plan — <t t-esc="bd['order'].name"/></small>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-center">
+                                        <div class="wink-bundle-progress-ring" style="background: rgba(255,255,255,0.2);">
+                                            <span style="color:white;"><t t-esc="bd['activated']"/>/<t t-esc="bd['total']"/></span>
+                                        </div>
+                                        <small class="d-block mt-1 opacity-75">activated</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="px-4 pt-3 pb-2">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="text-muted">Activation Progress</small>
+                                        <small class="fw-bold" style="color: #6366f1;"><t t-esc="bd['progress_pct']"/>%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px; border-radius: 999px;">
+                                        <div class="progress-bar" role="progressbar"
+                                             t-att-style="'width: %s%%; background: linear-gradient(90deg, #6366f1, #818cf8);' % bd['progress_pct']"
+                                             t-att-aria-valuenow="bd['progress_pct']" aria-valuemin="0" aria-valuemax="100"/>
+                                    </div>
+                                </div>
+                                <div class="p-4 d-flex flex-column gap-2">
+                                    <t t-foreach="bd['entitlements']" t-as="ent">
+                                        <div class="wink-entitlement-card">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <i t-attf-class="fa fa-cube #{'text-success' if ent.qty_activated > 0 else 'text-muted'}" style="font-size:1.3rem;"/>
+                                                <div>
+                                                    <div class="fw-semibold"><t t-esc="ent.name"/></div>
+                                                    <small class="text-muted">
+                                                        <t t-esc="ent.qty_activated"/> of <t t-esc="ent.qty_entitled"/> activated
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <t t-if="ent.state == 'available'">
+                                                    <span class="wink-entitlement-status available">Available</span>
+                                                </t>
+                                                <t t-elif="ent.state == 'fully_activated'">
+                                                    <span class="wink-entitlement-status activated">Activated</span>
+                                                </t>
+                                                <t t-elif="ent.state == 'expired'">
+                                                    <span class="wink-entitlement-status expired">Expired</span>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+                                <a t-attf-href="/my/requests/#{bd['order'].id}" class="btn btn-outline-primary btn-sm">View Full Order</a>
+                                <small class="text-muted"><t t-esc="bd['order'].date_order" t-options="{'widget': 'date'}"/></small>
+                            </div>
+                        </div>
+                    </t>
                 </div>
             </t>
         </template>

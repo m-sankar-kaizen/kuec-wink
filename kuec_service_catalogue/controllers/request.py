@@ -239,12 +239,23 @@ class WinkRequest(http.Controller):
                 next_step = None
             pid = self._parse_product_id(kwargs.get('product_id') or request.httprequest.form.get('product_id'))
             if next_step == 2 and pid:
+                _tier_kw = kwargs.get('tier_id', '')
+                _tier_form = request.httprequest.form.get('tier_id', '')
+                _pricing_kw = kwargs.get('selected_pricing_id', '')
+                _pricing_form = request.httprequest.form.get('selected_pricing_id', '')
+                import logging
+                _logger = logging.getLogger('wink.wizard.debug')
+                _logger.info(
+                    'WIZARD STEP1→2 POST: tier_id(kw=%s, form=%s) pricing(kw=%s, form=%s) all_form_keys=%s',
+                    _tier_kw, _tier_form, _pricing_kw, _pricing_form,
+                    list(request.httprequest.form.keys())
+                )
                 draft = {
                     'product_id': pid,
                     'start_date': kwargs.get('start_date') or request.httprequest.form.get('start_date') or '',
                     'notes': kwargs.get('notes') or request.httprequest.form.get('notes') or '',
-                    'selected_pricing_id': kwargs.get('selected_pricing_id') or request.httprequest.form.get('selected_pricing_id') or '',
-                    'tier_id': kwargs.get('tier_id') or request.httprequest.form.get('tier_id') or '',
+                    'selected_pricing_id': _pricing_kw or _pricing_form or '',
+                    'tier_id': _tier_kw or _tier_form or '',
                     'change_from_id': kwargs.get('change_from_id') or request.httprequest.form.get('change_from_id') or '',
                 }
                 self._wizard_set_draft(draft)
@@ -458,9 +469,17 @@ class WinkRequest(http.Controller):
             if wizard_draft and step in (2, 3):
                 post_data.update({k: v for k, v in wizard_draft.items() if v and k != 'employee_ids'})
             # CR-6: review step display (type_label, tier_name, plan_name, employee_names)
-            review_display = {'type_label': '', 'tier_name': '', 'plan_name': '', 'employee_names': []}
+            # CR-6: review step display (type_label, tier_name, plan_name, employee_names, price_str)
+            review_display = {
+                'type_label': '', 
+                'tier_name': '', 
+                'plan_name': '', 
+                'employee_names': [],
+                'price_str': '',
+                'currency_symbol': 'AED',
+            }
             if step == 3 and wizard_draft:
-                wink_is_bundle = product.commercial_structure == 'bundled' and product.wink_bundle_id
+                wink_is_bundle = (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False)) and product.wink_bundle_id
                 if wink_is_bundle:
                     review_display['type_label'] = 'Bundle'
                     tier_id = wizard_draft.get('tier_id')
@@ -472,7 +491,41 @@ class WinkRequest(http.Controller):
                             review_display['tier_name'] = ''
                     else:
                         review_display['tier_name'] = ''
-                    review_display['plan_name'] = ''
+                    
+                    # UI-013: Map plan name and price for bundles
+                    rec_id = wizard_draft.get('selected_pricing_id')
+                    if rec_id:
+                        try:
+                            plan_found = False
+                            # 1. Try native subscription plans
+                            plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+                            for p in (plans or []):
+                                if str(p.get('pricing_id')) == str(rec_id) or str(p.get('recurrence_id')) == str(rec_id):
+                                    review_display['plan_name'] = p.get('plan_name', '')
+                                    review_display['price_str'] = p.get('price_str', '')
+                                    review_display['currency_symbol'] = p.get('currency_symbol', 'AED')
+                                    plan_found = True
+                                    break
+                            # 2. Try fallback group plans
+                            if not plan_found and product.wink_subscription_group_id:
+                                for p in product.wink_subscription_group_id.plan_ids:
+                                    if str(p.id) == str(rec_id):
+                                        review_display['plan_name'] = p.name
+                                        months = 1
+                                        nl = p.name.lower()
+                                        if 'annual' in nl or 'year' in nl: months = 12
+                                        elif 'quarter' in nl: months = 3
+                                        tier_id = wizard_draft.get('tier_id')
+                                        t_price = 0.0
+                                        if tier_id:
+                                            tier = request.env['wink.bundle.tier'].sudo().browse(int(tier_id))
+                                            t_price = tier.price if tier.exists() else 0.0
+                                        price = float(p.monthly_std_price or t_price or 0.0) * months
+                                        review_display['price_str'] = '{:,.2f}'.format(price)
+                                        review_display['currency_symbol'] = 'AED'
+                                        break
+                        except Exception:
+                            pass
                 else:
                     review_display['tier_name'] = ''
                     if getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer':
@@ -576,12 +629,23 @@ class WinkRequest(http.Controller):
                                 for td in tier_data:
                                     tier = td['tier']
                                     vid = str(tier.product_variant_id.id) if tier.product_variant_id else 'None'
+                                    months = 1
+                                    name_lower = p.name.lower()
+                                    if 'annual' in name_lower or 'year' in name_lower:
+                                        months = 12
+                                    elif 'quarter' in name_lower:
+                                        months = 3
+                                    
+                                    price = float(p.monthly_std_price or tier.price or 0.0) * months
+                                    
                                     fake_plan = {
                                         'plan_name': p.name,
-                                        'price': tier.price,
+                                        'price': price,
+                                        'price_str': '{:,.2f}'.format(price),
                                         'period_label': '/' + p.name.lower(),
                                         'currency_symbol': 'AED',
                                         'pricing_id': p.id,
+                                        'recurrence_id': p.id, # needed for JS matching
                                     }
                                     if vid != 'None':
                                         pricing_matrix['%s|%s' % (p.id, vid)] = fake_plan
@@ -780,7 +844,7 @@ class WinkRequest(http.Controller):
         employee_ids = [int(e) for e in employee_ids if str(e).isdigit()]
 
         wink_is_bundle = (
-            product.commercial_structure == 'bundled'
+            (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False))
             and product.wink_bundle_id
         )
 
@@ -930,15 +994,21 @@ class WinkRequest(http.Controller):
             if getattr(recurring_lines, '_name', None) == 'sale.subscription.plan' and selected_plan:
                 # Legacy sale.subscription.plan path
                 price_unit = getattr(selected_plan, 'price', None) or getattr(selected_plan, 'list_price', None) or price_unit
-            elif selected_pricing and getattr(selected_pricing, 'exists', lambda: False)() and selected_pricing.exists():
-                # v2: selected_pricing is the pricing record (product.pricing or sale.subscription.pricing)
+                # v2: selected_pricing is the pricing record (product.pricing, sale.subscription.pricing, or wink.subscription.plan)
                 # Odoo 18 often uses 'price' (related/computed) or 'recurring_price'
-                price_unit = (
-                    getattr(selected_pricing, 'price', 0.0) or 
-                    getattr(selected_pricing, 'recurring_price', 0.0) or 
-                    getattr(selected_pricing, 'list_price', 0.0) or 
-                    price_unit
-                )
+                price_unit = getattr(selected_pricing, 'price', 0.0) or getattr(selected_pricing, 'recurring_price', 0.0)
+                
+                # Fallback: if selected_pricing is wink.subscription.plan, normalize to the period
+                if not price_unit and getattr(selected_pricing, '_name', None) == 'wink.subscription.plan':
+                    months = 1
+                    name_lower = selected_pricing.name.lower()
+                    if 'annual' in name_lower or 'year' in name_lower:
+                        months = 12
+                    elif 'quarter' in name_lower:
+                        months = 3
+                    price_unit = float(selected_pricing.monthly_std_price or 0.0) * months
+                
+                price_unit = price_unit or getattr(selected_pricing, 'list_price', 0.0) or price_unit
 
 
         line_vals = {
@@ -1144,9 +1214,9 @@ class WinkRequest(http.Controller):
 
         # UI-013: Redirect with submitted=1 to show Request Submitted success block
         self._wizard_clear_draft()
-        # Phase 6: If price is confirmed (priced bundle), redirect directly to SO portal page for checkout
+        # Phase 6 & 7.1: If price is confirmed (priced bundle), redirect directly to SO portal page with pay_now=1
         if order.wink_price_confirmed:
-            return request.redirect(f'/my/orders/{order.id}')
+            return request.redirect(f'/my/orders/{order.id}?pay_now=1')
         return request.redirect(f'/my/requests/{order.id}?submitted=1')
 
     @http.route('/my/requests/<int:order_id>', type='http', auth='user', website=True)
@@ -1538,7 +1608,7 @@ class WinkRequest(http.Controller):
                         current_recurrence_id = rec.id
                     break
 
-        wink_is_bundle = (product.commercial_structure == 'bundled' and product.wink_bundle_id)
+        wink_is_bundle = ((product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False)) and product.wink_bundle_id)
         current_tier = order.wink_bundle_tier_id if wink_is_bundle else None
 
         target_plans_data = []
