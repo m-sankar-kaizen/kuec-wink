@@ -247,11 +247,12 @@ class ProductTemplate(models.Model):
             
             variant_id = None
             variant_attribute_names = []
+            is_bundle_product = self.commercial_structure == 'bundled' or getattr(self, 'wink_is_bundle', False)
             if hasattr(line, 'product_variant_ids') and line.product_variant_ids and len(self.product_variant_ids) > 1:
                 v = line.product_variant_ids[0]
                 variant_id = v.id
                 variant_attribute_names = v.product_template_attribute_value_ids.mapped('name')
-                if self.commercial_structure != 'bundled':
+                if not is_bundle_product:
                     variant_name = ", ".join(variant_attribute_names)
                     if variant_name:
                         name = f"{variant_name} ({name})"
@@ -259,7 +260,7 @@ class ProductTemplate(models.Model):
                 v = line.product_id
                 variant_id = v.id
                 variant_attribute_names = v.product_template_attribute_value_ids.mapped('name')
-                if self.commercial_structure != 'bundled':
+                if not is_bundle_product:
                     variant_name = ", ".join(variant_attribute_names)
                     if variant_name:
                         name = f"{variant_name} ({name})"

@@ -1,13 +1,14 @@
-/* WINK Bundle Configuratior - Reference Image Parity */
+/* WINK Bundle Configurator - Enhanced UI/UX */
 
 :root {
     --wink-bundle-card-bg: #ffffff;
     --wink-bundle-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 40px rgba(0, 0, 0, 0.03);
     --wink-bundle-card-hover-shadow: 0 20px 50px rgba(0, 85, 183, 0.1);
     --wink-bundle-accent: #6366f1;
-    /* Purple/Indigo from ref */
     --wink-bundle-border-radius: 12px;
     --wink-bundle-transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --wink-success: #10b981;
+    --wink-warning: #f59e0b;
 }
 
 /* Main Container - Clean and Minimal */
@@ -18,7 +19,9 @@
     box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);
 }
 
-/* Refined Billing Toggle (Boxy like Ref) */
+/* ============================
+   BILLING TOGGLE (U-5: Animated)
+   ============================ */
 .wink-billing-toggle-wrapper {
     display: flex;
     justify-content: flex-end;
@@ -40,6 +43,7 @@
     cursor: pointer;
     border-radius: 6px;
     transition: var(--wink-bundle-transition);
+    user-select: none;
 }
 
 .wink-toggle-label.active {
@@ -48,12 +52,33 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Hide standard slider, we use label-based toggle logic in JS now */
+/* U-6: Savings badge in toggle */
+.wink-savings-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    margin-left: 0.5rem;
+    animation: pulseSavings 2s ease-in-out infinite;
+    vertical-align: middle;
+}
+
+@keyframes pulseSavings {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Hide standard slider */
 .wink-switch {
     display: none;
 }
 
-/* Tier Grid */
+/* ============================
+   TIER GRID
+   ============================ */
 .wink-tier-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -71,6 +96,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: var(--wink-bundle-card-shadow);
+    animation: fadeInUp 0.5s ease forwards;
 }
 
 .wink-tier-card-premium:hover {
@@ -80,6 +106,46 @@
 
 .wink-tier-card-premium.selected {
     border: 2px solid var(--wink-bundle-accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* U-4: Most Popular card ring */
+.wink-tier-card-premium.wink-most-popular {
+    border: 2px solid var(--wink-warning);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15), var(--wink-bundle-card-shadow);
+}
+
+.wink-tier-card-premium.wink-most-popular.selected {
+    border-color: var(--wink-bundle-accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.wink-tier-card-premium:nth-child(2) {
+    animation-delay: 0.1s;
+}
+.wink-tier-card-premium:nth-child(3) {
+    animation-delay: 0.2s;
+}
+.wink-tier-card-premium:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+/* ============================
+   U-4: MOST POPULAR BADGE
+   ============================ */
+.wink-popular-ribbon {
+    position: absolute;
+    top: -1px;
+    right: 1.5rem;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.4rem 0.8rem 0.35rem;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 /* Ref Icons & Badges */
@@ -107,6 +173,9 @@
     margin-bottom: 0.5rem;
 }
 
+/* ============================
+   U-5: ANIMATED PRICE DISPLAY
+   ============================ */
 .wink-tier-price-wrapper {
     margin-bottom: 1.5rem;
 }
@@ -118,12 +187,44 @@
     display: block;
     line-height: 1;
     margin-bottom: 4px;
+    transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+/* U-5: Animated slide-in when price changes */
+.wink-tier-amount.wink-price-changing {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.wink-tier-amount.wink-price-entered {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .wink-tier-price-subtext {
     font-size: 0.85rem;
     color: #64748b;
     display: block;
+}
+
+/* U-6: Crossed-out monthly equivalent for annual */
+.wink-price-original {
+    font-size: 1rem;
+    color: #94a3b8;
+    text-decoration: line-through;
+    margin-right: 0.5rem;
+    font-weight: 600;
+}
+
+.wink-price-savings-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    margin-top: 0.35rem;
 }
 
 /* Feature Progression */
@@ -164,6 +265,8 @@
     font-weight: 700;
     font-size: 0.95rem;
     transition: var(--wink-bundle-transition);
+    border: none;
+    cursor: pointer;
 }
 
 .wink-btn-primary {
@@ -187,6 +290,101 @@
     background: #f5f3ff;
 }
 
+/* ============================
+   U-1: TIER COMPARISON TABLE
+   ============================ */
+.wink-comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.wink-comparison-table th {
+    background: #f8fafc;
+    padding: 1rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.wink-comparison-table th.wink-popular-col {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-bottom-color: #f59e0b;
+}
+
+.wink-comparison-table td {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.88rem;
+    color: #475569;
+}
+
+.wink-comparison-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.wink-comparison-table tr:hover td {
+    background: #fafbff;
+}
+
+.wink-comparison-check {
+    color: var(--wink-success);
+    font-size: 1rem;
+}
+
+.wink-comparison-cross {
+    color: #cbd5e1;
+    font-size: 0.85rem;
+}
+
+.wink-comparison-qty {
+    display: inline-block;
+    background: #ede9fe;
+    color: var(--wink-bundle-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+/* Toggle for comparison table */
+.wink-compare-toggle {
+    text-align: center;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.wink-compare-toggle a {
+    color: var(--wink-bundle-accent);
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.wink-compare-toggle a:hover {
+    text-decoration: underline;
+}
+
+.wink-comparison-wrapper {
+    display: none;
+    animation: fadeInUp 0.4s ease;
+}
+
+.wink-comparison-wrapper.visible {
+    display: block;
+}
+
 /* Floating Summary Bar */
 .wink-bottom-bar {
     position: fixed;
@@ -206,27 +404,204 @@
     transform: translateY(0);
 }
 
-/* Animations */
+/* ============================
+   U-3: ENTITLEMENT DASHBOARD
+   ============================ */
+.wink-bundles-dashboard {
+    padding: 2rem 0;
+}
+
+.wink-bundle-progress-ring {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--wink-bundle-accent);
+}
+
+.wink-entitlement-card {
+    background: white;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: var(--wink-bundle-transition);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.wink-entitlement-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: #e2e8f0;
+}
+
+.wink-entitlement-status {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.wink-entitlement-status.available {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.wink-entitlement-status.activated {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.wink-entitlement-status.expired {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* ============================
+   U-8: ACTIVATION MODAL
+   ============================ */
+.wink-activation-modal .modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.wink-activation-modal .modal-header {
+    background: linear-gradient(135deg, var(--wink-bundle-accent), #4f46e5);
+    color: white;
+    border: none;
+    padding: 1.5rem 2rem;
+}
+
+.wink-activation-modal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.wink-activation-modal .modal-body {
+    padding: 2rem;
+}
+
+.wink-activation-modal .modal-footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 1rem 2rem;
+}
+
+.wink-activation-loading {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+}
+
+.wink-activation-loading.active {
+    display: block;
+}
+
+.wink-activation-loading .spinner-border {
+    width: 2rem;
+    height: 2rem;
+    color: var(--wink-bundle-accent);
+}
+
+.wink-activation-result {
+    display: none;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.wink-activation-result.active {
+    display: block;
+}
+
+.wink-activation-result.success i {
+    font-size: 3rem;
+    color: var(--wink-success);
+    margin-bottom: 1rem;
+}
+
+.wink-activation-result.error i {
+    font-size: 3rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+/* ============================
+   ANIMATIONS
+   ============================ */
 @keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-.wink-tier-card-premium {
-    animation: fadeInUp 0.5s ease forwards;
+/* U-5: Price count-up animation helper */
+@keyframes priceSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.wink-tier-card-premium:nth-child(2) {
-    animation-delay: 0.1s;
+.wink-price-animate-in {
+    animation: priceSlideDown 0.35s ease forwards;
 }
 
-.wink-tier-card-premium:nth-child(4) {
-    animation-delay: 0.3s;
+/* ============================
+   RESPONSIVE (U-7 aspects)
+   ============================ */
+@media (max-width: 768px) {
+    .wink-tier-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .wink-tier-card-premium {
+        padding: 1.75rem 1.5rem;
+    }
+
+    .wink-tier-amount {
+        font-size: 2rem;
+    }
+
+    .wink-bundle-configurator {
+        padding: 1.5rem 1rem;
+    }
+
+    .wink-billing-toggle-wrapper {
+        margin-left: 0;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .wink-comparison-table {
+        font-size: 0.8rem;
+    }
+
+    .wink-comparison-table th,
+    .wink-comparison-table td {
+        padding: 0.5rem;
+    }
+
+    /* Horizontal scroll for comparison table on mobile */
+    .wink-comparison-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }

@@ -26,13 +26,19 @@
                         <field name="nature_id"/>
 
                         <separator string="Delivery"/>
-                        <field name="delivery_model" widget="radio" readonly="wink_is_bundle or commercial_structure == 'bundled'"/>
-                        <field name="request_frequency" widget="radio" invisible="wink_is_bundle"/>
-                        <field name="project_template_id" invisible="delivery_model != 'project'"/>
+                        <field name="delivery_model" widget="radio" readonly="wink_is_bundle or commercial_structure == 'bundled'"
+                               help="Project: one-time delivery with a defined scope. Retainer: recurring subscription-based delivery."/>
+                        <field name="request_frequency" widget="radio" invisible="wink_is_bundle"
+                               help="One Time: customer can request only once. Repeated: customer can request multiple times."/>
+                        <field name="project_template_id" invisible="delivery_model != 'project'"
+                               help="Odoo project template used to auto-create projects on order confirmation."/>
                         <separator string="Commercial" invisible="wink_is_bundle"/>
-                        <field name="commercial_structure" widget="radio" invisible="wink_is_bundle"/>
-                        <field name="wink_bundle_id" invisible="commercial_structure == 'bundled' and not wink_is_bundle"/>
-                        <field name="wink_subscription_group_id" invisible="delivery_model != 'retainer'"/>
+                        <field name="commercial_structure" widget="radio" invisible="wink_is_bundle"
+                               help="Standalone: sold independently. Bundled: only available inside a bundle. Flexible: can be standalone or bundled."/>
+                        <field name="wink_bundle_id" invisible="commercial_structure != 'bundled' or not wink_is_bundle"
+                               help="Link this product to a bundle package so tiers and services are configured there."/>
+                        <field name="wink_subscription_group_id" invisible="delivery_model != 'retainer'"
+                               help="Links this retainer service to its upgrade/downgrade/cancellation policy group with proration rules."/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
                         <field name="price_visibility" required="available_on_wink"/>

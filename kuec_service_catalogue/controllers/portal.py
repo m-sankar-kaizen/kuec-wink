@@ -28,7 +28,18 @@ class KuecCustomerPortal(CustomerPortal):
             ]
             request_count = request.env['sale.order'].sudo().search_count(request_domain)
             values['request_count'] = request_count
-        
+
+        # U-3: My Bundles Counter (confirmed orders with entitlements)
+        if not counters or 'bundle_count' in counters:
+            bundle_domain = [
+                ('message_partner_ids', 'child_of', [partner.id]),
+                ('wink_is_portal_request', '=', True),
+                ('state', 'in', ['sale', 'done']),
+                ('wink_entitlement_ids', '!=', False),
+            ]
+            bundle_count = request.env['sale.order'].sudo().search_count(bundle_domain)
+            values['bundle_count'] = bundle_count
+
         return values
 
     @http.route(['/my/requests', '/my/requests/page/<int:page>'], type='http', auth="user", website=True)
@@ -321,3 +332,47 @@ class KuecCustomerPortal(CustomerPortal):
             return request.redirect('/my/tickets')
         except Exception:
             return request.redirect('/my/ticket/new?error=create')
+
+    # U-3: Entitlement Dashboard — /my/bundles
+    @http.route(['/my/bundles'], type='http', auth='user', website=True)
+    def portal_my_bundles(self, **kw):
+        """Dedicated entitlement dashboard showing all active bundle subscriptions
+        with their service activation progress."""
+        partner = request.env.user.partner_id.commercial_partner_id
+        SaleOrder = request.env['sale.order'].sudo()
+        # Find all confirmed orders with bundle entitlements
+        domain = [
+            ('message_partner_ids', 'child_of', [partner.id]),
+            ('wink_is_portal_request', '=', True),
+            ('state', 'in', ['sale', 'done']),
+            ('wink_entitlement_ids', '!=', False),
+        ]
+        orders = SaleOrder.search(domain, order='date_order desc')
+
+        # Build bundle data for each order
+        bundle_data = []
+        for order in orders:
+            entitlements = order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)
+            total = len(entitlements)
+            activated = len(entitlements.filtered(lambda e: e.qty_activated > 0))
+            progress_pct = int((activated / total * 100)) if total > 0 else 0
+            tier_name = order.wink_bundle_tier_id.name if order.wink_bundle_tier_id else ''
+            bundle_name = ''
+            if order.wink_source_product_id and order.wink_source_product_id.wink_bundle_id:
+                bundle_name = order.wink_source_product_id.wink_bundle_id.name
+            bundle_data.append({
+                'order': order,
+                'entitlements': entitlements,
+                'total': total,
+                'activated': activated,
+                'progress_pct': progress_pct,
+                'tier_name': tier_name,
+                'bundle_name': bundle_name or (order.wink_source_product_id.name if order.wink_source_product_id else order.name),
+            })
+
+        values = {
+            'bundle_data': bundle_data,
+            'page_name': 'my_bundles',
+            'partner': partner,
+        }
+        return request.render('kuec_service_catalogue.portal_my_bundles', values)

@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
+# B-8: Audit Trail (mail.thread) on entitlements
+# T-3: Activation Idempotency (locking)
 
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 from odoo.tools.translate import _
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class WinkBundleEntitlement(models.Model):
     _name = 'wink.bundle.entitlement'
     _description = 'WINK Bundle Entitlement'
+    # B-8: Add mail.thread for dedicated audit trail per entitlement
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'sequence, id'
 
     order_id = fields.Many2one(
@@ -16,34 +23,43 @@ class WinkBundleEntitlement(models.Model):
         required=True,
         ondelete='cascade',
         index=True,
+        help='Parent sale order this entitlement belongs to.',
     )
     tier_id = fields.Many2one(
         'wink.bundle.tier',
         string='Bundle Tier',
         ondelete='set null',
+        help='The bundle tier this entitlement was generated from.',
     )
     service_product_id = fields.Many2one(
         'product.template',
         string='Service',
         required=True,
         ondelete='restrict',
+        help='The service product template this entitlement represents.',
     )
     name = fields.Char(
         string='Description',
         required=True,
+        tracking=True,
+        help='Human-readable service description shown on portal.',
     )
     sequence = fields.Integer(
         default=10,
+        help='Order of services in the bundle tier listing.',
     )
     qty_entitled = fields.Integer(
         string='Entitled Qty',
         default=1,
+        tracking=True,
         help='How many times the customer can activate this service.',
     )
     qty_activated = fields.Integer(
         string='Activated Qty',
         default=0,
         readonly=True,
+        tracking=True,
+        help='Number of times this service has been activated so far.',
     )
     state = fields.Selection(
         [
@@ -54,6 +70,8 @@ class WinkBundleEntitlement(models.Model):
         string='Status',
         compute='_compute_state',
         store=True,
+        tracking=True,
+        help='Current activation status of this entitlement.',
     )
     activated_line_ids = fields.One2many(
         'sale.order.line',
@@ -68,6 +86,11 @@ class WinkBundleEntitlement(models.Model):
         'employee_id',
         string='Selected Employees',
         help='Employees selected for this child service (bundle).',
+    )
+    # T-3: Idempotency lock field — prevents concurrent double-activation
+    _activation_lock = fields.Boolean(
+        default=False,
+        help='Internal flag to prevent concurrent activations. Reset after activation completes.',
     )
 
     def action_add_all_employees(self):
@@ -93,15 +116,38 @@ class WinkBundleEntitlement(models.Model):
                 rec.state = 'available'
 
     # WF-BND-001 / WF-BND-002 / WF-BND-005: per-activation employees & docs
+    # T-3: Activation Idempotency via SQL-level row lock
     def action_activate(self, employee_ids=None):
         """
         Customer or coordinator activates one unit of this
         entitlement. Creates a real sale.order.line on the
         confirmed SO, which triggers Odoo's native sale_project
         to create the Project/Task automatically.
+
+        T-3: Uses SQL SELECT FOR UPDATE NOWAIT to prevent
+        concurrent double-activation from simultaneous portal clicks.
         """
         self.ensure_one()
         order = self.order_id
+
+        # T-3: Acquire row-level lock to prevent concurrent activation
+        try:
+            self.env.cr.execute(
+                "SELECT id FROM wink_bundle_entitlement WHERE id = %s FOR UPDATE NOWAIT",
+                (self.id,)
+            )
+        except Exception:
+            raise UserError(_(
+                "This service is currently being activated. Please wait a moment and try again."
+            ))
+
+        # Re-read after lock to get latest qty_activated
+        self.env.cr.execute(
+            "SELECT qty_activated FROM wink_bundle_entitlement WHERE id = %s",
+            (self.id,)
+        )
+        row = self.env.cr.fetchone()
+        current_qty_activated = row[0] if row else self.qty_activated
 
         # No limit on reactivation: customer can activate as many times as needed
         if order.state not in ('sale', 'done'):
@@ -115,8 +161,8 @@ class WinkBundleEntitlement(models.Model):
                 "This bundle is no longer active. You cannot activate services from a cancelled or expired bundle."
             ))
 
-        # Phase 2: One-Time service activation guard
-        if self.service_product_id.request_frequency == 'one_time' and self.qty_activated >= 1:
+        # Phase 2: One-Time service activation guard (use locked value)
+        if self.service_product_id.request_frequency == 'one_time' and current_qty_activated >= 1:
             raise UserError(_(
                 "The service '%s' is a One-Time service and has already been activated."
             ) % self.service_product_id.name)
@@ -149,7 +195,7 @@ class WinkBundleEntitlement(models.Model):
         # Create a real SO line — Odoo natively creates
         # Project/Task because the SO is already confirmed.
         # Reactivation: 2nd+ activations get distinct line/task name (e.g. "Service (2)")
-        activation_num = self.qty_activated + 1
+        activation_num = current_qty_activated + 1
         line_name = self.name if activation_num <= 1 else _('%s (%s)') % (self.name, activation_num)
         line_vals = {
             'order_id': order.id,
@@ -165,11 +211,14 @@ class WinkBundleEntitlement(models.Model):
         if employee_ids:
             new_line.wink_selected_employee_ids = [(6, 0, list(map(int, employee_ids)))]
 
-        self.sudo().write({
-            'qty_activated': self.qty_activated + 1,
-        })
+        # T-3: Atomic update using SQL to avoid race condition
+        self.env.cr.execute(
+            "UPDATE wink_bundle_entitlement SET qty_activated = %s, write_date = NOW() AT TIME ZONE 'UTC' WHERE id = %s",
+            (activation_num, self.id)
+        )
+        self.invalidate_recordset(['qty_activated', 'state'])
 
-        # WF-BND-001 / WF-BND-005: log activation with employees
+        # B-8: Log activation to entitlement's own chatter (audit trail)
         try:
             employee_names = []
             if employee_ids:
@@ -179,13 +228,21 @@ class WinkBundleEntitlement(models.Model):
                 employee_names = [e.name for e in emps if e.exists()]
             user_name = self.env.user.partner_id.name or self.env.user.name or ''
             msg = (
-                "Bundle service <strong>%s</strong> activated "
+                "Service <strong>%s</strong> activated "
                 "(activation #%s). Order line #%s created."
-            ) % (self.name, self.qty_activated, new_line.id)
+            ) % (self.name, activation_num, new_line.id)
             if employee_names:
                 msg += " Employees: %s." % ", ".join(employee_names)
             if user_name:
-                msg += " Activated from portal by %s." % user_name
+                msg += " Activated by %s." % user_name
+
+            # B-8: Post to entitlement's own chatter
+            self.sudo().message_post(
+                body=msg,
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
+            # Also post to order chatter for backward compat
             order.message_post(
                 body=msg,
                 message_type='comment',
@@ -193,6 +250,6 @@ class WinkBundleEntitlement(models.Model):
             )
         except Exception:
             # Never block activation on logging issues
-            pass
+            _logger.warning("Failed to log activation for entitlement %s", self.id, exc_info=True)
 
         return new_line
