@@ -324,7 +324,9 @@ class WinkRequest(http.Controller):
             step = 1
 
         # UI-BUG-003 (FB-003): Redirect from step 2 to step 3 when product does not require employees
-        if step == 2 and product and not product.requires_employee_selection:
+        # Phase 6: Also skip for all bundles (employees selected at activation)
+        is_bundle_config = (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False))
+        if step == 2 and product and (not product.requires_employee_selection or is_bundle_config):
             draft = self._wizard_get_draft()
             if not draft.get('employee_ids'):
                 draft['employee_ids'] = []
@@ -910,29 +912,14 @@ class WinkRequest(http.Controller):
                         selected_plan = getattr(selected_pricing, 'recurring_plan_id', None) or getattr(selected_pricing, 'plan_id', None)
 
         # Validation: employees required when product or child service requires selection
+        # Phase 6: Only for standalone at this stage; bundles collect at activation
         if not wink_is_bundle:
             if product.requires_employee_selection and not employee_ids:
                 vals = self._get_request_form_vals(product, errors={'employee_ids': _('Please select at least one employee for this service.')}, post=post)
                 return request.render('kuec_service_catalogue.wink_request_form', vals)
         else:
-            try:
-                tier_id = int(post.get('tier_id', 0))
-            except (TypeError, ValueError):
-                tier_id = 0
-            tier = request.env['wink.bundle.tier'].sudo().browse(tier_id)
-            if tier.exists() and tier.bundle_id == product.wink_bundle_id:
-                missing = []
-                for idx, item in enumerate(tier.item_ids.sorted('sequence')):
-                    if item.service_product_id and item.service_product_id.requires_employee_selection:
-                        emp_ids = request.httprequest.form.getlist('employee_ids_%s_%s' % (tier.id, idx))
-                        emp_ids = [int(e) for e in emp_ids if str(e).isdigit()]
-                        if not emp_ids:
-                            missing.append(item.description or item.service_product_id.name)
-                if missing:
-                    vals = self._get_request_form_vals(product, errors={
-                        'employee_ids_bundle': _('Please select at least one employee for: %s') % ', '.join(missing)
-                    }, post=post)
-                    return request.render('kuec_service_catalogue.wink_request_form', vals)
+            # Bundle: skip employee validation at request stage
+            pass
 
         # variant is already determined above based on tier
         price_unit = variant.list_price if variant else product.list_price
@@ -1157,6 +1144,9 @@ class WinkRequest(http.Controller):
 
         # UI-013: Redirect with submitted=1 to show Request Submitted success block
         self._wizard_clear_draft()
+        # Phase 6: If price is confirmed (priced bundle), redirect directly to SO portal page for checkout
+        if order.wink_price_confirmed:
+            return request.redirect(f'/my/orders/{order.id}')
         return request.redirect(f'/my/requests/{order.id}?submitted=1')
 
     @http.route('/my/requests/<int:order_id>', type='http', auth='user', website=True)

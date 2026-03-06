@@ -58,6 +58,10 @@ class WinkBundleTier(models.Model):
         required=True,
         help="e.g. Starter, Professional, Enterprise",
     )
+    description = fields.Text(
+        string='Description',
+        help="Description of this tier and its specific benefits.",
+    )
     sequence = fields.Integer(
         default=10,
     )
