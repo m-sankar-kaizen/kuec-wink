@@ -92,7 +92,7 @@ class ProductTemplate(models.Model):
         if self.wink_is_bundle:
             self.delivery_model = 'retainer'
             self.recurring_invoice = True
-            self.commercial_structure = False
+            self.commercial_structure = 'bundled'
 
     @api.onchange('commercial_structure')
     def _onchange_commercial_structure(self):

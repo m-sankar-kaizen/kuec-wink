@@ -518,7 +518,8 @@ class WinkRequest(http.Controller):
             }
 
             # Bundle tier data; UI-BUG-005f (FB-005.8): bundle total for selected tier
-            if product.commercial_structure == 'bundled' and product.wink_bundle_id:
+            is_bundle_config = (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False))
+            if is_bundle_config and product.wink_bundle_id:
                 bundle = product.wink_bundle_id
                 tiers = bundle.tier_ids.sorted('sequence')
                 tier_data = []
@@ -555,7 +556,7 @@ class WinkRequest(http.Controller):
                 render_vals['subscription_plans'] = subscription_plans
                 render_vals['selected_plan'] = None  # bundles never pre-select
 
-                if product.commercial_structure == 'bundled':
+                if is_bundle_config:
                     seen_cycles = {}
                     billing_cycles = []
                     pricing_matrix = {}
