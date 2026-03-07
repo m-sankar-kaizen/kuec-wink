@@ -446,8 +446,13 @@ class KuecCustomerPortal(CustomerPortal):
             if order_has_docs_needed:
                 total_docs_needed += 1
 
+            bundle_obj = None
+            if order.wink_source_product_id and order.wink_source_product_id.wink_bundle_id:
+                bundle_obj = order.wink_source_product_id.wink_bundle_id
+
             bundle_data.append({
                 'order': order,
+                'bundle': bundle_obj,
                 'entitlements': entitlements,
                 'total': total,
                 'activated': activated_count,
@@ -475,3 +480,201 @@ class KuecCustomerPortal(CustomerPortal):
             'kpi_docs_needed': total_docs_needed,
         }
         return request.render('kuec_service_catalogue.portal_my_bundles', values)
+
+    # -------------------------------------------------------------------------
+    # Bundle Lifecycle — helper to load + authorize a bundle order
+    # -------------------------------------------------------------------------
+    def _wink_get_bundle_order(self, order_id):
+        """Load the bundle sale order for the current portal user.
+        Returns (order, error_redirect). error_redirect is non-None when access denied."""
+        partner = request.env.user.partner_id.commercial_partner_id
+        order = request.env['sale.order'].sudo().browse(int(order_id))
+        if not order.exists():
+            return None, request.redirect('/my/bundles')
+        # Ownership check
+        if order.partner_id.commercial_partner_id.id != partner.id:
+            return None, request.redirect('/my/bundles')
+        # Must be a bundle order
+        if not order.wink_entitlement_ids:
+            return None, request.redirect('/my/bundles')
+        return order, None
+
+    # -------------------------------------------------------------------------
+    # P3 — Cancel
+    # -------------------------------------------------------------------------
+    @http.route(['/my/bundles/<int:order_id>/cancel'], type='http', auth='user', website=True, methods=['GET'])
+    def portal_bundle_cancel_page(self, order_id, **kw):
+        """Show cancel preview page with refund calculation."""
+        order, err = self._wink_get_bundle_order(order_id)
+        if err:
+            return err
+        if order.state not in ('sale', 'done'):
+            return request.redirect('/my/bundles')
+        bundle = order._wink_bundle_get_policy()
+        if bundle and not bundle.allow_self_service_cancel:
+            return request.redirect('/my/bundles?error=cancel_not_allowed')
+
+        refund_info = order._wink_bundle_compute_refund()
+        return request.render('kuec_service_catalogue.wink_bundle_cancel_page', {
+            'order': order,
+            'bundle': bundle,
+            'refund_info': refund_info,
+            'tier': order.wink_bundle_tier_id,
+            'page_name': 'my_bundles',
+            'error': kw.get('error', ''),
+        })
+
+    @http.route(['/my/bundles/<int:order_id>/cancel'], type='http', auth='user', website=True, methods=['POST'], csrf=True)
+    def portal_bundle_cancel_submit(self, order_id, **post):
+        """Execute bundle cancellation."""
+        order, err = self._wink_get_bundle_order(order_id)
+        if err:
+            return err
+        if order.state not in ('sale', 'done'):
+            return request.redirect('/my/bundles')
+        reason = (post.get('cancel_reason') or '').strip()
+        confirm = post.get('confirm_cancel')
+        if not confirm:
+            return request.redirect(f'/my/bundles/{order_id}/cancel?error=confirm_required')
+        try:
+            result = order._wink_bundle_do_cancel(reason=reason)
+            refund_amount = result.get('refund_amount', 0.0)
+            credit_note = result.get('credit_note')
+            return request.render('kuec_service_catalogue.wink_bundle_cancel_done', {
+                'order': order,
+                'refund_amount': refund_amount,
+                'credit_note': credit_note,
+                'currency': order.currency_id,
+                'page_name': 'my_bundles',
+            })
+        except Exception as e:
+            return request.redirect(f'/my/bundles/{order_id}/cancel?error={str(e)[:80]}')
+
+    # -------------------------------------------------------------------------
+    # P4 — Upgrade
+    # -------------------------------------------------------------------------
+    @http.route(['/my/bundles/<int:order_id>/upgrade'], type='http', auth='user', website=True, methods=['GET'])
+    def portal_bundle_upgrade_page(self, order_id, **kw):
+        """Show available upgrade tiers with pro-rata charges."""
+        order, err = self._wink_get_bundle_order(order_id)
+        if err:
+            return err
+        if order.state not in ('sale', 'done'):
+            return request.redirect('/my/bundles')
+        bundle = order._wink_bundle_get_policy()
+        if bundle and not bundle.allow_self_service_upgrade:
+            return request.redirect('/my/bundles?error=upgrade_not_allowed')
+
+        current_tier = order.wink_bundle_tier_id
+        upgrade_tiers = []
+        if current_tier:
+            for tier in current_tier.upgrade_to_ids:
+                charge_info = order._wink_bundle_compute_upgrade_charge(tier)
+                upgrade_tiers.append({
+                    'tier': tier,
+                    'charge_amount': charge_info.get('charge_amount', 0.0),
+                    'remaining_days': charge_info.get('remaining_days', 0),
+                    'note': charge_info.get('note', ''),
+                })
+
+        return request.render('kuec_service_catalogue.wink_bundle_upgrade_page', {
+            'order': order,
+            'bundle': bundle,
+            'current_tier': current_tier,
+            'upgrade_tiers': upgrade_tiers,
+            'currency': order.currency_id,
+            'page_name': 'my_bundles',
+            'error': kw.get('error', ''),
+        })
+
+    @http.route(['/my/bundles/<int:order_id>/upgrade'], type='http', auth='user', website=True, methods=['POST'], csrf=True)
+    def portal_bundle_upgrade_submit(self, order_id, **post):
+        """Execute tier upgrade."""
+        order, err = self._wink_get_bundle_order(order_id)
+        if err:
+            return err
+        if order.state not in ('sale', 'done'):
+            return request.redirect('/my/bundles')
+        tier_id = post.get('tier_id')
+        if not tier_id:
+            return request.redirect(f'/my/bundles/{order_id}/upgrade?error=no_tier')
+        try:
+            result = order._wink_bundle_do_upgrade(int(tier_id))
+            charge_amount = result.get('charge_amount', 0.0)
+            new_tier = result.get('new_tier')
+            return request.render('kuec_service_catalogue.wink_bundle_change_done', {
+                'order': order,
+                'change_type': 'upgrade',
+                'new_tier': new_tier,
+                'amount': charge_amount,
+                'amount_label': 'Pro-rata charge',
+                'currency': order.currency_id,
+                'page_name': 'my_bundles',
+            })
+        except Exception as e:
+            return request.redirect(f'/my/bundles/{order_id}/upgrade?error={str(e)[:80]}')
+
+    # -------------------------------------------------------------------------
+    # P5 — Downgrade
+    # -------------------------------------------------------------------------
+    @http.route(['/my/bundles/<int:order_id>/downgrade'], type='http', auth='user', website=True, methods=['GET'])
+    def portal_bundle_downgrade_page(self, order_id, **kw):
+        """Show available downgrade tiers with pro-rata credits."""
+        order, err = self._wink_get_bundle_order(order_id)
+        if err:
+            return err
+        if order.state not in ('sale', 'done'):
+            return request.redirect('/my/bundles')
+        bundle = order._wink_bundle_get_policy()
+        if bundle and not bundle.allow_self_service_downgrade:
+            return request.redirect('/my/bundles?error=downgrade_not_allowed')
+
+        current_tier = order.wink_bundle_tier_id
+        downgrade_tiers = []
+        if current_tier:
+            for tier in current_tier.downgrade_to_ids:
+                credit_info = order._wink_bundle_compute_downgrade_credit(tier)
+                downgrade_tiers.append({
+                    'tier': tier,
+                    'credit_amount': credit_info.get('credit_amount', 0.0),
+                    'remaining_days': credit_info.get('remaining_days', 0),
+                    'policy': credit_info.get('policy', 'none'),
+                    'note': credit_info.get('note', ''),
+                })
+
+        return request.render('kuec_service_catalogue.wink_bundle_downgrade_page', {
+            'order': order,
+            'bundle': bundle,
+            'current_tier': current_tier,
+            'downgrade_tiers': downgrade_tiers,
+            'currency': order.currency_id,
+            'page_name': 'my_bundles',
+            'error': kw.get('error', ''),
+        })
+
+    @http.route(['/my/bundles/<int:order_id>/downgrade'], type='http', auth='user', website=True, methods=['POST'], csrf=True)
+    def portal_bundle_downgrade_submit(self, order_id, **post):
+        """Execute tier downgrade."""
+        order, err = self._wink_get_bundle_order(order_id)
+        if err:
+            return err
+        if order.state not in ('sale', 'done'):
+            return request.redirect('/my/bundles')
+        tier_id = post.get('tier_id')
+        if not tier_id:
+            return request.redirect(f'/my/bundles/{order_id}/downgrade?error=no_tier')
+        try:
+            result = order._wink_bundle_do_downgrade(int(tier_id))
+            credit_amount = result.get('credit_amount', 0.0)
+            new_tier = result.get('new_tier')
+            return request.render('kuec_service_catalogue.wink_bundle_change_done', {
+                'order': order,
+                'change_type': 'downgrade',
+                'new_tier': new_tier,
+                'amount': credit_amount,
+                'amount_label': 'Credit note issued',
+                'currency': order.currency_id,
+                'page_name': 'my_bundles',
+            })
+        except Exception as e:
+            return request.redirect(f'/my/bundles/{order_id}/downgrade?error={str(e)[:80]}')

@@ -36,9 +36,7 @@
                     <group>
                         <group>
                             <field name="active" widget="boolean_toggle"/>
-                        </group>
-                        <group>
-                            <field name="tier_count" string="Tiers"/>
+                            <field name="tier_count" string="Tiers" readonly="1"/>
                         </group>
                     </group>
                     <field name="description" placeholder="Optional bundle description..."/>
@@ -56,6 +54,17 @@
                                     <button name="action_open_tier_services" type="object" string="Add / edit services" class="btn-link" icon="fa-arrow-right"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="Lifecycle Policy" name="lifecycle_policy">
+                            <group string="Self-Service Permissions">
+                                <field name="allow_self_service_upgrade"/>
+                                <field name="allow_self_service_downgrade"/>
+                                <field name="allow_self_service_cancel"/>
+                            </group>
+                            <group string="Refund / Credit Policy">
+                                <field name="cancel_refund_policy"/>
+                                <field name="downgrade_credit_policy"/>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
@@ -96,6 +105,24 @@
                                     <field name="description"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="Upgrade / Downgrade" name="tier_changes">
+                            <group>
+                                <group string="Pricing">
+                                    <field name="price" string="Annual / Full Price"/>
+                                    <field name="price_monthly" string="Standard Monthly Price"/>
+                                </group>
+                            </group>
+                            <group string="Allowed Changes">
+                                <field name="upgrade_to_ids"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       string="Customers Can Upgrade To"/>
+                                <field name="downgrade_to_ids"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       string="Customers Can Downgrade To"/>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>

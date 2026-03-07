@@ -48,6 +48,8 @@
         'views/kuec_document_submission_views.xml',
         'views/website_templates/wink_catalogue_page.xml',
         'views/website_templates/project_portal_templates.xml',
+        'views/website_templates/wink_bundle_lifecycle_templates.xml',
+        'views/wink_bundle_change_log_views.xml',
     ],
     'demo': [
         'data/demo_data.xml',

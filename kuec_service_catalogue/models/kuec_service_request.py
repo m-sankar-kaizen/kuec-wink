@@ -142,6 +142,31 @@ class SaleOrderWink(models.Model):
         'order_id',
         string='Bundle Entitlements',
     )
+
+    # --- Bundle Lifecycle Fields ---
+    wink_bundle_start_date = fields.Date(
+        string='Bundle Start Date',
+        copy=False,
+        help='Date when the current bundle billing period started. Used for pro-rata refund/charge calculations.',
+    )
+    wink_bundle_end_date = fields.Date(
+        string='Bundle End Date / Next Renewal',
+        copy=False,
+        help='Date when the current bundle billing period ends (next renewal). Used for pro-rata calculations.',
+    )
+    wink_pending_downgrade_tier_id = fields.Many2one(
+        'wink.bundle.tier',
+        string='Pending Downgrade Tier',
+        ondelete='set null',
+        copy=False,
+        help='When a downgrade is scheduled for next billing cycle, this holds the target tier until the cycle renews.',
+    )
+    wink_bundle_change_log_ids = fields.One2many(
+        'wink.bundle.change.log',
+        'order_id',
+        string='Bundle Change History',
+        readonly=True,
+    )
     # ISSUE-006: Idempotent cron — store which day-offsets already sent (e.g. "30,14,7").
     wink_expiry_reminder_sent_days = fields.Char(
         string='Expiry reminder sent for days',
@@ -518,6 +543,440 @@ class SaleOrderWink(models.Model):
         ])
         if employees:
             self.wink_selected_employee_ids = [(6, 0, employees.ids)]
+
+    # =========================================================================
+    # BUNDLE LIFECYCLE — P2: Refund calculator + cancel/upgrade/downgrade
+    # =========================================================================
+
+    def _wink_bundle_get_policy(self):
+        """Return the wink.bundle record for this order's source product, or None."""
+        self.ensure_one()
+        product = self.wink_source_product_id
+        if product and product.wink_bundle_id:
+            return product.wink_bundle_id
+        return None
+
+    def _wink_bundle_remaining_days(self):
+        """Return (remaining_days, total_days) for the current bundle billing period.
+        Returns (0, 0) when start/end date not configured or period already elapsed."""
+        self.ensure_one()
+        from datetime import date as date_cls
+        today = date_cls.today()
+        start = self.wink_bundle_start_date
+        end = self.wink_bundle_end_date
+        if not start or not end or end <= today:
+            return 0, 0
+        remaining = (end - today).days
+        total = (end - start).days
+        return max(remaining, 0), max(total, 1)
+
+    def _wink_bundle_compute_refund(self):
+        """Compute prorated refund amount for bundle cancellation based on bundle policy.
+
+        Returns dict with: remaining_days, total_days, refund_amount, policy, note.
+        Returns refund_amount=0 when no active period or policy is 'none'.
+        """
+        self.ensure_one()
+        remaining_days, total_days = self._wink_bundle_remaining_days()
+        bundle = self._wink_bundle_get_policy()
+        tier = self.wink_bundle_tier_id
+
+        if not bundle or not tier:
+            return {
+                'remaining_days': remaining_days, 'total_days': total_days,
+                'refund_amount': 0.0, 'policy': 'none',
+                'note': 'No bundle or tier configured.',
+            }
+
+        policy = bundle.cancel_refund_policy or 'none'
+
+        if policy == 'none' or remaining_days <= 0:
+            return {
+                'remaining_days': remaining_days, 'total_days': total_days,
+                'refund_amount': 0.0, 'policy': policy,
+                'note': 'No refund per policy.' if policy == 'none' else 'No remaining days in period.',
+            }
+
+        if policy == 'monthly_rate':
+            # Use standard monthly price — yearly discount is forfeited on cancellation
+            monthly_price = tier.price_monthly or 0.0
+            if not monthly_price and total_days > 0:
+                # Fallback: derive monthly equivalent from annual price
+                monthly_price = tier.price / max(total_days / 30.0, 1)
+            daily_rate = monthly_price / 30.0
+            refund_amount = round(daily_rate * remaining_days, 2)
+            note = (
+                f'Monthly rate policy: ({monthly_price:.2f} / 30) × {remaining_days} days'
+                f' = {refund_amount:.2f} (yearly discount forfeited)'
+            )
+        else:  # pro_rata
+            refund_ratio = remaining_days / total_days
+            refund_amount = round((tier.price or 0.0) * refund_ratio, 2)
+            note = (
+                f'Pro-rata: {tier.price:.2f} × ({remaining_days}/{total_days})'
+                f' = {refund_amount:.2f}'
+            )
+
+        return {
+            'remaining_days': remaining_days,
+            'total_days': total_days,
+            'refund_amount': max(refund_amount, 0.0),
+            'policy': policy,
+            'note': note,
+        }
+
+    def _wink_bundle_compute_upgrade_charge(self, new_tier):
+        """Compute pro-rata charge amount for upgrading from current tier to new_tier.
+        Returns dict: remaining_days, total_days, charge_amount, note.
+        """
+        self.ensure_one()
+        remaining_days, total_days = self._wink_bundle_remaining_days()
+        current_tier = self.wink_bundle_tier_id
+        price_delta = (new_tier.price or 0.0) - (current_tier.price if current_tier else 0.0)
+        if price_delta <= 0 or remaining_days <= 0 or total_days <= 0:
+            return {
+                'remaining_days': remaining_days, 'total_days': total_days,
+                'charge_amount': 0.0,
+                'note': 'No upgrade charge (price delta ≤ 0 or no remaining period).',
+            }
+        charge_amount = round(price_delta * (remaining_days / total_days), 2)
+        return {
+            'remaining_days': remaining_days,
+            'total_days': total_days,
+            'charge_amount': max(charge_amount, 0.0),
+            'note': (
+                f'Upgrade charge: {price_delta:.2f} × ({remaining_days}/{total_days})'
+                f' = {charge_amount:.2f}'
+            ),
+        }
+
+    def _wink_bundle_compute_downgrade_credit(self, new_tier):
+        """Compute pro-rata credit for downgrading from current tier to new_tier.
+        Returns dict: remaining_days, total_days, credit_amount, note.
+        """
+        self.ensure_one()
+        bundle = self._wink_bundle_get_policy()
+        policy = bundle.downgrade_credit_policy if bundle else 'none'
+        remaining_days, total_days = self._wink_bundle_remaining_days()
+        current_tier = self.wink_bundle_tier_id
+        price_delta = (current_tier.price if current_tier else 0.0) - (new_tier.price or 0.0)
+        if policy == 'none' or price_delta <= 0 or remaining_days <= 0 or total_days <= 0:
+            return {
+                'remaining_days': remaining_days, 'total_days': total_days,
+                'credit_amount': 0.0, 'policy': policy,
+                'note': 'No downgrade credit per policy.' if policy == 'none' else 'No remaining days.',
+            }
+        credit_amount = round(price_delta * (remaining_days / total_days), 2)
+        return {
+            'remaining_days': remaining_days,
+            'total_days': total_days,
+            'credit_amount': max(credit_amount, 0.0),
+            'policy': policy,
+            'note': (
+                f'Downgrade credit: {price_delta:.2f} × ({remaining_days}/{total_days})'
+                f' = {credit_amount:.2f}'
+            ),
+        }
+
+    def _wink_bundle_create_credit_note(self, amount, description):
+        """Create and post a credit note for the given amount.
+        Uses the source product or first SO line product for accounting.
+        Returns account.move or False.
+        """
+        self.ensure_one()
+        if amount <= 0:
+            return False
+        # Resolve product for accounting
+        product = None
+        src = self.wink_source_product_id
+        if src:
+            if src._name == 'product.template':
+                product = self.env['product.product'].search(
+                    [('product_tmpl_id', '=', src.id)], limit=1
+                )
+            else:
+                product = src
+        if not product:
+            line = self.order_line[:1]
+            product = line.product_id if line else None
+        if not product or product._name != 'product.product':
+            return False
+        account = product.property_account_income_id
+        if not account:
+            account = product.categ_id.property_account_income_categ_id
+        if not account:
+            return False
+        journal = self.env['account.journal'].search([
+            ('type', '=', 'sale'), ('company_id', '=', self.company_id.id),
+        ], limit=1)
+        if not journal:
+            return False
+        from odoo import fields as odoo_fields
+        today = odoo_fields.Date.context_today(self)
+        credit_note = self.env['account.move'].create({
+            'move_type': 'out_refund',
+            'partner_id': self.partner_id.id,
+            'invoice_origin': self.name,
+            'ref': description,
+            'currency_id': self.currency_id.id,
+            'journal_id': journal.id,
+            'invoice_date': today,
+            'date': today,
+            'company_id': self.company_id.id,
+            'invoice_line_ids': [(0, 0, {
+                'name': description,
+                'product_id': product.id,
+                'product_uom_id': product.uom_id.id,
+                'quantity': 1.0,
+                'price_unit': amount,
+                'account_id': account.id,
+            })],
+        })
+        try:
+            credit_note.action_post()
+        except Exception as e:
+            self.message_post(
+                body=_('Bundle credit note created but could not be posted: %s') % str(e),
+                message_type='comment', subtype_xmlid='mail.mt_note',
+            )
+        return credit_note
+
+    def _wink_bundle_do_cancel(self, reason=''):
+        """Portal self-service cancellation.
+        Computes refund per policy, creates credit note, cancels the order, logs the event.
+        Returns dict: refund_amount, credit_note.
+        """
+        self.ensure_one()
+        bundle = self._wink_bundle_get_policy()
+        if bundle and not bundle.allow_self_service_cancel:
+            raise exceptions.UserError(
+                _('Self-service cancellation is not enabled for this bundle.')
+            )
+        if self.state not in ('sale', 'done'):
+            raise exceptions.UserError(
+                _('Only confirmed bundle orders can be cancelled.')
+            )
+        # Compute refund
+        refund_info = self._wink_bundle_compute_refund()
+        refund_amount = refund_info.get('refund_amount', 0.0)
+
+        # Create credit note
+        credit_note = False
+        if refund_amount > 0:
+            credit_note = self._wink_bundle_create_credit_note(
+                refund_amount,
+                _('Bundle cancellation credit — %s') % (self.name or ''),
+            )
+
+        # Log the event
+        from odoo import fields as odoo_fields
+        self.env['wink.bundle.change.log'].sudo().create({
+            'order_id': self.id,
+            'change_type': 'cancel',
+            'from_tier_id': self.wink_bundle_tier_id.id if self.wink_bundle_tier_id else False,
+            'refund_amount': refund_amount,
+            'credit_note_id': credit_note.id if credit_note else False,
+            'user_id': self.env.user.id,
+            'remaining_days': refund_info.get('remaining_days', 0),
+            'total_days': refund_info.get('total_days', 0),
+            'note': reason or '',
+            'state': 'done',
+        })
+
+        # Persist cancellation fields
+        now = odoo_fields.Datetime.now()
+        self.sudo().write({
+            'wink_cancellation_requested': True,
+            'wink_cancellation_reason': reason,
+            'wink_cancellation_requested_date': now,
+            'wink_cancellation_processed_date': now,
+            'wink_cancellation_credit_note_id': credit_note.id if credit_note else False,
+        })
+
+        # Cancel the order
+        try:
+            self.sudo().action_cancel()
+        except Exception as e:
+            self.message_post(
+                body=_('Could not cancel order automatically: %s') % str(e),
+                message_type='comment', subtype_xmlid='mail.mt_note',
+            )
+
+        # Chatter
+        msg = _(
+            'Bundle cancelled by customer. Refund: <strong>%(amount)s %(currency)s</strong>.'
+        ) % {'amount': f'{refund_amount:,.2f}', 'currency': self.currency_id.name or ''}
+        if reason:
+            msg += _(' Reason: %s') % reason
+        if credit_note:
+            msg += _(
+                ' Credit note <a href="/web#model=account.move&amp;id=%(id)s">%(name)s</a> created.'
+            ) % {'id': credit_note.id, 'name': credit_note.name or _('Draft')}
+        self.sudo().message_post(body=msg, message_type='comment', subtype_xmlid='mail.mt_note')
+
+        return {'refund_amount': refund_amount, 'credit_note': credit_note}
+
+    def _wink_bundle_do_upgrade(self, new_tier_id):
+        """Portal self-service tier upgrade.
+        Charges pro-rata price delta, swaps tier, regenerates entitlements, logs event.
+        Returns dict: charge_amount, new_tier.
+        """
+        self.ensure_one()
+        bundle = self._wink_bundle_get_policy()
+        if bundle and not bundle.allow_self_service_upgrade:
+            raise exceptions.UserError(
+                _('Self-service upgrade is not enabled for this bundle.')
+            )
+        if self.state not in ('sale', 'done'):
+            raise exceptions.UserError(
+                _('Only confirmed bundle orders can be upgraded.')
+            )
+        new_tier = self.env['wink.bundle.tier'].sudo().browse(int(new_tier_id))
+        if not new_tier.exists():
+            raise exceptions.UserError(_('Invalid tier selected.'))
+        current_tier = self.wink_bundle_tier_id
+        if current_tier and new_tier.id not in current_tier.upgrade_to_ids.ids:
+            raise exceptions.UserError(
+                _('Upgrade to "%s" is not configured for this tier.') % new_tier.name
+            )
+
+        # Compute charge
+        charge_info = self._wink_bundle_compute_upgrade_charge(new_tier)
+        charge_amount = charge_info.get('charge_amount', 0.0)
+
+        # Create SO line for the upgrade charge
+        charge_line = False
+        if charge_amount > 0:
+            variant = new_tier.product_variant_id
+            if not variant and self.wink_source_product_id:
+                variant = self.wink_source_product_id.product_variant_ids[:1]
+            if variant:
+                charge_line = self.env['sale.order.line'].sudo().create({
+                    'order_id': self.id,
+                    'product_id': variant.id,
+                    'name': _(
+                        'Upgrade to %(tier)s — pro-rata %(days)s days'
+                    ) % {'tier': new_tier.name, 'days': charge_info.get('remaining_days', 0)},
+                    'product_uom_qty': 1,
+                    'price_unit': charge_amount,
+                })
+
+        # Log
+        self.env['wink.bundle.change.log'].sudo().create({
+            'order_id': self.id,
+            'change_type': 'upgrade',
+            'from_tier_id': current_tier.id if current_tier else False,
+            'to_tier_id': new_tier.id,
+            'charge_amount': charge_amount,
+            'charge_line_id': charge_line.id if charge_line else False,
+            'user_id': self.env.user.id,
+            'remaining_days': charge_info.get('remaining_days', 0),
+            'total_days': charge_info.get('total_days', 0),
+            'note': charge_info.get('note', ''),
+            'state': 'done',
+        })
+
+        # Swap tier and regenerate entitlements
+        self.sudo().with_context(skip_tier_entitlements=True).write(
+            {'wink_bundle_tier_id': new_tier.id}
+        )
+        self.sudo().wink_entitlement_ids.unlink()
+        self._generate_tier_entitlements(new_tier)
+
+        # Chatter
+        self.sudo().message_post(
+            body=_(
+                'Bundle upgraded from <strong>%(old)s</strong> to <strong>%(new)s</strong>.'
+                ' Pro-rata charge: <strong>%(amount)s %(currency)s</strong>.'
+            ) % {
+                'old': current_tier.name if current_tier else '—',
+                'new': new_tier.name,
+                'amount': f'{charge_amount:,.2f}',
+                'currency': self.currency_id.name or '',
+            },
+            message_type='comment', subtype_xmlid='mail.mt_note',
+        )
+
+        return {'charge_amount': charge_amount, 'new_tier': new_tier}
+
+    def _wink_bundle_do_downgrade(self, new_tier_id):
+        """Portal self-service tier downgrade.
+        Issues pro-rata credit note for price delta (per policy), swaps tier,
+        regenerates entitlements, logs event.
+        Returns dict: credit_amount, credit_note, new_tier.
+        """
+        self.ensure_one()
+        bundle = self._wink_bundle_get_policy()
+        if bundle and not bundle.allow_self_service_downgrade:
+            raise exceptions.UserError(
+                _('Self-service downgrade is not enabled for this bundle.')
+            )
+        if self.state not in ('sale', 'done'):
+            raise exceptions.UserError(
+                _('Only confirmed bundle orders can be downgraded.')
+            )
+        new_tier = self.env['wink.bundle.tier'].sudo().browse(int(new_tier_id))
+        if not new_tier.exists():
+            raise exceptions.UserError(_('Invalid tier selected.'))
+        current_tier = self.wink_bundle_tier_id
+        if current_tier and new_tier.id not in current_tier.downgrade_to_ids.ids:
+            raise exceptions.UserError(
+                _('Downgrade to "%s" is not configured for this tier.') % new_tier.name
+            )
+
+        # Compute credit
+        credit_info = self._wink_bundle_compute_downgrade_credit(new_tier)
+        credit_amount = credit_info.get('credit_amount', 0.0)
+
+        # Create credit note
+        credit_note = False
+        if credit_amount > 0:
+            credit_note = self._wink_bundle_create_credit_note(
+                credit_amount,
+                _('Bundle downgrade credit — %(old)s → %(new)s — %(order)s') % {
+                    'old': current_tier.name if current_tier else '—',
+                    'new': new_tier.name,
+                    'order': self.name or '',
+                },
+            )
+
+        # Log
+        self.env['wink.bundle.change.log'].sudo().create({
+            'order_id': self.id,
+            'change_type': 'downgrade',
+            'from_tier_id': current_tier.id if current_tier else False,
+            'to_tier_id': new_tier.id,
+            'refund_amount': credit_amount,
+            'credit_note_id': credit_note.id if credit_note else False,
+            'user_id': self.env.user.id,
+            'remaining_days': credit_info.get('remaining_days', 0),
+            'total_days': credit_info.get('total_days', 0),
+            'note': credit_info.get('note', ''),
+            'state': 'done',
+        })
+
+        # Swap tier and regenerate entitlements
+        self.sudo().with_context(skip_tier_entitlements=True).write(
+            {'wink_bundle_tier_id': new_tier.id}
+        )
+        self.sudo().wink_entitlement_ids.unlink()
+        self._generate_tier_entitlements(new_tier)
+
+        # Chatter
+        self.sudo().message_post(
+            body=_(
+                'Bundle downgraded from <strong>%(old)s</strong> to <strong>%(new)s</strong>.'
+                ' Credit: <strong>%(amount)s %(currency)s</strong>.'
+            ) % {
+                'old': current_tier.name if current_tier else '—',
+                'new': new_tier.name,
+                'amount': f'{credit_amount:,.2f}',
+                'currency': self.currency_id.name or '',
+            },
+            message_type='comment', subtype_xmlid='mail.mt_note',
+        )
+
+        return {'credit_amount': credit_amount, 'credit_note': credit_note, 'new_tier': new_tier}
 
     def _generate_tier_entitlements(self, tier):
         """Generates the entitlement records for a given tier on this order."""

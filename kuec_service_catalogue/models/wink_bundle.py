@@ -29,6 +29,45 @@ class WinkBundle(models.Model):
         'bundle_id',
         string='Tiers',
     )
+
+    # --- Self-service lifecycle policy (one-time admin config) ---
+    allow_self_service_upgrade = fields.Boolean(
+        string='Allow Self-Service Upgrade',
+        default=True,
+        help='When enabled, customers can upgrade their tier directly from the portal without coordinator approval.',
+    )
+    allow_self_service_downgrade = fields.Boolean(
+        string='Allow Self-Service Downgrade',
+        default=True,
+        help='When enabled, customers can downgrade their tier directly from the portal without coordinator approval.',
+    )
+    allow_self_service_cancel = fields.Boolean(
+        string='Allow Self-Service Cancellation',
+        default=True,
+        help='When enabled, customers can cancel their bundle directly from the portal.',
+    )
+    cancel_refund_policy = fields.Selection(
+        [
+            ('pro_rata', 'Pro-Rata (annual price)'),
+            ('monthly_rate', 'Monthly Rate (yearly discount forfeited)'),
+            ('none', 'No Refund'),
+        ],
+        string='Cancellation Refund Policy',
+        default='monthly_rate',
+        help='How the refund is calculated when a customer cancels.\n'
+             '• Pro-Rata: refunds the proportion of the annual price for remaining days.\n'
+             '• Monthly Rate: refunds using the standard monthly price — yearly discount is forfeited.\n'
+             '• No Refund: no credit note is created.',
+    )
+    downgrade_credit_policy = fields.Selection(
+        [
+            ('pro_rata', 'Pro-Rata Credit'),
+            ('none', 'No Credit on Downgrade'),
+        ],
+        string='Downgrade Credit Policy',
+        default='pro_rata',
+        help='Whether to issue a pro-rata credit note when the customer downgrades to a cheaper tier.',
+    )
     tier_count = fields.Integer(
         compute='_compute_tier_count',
         store=True,
@@ -202,6 +241,31 @@ class WinkBundleTier(models.Model):
         compute='_compute_item_count',
         store=True,
         help='Number of services included in this tier.',
+    )
+
+    # --- Lifecycle: upgrade / downgrade targets (one-time admin config) ---
+    upgrade_to_ids = fields.Many2many(
+        'wink.bundle.tier',
+        'wink_tier_upgrade_rel',
+        'from_tier_id',
+        'to_tier_id',
+        string='Can Upgrade To',
+        domain="[('bundle_id', '=', bundle_id), ('id', '!=', id)]",
+        help='Tiers a customer on this tier may self-service upgrade to.',
+    )
+    downgrade_to_ids = fields.Many2many(
+        'wink.bundle.tier',
+        'wink_tier_downgrade_rel',
+        'from_tier_id',
+        'to_tier_id',
+        string='Can Downgrade To',
+        domain="[('bundle_id', '=', bundle_id), ('id', '!=', id)]",
+        help='Tiers a customer on this tier may self-service downgrade to.',
+    )
+    price_monthly = fields.Float(
+        string='Monthly Price (Std)',
+        digits=(10, 2),
+        help='Standard monthly price used for refund/credit calculations when yearly discount is forfeited on cancellation or downgrade.',
     )
 
     @api.depends('item_ids')

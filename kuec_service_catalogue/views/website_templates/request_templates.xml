@@ -2457,18 +2457,78 @@
 
                             <!-- Bundle header with KUEC gradient -->
                             <div class="wink-bundle-card-header">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h5 class="mb-0 fw-bold"><t t-esc="bd['bundle_name']"/></h5>
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                            <h5 class="mb-0 fw-bold"><t t-esc="bd['bundle_name']"/></h5>
+                                            <!-- Status badge -->
+                                            <t t-if="bd['order'].state == 'cancel'">
+                                                <span class="badge rounded-pill" style="background:rgba(255,255,255,0.2);font-size:0.7rem;">
+                                                    <i class="fa fa-times-circle me-1"/>Cancelled
+                                                </span>
+                                            </t>
+                                            <t t-elif="bd['order'].wink_pending_downgrade_tier_id">
+                                                <span class="badge rounded-pill" style="background:rgba(255,193,7,0.3);color:#fff;font-size:0.7rem;">
+                                                    <i class="fa fa-arrow-down me-1"/>Downgrade Pending
+                                                </span>
+                                            </t>
+                                        </div>
                                         <small class="opacity-75">
                                             <t t-if="bd['tier_name']"><t t-esc="bd['tier_name']"/> Plan · </t>
                                             <t t-esc="bd['order'].name"/>
                                             · Started <t t-esc="bd['order'].date_order" t-options="{'widget': 'date'}"/>
+                                            <t t-if="bd['order'].wink_bundle_end_date">
+                                                · Renews <t t-esc="bd['order'].wink_bundle_end_date" t-options="{'widget': 'date'}"/>
+                                            </t>
                                         </small>
                                     </div>
-                                    <div class="wink-bundle-ring">
-                                        <span><t t-esc="bd['activated']"/>/<t t-esc="bd['total']"/></span>
-                                        <small>activated</small>
+                                    <div class="d-flex align-items-center gap-2 ms-2">
+                                        <div class="wink-bundle-ring">
+                                            <span><t t-esc="bd['activated']"/>/<t t-esc="bd['total']"/></span>
+                                            <small>activated</small>
+                                        </div>
+                                        <!-- Manage dropdown (only for active orders) -->
+                                        <t t-if="bd['order'].state in ('sale','done')">
+                                            <t t-set="bnd_obj" t-value="bd.get('bundle')"/>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm dropdown-toggle fw-semibold"
+                                                        style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:8px;"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fa fa-cog me-1"/>Manage
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width:180px;">
+                                                    <t t-if="not bnd_obj or bnd_obj.allow_self_service_upgrade">
+                                                        <t t-if="bd['order'].wink_bundle_tier_id and bd['order'].wink_bundle_tier_id.upgrade_to_ids">
+                                                            <li>
+                                                                <a t-attf-href="/my/bundles/{{ bd['order'].id }}/upgrade"
+                                                                   class="dropdown-item small">
+                                                                    <i class="fa fa-arrow-circle-up me-2" style="color:var(--wink-primary);"/>Upgrade Tier
+                                                                </a>
+                                                            </li>
+                                                        </t>
+                                                    </t>
+                                                    <t t-if="not bnd_obj or bnd_obj.allow_self_service_downgrade">
+                                                        <t t-if="bd['order'].wink_bundle_tier_id and bd['order'].wink_bundle_tier_id.downgrade_to_ids">
+                                                            <li>
+                                                                <a t-attf-href="/my/bundles/{{ bd['order'].id }}/downgrade"
+                                                                   class="dropdown-item small">
+                                                                    <i class="fa fa-arrow-circle-down me-2 text-secondary"/>Downgrade Tier
+                                                                </a>
+                                                            </li>
+                                                        </t>
+                                                    </t>
+                                                    <t t-if="not bnd_obj or bnd_obj.allow_self_service_cancel">
+                                                        <li><hr class="dropdown-divider"/></li>
+                                                        <li>
+                                                            <a t-attf-href="/my/bundles/{{ bd['order'].id }}/cancel"
+                                                               class="dropdown-item small text-danger">
+                                                                <i class="fa fa-times-circle me-2"/>Cancel Bundle
+                                                            </a>
+                                                        </li>
+                                                    </t>
+                                                </ul>
+                                            </div>
+                                        </t>
                                     </div>
                                 </div>
 
