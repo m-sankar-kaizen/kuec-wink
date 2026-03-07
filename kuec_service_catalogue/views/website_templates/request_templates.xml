@@ -820,7 +820,7 @@
                                     // UI-REV-001: Compare Plans toggle
                                     var compareBtn = document.getElementById('wink-compare-btn');
                                     var compareTable = document.getElementById('wink-compare-table');
-                                    if (compareBtn && compareTable) {
+                                    if (compareBtn &amp;&amp; compareTable) {
                                         compareBtn.addEventListener('click', function(e) {
                                             e.preventDefault();
                                             var hidden = compareTable.classList.toggle('d-none');
