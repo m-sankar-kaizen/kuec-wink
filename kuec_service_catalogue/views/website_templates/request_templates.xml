@@ -285,45 +285,86 @@
                         </div>
                     </t>
 
-                    <!-- CR-6 Step 3: Review + Submit form (Type, Tier, Plan, employee name badges) -->
+                    <!-- CR-6 / UI-REV-002: Step 3 — Review Your Request (redesigned order summary card) -->
                     <t t-if="step == 3 and wizard_draft">
-                        <div class="card-premium rounded-2xl p-4 mb-4">
-                            <h5 class="fw-bold mb-3"><i class="fa fa-clipboard-list me-1"/> Review Your Request</h5>
-                            <dl class="row mb-0">
-                                <dt class="col-sm-4 text-muted">Service</dt>
-                                <dd class="col-sm-8"><t t-esc="product.name"/></dd>
-                                <dt class="col-sm-4 text-muted">Type</dt>
-                                <dd class="col-sm-8"><t t-esc="review_display.get('type_label') or '—'"/></dd>
+                        <!-- UI-REV-002: Premium review card with gradient header -->
+                        <div class="wink-review-card mb-4">
+                            <div class="wink-review-header">
+                                <i class="fa fa-clipboard-check"/>
+                                <div>
+                                    <p class="wink-review-header-title">Review Your Request</p>
+                                    <p class="wink-review-header-subtitle"><t t-esc="product.name"/></p>
+                                </div>
+                            </div>
+                            <div class="wink-review-body">
+                                <div class="wink-review-row">
+                                    <span class="wink-review-label"><i class="fa fa-tag me-1"/>Type</span>
+                                    <span class="wink-review-value"><t t-esc="review_display.get('type_label') or '—'"/></span>
+                                </div>
                                 <t t-if="review_display.get('tier_name')">
-                                    <dt class="col-sm-4 text-muted">Tier</dt>
-                                    <dd class="col-sm-8"><t t-esc="review_display.get('tier_name')"/></dd>
+                                    <div class="wink-review-row">
+                                        <span class="wink-review-label"><i class="fa fa-layers me-1"/>Tier</span>
+                                        <span class="wink-review-value fw-bold"><t t-esc="review_display.get('tier_name')"/></span>
+                                    </div>
                                 </t>
                                 <t t-if="review_display.get('plan_name')">
-                                    <dt class="col-sm-4 text-muted">Plan</dt>
-                                    <dd class="col-sm-8"><t t-esc="review_display.get('plan_name')"/></dd>
+                                    <div class="wink-review-row">
+                                        <span class="wink-review-label"><i class="fa fa-calendar me-1"/>Plan</span>
+                                        <span class="wink-review-value fw-bold"><t t-esc="review_display.get('plan_name')"/></span>
+                                    </div>
                                 </t>
-                                <dt class="col-sm-4 text-muted">Start Date</dt>
-                                <dd class="col-sm-8"><t t-esc="wizard_draft.get('start_date') or '—'"/></dd>
-                                <dt class="col-sm-4 text-muted">Notes</dt>
-                                <dd class="col-sm-8"><t t-esc="wizard_draft.get('notes') or '—'"/></dd>
-                                <dt class="col-sm-4 text-muted">Employees</dt>
-                                <dd class="col-sm-8">
-                                    <t t-if="review_display.get('employee_names')">
-                                        <span class="d-flex flex-wrap gap-1">
-                                            <t t-foreach="review_display.get('employee_names')" t-as="ename">
-                                                <span class="badge bg-primary rounded-pill"><t t-esc="ename"/></span>
-                                            </t>
+                                <div class="wink-review-row">
+                                    <span class="wink-review-label"><i class="fa fa-calendar-o me-1"/>Start Date</span>
+                                    <span class="wink-review-value"><t t-esc="wizard_draft.get('start_date') or '—'"/></span>
+                                </div>
+                                <t t-if="wizard_draft.get('notes')">
+                                    <div class="wink-review-row">
+                                        <span class="wink-review-label"><i class="fa fa-comment-o me-1"/>Notes</span>
+                                        <span class="wink-review-value"><t t-esc="wizard_draft.get('notes')"/></span>
+                                    </div>
+                                </t>
+                                <t t-if="review_display.get('employee_names')">
+                                    <div class="wink-review-row">
+                                        <span class="wink-review-label"><i class="fa fa-users me-1"/>Employees</span>
+                                        <span class="wink-review-value">
+                                            <span class="d-flex flex-wrap justify-content-end gap-1">
+                                                <t t-foreach="review_display.get('employee_names')" t-as="ename">
+                                                    <span class="badge rounded-pill" style="background: #1F3864; color:#fff;"><t t-esc="ename"/></span>
+                                                </t>
+                                            </span>
                                         </span>
-                                    </t>
-                                    <t t-else="">
-                                        <span class="text-muted">—</span>
-                                    </t>
-                                </dd>
-                            </dl>
+                                    </div>
+                                </t>
+                                <!-- Amount row — prominent display -->
+                                <t t-if="review_display.get('price_str')">
+                                    <div class="wink-review-amount-row">
+                                        <span class="wink-review-amount-label"><i class="fa fa-credit-card me-2"/>Total Amount</span>
+                                        <span class="wink-review-amount-value">
+                                            <t t-esc="review_display.get('currency_symbol', 'AED')"/> <t t-esc="review_display.get('price_str')"/>
+                                        </span>
+                                    </div>
+                                </t>
+                            </div>
                         </div>
-                        <div class="alert alert-info">
-                            <i class="fa fa-info-circle me-2"/> A coordinator will review your request and confirm pricing if needed.
-                        </div>
+
+                        <!-- Info alert: differs based on whether price is set -->
+                        <t t-if="product.price_visibility != 'hidden' and review_display.get('price_str')">
+                            <!-- Priced: direct checkout -->
+                            <div class="alert d-flex align-items-start gap-2 mb-3" style="background:#f0f6ff; border:1px solid #c7daf5; color:#1F3864; border-radius:10px;">
+                                <i class="fa fa-credit-card mt-1"/>
+                                <div>
+                                    <strong>Ready to checkout.</strong> Submitting will create your order and take you directly to payment.
+                                </div>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <!-- Hidden price / quote flow -->
+                            <div class="alert alert-info d-flex align-items-start gap-2 mb-3" style="border-radius:10px;">
+                                <i class="fa fa-info-circle mt-1"/>
+                                <div>A coordinator will review your request and confirm pricing. You will be notified when your quote is ready.</div>
+                            </div>
+                        </t>
+
                         <form method="post" action="/my/requests/submit">
                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                             <input type="hidden" name="product_id" t-att-value="wizard_draft.get('product_id')"/>
@@ -336,8 +377,20 @@
                                 <input type="hidden" name="employee_ids" t-att-value="eid"/>
                             </t>
                             <div class="d-flex gap-2">
-                                <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;step=#{2 if product.requires_employee_selection else 1}" class="btn btn-outline-secondary rounded-xl">Back</a>
-                                <button type="submit" class="btn btn-primary rounded-xl touch-target">Submit Request</button>
+                                <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;step=#{2 if product.requires_employee_selection else 1}" class="btn btn-outline-secondary rounded-xl">
+                                    <i class="fa fa-arrow-left me-1"/>Back
+                                </a>
+                                <!-- UI-REV-001 / checkout directly: label changes based on price visibility -->
+                                <t t-if="product.price_visibility != 'hidden' and review_display.get('price_str')">
+                                    <button type="submit" class="btn btn-primary rounded-xl touch-target flex-grow-1 fw-bold">
+                                        <i class="fa fa-credit-card me-2"/>Confirm &amp; Pay
+                                    </button>
+                                </t>
+                                <t t-else="">
+                                    <button type="submit" class="btn btn-primary rounded-xl touch-target flex-grow-1 fw-bold">
+                                        <i class="fa fa-paper-plane me-2"/>Submit Request
+                                    </button>
+                                </t>
                             </div>
                         </form>
                     </t>
@@ -499,7 +552,7 @@
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
                         <input t-if="step == 1" type="hidden" name="next_step" value="2"/>
-                        <input t-if="selected_plan" type="hidden" name="selected_pricing_id" t-att-value="selected_plan['pricing_id']"/>
+                        <input t-if="selected_plan and not wink_is_bundle" type="hidden" name="selected_pricing_id" t-att-value="selected_plan['pricing_id']"/>
                         <input t-if="change_from_id" type="hidden" name="change_from_id" t-att-value="change_from_id"/>
 
                         <!-- v2: Your Selected Plan summary (when coming from detail page with plan, non-bundle only) -->
@@ -536,14 +589,22 @@
                                 <span t-if="annual_cycle" class="badge bg-success rounded-pill ms-2">Save 20%</span>
                             </div>
 
-                            <!-- Tier Comparison Grid -->
+                            <!-- UI-REV-001: Tier Comparison Grid — tier name + most popular badge visible -->
                             <div class="wink-tier-grid">
                                 <t t-foreach="tier_data" t-as="td">
-                                    <div class="wink-tier-card-premium" 
+                                    <div t-attf-class="wink-tier-card-premium #{'wink-popular' if td['tier'].is_most_popular else ''}"
                                          t-att-data-tier-id="td['tier'].id"
                                          t-att-data-variant-id="td['tier'].product_variant_id.id"
                                          t-att-data-tier-name="td['tier'].name">
-                                        
+
+                                        <!-- Most Popular badge -->
+                                        <t t-if="td['tier'].is_most_popular">
+                                            <span class="wink-most-popular-badge">Most Popular</span>
+                                        </t>
+
+                                        <!-- Tier name (plan name) — UI-REV-001 -->
+                                        <div class="wink-tier-name"><t t-esc="td['tier'].name"/></div>
+
                                         <div class="wink-tier-price-wrapper">
                                             <div class="wink-tier-amount-row">
                                                 <span class="wink-tier-amount">—</span>
@@ -554,17 +615,16 @@
                                         <button type="submit" name="tier_id" t-att-value="td['tier'].id"
                                                 t-attf-class="wink-select-btn touch-target wink-subscribe-btn #{'wink-btn-primary' if td['tier'].is_most_popular else 'wink-btn-outline'}"
                                                 t-att-data-tier-id="td['tier'].id">
-                                            Subscribe
+                                            Get Started
                                         </button>
 
                                         <!-- Feature Progression Header -->
                                         <div class="wink-tier-progression-header">
-                                            <t t-if="td_index == 0"><t t-esc="td['tier'].name"/> Plan includes:</t>
-                                            <t t-else="">Includes <t t-esc="tier_data[td_index-1]['tier'].name"/> Features, plus:</t>
+                                            <t t-if="td_index == 0"><t t-esc="td['tier'].name"/> includes:</t>
+                                            <t t-else="">Everything in <t t-esc="tier_data[td_index-1]['tier'].name"/>, plus:</t>
                                         </div>
 
                                         <ul class="wink-tier-features" t-attf-id="features_#{td['tier'].id}">
-                                            <!-- Logic: only show features that are NOT in the previous tier to avoid redundancy and match "plus" logic -->
                                             <t t-set="prev_features" t-value="[i.service_product_id.id for i in tier_data[td_index-1]['items']] if td_index > 0 else []"/>
                                             <t t-set="tier_items" t-value="[item for item in td['items'] if item.service_product_id.id not in prev_features]"/>
                                             <t t-foreach="tier_items" t-as="item">
@@ -577,15 +637,64 @@
                                                 </li>
                                             </t>
                                             <li t-if="len(tier_items) > 10" class="wink-tier-feature-item mt-2">
-                                                <a href="#" class="wink-show-all-features small fw-bold" t-att-data-tier-id="td['tier'].id">See All Features</a>
+                                                <a href="#" class="wink-show-all-features small fw-bold" t-att-data-tier-id="td['tier'].id">See all</a>
                                             </li>
                                         </ul>
-                                        
-                                        <!-- Tier ID stored in data-tier-id, submitted via single hidden input -->
                                     </div>
                                 </t>
                             </div>
 
+                            <!-- UI-REV-001: Compare Plans toggle (one button, below grid) -->
+                            <div class="wink-compare-toggle mt-3">
+                                <a href="#" id="wink-compare-btn" class="wink-compare-link">
+                                    Compare all plans <i class="fa fa-chevron-down ms-1"/>
+                                </a>
+                            </div>
+
+                            <!-- UI-REV-001: Compare table (collapsed by default) -->
+                            <div class="wink-compare-table d-none" id="wink-compare-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Feature</th>
+                                            <t t-foreach="tier_data" t-as="td">
+                                                <th><t t-esc="td['tier'].name"/></th>
+                                            </t>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Build feature set: all unique features across all tiers -->
+                                        <t t-set="all_features" t-value="{}"/>
+                                        <t t-foreach="tier_data" t-as="td">
+                                            <t t-foreach="td['items']" t-as="item">
+                                                <t t-set="_fname" t-value="item.description or item.service_product_id.name"/>
+                                                <t t-set="_fid" t-value="item.service_product_id.id"/>
+                                            </t>
+                                        </t>
+                                        <!-- For each unique service across tiers, show which tiers include it -->
+                                        <t t-set="seen_ids" t-value="[]"/>
+                                        <t t-foreach="tier_data" t-as="td_outer">
+                                            <t t-foreach="td_outer['items']" t-as="item_outer">
+                                                <t t-if="item_outer.service_product_id.id not in seen_ids">
+                                                    <t t-set="seen_ids" t-value="seen_ids + [item_outer.service_product_id.id]"/>
+                                                    <tr>
+                                                        <td>
+                                                            <t t-esc="item_outer.description or item_outer.service_product_id.name"/>
+                                                        </td>
+                                                        <t t-foreach="tier_data" t-as="td_col">
+                                                            <t t-set="has_feature" t-value="any(i.service_product_id.id == item_outer.service_product_id.id for i in td_col['items'])"/>
+                                                            <td>
+                                                                <i t-if="has_feature" class="fa fa-check"/>
+                                                                <i t-else="" class="fa fa-minus"/>
+                                                            </td>
+                                                        </t>
+                                                    </tr>
+                                                </t>
+                                            </t>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
 
                             <!-- Hidden State Management -->
                             <input type="hidden" name="bundle_recurrence_id" id="wink-hidden-recurrence-id" 
@@ -707,6 +816,18 @@
 
                                     // Initial load
                                     setTimeout(updateAll, 100);
+
+                                    // UI-REV-001: Compare Plans toggle
+                                    var compareBtn = document.getElementById('wink-compare-btn');
+                                    var compareTable = document.getElementById('wink-compare-table');
+                                    if (compareBtn && compareTable) {
+                                        compareBtn.addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            var hidden = compareTable.classList.toggle('d-none');
+                                            compareBtn.classList.toggle('open', !hidden);
+                                            compareBtn.querySelector('i').style.transform = hidden ? '' : 'rotate(180deg)';
+                                        });
+                                    }
 
                                     // Point 6: Show all features logic
                                     document.querySelectorAll('.wink-show-all-features').forEach(function(link) {
@@ -2015,8 +2136,9 @@
                                         <small class="fw-bold" style="color: #6366f1;"><t t-esc="bd['progress_pct']"/>%</small>
                                     </div>
                                     <div class="progress" style="height: 6px; border-radius: 999px;">
+                                        <!-- WF-BUNDLE-UI-006 -->
                                         <div class="progress-bar" role="progressbar"
-                                             t-att-style="'width: %s%%; background: linear-gradient(90deg, #6366f1, #818cf8);' % bd['progress_pct']"
+                                             t-attf-style="width: {{ bd['progress_pct'] }}%; background: linear-gradient(90deg, #6366f1, #818cf8);"
                                              t-att-aria-valuenow="bd['progress_pct']" aria-valuemin="0" aria-valuemax="100"/>
                                     </div>
                                 </div>

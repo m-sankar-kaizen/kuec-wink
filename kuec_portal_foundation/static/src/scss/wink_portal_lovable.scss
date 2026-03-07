@@ -333,3 +333,298 @@
     font-size: 0.7rem;
     font-weight: 500;
 }
+
+/* ── UI-REV-001: Bundle Configurator Premium Tier Cards ────────────── */
+/* Billing toggle */
+.wink-billing-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+}
+.wink-toggle-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--wink-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+    &.active { color: var(--wink-primary); }
+}
+.wink-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    input { opacity: 0; width: 0; height: 0; }
+}
+.wink-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 999px;
+    transition: background 0.25s;
+    &::before {
+        content: '';
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.25s;
+        box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+}
+input:checked + .wink-slider {
+    background: var(--wink-primary);
+    &::before { transform: translateX(22px); }
+}
+
+/* Tier card grid */
+.wink-tier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+}
+.wink-tier-card-premium {
+    position: relative;
+    background: #fff;
+    border: 2px solid var(--wink-border);
+    border-radius: 16px;
+    padding: 1.5rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    &:hover {
+        border-color: var(--wink-primary);
+        box-shadow: 0 4px 16px rgba(31,78,121,0.12);
+        transform: translateY(-2px);
+    }
+    &.selected, &.wink-popular {
+        border-color: var(--wink-primary);
+        box-shadow: 0 4px 20px rgba(31,78,121,0.18);
+    }
+}
+/* Most popular: distinct accent ring */
+.wink-tier-card-premium.wink-popular {
+    border-color: #1F3864;
+    background: linear-gradient(160deg, #f8faff 0%, #fff 100%);
+}
+.wink-most-popular-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--wink-primary);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(31,78,121,0.25);
+}
+/* Tier name */
+.wink-tier-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1F3864;
+    text-align: center;
+    letter-spacing: 0.01em;
+}
+/* Tier price block */
+.wink-tier-price-wrapper {
+    text-align: center;
+    padding: 0.5rem 0;
+}
+.wink-tier-amount-row { line-height: 1; }
+.wink-tier-amount {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #1F3864;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: -0.02em;
+}
+.wink-tier-price-subtext {
+    font-size: 0.78rem;
+    color: var(--wink-muted);
+    margin-top: 4px;
+    display: block;
+}
+/* Select / Subscribe button */
+.wink-select-btn {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    &:hover:not(:disabled) { opacity: 0.88; transform: scale(1.02); }
+    &:disabled { cursor: not-allowed; }
+}
+.wink-btn-primary {
+    background: var(--wink-primary);
+    color: #fff !important;
+}
+.wink-btn-outline {
+    background: transparent;
+    border: 2px solid var(--wink-primary) !important;
+    color: var(--wink-primary) !important;
+}
+/* Feature list inside tier card */
+.wink-tier-progression-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--wink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-top: 1px solid var(--wink-border);
+    padding-top: 0.6rem;
+    margin-top: auto;
+}
+.wink-tier-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.wink-tier-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--wink-text-dark);
+    .fa-check { color: #22c55e; font-size: 0.75rem; margin-top: 2px; flex-shrink: 0; }
+}
+
+/* UI-REV-001: Compare Plans toggle + table */
+.wink-compare-toggle {
+    text-align: center;
+    margin-top: 1.25rem;
+}
+.wink-compare-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--wink-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    &:hover { opacity: 0.75; }
+    i { transition: transform 0.25s; }
+    &.open i { transform: rotate(180deg); }
+}
+.wink-compare-table {
+    margin-top: 1rem;
+    border: 1px solid var(--wink-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+        th {
+            background: linear-gradient(135deg, #1F3864, #2E75B6);
+            color: #fff;
+            padding: 0.6rem 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            &:first-child { text-align: left; }
+        }
+        td {
+            padding: 0.45rem 0.75rem;
+            border-bottom: 1px solid var(--wink-border);
+            text-align: center;
+            &:first-child { text-align: left; font-weight: 500; color: var(--wink-text-dark); }
+            &:last-child { border-bottom: none; }
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) td { background: #f8faff; }
+        .fa-check { color: #22c55e; }
+        .fa-minus { color: #cbd5e1; }
+    }
+}
+
+/* ── UI-REV-002: Review page redesign ─────────────────────────────── */
+.wink-review-card {
+    background: #fff;
+    border: 1px solid var(--wink-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(31,78,121,0.08);
+}
+.wink-review-header {
+    background: linear-gradient(135deg, #1F3864 0%, #2E75B6 100%);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    i { font-size: 1.3rem; opacity: 0.9; }
+}
+.wink-review-header-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0;
+}
+.wink-review-header-subtitle { font-size: 0.82rem; opacity: 0.82; margin: 0; }
+.wink-review-body {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.wink-review-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #f0f4f8;
+    gap: 1rem;
+    &:last-child { border-bottom: none; }
+}
+.wink-review-label {
+    font-size: 0.82rem;
+    color: var(--wink-muted);
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 110px;
+}
+.wink-review-value {
+    font-size: 0.9rem;
+    color: var(--wink-text-dark);
+    font-weight: 500;
+    text-align: right;
+    flex: 1;
+}
+.wink-review-amount-row {
+    background: #f0f6ff;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.wink-review-amount-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--wink-primary);
+}
+.wink-review-amount-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--wink-primary);
+    font-family: 'IBM Plex Mono', monospace;
+}

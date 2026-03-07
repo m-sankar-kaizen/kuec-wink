@@ -464,9 +464,9 @@ class WinkRequest(http.Controller):
                 except Exception:
                     change_proration = None
 
-            wizard_draft = self._wizard_get_draft() if step in (2, 3) else {}
+            wizard_draft = self._wizard_get_draft() if step in (1, 2, 3) else {}
             post_data = dict(kwargs)
-            if wizard_draft and step in (2, 3):
+            if wizard_draft and step in (1, 2, 3):
                 post_data.update({k: v for k, v in wizard_draft.items() if v and k != 'employee_ids'})
             # CR-6: review step display (type_label, tier_name, plan_name, employee_names)
             # CR-6: review step display (type_label, tier_name, plan_name, employee_names, price_str)
@@ -532,18 +532,25 @@ class WinkRequest(http.Controller):
                         review_display['type_label'] = 'Retainer'
                         rec_id = wizard_draft.get('selected_pricing_id')
                         plan_name = ''
+                        price_str = ''
                         try:
                             plans = product._wink_subscription_plans_dicts(pricelist_id=False)
                             for p in (plans or []):
                                 if str(p.get('pricing_id')) == str(rec_id) or str(p.get('recurrence_id')) == str(rec_id):
                                     plan_name = p.get('plan_name', '')
+                                    price_str = '{:,.2f}'.format(p.get('price', 0.0))
+                                    review_display['currency_symbol'] = p.get('currency_symbol', 'AED')
                                     break
                         except Exception:
                             pass
                         review_display['plan_name'] = plan_name
+                        review_display['price_str'] = price_str
                     else:
                         review_display['type_label'] = 'One-time'
                         review_display['plan_name'] = ''
+                        price = product.list_price or 0.0
+                        review_display['price_str'] = '{:,.2f}'.format(price)
+                        review_display['currency_symbol'] = request.website.currency_id.symbol if request.website else request.env.company.currency_id.symbol if request.env.company else 'AED'
                 emp_ids = wizard_draft.get('employee_ids') or []
                 if emp_ids:
                     emps = request.env['kuec.employee.directory'].sudo().browse(emp_ids)
@@ -884,7 +891,8 @@ class WinkRequest(http.Controller):
             if not recurring_lines and wink_is_bundle:
                 # For bundles, selected_pricing_id is expected to be a product.pricing or sale.subscription.pricing ID
                 # We try to browse commonly used pricing models
-                for model in ['product.pricing', 'sale.subscription.pricing']:
+                # WF-BUNDLE-PLAN-002: Add wink.subscription.plan to the list of models
+                for model in ['product.pricing', 'sale.subscription.pricing', 'wink.subscription.plan']:
                     try:
                         p = request.env[model].sudo().browse(selected_pricing_id)
                         if p.exists():
@@ -913,7 +921,11 @@ class WinkRequest(http.Controller):
                 elif getattr(selected_pricing, 'product_id', False) and selected_pricing.product_id.id != variant.id:
                     variant = selected_pricing.product_id
                     
-                recurrence_ref = getattr(pricing_line, 'recurrence_id', getattr(pricing_line, 'plan_id', getattr(pricing_line, 'recurring_plan_id', None)))
+                # WF-BUNDLE-PLAN-002: If pricing_line is wink.subscription.plan, it is the recurrence ref
+                if getattr(pricing_line, '_name', None) == 'wink.subscription.plan':
+                    recurrence_ref = pricing_line
+                else:
+                    recurrence_ref = getattr(pricing_line, 'recurrence_id', getattr(pricing_line, 'plan_id', getattr(pricing_line, 'recurring_plan_id', None)))
                 selected_recurrence_id = getattr(recurrence_ref, 'id', recurrence_ref)
                 selected_plan = recurrence_ref
             elif use_recurring_prices:
@@ -1093,7 +1105,8 @@ class WinkRequest(http.Controller):
             # v2: Odoo 18 subscription — recurrence_id + is_subscription
             if selected_recurrence_id:
                 sub_vals = {}
-                if hasattr(order, 'recurrence_id'):
+                is_fake_plan = getattr(selected_plan, '_name', None) == 'wink.subscription.plan'
+                if hasattr(order, 'recurrence_id') and not is_fake_plan:
                     sub_vals['recurrence_id'] = selected_recurrence_id
                 if hasattr(order, 'is_subscription'):
                     sub_vals['is_subscription'] = True
@@ -1248,6 +1261,12 @@ class WinkRequest(http.Controller):
                     retainer_plan = order.plan_id
             except (KeyError, AttributeError):
                 pass
+        
+        # WF-BUNDLE-PLAN-002: Bundles store their plan in wink_plan_id, which avoids modifying the native recurrence fields
+        if not retainer_plan and getattr(order, 'wink_plan_id', None):
+            if order.wink_plan_id and getattr(order.wink_plan_id, 'id', None):
+                retainer_plan = order.wink_plan_id
+
         if not retainer_plan:
             pid = getattr(order, 'wink_recurring_pricing_id', None) or 0
             if pid and recurring_lines and pid in (recurring_lines.ids or []):
@@ -1261,6 +1280,14 @@ class WinkRequest(http.Controller):
                 rec = _get_product_pricing_browse(request.env, [pid])
                 if rec.exists():
                     retainer_plan = rec
+                else:
+                    # Final fallback: maybe it was a wink.subscription.plan stored in wink_recurring_pricing_id
+                    try:
+                        rec = request.env['wink.subscription.plan'].sudo().browse(pid)
+                        if rec.exists():
+                            retainer_plan = rec
+                    except Exception:
+                        pass
         retainer_plans_for_change = recurring_lines
         # RET-006: Allow plan change when subscription group has multiple tiers
         group = product.wink_subscription_group_id if product else None

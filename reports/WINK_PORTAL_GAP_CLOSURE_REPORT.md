@@ -1,5 +1,11 @@
 # WINK Portal — Gap Closure Report (Lovable Pixel-Parity)
 
+> **VERIFIED CODEBASE RE-CHECK NOTE**: A fresh code-level audit was performed. The following findings are re-verified:
+> - **Portal Tags (UI-TAG-001/002)**: Verified Fixed. `wink_catalogue_page.xml` correctly applies the diagonal ribbon and pill badge logic as described in this report.
+> - **My Requests Filters / Mobile Cards (Epic4-MR)**: Verified Fixed. `portal.py` contains the filtering and sorting functionality.
+> - **Request Detail (Epic4-RD)**: Verified. Logic handling `is_closed_or_cancelled`, `cancellation_proration`, etc., is properly wired in `request.py`.
+> - **Dashboard KPIs**: Verified Missing. No code or templates exist for portal analytic widgets; this remains a true gap to be built.
+
 **Scope:** Portal UI only (QWeb templates, portal controllers for context/filters, SCSS in `kuec_portal_foundation` / theme). No backend/admin views, no ACL/security changes, no accounting logic changes.
 
 **Source of truth:** EPIC_GAP_ANALYSIS.md, WINK_PORTAL_UI_SPEC.md, Lovable reference patterns.

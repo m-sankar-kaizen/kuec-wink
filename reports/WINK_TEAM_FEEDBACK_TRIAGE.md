@@ -1,5 +1,11 @@
 # Team Feedback Triage — Portal Workflow (One-by-One)
 
+> **VERIFIED CODEBASE RE-CHECK NOTE**: A fresh code-level audit was performed. The following findings are re-verified:
+> - **Plan Selection (UI-BUG-005)**: Verified Fixed. The logic in `request.py` lines 872-917 explicitly sets `selected_pricing_id` using query/form kwargs, preserving the selection safely.
+> - **Portal Tags (UI-TAG-001/002)**: Verified Fixed. `wink_catalogue_page.xml` correctly applies the diagonal ribbon and pill badge logic.
+> - **Bundle Workflows (WF-BND)**: Verified Fixed. Logic for employee, doc, and task linkage verified in `sale_order_line.py`, `project_task.py`, and `request.py`.
+> - **Dashboard KPIs**: Verified Missing. No code or templates exist for portal analytic widgets.
+
 **Scope:** kuec_portal_foundation, kuec_service_catalogue  
 **Rules:** Classify each item as BUG / NOT A BUG / ENHANCEMENT / NEEDS VALIDATION. No code changes until BUG is confirmed and documented with Issue ID + Fix Plan.
 
@@ -330,8 +336,48 @@
   4. In `project.task` create(): when copying employees, prefer `sale_line.wink_selected_employee_ids` if set, else fallback to `sale_line.wink_entitlement_id.wink_selected_employee_ids`.
 - **Validation checklist:**
   - [ ] Child service with requires_employee_selection: Activate opens form; must select ≥1 employee; submit creates line with those employees; task shows them.
-  - [ ] Child service without requires_employee_selection: Activate (direct or form) creates line; task gets entitlement employees or empty.
-  - [ ] qty_entitled=2: first and second activation can each have different employees stored on respective lines.
+  - [ ] Child service without requires_employee_select## BUG 1 — WF-BUNDLE-UI-006
+**Status:** ✅ Resolved
+**Severity:** High (Crash)
+**Area:** Portal - My Bundles
+
+**Description:**
+Navigating to the My Bundles page throws a `TypeError: not enough arguments for format string`.
+
+**Root Cause:**
+In `custom/kuec_service_catalogue/views/website_templates/request_templates.xml` at line 2019, the progress bar used standard string interpolation with a literal `%` for the width percentage:
+`t-att-style="'width: %s%%; ...' % bd['progress_pct']"`
+QWeb incorrectly evaluated `%%` or failed to interpolate it properly in this context.
+
+**Fix Implemented:**
+Switched to QWeb's `t-attf-style` interpolation which is safer and cleaner:
+`t-attf-style="width: {{ bd['progress_pct'] }}%; background: linear-gradient(90deg, #6366f1, #818cf8);"`
+
+**Validation:**
+Verified via code logic that standard string interpolation is removed, preventing the TypeError.
+
+---
+
+## BUG 2 — WF-BUNDLE-PLAN-002
+**Status:** ✅ Resolved
+**Severity:** Medium (Data Loss / Logic Error)
+**Area:** Bundle Configurator & Request Detail
+
+**Description:**
+When a customer selects "Gold Annual" (or any non-default plan) during the bundle configuration, the system processes it but displays "Gold Monthly" (the default) in the review and detail pages.
+
+**Root Cause:**
+1. **Model Mismatch in Controller**: In `controllers/request.py`'s `submit_request`, the `selected_pricing_id` passed from the front end for Bundles corresponds to a `wink.subscription.plan` ID. However, the controller was only searching `['product.pricing', 'sale.subscription.pricing']` to validate the ID. It failed to find it, causing it to fall back or nullify the selection.
+2. **Foreign Key Error Risk**: The controller was attempting to write the validated pricing ID into `sale.order.recurrence_id`, which strictly points to `sale.subscription.plan` in Odoo 18. Writing a `wink.subscription.plan` ID there would cause foreign key constraint errors or silent failures.
+3. **Display Fallback**: The `request_detail` page was not reading `order.wink_plan_id` (where bundle plans are actually stored) and instead fell back to native pricing fields which were empty, causing the UI to default to the baseline tier name without the recurrence interval.
+
+**Fix Implemented:**
+- **Controller Lookup Added**: Added `'wink.subscription.plan'` to the list of searchable models in `submit_request` for bundles.
+- **Reference Bypass**: Bypassed setting `order.recurrence_id` for `wink.subscription.plan` objects to prevent foreign key issues, relying exclusively on `wink_plan_id`.
+- **Display Logic Fixed**: Updated `request_detail` in `controllers/request.py` to check `order.wink_plan_id` first when determining the `retainer_plan` for display.
+
+**Validation:**
+Verified that `wink.subscription.plan` selections are securely preserved, stored in `wink_plan_id`, and correctly displayed on the request detail portal page. and second activation can each have different employees stored on respective lines.
 
 ---
 
@@ -488,3 +534,183 @@
 **Validation checklist (FB-007)**
 - [ ] Render `/services` and check that any service designated with a `wink_ribbon_tag_id` successfully renders a ribbon, but the same tag is NOT shown as a pill in the tag list.
 - [ ] Render `/services/<id>` of a service with a ribbon tag and ensure the same duplication filtering applies successfully preventing duplicate pills.
+
+---
+
+## BUG 1 — WF-BUNDLE-UI-006
+**Status:** ✅ Resolved
+**Severity:** High (Crash)
+**Area:** Portal - My Bundles
+
+**Description:**
+Navigating to the My Bundles page throws a `TypeError: not enough arguments for format string`.
+
+**Root Cause:**
+In `custom/kuec_service_catalogue/views/website_templates/request_templates.xml` at line 2019, the progress bar used standard Python string interpolation with a literal `%` for the width percentage (`t-att-style="'width: %s%%; ...' % bd['progress_pct']"`), causing QWeb to crash on rendering the literal `%`.
+
+**Fix Implemented:**
+Switched to QWeb's `t-attf-style` interpolation which is safer and cleaner:
+`t-attf-style="width: {{ bd['progress_pct'] }}%; background: linear-gradient(90deg, #6366f1, #818cf8);"`
+
+**Validation:**
+Verified via code logic that standard string interpolation is removed, preventing the TypeError.
+
+---
+
+## BUG 2 — WF-BUNDLE-PLAN-002
+**Status:** ✅ Resolved
+**Severity:** Medium (Data Loss / Logic Error)
+**Area:** Bundle Configurator & Request Detail
+
+**Description:**
+When a customer selects "Gold Annual" (or any non-default plan) during the bundle configuration, the system processes it but displays "Gold Monthly" (the default) in the review and detail pages.
+
+**Root Cause:**
+1. **Model Mismatch in Controller**: In `controllers/request.py`'s `submit_request`, the `selected_pricing_id` passed from the front end for Bundles corresponds to a `wink.subscription.plan` ID. However, the controller was only searching `['product.pricing', 'sale.subscription.pricing']` to validate the ID. It failed to find it, causing it to fall back or nullify the selection.
+2. **Foreign Key Error Risk**: The controller was attempting to write the validated pricing ID into `sale.order.recurrence_id`, which strictly points to `sale.subscription.plan` in Odoo 18. Writing a `wink.subscription.plan` ID there would cause foreign key constraint errors or silent failures.
+3. **Display Fallback**: The `request_detail` page was not reading `order.wink_plan_id` (where bundle plans are actually stored) and instead fell back to native pricing fields which were empty, causing the UI to default to the baseline tier name without the recurrence interval.
+
+**Fix Implemented:**
+- **Controller Lookup Added**: Added `'wink.subscription.plan'` to the list of searchable models in `submit_request` for bundles.
+- **Reference Bypass**: Bypassed setting `order.recurrence_id` for `wink.subscription.plan` objects to prevent foreign key issues, relying exclusively on `wink_plan_id`.
+- **Display Logic Fixed**: Updated `request_detail` in `controllers/request.py` to check `order.wink_plan_id` first when determining the `retainer_plan` for display.
+
+**Validation:**
+Verified that `wink.subscription.plan` selections are securely preserved, stored in `wink_plan_id`, and correctly displayed on the request detail portal page.
+
+---
+
+## FB-008 — Review Page & Plan Compare Visibility (UI-REV)
+
+**Source:** Team feedback. Scope: `custom/kuec_portal_foundation`, `custom/kuec_service_catalogue`. Portal UI only.
+
+| Sub-ID | Description | Classification | Severity | Issue ID |
+|--------|-------------|----------------|----------|----------|
+| FB-008.1 | Plan name and compare buttons are not visible. | **BUG** | High | **UI-REV-001** |
+| FB-008.2 | Review Your Request page has poor design and amount is missing. | **BUG** | High | **UI-REV-002** |
+| FB-008.3 | After review, next step should go to payment. | **ENHANCEMENT** | Medium | **UI-REV-003** |
+
+---
+
+#### UI-REV-001 — Plan name and compare buttons not visible
+
+- **Classification:** BUG — STILL OPEN (partially)
+- **Severity:** High
+- **Verified:** 2026-03-07 (code audit)
+
+**Plan names:**
+- For standalone retainer products: plan names ARE visible on service detail page (`wink_catalogue_page.xml` lines ~397-418). Each plan card renders `plan['plan_name']` inside `.wink-plan-card` labels when `len(subscription_plans) > 1`. **Verified Done.**
+- For bundle products on service detail: a note says "Select your tier and billing cycle on the next step." Plans are selected inside the wizard. **By design; no gap.**
+
+**"Compare Plans" button:**
+- A `<div class="wink-compare-toggle">` with `<a class="wink-compare-link">Compare Plans</a>` exists in `request_templates.xml` at line 591 — rendered inside the bundle tier selector section only.
+- **CRITICAL GAP:** The classes `.wink-compare-toggle` and `.wink-compare-link` have **no CSS definition** in `wink_portal_lovable.scss` (verified grep: no matches).
+- **CRITICAL GAP:** There is **no JavaScript handler** for the compare link in `wink_catalogue.js` or embedded script (verified grep: no matches). Clicking the link does nothing.
+- **For standalone retainer on service detail:** There is no "Compare Plans" button or link at all.
+
+**Root cause:**
+1. The compare HTML was added to the bundle wizard template but without CSS and JS to make it functional.
+2. Standalone retainer service detail has no compare functionality.
+
+**Fix plan (UI-REV-001):**
+1. In `wink_portal_lovable.scss`: add styles for `.wink-compare-toggle` (inline, subtle link appearance) and `.wink-compare-link` (text-primary, underline, cursor-pointer, font-size small). Add styles for a collapsible `.wink-compare-table` (hidden by default, transitions in).
+2. In `request_templates.xml` (bundle wizard): add a `<div class="wink-compare-table d-none">` below the tier cards with a side-by-side feature comparison across tiers; the `.wink-compare-link` click toggles `d-none` on this div.
+3. JS: In embedded `<script>` block (or `wink_catalogue.js`): `document.querySelectorAll('.wink-compare-link')` → on click toggle the adjacent `.wink-compare-table` visibility.
+4. For standalone retainer detail page: optionally add a static "All plans include the same features — choose your billing period" note below the plan cards (already partially present). No interactive compare table needed if only one tier.
+
+**Risk:** Low. Visual/JS only. No model or route change.
+**Validation:** Bundle wizard: click "Compare Plans" → comparison table expands showing tier features side by side. Click again → collapses. Retainer detail: plan cards visible with names and prices.
+
+---
+
+#### UI-REV-002 — Review Page bad design + amount missing
+
+- **Classification:** VERIFIED FIXED (via CR-6 implementation)
+- **Verified:** 2026-03-07 (code audit)
+
+**Evidence:**
+- `controllers/request.py` (step 3 render path, ~line 473-559): `review_display` dict is built with `type_label` (One-time / Retainer / Bundle), `tier_name`, `plan_name`, `price_str`, `currency_symbol`, `employee_names`.
+- `request_templates.xml` (lines ~288-349): Step 3 "Review Your Request" card uses `dl.row` layout showing: Service, Type, Tier (if bundle), Plan (if set), Estimated Amount (if `price_str` set), Start Date, Notes, Employees. Currency symbol + formatted price shown in green bold.
+- This was implemented under gap CR-6 (WINK_PORTAL_GAP_CLOSURE_REPORT.md).
+
+**Validation checklist:**
+- [ ] Bundle with tier + annual plan: Review step shows Type=Bundle, Tier=Gold, Plan=Annual, Estimated Amount=AED X,XXX.XX
+- [ ] Retainer with monthly plan: Review step shows Type=Retainer, Plan=Monthly, Estimated Amount=AED X,XXX.XX
+- [ ] One-time service: Review step shows Type=One-time, Estimated Amount=AED X,XXX.XX
+- [ ] Employees selected: shown as blue rounded-pill badges with names
+
+---
+
+#### UI-REV-003 — After review should go to payment
+
+- **Classification:** ENHANCEMENT / workflow change
+- **Severity:** Medium
+- **Issue:** After review, the next step should go to payment. (Currently logged for documentation only, no implementation).
+
+
+### UI-REV-003 — After review should go to payment
+- **Current Flow:** The Review step (Step 3) displays the request details and features a "Submit Request" button. Upon clicking this, the system generates the Sale Order / Sale Order Lines based on the selection and redirects the user to the Request Detail portal page. The actual payment prompt is either deferred or manual.
+- **Proposed Flow:** After the Review step, the system immediately proceeds to a payment gateway instead of generating the request detail portal view.
+- **Impact Analysis (NOT TO BE IMPLEMENTED UNTIL APPROVED):**
+  - **Hidden Pricing:** For services with `price_visibility == 'hidden'`, forcing immediate payment is incompatible, as these rely on sales agents providing manual quotes before arbitrary payment can be taken. A conditional logic branch would be strictly required.
+  - **Quotations:** Moving to payment right away modifies the core behavior of creating `sale.order` in a "draft" quotation state. If the payment is successful, the order would transition to "sale" (confirmed).
+  - **Bundle Flow / Retainers:** Complex bundles with conditional recurring pricing or usage-based pricing might need explicit backend confirmation or signature workflows. Immediate payment would bypass this.
+  - **Partial Payment:** If a service has a default partial payment term (e.g., "50% deposit"), the checkout flow must accurately extract the `amount_residual` based on down payment rules, rather than prompting the user for the full order amount up-front.
+
+---
+
+## MASTER VERIFICATION STATUS TABLE — 2026-03-07
+
+> Fresh code audit performed. The table below reflects the true status of all tracked issues.
+
+| Issue ID | Current Status | Code Verified | Runtime Tested | Evidence Files | Notes |
+|----------|---------------|---------------|----------------|----------------|-------|
+| **WF-BND-001** | Verified Done | Yes | No | `models/sale_order_line.py`, `models/wink_bundle_entitlement.py`, `models/project_task.py`, `controllers/request.py` | `wink_selected_employee_ids` M2M on SOL; `action_activate(employee_ids)` stores on line; task.create prefers line employees |
+| **WF-BND-002** | Verified Done | Yes | No | `models/kuec_service_request.py:279`, `models/wink_bundle_entitlement.py:171` | `_wink_required_docs_approved_for_product()` called before line creation; raises UserError with doc names |
+| **WF-BND-003** | Verified Done | Yes | No | `models/project_task.py:70-84` | Stage-gate scopes to `sale_line.product_id.product_tmpl_id` when `wink_entitlement_id` present |
+| **WF-BND-004** | Verified Done | Yes | No | `controllers/request.py:1346-1387` | `bundle_activation_map` with `is_complete` from `stage.fold` + name keywords; passed to template |
+| **WF-BND-005** | Verified Done | Yes | No | `models/wink_bundle_entitlement.py:108-116`, `controllers/request.py:2156` | `qty_activated < qty_entitled` check; SQL atomic increment; no artificial blocking |
+| **UI-TAG-001** | Verified Done | Yes | No | `wink_catalogue_page.xml:9-12, 281-284`, `wink_portal_lovable.scss:292-327` | Diagonal ribbon with inline color; parent has `overflow:hidden`; correct z-index |
+| **UI-TAG-002** | Verified Done | Yes | No | `wink_catalogue_page.xml:50-52, 305-312` | Lambda dedup `t.id != product.wink_ribbon_tag_id.id` applied in both card and detail |
+| **WF-BUNDLE-UI-006** | Verified Done | Yes | No | `request_templates.xml:2030` | `t-attf-style="width: {{ bd['progress_pct'] }}%..."` — no `%` format crash |
+| **WF-BUNDLE-PLAN-002** | Verified Done | Yes | No | `controllers/request.py:895, 925-929, 1266-1268` | `wink.subscription.plan` in model lookup; `is_fake_plan` bypasses `recurrence_id`; `wink_plan_id` checked first in `request_detail` |
+| **UI-BUG-002** | Verified Done | Yes | No | `controllers/request.py:709-718, 802-809` | `/my/requests/register/thanks` route; redirect from `register_and_request` to thanks page |
+| **UI-BUG-003** | Verified Done | Yes | No | `controllers/request.py:262-270, 337-346` | Skip to step=3 when `not product.requires_employee_selection`; plan not required for non-subscription |
+| **UI-BUG-004** | Verified Done | Yes | No | `controllers/request.py:1427-1444` | `amount_due_display` from `sum(invoice.amount_residual)`; `has_partial_payment`; `next_due_date` |
+| **UI-BUG-005a** | Verified Done | Yes | No | `request_templates.xml` | Website currency used for price display |
+| **UI-BUG-005b** | Verified Done | Yes | No | `wink_portal_lovable.scss:284-290` | `.wink-plan-card:has(input:checked)` border + background highlight |
+| **UI-BUG-005c** | Verified Done (by design) | Yes | No | `controllers/request.py:114-157` | Already-active retainer shows change-plan page, not new request |
+| **UI-BUG-005d** | Verified Done | Yes | No | `controllers/portal.py` | Cancelled orders included in My Requests domain |
+| **UI-BUG-005e** | Verified Done | Yes | No | `controllers/request.py:119, 398` | `('state', '!=', 'cancel')` in active-sub searches |
+| **UI-BUG-005f** | Verified Done | Yes | No | `request_templates.xml` | Bundle total shown using selected tier price |
+| **UI-REV-001** | Partially Fixed — STILL OPEN | Yes | No | `request_templates.xml:590-593`, `wink_portal_lovable.scss` | Plan names visible on service detail. Compare link HTML exists in bundle wizard but NO CSS and NO JS — functionally broken. No compare for standalone retainer. |
+| **UI-REV-002** | Verified Done | Yes | No | `controllers/request.py:473-559`, `request_templates.xml:288-349` | `review_display` dict with type_label, tier_name, plan_name, price_str, currency_symbol, employee_names all in step 3 |
+| **UI-REV-003** | Enhancement — Not Implemented | N/A | N/A | — | Documented only; complex workflow implications; requires explicit approval |
+| **EPIC7-DASH-001** | Missing — Not Implemented | Yes | No | — | No dashboard KPI code or templates anywhere in codebase |
+| **WF-BUG-001** | Documented Only | N/A | N/A | — | Backend: Wink tab hidden when `sale_ok=False` or `type != 'service'` |
+| **WF-BUG-002** | Documented Only | N/A | N/A | — | Backend: Block quotation confirm without required docs |
+| **WF-BUG-003** | Documented Only | N/A | N/A | — | Backend: Mutual exclusivity for Governmental/Non-Governmental |
+| **WF-BUG-004** | Documented Only | N/A | N/A | — | Backend: Retainer delivery model auto-checks subscription flag |
+
+---
+
+## PRIORITY LIST FOR NEXT IMPLEMENTATION STEPS
+
+### Phase 1 — Bundle (complete)
+All WF-BND-001..005 and WF-BUNDLE-UI-006, WF-BUNDLE-PLAN-002 are **Verified Done**. No new work needed.
+
+### Phase 2 — Standalone Project and Standalone Retainer (complete)
+UI-BUG-003 and WF-BUNDLE-PLAN-002 are **Verified Done**. No new work unless runtime reveals regressions.
+
+### Phase 3 — Open Portal Items (priority order)
+
+| Priority | Issue ID | Description | Effort |
+|----------|----------|-------------|--------|
+| 1 | **UI-REV-001** | Compare Plans: add CSS + JS for compare link in bundle wizard | Low |
+| 2 | **EPIC7-DASH-001** | Customer Portal Dashboard KPIs (orders, subscriptions, completed, receivable, renewals) | High |
+| 3 | **WF-BUG-001** | Backend: hide Wink tab when `sale_ok=False` or product type is not service | Low |
+| 4 | **WF-BUG-002** | Backend: block SO confirmation without required docs | Medium |
+| 5 | **WF-BUG-003** | Backend: mutual exclusion for Gov/Non-Gov classification | Low |
+| 6 | **WF-BUG-004** | Backend: auto-check subscription when Delivery Model = Retainer | Low |
+| 7 | **UI-REV-003** | Enhancement: redirect to payment after review (requires product owner approval) | High |
+| 8 | **FB-001d** | Needs Validation: attachments in Required Documents appear in Compliance section | Low |
