@@ -1434,22 +1434,15 @@
                                         <t t-else="">
                                             <span class="badge bg-secondary">Available</span>
                                         </t>
-                                        <!-- No limit on reactivation: always show Activate when order confirmed -->
+                                        <!-- Modal-driven activation (handles docs + employees inline) -->
                                         <t t-if="order.state in ('sale', 'done')">
-                                            <t t-if="ent.service_product_id.requires_employee_selection">
-                                                <a t-attf-href="/my/requests/#{order.id}/bundle/#{ent.id}/activate"
-                                                   class="btn btn-sm"
-                                                   style="background:var(--wink-primary);color:#fff;">Activate</a>
-                                            </t>
-                                            <t t-else="">
-                                                <form method="post"
-                                                      t-attf-action="/my/requests/#{order.id}/bundle/#{ent.id}/activate">
-                                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                                    <button type="submit" class="btn btn-sm" style="background:var(--wink-primary);color:#fff;">Activate</button>
-                                                </form>
-                                            </t>
+                                            <button type="button" class="btn btn-sm wink-btn-primary"
+                                                    t-attf-data-bs-target="#wink-activate-modal-#{ent.id}"
+                                                    data-bs-toggle="modal">
+                                                <i class="fa fa-play me-1"/>Activate
+                                            </button>
                                         </t>
-                                        <t t-if="order.state not in ('sale', 'done')">
+                                        <t t-else="">
                                             <small class="text-muted fst-italic">Available after order confirmation</small>
                                         </t>
                                     </div>
@@ -1457,6 +1450,245 @@
                             </t>
                         </div>
                     </div>
+
+                    <!-- ── Per-entitlement activation modals ── -->
+                    <t t-foreach="order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)" t-as="ent_m">
+                        <t t-set="prereq" t-value="entitlement_prereqs.get(ent_m.id, {})"/>
+                        <div class="modal fade" t-attf-id="wink-activate-modal-#{ent_m.id}"
+                             tabindex="-1" aria-modal="true" role="dialog">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content wink-activate-modal-content">
+                                    <div class="modal-header wink-activate-modal-header">
+                                        <h5 class="modal-title">
+                                            <i class="fa fa-play-circle me-2"/>Activate: <t t-esc="ent_m.name"/>
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"/>
+                                    </div>
+                                    <div class="modal-body p-0">
+
+                                        <!-- Doc upload success flash -->
+                                        <div t-if="doc_uploaded and open_modal and open_modal == str(ent_m.id)"
+                                             class="alert alert-success py-2 mx-3 mt-3 small mb-0">
+                                            <i class="fa fa-check me-1"/>Document uploaded. Awaiting coordinator approval.
+                                        </div>
+
+                                        <!-- Documents section -->
+                                        <t t-if="prereq.get('doc_items')">
+                                            <div class="wink-activate-section">
+                                                <div class="wink-activate-section-title">
+                                                    <i class="fa fa-file-text-o me-1"/>Required Documents
+                                                </div>
+                                                <t t-foreach="prereq.get('doc_items', [])" t-as="doc">
+                                                    <div class="wink-activate-doc-row">
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span class="wink-activate-doc-name"><t t-esc="doc['name']"/></span>
+                                                            <t t-if="doc['state'] == 'approved'">
+                                                                <span class="wink-doc-badge approved"><i class="fa fa-check me-1"/>Approved</span>
+                                                            </t>
+                                                            <t t-elif="doc['state'] == 'under_review'">
+                                                                <span class="wink-doc-badge pending"><i class="fa fa-clock-o me-1"/>Pending review</span>
+                                                            </t>
+                                                            <t t-elif="doc['state'] == 'change_required'">
+                                                                <span class="wink-doc-badge rejected"><i class="fa fa-exclamation me-1"/>Changes needed</span>
+                                                            </t>
+                                                            <t t-elif="doc['state'] == 'rejected'">
+                                                                <span class="wink-doc-badge rejected"><i class="fa fa-times me-1"/>Rejected</span>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <span class="wink-doc-badge missing"><i class="fa fa-upload me-1"/>Not uploaded</span>
+                                                            </t>
+                                                        </div>
+                                                        <t t-if="doc.get('notes')">
+                                                            <p class="text-muted small mb-1 fst-italic"><t t-esc="doc['notes']"/></p>
+                                                        </t>
+                                                        <!-- Upload form (always available) -->
+                                                        <t t-if="doc['state'] in ('approved', 'under_review')">
+                                                            <!-- Collapsible re-upload for already-submitted docs -->
+                                                            <a href="#" class="wink-reupload-toggle small text-muted mt-1 d-inline-block"
+                                                               t-attf-data-target="#reupload-#{doc['req_id']}-#{ent_m.id}">
+                                                                <i class="fa fa-refresh me-1"/>Re-upload document
+                                                            </a>
+                                                            <div class="d-none mt-2" t-attf-id="reupload-#{doc['req_id']}-#{ent_m.id}">
+                                                                <form method="post"
+                                                                      t-attf-action="/my/requests/#{order.id}/documents/upload"
+                                                                      enctype="multipart/form-data"
+                                                                      class="wink-inline-upload-form">
+                                                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                                    <input type="hidden" name="requirement_id" t-att-value="doc['req_id']"/>
+                                                                    <input type="hidden" name="redirect_to"
+                                                                           t-attf-value="/my/requests/#{order.id}?open_modal=#{ent_m.id}&amp;doc_uploaded=1"/>
+                                                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                                                        <input type="file" name="doc_file"
+                                                                               class="form-control form-control-sm flex-grow-1"
+                                                                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                                                               required="required"/>
+                                                                        <button type="submit" class="btn btn-sm btn-outline-primary flex-shrink-0">
+                                                                            <i class="fa fa-upload me-1"/>Upload
+                                                                        </button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <!-- Immediate upload form for missing / rejected / change-required -->
+                                                            <form method="post"
+                                                                  t-attf-action="/my/requests/#{order.id}/documents/upload"
+                                                                  enctype="multipart/form-data"
+                                                                  class="wink-inline-upload-form mt-2">
+                                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                                <input type="hidden" name="requirement_id" t-att-value="doc['req_id']"/>
+                                                                <input type="hidden" name="redirect_to"
+                                                                       t-attf-value="/my/requests/#{order.id}?open_modal=#{ent_m.id}&amp;doc_uploaded=1"/>
+                                                                <div class="d-flex gap-2 align-items-center flex-wrap">
+                                                                    <input type="file" name="doc_file"
+                                                                           class="form-control form-control-sm flex-grow-1"
+                                                                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                                                           required="required"/>
+                                                                    <button type="submit" class="btn btn-sm btn-primary flex-shrink-0">
+                                                                        <i class="fa fa-upload me-1"/>Upload
+                                                                    </button>
+                                                                </div>
+                                                            </form>
+                                                        </t>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+
+                                        <!-- Employees section (when required) -->
+                                        <t t-if="prereq.get('requires_employees')">
+                                            <div class="wink-activate-section border-top">
+                                                <div class="wink-activate-section-title">
+                                                    <i class="fa fa-users me-1"/>Select Employees
+                                                </div>
+                                                <t t-if="prereq.get('employees')">
+                                                    <div class="wink-emp-grid">
+                                                        <t t-foreach="prereq['employees']" t-as="emp">
+                                                            <label class="wink-emp-card">
+                                                                <input type="checkbox" class="wink-emp-checkbox d-none"
+                                                                       t-attf-name="emp_check_#{ent_m.id}"
+                                                                       t-att-value="emp.id"/>
+                                                                <div class="wink-emp-body">
+                                                                    <i class="fa fa-user wink-emp-icon"/>
+                                                                    <span class="wink-emp-name"><t t-esc="emp.name"/></span>
+                                                                </div>
+                                                            </label>
+                                                        </t>
+                                                    </div>
+                                                </t>
+                                                <t t-else="">
+                                                    <p class="text-warning small mb-0">
+                                                        <i class="fa fa-warning me-1"/>No employees in directory.
+                                                        <a href="/my/employees">Add employees</a> first.
+                                                    </p>
+                                                </t>
+                                            </div>
+                                        </t>
+
+                                        <!-- Docs blocking notice -->
+                                        <t t-if="not prereq.get('docs_ok')">
+                                            <div class="px-3 pb-3">
+                                                <div class="alert alert-warning py-2 mb-0 small">
+                                                    <i class="fa fa-lock me-1"/>Upload all required documents and await coordinator approval to activate.
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                        <!-- Activate form (with employee_ids from grid above) -->
+                                        <form method="post"
+                                              t-attf-action="/my/requests/#{order.id}/bundle/#{ent_m.id}/activate"
+                                              t-attf-id="wink-activate-form-#{ent_m.id}"
+                                              class="wink-activate-form">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <div class="modal-footer border-top">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                        data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit"
+                                                        t-attf-class="btn btn-primary btn-sm wink-activate-submit"
+                                                        t-att-data-docs-ok="'1' if prereq.get('docs_ok') else '0'"
+                                                        t-att-data-req-emp="'1' if prereq.get('requires_employees') else '0'"
+                                                        t-att-disabled="'disabled' if (not prereq.get('docs_ok') or prereq.get('requires_employees')) else None">
+                                                    <i class="fa fa-play me-1"/>Activate Service
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Activation modal JS -->
+                    <script>
+                        (function() {
+                            // ── Reactive Activate button ──────────────────────────
+                            function updateActivateBtn(modal) {
+                                var btn = modal.querySelector('.wink-activate-submit');
+                                if (!btn) return;
+                                var docsOk  = btn.getAttribute('data-docs-ok')  === '1';
+                                var reqEmp  = btn.getAttribute('data-req-emp')  === '1';
+                                if (!docsOk) { btn.disabled = true; return; }
+                                btn.disabled = reqEmp
+                                    ? modal.querySelectorAll('.wink-emp-checkbox:checked').length === 0
+                                    : false;
+                            }
+
+                            document.querySelectorAll('.modal[id^="wink-activate-modal-"]').forEach(function(m) {
+                                m.addEventListener('shown.bs.modal', function() { updateActivateBtn(m); });
+                                updateActivateBtn(m);
+                            });
+
+                            // ── Employee card toggle ──────────────────────────────
+                            document.querySelectorAll('.wink-emp-card').forEach(function(card) {
+                                var cb = card.querySelector('.wink-emp-checkbox');
+                                if (!cb) return;
+                                card.addEventListener('click', function() {
+                                    cb.checked = !cb.checked;
+                                    card.classList.toggle('selected', cb.checked);
+                                    var modal = card.closest('.modal');
+                                    syncEmployeesToForm(modal);
+                                    if (modal) updateActivateBtn(modal);
+                                });
+                            });
+
+                            function syncEmployeesToForm(modal) {
+                                if (!modal) return;
+                                var form = modal.querySelector('.wink-activate-form');
+                                if (!form) return;
+                                form.querySelectorAll('input[name="employee_ids"]').forEach(function(el) { el.remove(); });
+                                // Add one hidden input per checked employee
+                                modal.querySelectorAll('.wink-emp-checkbox:checked').forEach(function(checked) {
+                                    var hidden = document.createElement('input');
+                                    hidden.type = 'hidden';
+                                    hidden.name = 'employee_ids';
+                                    hidden.value = checked.value;
+                                    form.appendChild(hidden);
+                                });
+                            }
+
+                            // ── Re-upload toggle ──────────────────────────────────
+                            document.querySelectorAll('.wink-reupload-toggle').forEach(function(link) {
+                                link.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    var panel = document.querySelector(link.getAttribute('data-target'));
+                                    if (!panel) return;
+                                    panel.classList.toggle('d-none');
+                                    var icon = link.querySelector('i');
+                                    if (icon) icon.className = panel.classList.contains('d-none')
+                                        ? 'fa fa-refresh me-1' : 'fa fa-chevron-up me-1';
+                                });
+                            });
+
+                            // ── Auto-open modal after doc upload redirect ─────────
+                            var params = new URLSearchParams(window.location.search);
+                            var openModalId = params.get('open_modal');
+                            if (openModalId &amp;&amp; typeof bootstrap !== 'undefined') {
+                                var modalEl = document.getElementById('wink-activate-modal-' + openModalId);
+                                if (modalEl) { new bootstrap.Modal(modalEl).show(); }
+                            }
+                        })();
+                    </script>
 
                     <!-- Compliance Documents Section -->
                     <div t-if="requirements" class="card mt-3 shadow-sm">

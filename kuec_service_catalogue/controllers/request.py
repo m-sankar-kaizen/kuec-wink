@@ -1251,6 +1251,37 @@ class WinkRequest(http.Controller):
         ])
         sub_map = {s.requirement_id.id: s for s in submissions}
 
+        # Build per-entitlement prereqs for activation modal (docs + employees)
+        entitlement_prereqs = {}
+        if order.wink_entitlement_ids:
+            partner_emp = order.partner_id.commercial_partner_id
+            modal_employees = request.env['kuec.employee.directory'].sudo().search([
+                ('partner_id', '=', partner_emp.id)
+            ])
+            for ent in order.wink_entitlement_ids:
+                docs_ok, _missing = order._wink_required_docs_approved_for_product(ent.service_product_id)
+                doc_items = []
+                if ent.service_product_id:
+                    for req in ent.service_product_id.kuec_document_ids.filtered(
+                        lambda d: getattr(d, 'requirement', '') == 'required'
+                    ):
+                        sub = sub_map.get(req.id)
+                        doc_items.append({
+                            'req_id': req.id,
+                            'name': req.name or '',
+                            'state': sub.state if sub else 'draft',
+                            'filename': sub.filename if sub else '',
+                            'notes': (sub.coordinator_notes or '') if sub else '',
+                        })
+                requires_emps = bool(getattr(ent.service_product_id, 'requires_employee_selection', False))
+                entitlement_prereqs[ent.id] = {
+                    'docs_ok': docs_ok,
+                    'doc_items': doc_items,
+                    'requires_employees': requires_emps,
+                    'employees': modal_employees,
+                    'can_activate': docs_ok,
+                }
+
         is_retainer = product and product.delivery_model == 'retainer'
         recurring_lines = product._wink_recurring_plan_lines() if product else []
         # Current plan: order.plan_id (sale.subscription.plan) or pricing record from wink_recurring_pricing_id
@@ -1508,6 +1539,10 @@ class WinkRequest(http.Controller):
             'submitted': kwargs.get('submitted') == '1',  # UI-013
             # WF-BND-002: activation error message when activation blocked (docs/employees)
             'activation_error': kwargs.get('activation_error') or request.params.get('activation_error', '') or '',
+            # Activation modal state
+            'entitlement_prereqs': entitlement_prereqs,
+            'open_modal': kwargs.get('open_modal', ''),
+            'doc_uploaded': kwargs.get('doc_uploaded') == '1',
             # UI-BUG-004 (FB-004): partial payment display
             'amount_due_display': amount_due_display,
             'amount_paid_display': amount_paid_display,
@@ -2124,6 +2159,10 @@ class WinkRequest(http.Controller):
                 'submitted_date': now,
             })
 
+        # Allow redirect back to activation modal when upload came from there
+        redirect_to = post.get('redirect_to', '')
+        if redirect_to and redirect_to.startswith('/my/requests/'):
+            return request.redirect(redirect_to)
         return request.redirect(
             f'/my/requests/{order_id}/documents?doc_uploaded=1'
         )
@@ -2155,31 +2194,9 @@ class WinkRequest(http.Controller):
             raise NotFound()
         # No limit on reactivation: customer can activate as many times as needed
 
-        # GET: show activation form when employees required
+        # GET: redirect back to request detail — activation is now handled inline via modal
         if request.httprequest.method == 'GET':
-            requires_emps = getattr(
-                entitlement.service_product_id,
-                'requires_employee_selection',
-                False,
-            )
-            if not requires_emps:
-                # For services without employee requirement, just go back to detail
-                return request.redirect(f'/my/requests/{order_id}')
-
-            partner = order.partner_id.commercial_partner_id
-            employees = request.env['kuec.employee.directory'].sudo().search([
-                ('partner_id', '=', partner.id),
-            ])
-            ok_docs, pending_docs = order._wink_required_docs_approved_for_product(
-                entitlement.service_product_id
-            )
-            return request.render('kuec_service_catalogue.wink_bundle_activate_form', {
-                'order': order,
-                'entitlement': entitlement,
-                'employees': employees,
-                'docs_ok': ok_docs,
-                'pending_docs': pending_docs,
-            })
+            return request.redirect(f'/my/requests/{order_id}?open_modal={entitlement_id}')
 
         # POST: perform activation
         employee_ids = []

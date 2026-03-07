@@ -628,3 +628,88 @@ input:checked + .wink-slider {
     color: var(--wink-primary);
     font-family: 'IBM Plex Mono', monospace;
 }
+
+/* ── Activation Modal ─────────────────────────────────────────────── */
+.wink-activate-modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 85, 183, 0.18);
+}
+.wink-activate-modal-header {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
+    color: #fff;
+    padding: 1rem 1.25rem;
+    border-bottom: none;
+    .modal-title { font-size: 1rem; font-weight: 700; }
+    .btn-close-white { filter: brightness(0) invert(1); opacity: 0.85; }
+}
+.wink-activate-section {
+    padding: 1rem 1.25rem;
+}
+.wink-activate-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--wink-muted);
+    margin-bottom: 0.75rem;
+}
+.wink-activate-doc-row {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--wink-border);
+    &:last-child { border-bottom: none; }
+}
+.wink-activate-doc-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--wink-text-dark);
+}
+.wink-doc-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    &.approved  { background: #dcfce7; color: #15803d; }
+    &.pending   { background: #fef9c3; color: #854d0e; }
+    &.rejected  { background: #fee2e2; color: #b91c1c; }
+    &.missing   { background: #f1f5f9; color: var(--wink-muted); }
+}
+.wink-inline-upload-form input[type="file"] {
+    font-size: 0.8rem;
+}
+/* Employee grid */
+.wink-emp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.wink-emp-card {
+    border: 2px solid var(--wink-border);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+    &:hover { border-color: var(--wink-primary); background: #f0f6ff; }
+    &.selected { border-color: var(--wink-primary); background: #e8f0ff; }
+}
+.wink-emp-body {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.wink-emp-icon {
+    color: var(--wink-primary);
+    font-size: 1rem;
+}
+.wink-emp-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--wink-text-dark);
+    line-height: 1.2;
+}
