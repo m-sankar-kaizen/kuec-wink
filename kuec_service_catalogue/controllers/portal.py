@@ -336,11 +336,9 @@ class KuecCustomerPortal(CustomerPortal):
     # U-3: Entitlement Dashboard — /my/bundles
     @http.route(['/my/bundles'], type='http', auth='user', website=True)
     def portal_my_bundles(self, **kw):
-        """Dedicated entitlement dashboard showing all active bundle subscriptions
-        with their service activation progress."""
+        """Dedicated entitlement dashboard — activate services, track progress, view tasks."""
         partner = request.env.user.partner_id.commercial_partner_id
         SaleOrder = request.env['sale.order'].sudo()
-        # Find all confirmed orders with bundle entitlements
         domain = [
             ('message_partner_ids', 'child_of', [partner.id]),
             ('wink_is_portal_request', '=', True),
@@ -349,30 +347,131 @@ class KuecCustomerPortal(CustomerPortal):
         ]
         orders = SaleOrder.search(domain, order='date_order desc')
 
-        # Build bundle data for each order
+        # Employees for this partner (shared across all modals)
+        modal_employees = request.env['kuec.employee.directory'].sudo().search([
+            ('partner_id', '=', partner.id)
+        ])
+
+        # Build per-entitlement prereqs (docs + employees) for activation modals
+        entitlement_prereqs = {}
+
+        # Build bundle data
         bundle_data = []
+        total_services = 0
+        total_activated = 0
+        total_docs_needed = 0
+
         for order in orders:
             entitlements = order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)
             total = len(entitlements)
-            activated = len(entitlements.filtered(lambda e: e.qty_activated > 0))
-            progress_pct = int((activated / total * 100)) if total > 0 else 0
+            activated_count = len(entitlements.filtered(lambda e: e.qty_activated > 0))
+            progress_pct = int((activated_count / total * 100)) if total > 0 else 0
             tier_name = order.wink_bundle_tier_id.name if order.wink_bundle_tier_id else ''
             bundle_name = ''
             if order.wink_source_product_id and order.wink_source_product_id.wink_bundle_id:
                 bundle_name = order.wink_source_product_id.wink_bundle_id.name
+
+            total_services += total
+            total_activated += activated_count
+
+            # Per-entitlement prereqs + task map
+            ent_activation_map = {}
+            try:
+                all_lines = entitlements.mapped('activated_line_ids')
+                line_completion = {}
+                if all_lines:
+                    tasks = request.env['project.task'].sudo().search([
+                        ('sale_line_id', 'in', all_lines.ids),
+                    ])
+                    tasks_by_line = {}
+                    for t in tasks:
+                        tasks_by_line.setdefault(t.sale_line_id.id, []).append(t)
+                    for line in all_lines:
+                        line_tasks = tasks_by_line.get(line.id, [])
+                        if not line_tasks:
+                            complete = False
+                        else:
+                            def _task_done(task):
+                                stage = getattr(task, 'stage_id', None)
+                                if not stage:
+                                    return False
+                                if getattr(stage, 'fold', False):
+                                    return True
+                                name = (stage.name or '').lower()
+                                return any(x in name for x in ('done', 'cancelled', 'closed', 'complete'))
+                            complete = all(_task_done(t) for t in line_tasks)
+                        line_completion[line.id] = complete
+                for ent in entitlements:
+                    ent_activation_map[ent.id] = [
+                        {
+                            'name': line.name or '',
+                            'is_complete': line_completion.get(line.id, False),
+                            'index': idx + 1,
+                        }
+                        for idx, line in enumerate(ent.activated_line_ids)
+                    ]
+            except Exception:
+                ent_activation_map = {}
+
+            # Per-entitlement docs + employee prereqs
+            order_has_docs_needed = False
+            for ent in entitlements:
+                docs_ok, _missing = order._wink_required_docs_approved_for_product(ent.service_product_id)
+                doc_items = []
+                if ent.service_product_id:
+                    for req in ent.service_product_id.kuec_document_ids.filtered(
+                        lambda r: r.requirement == 'required'
+                    ):
+                        sub = request.env['kuec.document.submission'].sudo().search([
+                            ('order_id', '=', order.id),
+                            ('requirement_id', '=', req.id),
+                        ], limit=1)
+                        doc_items.append({
+                            'req_id': req.id,
+                            'name': req.name,
+                            'state': sub.state if sub else 'draft',
+                            'notes': sub.coordinator_notes or '' if sub else '',
+                        })
+                if not docs_ok:
+                    order_has_docs_needed = True
+                requires_emps = bool(getattr(ent.service_product_id, 'requires_employee_selection', False))
+                entitlement_prereqs[ent.id] = {
+                    'docs_ok': docs_ok,
+                    'doc_items': doc_items,
+                    'requires_employees': requires_emps,
+                    'employees': modal_employees,
+                    'order_id': order.id,
+                }
+
+            if order_has_docs_needed:
+                total_docs_needed += 1
+
             bundle_data.append({
                 'order': order,
                 'entitlements': entitlements,
                 'total': total,
-                'activated': activated,
+                'activated': activated_count,
                 'progress_pct': progress_pct,
                 'tier_name': tier_name,
                 'bundle_name': bundle_name or (order.wink_source_product_id.name if order.wink_source_product_id else order.name),
+                'ent_activation_map': ent_activation_map,
             })
+
+        open_modal = kw.get('open_modal', '')
+        doc_uploaded = kw.get('doc_uploaded') == '1'
 
         values = {
             'bundle_data': bundle_data,
+            'entitlement_prereqs': entitlement_prereqs,
+            'open_modal': open_modal,
+            'doc_uploaded': doc_uploaded,
             'page_name': 'my_bundles',
             'partner': partner,
+            # KPI totals
+            'kpi_bundles': len(bundle_data),
+            'kpi_total_services': total_services,
+            'kpi_activated': total_activated,
+            'kpi_pending': total_services - total_activated,
+            'kpi_docs_needed': total_docs_needed,
         }
         return request.render('kuec_service_catalogue.portal_my_bundles', values)

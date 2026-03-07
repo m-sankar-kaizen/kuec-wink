@@ -558,7 +558,7 @@ class SaleOrderWink(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if 'wink_bundle_tier_id' in vals:
+        if 'wink_bundle_tier_id' in vals and not self.env.context.get('skip_tier_entitlements'):
             for order in self:
                 if order.wink_bundle_tier_id:
                     order._generate_tier_entitlements(order.wink_bundle_tier_id)

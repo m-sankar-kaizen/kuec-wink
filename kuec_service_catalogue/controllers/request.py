@@ -1167,14 +1167,14 @@ class WinkRequest(http.Controller):
                         'price_unit': tier.price,
                     })
 
-            # Save tier on order
-            order.sudo().write({
+            # Save tier on order — skip_tier_entitlements prevents the write() hook
+            # from also calling _generate_tier_entitlements; we create records below.
+            order.sudo().with_context(skip_tier_entitlements=True).write({
                 'wink_bundle_tier_id': tier.id,
             })
 
-            # Create entitlement records (no SO lines yet —
-            # real lines are created when customer activates).
-            # Employees and documents are linked to each child service (entitlement).
+            # Clear any stale entitlements then create once (avoids duplication with hook)
+            order.sudo().wink_entitlement_ids.unlink()
             for idx, item in enumerate(tier.item_ids.sorted('sequence')):
                 ent_vals = {
                     'order_id': order.id,

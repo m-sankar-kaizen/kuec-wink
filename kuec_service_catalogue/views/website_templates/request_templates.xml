@@ -74,7 +74,8 @@
                             </t>
                         </div>
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary rounded-xl touch-target">Next: Configure</button>
+                            <button type="submit" id="wizard-step0-next" class="btn btn-primary rounded-xl touch-target" disabled="disabled">Next: Configure</button>
+                            <small class="text-muted ms-3" id="wizard-step0-hint">Select a service above to continue</small>
                         </div>
                     </form>
                     <script>
@@ -83,14 +84,19 @@
                             if (!form) return;
                             var radios = form.querySelectorAll('input.wizard-service-radio');
                             var labels = form.querySelectorAll('label.wizard-service-card-label');
+                            var nextBtn = document.getElementById('wizard-step0-next');
+                            var hint = document.getElementById('wizard-step0-hint');
                             function updateSelection() {
+                                var anyChecked = false;
                                 labels.forEach(function(l) {
                                     var card = l.querySelector('.wink-card-selectable');
                                     if (!card) return;
                                     var r = l.querySelector('input[type="radio"]');
-                                    if (r &amp;&amp; r.checked) card.classList.add('wink-card-selected');
+                                    if (r &amp;&amp; r.checked) { card.classList.add('wink-card-selected'); anyChecked = true; }
                                     else card.classList.remove('wink-card-selected');
                                 });
+                                if (nextBtn) nextBtn.disabled = !anyChecked;
+                                if (hint) hint.style.display = anyChecked ? 'none' : '';
                             }
                             radios.forEach(function(r) { r.addEventListener('change', updateSelection); });
                             updateSelection();
@@ -329,7 +335,7 @@
                                         <span class="wink-review-value">
                                             <span class="d-flex flex-wrap justify-content-end gap-1">
                                                 <t t-foreach="review_display.get('employee_names')" t-as="ename">
-                                                    <span class="badge rounded-pill" style="background: #1F3864; color:#fff;"><t t-esc="ename"/></span>
+                                                    <span class="badge rounded-pill" style="background:var(--wink-primary); color:#fff;"><t t-esc="ename"/></span>
                                                 </t>
                                             </span>
                                         </span>
@@ -350,7 +356,7 @@
                         <!-- Info alert: differs based on whether price is set -->
                         <t t-if="product.price_visibility != 'hidden' and review_display.get('price_str')">
                             <!-- Priced: direct checkout -->
-                            <div class="alert d-flex align-items-start gap-2 mb-3" style="background:#f0f6ff; border:1px solid #c7daf5; color:#1F3864; border-radius:10px;">
+                            <div class="alert d-flex align-items-start gap-2 mb-3" style="background:#f0f6ff; border:1px solid #c7daf5; color:var(--wink-primary); border-radius:10px;">
                                 <i class="fa fa-credit-card mt-1"/>
                                 <div>
                                     <strong>Ready to checkout.</strong> Submitting will create your order and take you directly to payment.
@@ -376,23 +382,38 @@
                             <t t-foreach="wizard_draft.get('employee_ids', [])" t-as="eid">
                                 <input type="hidden" name="employee_ids" t-att-value="eid"/>
                             </t>
+                            <!-- R-5: Confirmation checkbox -->
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="review-confirm-check"/>
+                                <label class="form-check-label small text-muted" for="review-confirm-check">
+                                    I confirm the information above is correct and I am authorised to submit this request.
+                                </label>
+                            </div>
                             <div class="d-flex gap-2">
                                 <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;step=#{2 if product.requires_employee_selection else 1}" class="btn btn-outline-secondary rounded-xl">
                                     <i class="fa fa-arrow-left me-1"/>Back
                                 </a>
                                 <!-- UI-REV-001 / checkout directly: label changes based on price visibility -->
                                 <t t-if="product.price_visibility != 'hidden' and review_display.get('price_str')">
-                                    <button type="submit" class="btn btn-primary rounded-xl touch-target flex-grow-1 fw-bold">
+                                    <button type="submit" id="review-submit-btn" class="btn btn-primary rounded-xl touch-target flex-grow-1 fw-bold" disabled="disabled">
                                         <i class="fa fa-credit-card me-2"/>Confirm &amp; Pay
                                     </button>
                                 </t>
                                 <t t-else="">
-                                    <button type="submit" class="btn btn-primary rounded-xl touch-target flex-grow-1 fw-bold">
+                                    <button type="submit" id="review-submit-btn" class="btn btn-primary rounded-xl touch-target flex-grow-1 fw-bold" disabled="disabled">
                                         <i class="fa fa-paper-plane me-2"/>Submit Request
                                     </button>
                                 </t>
                             </div>
                         </form>
+                        <script>
+                            (function() {
+                                var cb = document.getElementById('review-confirm-check');
+                                var btn = document.getElementById('review-submit-btn');
+                                if (!cb || !btn) return;
+                                cb.addEventListener('change', function() { btn.disabled = !cb.checked; });
+                            })();
+                        </script>
                     </t>
 
                     <!-- Step 1 (Configure) and legacy full form: show when step is 1 or not set. Step 2 (Employees only) shown when step == 2; UI-BUG-003: step 2 only if requires_employee_selection -->
@@ -503,9 +524,18 @@
                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                             <input type="hidden" name="product_id" t-att-value="product.id"/>
                             <input type="hidden" name="next_step" value="3"/>
-                            <h5 class="mb-3"><i class="fa fa-users me-1"/> Select Employees <span id="wizard-emp-count-badge" class="badge bg-primary ms-2"><t t-esc="len(wizard_draft.get('employee_ids') or [])"/> selected</span></h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0"><i class="fa fa-users me-1"/> Select Employees <span id="wizard-emp-count-badge" class="badge ms-2" style="background:var(--wink-primary);"><t t-esc="len(wizard_draft.get('employee_ids') or [])"/> selected</span></h5>
+                                <t t-if="employees">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <a href="#" id="wizard-select-all" class="small fw-semibold" style="color:var(--wink-primary);">Select all</a>
+                                        <span class="text-muted small">·</span>
+                                        <a href="#" id="wizard-deselect-all" class="small text-muted">None</a>
+                                    </div>
+                                </t>
+                            </div>
                             <t t-if="employees">
-                                <div class="row g-2 mb-3" id="wizard-employees-list">
+                                <div class="row g-2 mb-2" id="wizard-employees-list">
                                     <t t-foreach="employees" t-as="emp">
                                         <t t-set="initials" t-value="''.join([(n[0] or '').upper() for n in (emp.name or '').split()[:2]]) or '?'"/>
                                         <div class="col-md-6">
@@ -514,11 +544,14 @@
                                                 <span class="wink-avatar-initials rounded-circle flex-shrink-0" t-att-title="emp.name"><t t-esc="initials"/></span>
                                                 <label class="form-check-label flex-grow-1 mb-0" t-att-for="'wizard_emp_%s' % emp.id">
                                                     <strong class="d-block"><t t-esc="emp.name"/></strong>
-                                                    <span class="text-muted small" t-if="emp.job_title"><t t-esc="emp.job_title"/></span>
+                                                    <span class="text-muted small"><t t-if="emp.job_title"><t t-esc="emp.job_title"/></t><t t-else="">Employee</t></span>
                                                 </label>
                                             </div>
                                         </div>
                                     </t>
+                                </div>
+                                <div class="mb-3">
+                                    <a href="/my/employees" class="small" style="color:var(--wink-primary);"><i class="fa fa-plus me-1"/>Add employee</a>
                                 </div>
                             </t>
                             <t t-else="">
@@ -535,12 +568,24 @@
                                 if (!form) return;
                                 var badge = document.getElementById('wizard-emp-count-badge');
                                 var cbs = form.querySelectorAll('input.wizard-emp-cb');
+                                var selectAll = document.getElementById('wizard-select-all');
+                                var deselectAll = document.getElementById('wizard-deselect-all');
                                 function updateCount() {
                                     var n = 0;
                                     cbs.forEach(function(cb) { if (cb.checked) n++; });
                                     if (badge) badge.textContent = n + ' selected';
                                 }
                                 cbs.forEach(function(cb) { cb.addEventListener('change', updateCount); });
+                                if (selectAll) selectAll.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    cbs.forEach(function(cb) { cb.checked = true; });
+                                    updateCount();
+                                });
+                                if (deselectAll) deselectAll.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    cbs.forEach(function(cb) { cb.checked = false; });
+                                    updateCount();
+                                });
                                 updateCount();
                             })();
                         </script>
@@ -560,11 +605,11 @@
                             <h5 class="mb-2"><i class="fa fa-calendar-check-o me-1"/> Selected Plan</h5>
                             <div class="card border-primary mb-2">
                                 <div class="card-body">
-                                    <span class="badge rounded-pill mb-2" style="background: #1F3864; color: white;"><t t-esc="selected_plan['plan_name']"/> Plan</span>
-                                    <div class="fw-bold" style="font-family: 'IBM Plex Mono', monospace; color: #1F3864;"><t t-esc="selected_plan.get('currency_symbol', selected_plan.get('currency_name', 'AED'))"/> <t t-esc="'{:,.2f}'.format(selected_plan['price'])"/> <t t-esc="selected_plan['period_label']"/></div>
+                                    <span class="badge rounded-pill mb-2" style="background:var(--wink-primary); color:#fff;"><t t-esc="selected_plan['plan_name']"/> Plan</span>
+                                    <div class="fw-bold" style="font-family: 'IBM Plex Mono', monospace; color:var(--wink-primary);"><t t-esc="selected_plan.get('currency_symbol', selected_plan.get('currency_name', 'AED'))"/> <t t-esc="'{:,.2f}'.format(selected_plan['price'])"/> <t t-esc="selected_plan['period_label']"/></div>
                                     <t t-if="selected_plan.get('monthly_equivalent') and selected_plan['monthly_equivalent'] != selected_plan['price']"><div class="small text-success">≈ <t t-esc="selected_plan.get('currency_symbol', selected_plan.get('currency_name', 'AED'))"/> <t t-esc="'{:,.2f}'.format(selected_plan['monthly_equivalent'])"/> / month</div></t>
                                     <t t-if="selected_plan.get('show_savings')"><span class="badge bg-success mt-1">Save <t t-esc="selected_plan['savings_pct']"/>%</span></t>
-                                    <t t-if="selected_plan.get('features')"><ul class="list-unstyled small mt-2 mb-0"><t t-foreach="selected_plan['features'][:6]" t-as="feat"><li class="mb-1"><i class="fa fa-check me-1" style="color: #2E75B6;"/><t t-esc="feat"/></li></t></ul></t>
+                                    <t t-if="selected_plan.get('features')"><ul class="list-unstyled small mt-2 mb-0"><t t-foreach="selected_plan['features'][:6]" t-as="feat"><li class="mb-1"><i class="fa fa-check me-1" style="color:var(--wink-primary);"/><t t-esc="feat"/></li></t></ul></t>
                                     <a t-attf-href="/services/#{product.id}" class="small">Change Plan (back to service)</a>
                                 </div>
                             </div>
@@ -1191,7 +1236,7 @@
                     </div>
                     <!-- Modern Action Banners -->
                     <div t-if="order.state in ['draft', 'sent'] and not quote_rejected" class="alert shadow-sm border-0 d-flex align-items-center gap-3 p-4 mb-4 rounded-3" 
-                         t-att-style="'background:rgba(31, 56, 100, 0.05); color: #1F3864; border-left: 5px solid #1F3864 !important;'">
+                         t-att-style="'background:rgba(0,85,183,0.05); color:var(--wink-primary); border-left: 5px solid var(--wink-primary) !important;'">
                         <div class="flex-shrink-0">
                             <i class="fa fa-info-circle fa-2x"/>
                         </div>
@@ -1234,7 +1279,7 @@
 
                     <!-- Order Summary Card -->
                     <div class="card shadow-sm border-0 mt-4 rounded-3 overflow-hidden">
-                        <div class="card-header border-0 py-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #1F3864; color: white;">
+                        <div class="card-header border-0 py-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:var(--wink-primary); color:#fff;">
                             <h4 class="mb-0 fw-bold"><i class="fa fa-file-text-o me-2 opacity-75"/> Order Summary: <t t-esc="order.name"/></h4>
                             <div class="d-flex align-items-center gap-2">
                                 <t t-if="not is_closed_or_cancelled">
@@ -1600,16 +1645,23 @@
                                               t-attf-id="wink-activate-form-#{ent_m.id}"
                                               class="wink-activate-form">
                                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                            <div class="modal-footer border-top">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm"
-                                                        data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit"
-                                                        t-attf-class="btn btn-primary btn-sm wink-activate-submit"
-                                                        t-att-data-docs-ok="'1' if prereq.get('docs_ok') else '0'"
-                                                        t-att-data-req-emp="'1' if prereq.get('requires_employees') else '0'"
-                                                        t-att-disabled="'disabled' if (not prereq.get('docs_ok') or prereq.get('requires_employees')) else None">
-                                                    <i class="fa fa-play me-1"/>Activate Service
-                                                </button>
+                                            <div class="modal-footer border-top flex-column align-items-stretch gap-2">
+                                                <div class="text-center">
+                                                    <small class="text-warning wink-activate-hint d-none">
+                                                        <i class="fa fa-info-circle me-1"/>Select at least one employee to activate
+                                                    </small>
+                                                </div>
+                                                <div class="d-flex gap-2 justify-content-end">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                            data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit"
+                                                            t-attf-class="btn btn-primary btn-sm wink-activate-submit"
+                                                            t-att-data-docs-ok="'1' if prereq.get('docs_ok') else '0'"
+                                                            t-att-data-req-emp="'1' if prereq.get('requires_employees') else '0'"
+                                                            t-att-disabled="'disabled' if (not prereq.get('docs_ok') or prereq.get('requires_employees')) else None">
+                                                        <i class="fa fa-play me-1"/>Activate Service
+                                                    </button>
+                                                </div>
                                             </div>
                                         </form>
 
@@ -1624,14 +1676,24 @@
                         (function() {
                             // ── Reactive Activate button ──────────────────────────
                             function updateActivateBtn(modal) {
-                                var btn = modal.querySelector('.wink-activate-submit');
+                                var btn  = modal.querySelector('.wink-activate-submit');
+                                var hint = modal.querySelector('.wink-activate-hint');
                                 if (!btn) return;
-                                var docsOk  = btn.getAttribute('data-docs-ok')  === '1';
-                                var reqEmp  = btn.getAttribute('data-req-emp')  === '1';
-                                if (!docsOk) { btn.disabled = true; return; }
-                                btn.disabled = reqEmp
-                                    ? modal.querySelectorAll('.wink-emp-checkbox:checked').length === 0
-                                    : false;
+                                var docsOk = btn.getAttribute('data-docs-ok') === '1';
+                                var reqEmp = btn.getAttribute('data-req-emp') === '1';
+                                if (!docsOk) {
+                                    btn.disabled = true;
+                                    if (hint) hint.classList.add('d-none');
+                                    return;
+                                }
+                                var empSelected = modal.querySelectorAll('.wink-emp-checkbox:checked').length > 0;
+                                if (reqEmp &amp;&amp; !empSelected) {
+                                    btn.disabled = true;
+                                    if (hint) hint.classList.remove('d-none');
+                                } else {
+                                    btn.disabled = false;
+                                    if (hint) hint.classList.add('d-none');
+                                }
                             }
 
                             document.querySelectorAll('.modal[id^="wink-activate-modal-"]').forEach(function(m) {
@@ -1685,7 +1747,13 @@
                             var openModalId = params.get('open_modal');
                             if (openModalId &amp;&amp; typeof bootstrap !== 'undefined') {
                                 var modalEl = document.getElementById('wink-activate-modal-' + openModalId);
-                                if (modalEl) { new bootstrap.Modal(modalEl).show(); }
+                                if (modalEl) {
+                                    var bsModal = new bootstrap.Modal(modalEl);
+                                    modalEl.addEventListener('shown.bs.modal', function() {
+                                        updateActivateBtn(modalEl);
+                                    }, { once: true });
+                                    bsModal.show();
+                                }
                             }
                         })();
                     </script>
@@ -2331,82 +2399,424 @@
         <template id="portal_my_bundles" name="My Bundles — Entitlement Dashboard">
             <t t-call="website.layout">
                 <div class="container mt-4 mb-5 wink-bundles-dashboard">
-                    <h1 class="page-header mb-1">My Bundles</h1>
-                    <p class="text-muted mb-4">Track your bundle subscriptions and activate included services.</p>
 
+                    <!-- Page header -->
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h1 class="page-header mb-1">My Bundles</h1>
+                            <p class="text-muted mb-0">Activate services, track progress, and manage your package.</p>
+                        </div>
+                        <a href="/services" class="btn btn-sm btn-outline-secondary"><i class="fa fa-plus me-1"/>Add Service</a>
+                    </div>
+
+                    <!-- KPI bar -->
+                    <t t-if="bundle_data">
+                        <div class="row g-3 mb-4">
+                            <div class="col-6 col-md-3">
+                                <div class="wink-bundle-kpi">
+                                    <div class="wink-bundle-kpi-value"><t t-esc="kpi_bundles"/></div>
+                                    <div class="wink-bundle-kpi-label">Active Bundles</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="wink-bundle-kpi">
+                                    <div class="wink-bundle-kpi-value text-success"><t t-esc="kpi_activated"/></div>
+                                    <div class="wink-bundle-kpi-label">Services Activated</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="wink-bundle-kpi">
+                                    <div class="wink-bundle-kpi-value" style="color:var(--wink-primary);"><t t-esc="kpi_pending"/></div>
+                                    <div class="wink-bundle-kpi-label">Pending Activation</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="wink-bundle-kpi" t-att-class="'wink-bundle-kpi-warn' if kpi_docs_needed else ''">
+                                    <div t-attf-class="wink-bundle-kpi-value #{'text-warning' if kpi_docs_needed else 'text-muted'}"><t t-esc="kpi_docs_needed"/></div>
+                                    <div class="wink-bundle-kpi-label">Docs Needed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Empty state -->
                     <t t-if="not bundle_data">
                         <div class="card border-0 shadow-sm">
                             <div class="card-body text-center py-5">
-                                <i class="fa fa-cube fa-3x text-muted mb-3 d-block"/>
-                                <h5 class="fw-bold mb-2">No active bundles</h5>
-                                <p class="text-muted mb-3">You don't have any active bundle subscriptions yet.</p>
+                                <i class="fa fa-cubes fa-3x text-muted mb-3 d-block"/>
+                                <h5 class="fw-bold mb-2">No active bundles yet</h5>
+                                <p class="text-muted mb-3">Browse our service packages to get started.</p>
                                 <a href="/services" class="btn btn-primary">Browse Services</a>
                             </div>
                         </div>
                     </t>
 
+                    <!-- Bundle cards -->
                     <t t-foreach="bundle_data" t-as="bd">
-                        <div class="card shadow-sm mb-4 border-0">
-                            <div class="card-header d-flex justify-content-between align-items-center py-3" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none;">
-                                <div>
-                                    <h5 class="mb-0 fw-bold"><t t-esc="bd['bundle_name']"/></h5>
-                                    <small class="opacity-75" t-if="bd['tier_name']"><t t-esc="bd['tier_name']"/> Plan — <t t-esc="bd['order'].name"/></small>
-                                </div>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="text-center">
-                                        <div class="wink-bundle-progress-ring" style="background: rgba(255,255,255,0.2);">
-                                            <span style="color:white;"><t t-esc="bd['activated']"/>/<t t-esc="bd['total']"/></span>
-                                        </div>
-                                        <small class="d-block mt-1 opacity-75">activated</small>
+                        <div class="card shadow-sm mb-4 border-0 overflow-hidden">
+
+                            <!-- Bundle header with KUEC gradient -->
+                            <div class="wink-bundle-card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-0 fw-bold"><t t-esc="bd['bundle_name']"/></h5>
+                                        <small class="opacity-75">
+                                            <t t-if="bd['tier_name']"><t t-esc="bd['tier_name']"/> Plan · </t>
+                                            <t t-esc="bd['order'].name"/>
+                                            · Started <t t-esc="bd['order'].date_order" t-options="{'widget': 'date'}"/>
+                                        </small>
+                                    </div>
+                                    <div class="wink-bundle-ring">
+                                        <span><t t-esc="bd['activated']"/>/<t t-esc="bd['total']"/></span>
+                                        <small>activated</small>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="px-4 pt-3 pb-2">
+
+                                <!-- Progress bar -->
+                                <div class="mt-3">
                                     <div class="d-flex justify-content-between mb-1">
-                                        <small class="text-muted">Activation Progress</small>
-                                        <small class="fw-bold" style="color: #6366f1;"><t t-esc="bd['progress_pct']"/>%</small>
+                                        <small class="opacity-75">Activation Progress</small>
+                                        <small class="fw-bold opacity-90"><t t-esc="bd['progress_pct']"/>%</small>
                                     </div>
-                                    <div class="progress" style="height: 6px; border-radius: 999px;">
-                                        <!-- WF-BUNDLE-UI-006 -->
-                                        <div class="progress-bar" role="progressbar"
-                                             t-attf-style="width: {{ bd['progress_pct'] }}%; background: linear-gradient(90deg, #6366f1, #818cf8);"
+                                    <div class="progress wink-bundle-progress">
+                                        <div class="progress-bar wink-bundle-progress-bar" role="progressbar"
+                                             t-attf-style="width:#{bd['progress_pct']}%"
                                              t-att-aria-valuenow="bd['progress_pct']" aria-valuemin="0" aria-valuemax="100"/>
                                     </div>
                                 </div>
-                                <div class="p-4 d-flex flex-column gap-2">
-                                    <t t-foreach="bd['entitlements']" t-as="ent">
-                                        <div class="wink-entitlement-card">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <i t-attf-class="fa fa-cube #{'text-success' if ent.qty_activated > 0 else 'text-muted'}" style="font-size:1.3rem;"/>
-                                                <div>
-                                                    <div class="fw-semibold"><t t-esc="ent.name"/></div>
-                                                    <small class="text-muted">
-                                                        <t t-esc="ent.qty_activated"/> of <t t-esc="ent.qty_entitled"/> activated
-                                                    </small>
-                                                </div>
+                            </div>
+
+                            <!-- Entitlement rows -->
+                            <div class="card-body p-0">
+                                <t t-foreach="bd['entitlements']" t-as="ent">
+                                    <t t-set="prereq" t-value="entitlement_prereqs.get(ent.id, {})"/>
+                                    <t t-set="act_list" t-value="bd['ent_activation_map'].get(ent.id, [])"/>
+                                    <div class="wink-ent-row">
+
+                                        <!-- Left: icon + info -->
+                                        <div class="wink-ent-left">
+                                            <div t-attf-class="wink-ent-icon #{'done' if ent.state == 'fully_activated' else ('expired' if ent.state == 'expired' else 'available')}">
+                                                <i t-attf-class="fa #{'fa-check' if ent.state == 'fully_activated' else ('fa-times' if ent.state == 'expired' else 'fa-cube')}"/>
                                             </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <t t-if="ent.state == 'available'">
-                                                    <span class="wink-entitlement-status available">Available</span>
-                                                </t>
-                                                <t t-elif="ent.state == 'fully_activated'">
-                                                    <span class="wink-entitlement-status activated">Activated</span>
-                                                </t>
-                                                <t t-elif="ent.state == 'expired'">
-                                                    <span class="wink-entitlement-status expired">Expired</span>
+                                            <div class="wink-ent-info">
+                                                <div class="fw-semibold"><t t-esc="ent.name"/></div>
+                                                <div class="wink-ent-meta">
+                                                    <t t-if="ent.qty_activated > 0">
+                                                        <span class="text-success"><i class="fa fa-check-circle me-1"/><t t-esc="ent.qty_activated"/> activation(s)</span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="text-muted">Not activated yet</span>
+                                                    </t>
+                                                    <!-- Doc warning -->
+                                                    <t t-if="not prereq.get('docs_ok') and prereq.get('doc_items')">
+                                                        <span class="text-warning ms-2"><i class="fa fa-exclamation-triangle me-1"/>Docs needed</span>
+                                                    </t>
+                                                </div>
+
+                                                <!-- Task progress pills -->
+                                                <t t-if="act_list">
+                                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                                        <t t-foreach="act_list" t-as="act">
+                                                            <span t-attf-class="wink-task-pill #{'done' if act['is_complete'] else 'inprog'}">
+                                                                <i t-attf-class="fa #{'fa-check' if act['is_complete'] else 'fa-spinner'} me-1"/>
+                                                                <t t-if="act.get('index')">Activation <t t-esc="act['index']"/></t>
+                                                                <t t-else=""><t t-esc="act.get('name') or 'Activation'"/></t>
+                                                                — <t t-if="act['is_complete']">Complete</t><t t-else="">In Progress</t>
+                                                            </span>
+                                                        </t>
+                                                    </div>
                                                 </t>
                                             </div>
                                         </div>
-                                    </t>
-                                </div>
+
+                                        <!-- Right: status + action -->
+                                        <div class="wink-ent-actions">
+                                            <t t-if="ent.state == 'fully_activated'">
+                                                <span class="wink-ent-badge done">✓ Activated</span>
+                                            </t>
+                                            <t t-elif="ent.state == 'expired'">
+                                                <span class="wink-ent-badge expired">Expired</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="wink-ent-badge available">Available</span>
+                                            </t>
+                                            <!-- Activate button — always shown for sale/done orders -->
+                                            <button type="button"
+                                                    class="btn btn-sm wink-btn-primary"
+                                                    t-attf-data-bs-target="#wink-bnd-modal-#{ent.id}"
+                                                    data-bs-toggle="modal">
+                                                <i class="fa fa-play me-1"/>Activate
+                                            </button>
+                                        </div>
+                                    </div>
+                                </t>
                             </div>
-                            <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-                                <a t-attf-href="/my/requests/#{bd['order'].id}" class="btn btn-outline-primary btn-sm">View Full Order</a>
-                                <small class="text-muted"><t t-esc="bd['order'].date_order" t-options="{'widget': 'date'}"/></small>
+
+                            <!-- Footer -->
+                            <div class="card-footer bg-light border-top-0 d-flex justify-content-between align-items-center py-2">
+                                <a t-attf-href="/my/requests/#{bd['order'].id}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fa fa-file-text-o me-1"/>View Full Request
+                                </a>
+                                <t t-if="bd['progress_pct'] == 100">
+                                    <span class="text-success small fw-semibold"><i class="fa fa-check-circle me-1"/>All services activated</span>
+                                </t>
                             </div>
                         </div>
                     </t>
+
+                    <!-- ── Per-entitlement activation modals (same pattern as request detail) ── -->
+                    <t t-foreach="bundle_data" t-as="bd_m">
+                        <t t-foreach="bd_m['entitlements']" t-as="ent_m">
+                            <t t-set="prereq" t-value="entitlement_prereqs.get(ent_m.id, {})"/>
+                            <div class="modal fade" t-attf-id="wink-bnd-modal-#{ent_m.id}"
+                                 tabindex="-1" aria-modal="true" role="dialog">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content wink-activate-modal-content">
+                                        <div class="modal-header wink-activate-modal-header">
+                                            <h5 class="modal-title">
+                                                <i class="fa fa-play-circle me-2"/>Activate: <t t-esc="ent_m.name"/>
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"/>
+                                        </div>
+                                        <div class="modal-body p-0">
+
+                                            <!-- Upload success flash -->
+                                            <div t-if="doc_uploaded and open_modal and open_modal == str(ent_m.id)"
+                                                 class="alert alert-success py-2 mx-3 mt-3 small mb-0">
+                                                <i class="fa fa-check me-1"/>Document uploaded. Awaiting coordinator approval.
+                                            </div>
+
+                                            <!-- Documents section -->
+                                            <t t-if="prereq.get('doc_items')">
+                                                <div class="wink-activate-section">
+                                                    <div class="wink-activate-section-title">
+                                                        <i class="fa fa-file-text-o me-1"/>Required Documents
+                                                    </div>
+                                                    <t t-foreach="prereq.get('doc_items', [])" t-as="doc">
+                                                        <div class="wink-activate-doc-row">
+                                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                                <span class="wink-activate-doc-name"><t t-esc="doc['name']"/></span>
+                                                                <t t-if="doc['state'] == 'approved'">
+                                                                    <span class="wink-doc-badge approved"><i class="fa fa-check me-1"/>Approved</span>
+                                                                </t>
+                                                                <t t-elif="doc['state'] == 'under_review'">
+                                                                    <span class="wink-doc-badge pending"><i class="fa fa-clock-o me-1"/>Pending review</span>
+                                                                </t>
+                                                                <t t-elif="doc['state'] == 'change_required'">
+                                                                    <span class="wink-doc-badge rejected"><i class="fa fa-exclamation me-1"/>Changes needed</span>
+                                                                </t>
+                                                                <t t-elif="doc['state'] == 'rejected'">
+                                                                    <span class="wink-doc-badge rejected"><i class="fa fa-times me-1"/>Rejected</span>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <span class="wink-doc-badge missing"><i class="fa fa-upload me-1"/>Not uploaded</span>
+                                                                </t>
+                                                            </div>
+                                                            <t t-if="doc.get('notes')">
+                                                                <p class="text-muted small mb-1 fst-italic"><t t-esc="doc['notes']"/></p>
+                                                            </t>
+                                                            <!-- Upload form -->
+                                                            <t t-if="doc['state'] in ('approved', 'under_review')">
+                                                                <a href="#" class="wink-reupload-toggle small text-muted mt-1 d-inline-block"
+                                                                   t-attf-data-target="#bnd-reup-#{doc['req_id']}-#{ent_m.id}">
+                                                                    <i class="fa fa-refresh me-1"/>Re-upload
+                                                                </a>
+                                                                <div class="d-none mt-2" t-attf-id="bnd-reup-#{doc['req_id']}-#{ent_m.id}">
+                                                                    <form method="post"
+                                                                          t-attf-action="/my/requests/#{prereq.get('order_id')}/documents/upload"
+                                                                          enctype="multipart/form-data" class="wink-inline-upload-form">
+                                                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                                        <input type="hidden" name="requirement_id" t-att-value="doc['req_id']"/>
+                                                                        <input type="hidden" name="redirect_to"
+                                                                               t-attf-value="/my/bundles?open_modal=#{ent_m.id}&amp;doc_uploaded=1"/>
+                                                                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                                                                            <input type="file" name="doc_file" class="form-control form-control-sm flex-grow-1"
+                                                                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required="required"/>
+                                                                            <button type="submit" class="btn btn-sm btn-outline-primary flex-shrink-0">
+                                                                                <i class="fa fa-upload me-1"/>Upload
+                                                                            </button>
+                                                                        </div>
+                                                                    </form>
+                                                                </div>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <form method="post"
+                                                                      t-attf-action="/my/requests/#{prereq.get('order_id')}/documents/upload"
+                                                                      enctype="multipart/form-data" class="wink-inline-upload-form mt-2">
+                                                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                                    <input type="hidden" name="requirement_id" t-att-value="doc['req_id']"/>
+                                                                    <input type="hidden" name="redirect_to"
+                                                                           t-attf-value="/my/bundles?open_modal=#{ent_m.id}&amp;doc_uploaded=1"/>
+                                                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                                                        <input type="file" name="doc_file" class="form-control form-control-sm flex-grow-1"
+                                                                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required="required"/>
+                                                                        <button type="submit" class="btn btn-sm btn-primary flex-shrink-0">
+                                                                            <i class="fa fa-upload me-1"/>Upload
+                                                                        </button>
+                                                                    </div>
+                                                                </form>
+                                                            </t>
+                                                        </div>
+                                                    </t>
+                                                </div>
+                                            </t>
+
+                                            <!-- Employees section -->
+                                            <t t-if="prereq.get('requires_employees')">
+                                                <div class="wink-activate-section border-top">
+                                                    <div class="wink-activate-section-title">
+                                                        <i class="fa fa-users me-1"/>Select Employees
+                                                    </div>
+                                                    <t t-if="prereq.get('employees')">
+                                                        <div class="wink-emp-grid">
+                                                            <t t-foreach="prereq['employees']" t-as="emp">
+                                                                <label class="wink-emp-card">
+                                                                    <input type="checkbox" class="wink-emp-checkbox d-none"
+                                                                           t-attf-name="emp_check_#{ent_m.id}"
+                                                                           t-att-value="emp.id"/>
+                                                                    <div class="wink-emp-body">
+                                                                        <i class="fa fa-user wink-emp-icon"/>
+                                                                        <span class="wink-emp-name"><t t-esc="emp.name"/></span>
+                                                                    </div>
+                                                                </label>
+                                                            </t>
+                                                        </div>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <p class="text-warning small px-3 mb-2">
+                                                            <i class="fa fa-warning me-1"/>No employees in directory.
+                                                            <a href="/my/employees">Add employees</a> first.
+                                                        </p>
+                                                    </t>
+                                                </div>
+                                            </t>
+
+                                            <!-- Docs blocking notice -->
+                                            <t t-if="not prereq.get('docs_ok')">
+                                                <div class="px-3 pb-3">
+                                                    <div class="alert alert-warning py-2 mb-0 small">
+                                                        <i class="fa fa-lock me-1"/>Upload all required documents and await approval to activate.
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- Activate form -->
+                                            <form method="post"
+                                                  t-attf-action="/my/requests/#{prereq.get('order_id')}/bundle/#{ent_m.id}/activate"
+                                                  t-attf-id="wink-bnd-form-#{ent_m.id}"
+                                                  class="wink-activate-form">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <div class="modal-footer border-top flex-column align-items-stretch gap-2">
+                                                    <div class="text-center">
+                                                        <small class="text-warning wink-activate-hint d-none">
+                                                            <i class="fa fa-info-circle me-1"/>Select at least one employee to activate
+                                                        </small>
+                                                    </div>
+                                                    <div class="d-flex gap-2 justify-content-end">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                                data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit"
+                                                                t-attf-class="btn btn-primary btn-sm wink-activate-submit"
+                                                                t-att-data-docs-ok="'1' if prereq.get('docs_ok') else '0'"
+                                                                t-att-data-req-emp="'1' if prereq.get('requires_employees') else '0'"
+                                                                t-att-disabled="'disabled' if (not prereq.get('docs_ok') or prereq.get('requires_employees')) else None">
+                                                            <i class="fa fa-play me-1"/>Activate Service
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+
+                    <!-- Activation modal JS (same logic as request detail) -->
+                    <script>
+                        (function() {
+                            function updateActivateBtn(modal) {
+                                var btn  = modal.querySelector('.wink-activate-submit');
+                                var hint = modal.querySelector('.wink-activate-hint');
+                                if (!btn) return;
+                                var docsOk = btn.getAttribute('data-docs-ok') === '1';
+                                var reqEmp = btn.getAttribute('data-req-emp') === '1';
+                                if (!docsOk) {
+                                    btn.disabled = true;
+                                    if (hint) hint.classList.add('d-none');
+                                    return;
+                                }
+                                var empSelected = modal.querySelectorAll('.wink-emp-checkbox:checked').length > 0;
+                                if (reqEmp &amp;&amp; !empSelected) {
+                                    btn.disabled = true;
+                                    if (hint) hint.classList.remove('d-none');
+                                } else {
+                                    btn.disabled = false;
+                                    if (hint) hint.classList.add('d-none');
+                                }
+                            }
+
+                            document.querySelectorAll('.modal[id^="wink-bnd-modal-"]').forEach(function(m) {
+                                m.addEventListener('shown.bs.modal', function() { updateActivateBtn(m); });
+                                updateActivateBtn(m);
+                            });
+
+                            document.querySelectorAll('.wink-emp-card').forEach(function(card) {
+                                var cb = card.querySelector('.wink-emp-checkbox');
+                                if (!cb) return;
+                                card.addEventListener('click', function() {
+                                    cb.checked = !cb.checked;
+                                    card.classList.toggle('selected', cb.checked);
+                                    var modal = card.closest('.modal');
+                                    if (modal) {
+                                        syncEmployeesToForm(modal);
+                                        updateActivateBtn(modal);
+                                    }
+                                });
+                            });
+
+                            function syncEmployeesToForm(modal) {
+                                if (!modal) return;
+                                var form = modal.querySelector('.wink-activate-form');
+                                if (!form) return;
+                                form.querySelectorAll('input[name="employee_ids"]').forEach(function(el) { el.remove(); });
+                                modal.querySelectorAll('.wink-emp-checkbox:checked').forEach(function(checked) {
+                                    var hidden = document.createElement('input');
+                                    hidden.type = 'hidden';
+                                    hidden.name = 'employee_ids';
+                                    hidden.value = checked.value;
+                                    form.appendChild(hidden);
+                                });
+                            }
+
+                            document.querySelectorAll('.wink-reupload-toggle').forEach(function(link) {
+                                link.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    var panel = document.querySelector(link.getAttribute('data-target'));
+                                    if (!panel) return;
+                                    panel.classList.toggle('d-none');
+                                    var icon = link.querySelector('i');
+                                    if (icon) icon.className = panel.classList.contains('d-none')
+                                        ? 'fa fa-refresh me-1' : 'fa fa-chevron-up me-1';
+                                });
+                            });
+
+                            // Auto-open after doc upload redirect
+                            var params = new URLSearchParams(window.location.search);
+                            var openModalId = params.get('open_modal');
+                            if (openModalId &amp;&amp; typeof bootstrap !== 'undefined') {
+                                var modalEl = document.getElementById('wink-bnd-modal-' + openModalId);
+                                if (modalEl) {
+                                    var bsModal = new bootstrap.Modal(modalEl);
+                                    modalEl.addEventListener('shown.bs.modal', function() {
+                                        updateActivateBtn(modalEl);
+                                    }, { once: true });
+                                    bsModal.show();
+                                }
+                            }
+                        })();
+                    </script>
+
                 </div>
             </t>
         </template>
