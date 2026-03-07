@@ -28,7 +28,7 @@
 
 /* UI-LOV-004 Gradient header (Order Summary, Service CTA, Ticket card, mobile CTA bar) */
 .kuec-gradient {
-    background: linear-gradient(135deg, var(--wink-primary) 0%, #1a4a7a 100%);
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
     color: #fff !important;
     border: none;
 }
@@ -137,7 +137,7 @@
     right: 0;
     z-index: 1030;
     padding: 12px 16px;
-    background: linear-gradient(135deg, var(--wink-primary) 0%, #1a4a7a 100%);
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
     color: #fff;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
@@ -186,7 +186,7 @@
     overflow: hidden;
 }
 .wink-catalogue-hero.kuec-gradient {
-    background: linear-gradient(135deg, var(--wink-primary) 0%, #1a4a7a 100%);
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
     color: #fff;
 }
 .wink-catalogue-hero .form-control,
@@ -413,8 +413,8 @@ input:checked + .wink-slider {
 }
 /* Most popular: distinct accent ring */
 .wink-tier-card-premium.wink-popular {
-    border-color: #1F3864;
-    background: linear-gradient(160deg, #f8faff 0%, #fff 100%);
+    border-color: var(--wink-primary);
+    background: linear-gradient(160deg, #eef5ff 0%, #fff 100%);
 }
 .wink-most-popular-badge {
     position: absolute;
@@ -436,7 +436,7 @@ input:checked + .wink-slider {
 .wink-tier-name {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #1F3864;
+    color: var(--wink-primary);
     text-align: center;
     letter-spacing: 0.01em;
 }
@@ -449,7 +449,7 @@ input:checked + .wink-slider {
 .wink-tier-amount {
     font-size: 1.65rem;
     font-weight: 800;
-    color: #1F3864;
+    color: var(--wink-primary);
     font-family: 'IBM Plex Mono', monospace;
     letter-spacing: -0.02em;
 }
@@ -535,7 +535,7 @@ input:checked + .wink-slider {
         border-collapse: collapse;
         font-size: 0.82rem;
         th {
-            background: linear-gradient(135deg, #1F3864, #2E75B6);
+            background: linear-gradient(135deg, var(--wink-primary), #003d8a);
             color: #fff;
             padding: 0.6rem 0.75rem;
             font-weight: 700;
@@ -565,7 +565,7 @@ input:checked + .wink-slider {
     box-shadow: 0 2px 12px rgba(31,78,121,0.08);
 }
 .wink-review-header {
-    background: linear-gradient(135deg, #1F3864 0%, #2E75B6 100%);
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
     color: #fff;
     padding: 1.25rem 1.5rem;
     display: flex;

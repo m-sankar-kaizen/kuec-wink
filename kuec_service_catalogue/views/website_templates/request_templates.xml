@@ -615,7 +615,7 @@
                                         <button type="submit" name="tier_id" t-att-value="td['tier'].id"
                                                 t-attf-class="wink-select-btn touch-target wink-subscribe-btn #{'wink-btn-primary' if td['tier'].is_most_popular else 'wink-btn-outline'}"
                                                 t-att-data-tier-id="td['tier'].id">
-                                            Get Started
+                                            Subscribe
                                         </button>
 
                                         <!-- Feature Progression Header -->

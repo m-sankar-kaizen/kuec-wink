@@ -493,7 +493,7 @@ class WinkRequest(http.Controller):
                         review_display['tier_name'] = ''
                     
                     # UI-013: Map plan name and price for bundles
-                    rec_id = wizard_draft.get('selected_pricing_id')
+                    rec_id = wizard_draft.get('selected_pricing_id') or wizard_draft.get('bundle_recurrence_id')
                     if rec_id:
                         try:
                             plan_found = False
@@ -502,7 +502,7 @@ class WinkRequest(http.Controller):
                             for p in (plans or []):
                                 if str(p.get('pricing_id')) == str(rec_id) or str(p.get('recurrence_id')) == str(rec_id):
                                     review_display['plan_name'] = p.get('plan_name', '')
-                                    review_display['price_str'] = p.get('price_str', '')
+                                    review_display['price_str'] = p.get('price_str') or '{:,.2f}'.format(p.get('price', 0.0))
                                     review_display['currency_symbol'] = p.get('currency_symbol', 'AED')
                                     plan_found = True
                                     break
@@ -1196,10 +1196,10 @@ class WinkRequest(http.Controller):
         # Only auto-confirm when price is visible and set (customer can pay immediately).
         # When price is hidden or not set we keep the order as Quotation; coordinator sets
         # price and unlocks; then customer can approve/reject or pay.
-        is_auto_confirm = (
-            product.commercial_structure == 'standalone'
-            and product.request_frequency == 'one_time'
-            and order.wink_price_confirmed
+        is_auto_confirm = order.wink_price_confirmed and (
+            (product.commercial_structure == 'standalone' and product.request_frequency == 'one_time')
+            or is_subscription_service
+            or wink_is_bundle
         )
         if is_auto_confirm:
             try:
@@ -1227,9 +1227,9 @@ class WinkRequest(http.Controller):
 
         # UI-013: Redirect with submitted=1 to show Request Submitted success block
         self._wizard_clear_draft()
-        # Phase 6 & 7.1: If price is confirmed (priced bundle), redirect directly to SO portal page with pay_now=1
+        # Phase 6 & 7.1: If price is confirmed, redirect directly to WINK payment page
         if order.wink_price_confirmed:
-            return request.redirect(f'/my/orders/{order.id}?pay_now=1')
+            return request.redirect(f'/my/requests/{order.id}/pay')
         return request.redirect(f'/my/requests/{order.id}?submitted=1')
 
     @http.route('/my/requests/<int:order_id>', type='http', auth='user', website=True)
