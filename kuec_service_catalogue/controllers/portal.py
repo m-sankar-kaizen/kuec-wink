@@ -29,12 +29,14 @@ class KuecCustomerPortal(CustomerPortal):
             request_count = request.env['sale.order'].sudo().search_count(request_domain)
             values['request_count'] = request_count
 
-        # U-3: My Bundles Counter (confirmed orders with entitlements)
+        # U-3: My Bundles Counter (confirmed + self-service-cancelled orders with entitlements)
         if not counters or 'bundle_count' in counters:
             bundle_domain = [
                 ('message_partner_ids', 'child_of', [partner.id]),
                 ('wink_is_portal_request', '=', True),
+                '|',
                 ('state', 'in', ['sale', 'done']),
+                ('wink_bundle_cancelled', '=', True),
                 ('wink_entitlement_ids', '!=', False),
             ]
             bundle_count = request.env['sale.order'].sudo().search_count(bundle_domain)
@@ -342,7 +344,9 @@ class KuecCustomerPortal(CustomerPortal):
         domain = [
             ('message_partner_ids', 'child_of', [partner.id]),
             ('wink_is_portal_request', '=', True),
+            '|',
             ('state', 'in', ['sale', 'done']),
+            ('wink_bundle_cancelled', '=', True),
             ('wink_entitlement_ids', '!=', False),
         ]
         orders = SaleOrder.search(domain, order='date_order desc')
@@ -486,7 +490,8 @@ class KuecCustomerPortal(CustomerPortal):
     # -------------------------------------------------------------------------
     def _wink_get_bundle_order(self, order_id):
         """Load the bundle sale order for the current portal user.
-        Returns (order, error_redirect). error_redirect is non-None when access denied."""
+        Returns (order, error_redirect). error_redirect is non-None when access denied.
+        Also accepts self-service-cancelled bundle orders (wink_bundle_cancelled=True)."""
         partner = request.env.user.partner_id.commercial_partner_id
         order = request.env['sale.order'].sudo().browse(int(order_id))
         if not order.exists():
@@ -494,7 +499,7 @@ class KuecCustomerPortal(CustomerPortal):
         # Ownership check
         if order.partner_id.commercial_partner_id.id != partner.id:
             return None, request.redirect('/my/bundles')
-        # Must be a bundle order
+        # Must have entitlements (bundle order)
         if not order.wink_entitlement_ids:
             return None, request.redirect('/my/bundles')
         return order, None
@@ -508,18 +513,20 @@ class KuecCustomerPortal(CustomerPortal):
         order, err = self._wink_get_bundle_order(order_id)
         if err:
             return err
-        if order.state not in ('sale', 'done'):
+        if order.wink_bundle_cancelled or order.state not in ('sale', 'done'):
             return request.redirect('/my/bundles')
         bundle = order._wink_bundle_get_policy()
         if bundle and not bundle.allow_self_service_cancel:
             return request.redirect('/my/bundles?error=cancel_not_allowed')
 
         refund_info = order._wink_bundle_compute_refund()
+        close_reasons = request.env['sale.order.close.reason'].sudo().search([], order='id')
         return request.render('kuec_service_catalogue.wink_bundle_cancel_page', {
             'order': order,
             'bundle': bundle,
             'refund_info': refund_info,
             'tier': order.wink_bundle_tier_id,
+            'close_reasons': close_reasons,
             'page_name': 'my_bundles',
             'error': kw.get('error', ''),
         })
@@ -530,7 +537,7 @@ class KuecCustomerPortal(CustomerPortal):
         order, err = self._wink_get_bundle_order(order_id)
         if err:
             return err
-        if order.state not in ('sale', 'done'):
+        if order.wink_bundle_cancelled or order.state not in ('sale', 'done'):
             return request.redirect('/my/bundles')
         reason = (post.get('cancel_reason') or '').strip()
         confirm = post.get('confirm_cancel')
@@ -559,7 +566,7 @@ class KuecCustomerPortal(CustomerPortal):
         order, err = self._wink_get_bundle_order(order_id)
         if err:
             return err
-        if order.state not in ('sale', 'done'):
+        if order.wink_bundle_cancelled or order.state not in ('sale', 'done'):
             return request.redirect('/my/bundles')
         bundle = order._wink_bundle_get_policy()
         if bundle and not bundle.allow_self_service_upgrade:
@@ -593,7 +600,7 @@ class KuecCustomerPortal(CustomerPortal):
         order, err = self._wink_get_bundle_order(order_id)
         if err:
             return err
-        if order.state not in ('sale', 'done'):
+        if order.wink_bundle_cancelled or order.state not in ('sale', 'done'):
             return request.redirect('/my/bundles')
         tier_id = post.get('tier_id')
         if not tier_id:
@@ -602,6 +609,7 @@ class KuecCustomerPortal(CustomerPortal):
             result = order._wink_bundle_do_upgrade(int(tier_id))
             charge_amount = result.get('charge_amount', 0.0)
             new_tier = result.get('new_tier')
+            upgrade_invoice = result.get('invoice')
             return request.render('kuec_service_catalogue.wink_bundle_change_done', {
                 'order': order,
                 'change_type': 'upgrade',
@@ -610,6 +618,7 @@ class KuecCustomerPortal(CustomerPortal):
                 'amount_label': 'Pro-rata charge',
                 'currency': order.currency_id,
                 'page_name': 'my_bundles',
+                'upgrade_invoice': upgrade_invoice,
             })
         except Exception as e:
             return request.redirect(f'/my/bundles/{order_id}/upgrade?error={str(e)[:80]}')
@@ -623,7 +632,7 @@ class KuecCustomerPortal(CustomerPortal):
         order, err = self._wink_get_bundle_order(order_id)
         if err:
             return err
-        if order.state not in ('sale', 'done'):
+        if order.wink_bundle_cancelled or order.state not in ('sale', 'done'):
             return request.redirect('/my/bundles')
         bundle = order._wink_bundle_get_policy()
         if bundle and not bundle.allow_self_service_downgrade:
@@ -658,7 +667,7 @@ class KuecCustomerPortal(CustomerPortal):
         order, err = self._wink_get_bundle_order(order_id)
         if err:
             return err
-        if order.state not in ('sale', 'done'):
+        if order.wink_bundle_cancelled or order.state not in ('sale', 'done'):
             return request.redirect('/my/bundles')
         tier_id = post.get('tier_id')
         if not tier_id:

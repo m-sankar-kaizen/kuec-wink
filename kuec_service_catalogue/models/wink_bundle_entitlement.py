@@ -105,10 +105,10 @@ class WinkBundleEntitlement(models.Model):
         if employees:
             self.wink_selected_employee_ids = [(6, 0, employees.ids)]
 
-    @api.depends('qty_entitled', 'qty_activated', 'order_id.state')
+    @api.depends('qty_entitled', 'qty_activated', 'order_id.state', 'order_id.wink_bundle_cancelled')
     def _compute_state(self):
         for rec in self:
-            if rec.order_id and rec.order_id.state == 'cancel':
+            if rec.order_id and (rec.order_id.state == 'cancel' or rec.order_id.wink_bundle_cancelled):
                 rec.state = 'expired'
             elif rec.qty_activated >= rec.qty_entitled:
                 rec.state = 'fully_activated'
@@ -156,7 +156,7 @@ class WinkBundleEntitlement(models.Model):
                 "bundle services."
             ))
 
-        if self.state == 'expired' or order.state == 'cancel':
+        if self.state == 'expired' or order.state == 'cancel' or order.wink_bundle_cancelled:
             raise UserError(_(
                 "This bundle is no longer active. You cannot activate services from a cancelled or expired bundle."
             ))

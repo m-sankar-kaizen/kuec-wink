@@ -73,8 +73,9 @@
                         <div class="col-6 col-md-3">
                             <div class="text-muted small mb-1">Start Date</div>
                             <div class="fw-semibold small">
-                                <t t-if="order.wink_bundle_start_date">
-                                    <t t-esc="order.wink_bundle_start_date" t-options='{"widget": "date"}'/>
+                                <t t-set="display_start" t-value="order.wink_bundle_start_date or order.start_date"/>
+                                <t t-if="display_start">
+                                    <t t-esc="display_start" t-options='{"widget": "date"}'/>
                                 </t>
                                 <t t-else="">—</t>
                             </div>
@@ -82,8 +83,9 @@
                         <div class="col-6 col-md-3">
                             <div class="text-muted small mb-1">End Date</div>
                             <div class="fw-semibold small">
-                                <t t-if="order.wink_bundle_end_date">
-                                    <t t-esc="order.wink_bundle_end_date" t-options='{"widget": "date"}'/>
+                                <t t-set="display_end" t-value="order.wink_bundle_end_date or order.next_invoice_date"/>
+                                <t t-if="display_end">
+                                    <t t-esc="display_end" t-options='{"widget": "date"}'/>
                                 </t>
                                 <t t-else="">—</t>
                             </div>
@@ -134,11 +136,9 @@
                             </label>
                             <select class="form-select form-select-sm" id="cancel_reason" name="cancel_reason">
                                 <option value="">Select a reason...</option>
-                                <option value="No longer needed">No longer needed</option>
-                                <option value="Switching to a different provider">Switching to a different provider</option>
-                                <option value="Budget constraints">Budget constraints</option>
-                                <option value="Services completed">Services completed</option>
-                                <option value="Other">Other</option>
+                                <t t-foreach="close_reasons" t-as="cr">
+                                    <option t-att-value="cr.name" t-esc="cr.name"/>
+                                </t>
                             </select>
                         </div>
 
@@ -257,11 +257,12 @@
                             <div class="text-muted small">Current Tier</div>
                             <div class="fw-semibold" t-esc="current_tier.name if current_tier else '—'"/>
                         </div>
-                        <t t-if="order.wink_bundle_end_date">
+                        <t t-set="renews_date" t-value="order.wink_bundle_end_date or order.next_invoice_date"/>
+                        <t t-if="renews_date">
                             <div class="ms-auto text-end">
                                 <div class="text-muted small">Renews</div>
                                 <div class="fw-semibold small">
-                                    <t t-esc="order.wink_bundle_end_date" t-options='{"widget": "date"}'/>
+                                    <t t-esc="renews_date" t-options='{"widget": "date"}'/>
                                 </div>
                             </div>
                         </t>
@@ -391,11 +392,12 @@
                             <div class="text-muted small">Current Tier</div>
                             <div class="fw-semibold" t-esc="current_tier.name if current_tier else '—'"/>
                         </div>
-                        <t t-if="order.wink_bundle_end_date">
+                        <t t-set="renews_date" t-value="order.wink_bundle_end_date or order.next_invoice_date"/>
+                        <t t-if="renews_date">
                             <div class="ms-auto text-end">
                                 <div class="text-muted small">Renews</div>
                                 <div class="fw-semibold small">
-                                    <t t-esc="order.wink_bundle_end_date" t-options='{"widget": "date"}'/>
+                                    <t t-esc="renews_date" t-options='{"widget": "date"}'/>
                                 </div>
                             </div>
                         </t>
@@ -507,15 +509,26 @@
             </div>
 
             <t t-if="amount and amount > 0">
-                <div class="card border-0 shadow-sm rounded-3 mb-4 mx-auto text-start" style="max-width:380px;">
+                <div class="card border-0 shadow-sm rounded-3 mb-4 mx-auto text-start" style="max-width:420px;">
                     <div class="card-body p-3">
                         <div class="text-muted small mb-1" t-esc="amount_label"/>
                         <div class="fw-bold fs-5" t-attf-style="color:{{ 'var(--wink-primary)' if change_type=='upgrade' else '#198754' }};">
                             <t t-esc="currency.symbol or currency.name"/>
                             <t t-esc="'%.2f' % amount"/>
                         </div>
-                        <t t-if="change_type == 'upgrade'">
-                            <div class="text-muted small mt-1">This charge has been added to your account.</div>
+                        <t t-if="change_type == 'upgrade' and upgrade_invoice">
+                            <div class="text-muted small mt-1 mb-2">
+                                Invoice <strong t-esc="upgrade_invoice.name"/> has been issued for the pro-rata charge.
+                                Pay it now to complete your upgrade.
+                            </div>
+                            <a t-attf-href="/my/invoices/{{ upgrade_invoice.id }}"
+                               class="btn btn-sm fw-semibold w-100"
+                               style="background:var(--wink-primary);color:#fff;">
+                                <i class="fa fa-credit-card me-1"/>View Invoice &amp; Pay
+                            </a>
+                        </t>
+                        <t t-elif="change_type == 'upgrade'">
+                            <div class="text-muted small mt-1">This charge has been added to your account. Your coordinator will invoice you shortly.</div>
                         </t>
                         <t t-else="">
                             <div class="text-muted small mt-1">A credit note has been issued to your account.</div>

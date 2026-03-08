@@ -167,6 +167,14 @@ class SaleOrderWink(models.Model):
         string='Bundle Change History',
         readonly=True,
     )
+    wink_bundle_cancelled = fields.Boolean(
+        string='Bundle Cancelled (Self-Service)',
+        default=False,
+        copy=False,
+        help='Set True when the bundle was cancelled by the customer via portal self-service. '
+             'Independent of order.state so it works even when action_cancel() cannot run '
+             '(e.g. order already has posted invoices).',
+    )
     # ISSUE-006: Idempotent cron — store which day-offsets already sent (e.g. "30,14,7").
     wink_expiry_reminder_sent_days = fields.Char(
         string='Expiry reminder sent for days',
@@ -557,14 +565,34 @@ class SaleOrderWink(models.Model):
         return None
 
     def _wink_bundle_remaining_days(self):
-        """Return (remaining_days, total_days) for the current bundle billing period.
-        Returns (0, 0) when start/end date not configured or period already elapsed."""
+        """Return (remaining_days, total_days) for the CURRENT billing period.
+        Period end = next_invoice_date (or wink_bundle_end_date override).
+        Period start = end minus the subscription plan duration — so it stays
+        accurate after renewal (when start_date would be years in the past).
+        Falls back to wink_bundle_start_date / start_date if no plan is set.
+        Returns (0, 0) when dates are unavailable or period has elapsed."""
         self.ensure_one()
         from datetime import date as date_cls
+        from dateutil.relativedelta import relativedelta
         today = date_cls.today()
+
+        # Period end
+        end = self.wink_bundle_end_date or self.next_invoice_date
+        if not end or end <= today:
+            return 0, 0
+
+        # Period start — derive from plan period so it's correct after renewal
         start = self.wink_bundle_start_date
-        end = self.wink_bundle_end_date
-        if not start or not end or end <= today:
+        if not start:
+            plan = self.plan_id
+            if plan and plan.billing_period_value and plan.billing_period_unit:
+                unit = plan.billing_period_unit  # 'day', 'week', 'month', 'year'
+                kwargs = {unit + 's': plan.billing_period_value}
+                start = end - relativedelta(**kwargs)
+            else:
+                start = self.start_date
+
+        if not start:
             return 0, 0
         remaining = (end - today).days
         total = (end - start).days
@@ -597,23 +625,28 @@ class SaleOrderWink(models.Model):
                 'note': 'No refund per policy.' if policy == 'none' else 'No remaining days in period.',
             }
 
+        # Base amount: what the customer actually paid (not the legacy tier.price)
+        paid_amount = self.amount_total or 0.0
+
         if policy == 'monthly_rate':
             # Use standard monthly price — yearly discount is forfeited on cancellation
             monthly_price = tier.price_monthly or 0.0
             if not monthly_price and total_days > 0:
-                # Fallback: derive monthly equivalent from annual price
-                monthly_price = tier.price / max(total_days / 30.0, 1)
+                # Fallback: derive monthly equivalent from actual paid amount
+                monthly_price = paid_amount / max(total_days / 30.0, 1)
             daily_rate = monthly_price / 30.0
             refund_amount = round(daily_rate * remaining_days, 2)
+            # Never refund more than what was paid
+            refund_amount = min(refund_amount, paid_amount)
             note = (
                 f'Monthly rate policy: ({monthly_price:.2f} / 30) × {remaining_days} days'
-                f' = {refund_amount:.2f} (yearly discount forfeited)'
+                f' = {refund_amount:.2f} (yearly discount forfeited, capped at paid amount {paid_amount:.2f})'
             )
         else:  # pro_rata
             refund_ratio = remaining_days / total_days
-            refund_amount = round((tier.price or 0.0) * refund_ratio, 2)
+            refund_amount = round(paid_amount * refund_ratio, 2)
             note = (
-                f'Pro-rata: {tier.price:.2f} × ({remaining_days}/{total_days})'
+                f'Pro-rata: {paid_amount:.2f} × ({remaining_days}/{total_days})'
                 f' = {refund_amount:.2f}'
             )
 
@@ -677,6 +710,71 @@ class SaleOrderWink(models.Model):
                 f' = {credit_amount:.2f}'
             ),
         }
+
+    def _wink_bundle_create_upgrade_invoice(self, amount, new_tier, description):
+        """Create and post a customer invoice (out_invoice) for the upgrade pro-rata charge.
+        Returns account.move or False. The invoice is left in 'posted' state so the portal
+        payment link is immediately available.
+        """
+        self.ensure_one()
+        if amount <= 0:
+            return False
+        # Resolve product for accounting (prefer tier's product, fallback to source product)
+        product = None
+        if new_tier and new_tier.product_variant_id:
+            product = new_tier.product_variant_id
+        if not product and self.wink_source_product_id:
+            src = self.wink_source_product_id
+            if src._name == 'product.template':
+                product = self.env['product.product'].search(
+                    [('product_tmpl_id', '=', src.id)], limit=1
+                )
+            else:
+                product = src
+        if not product:
+            line = self.order_line[:1]
+            product = line.product_id if line else None
+        if not product or product._name != 'product.product':
+            return False
+        account = product.property_account_income_id
+        if not account:
+            account = product.categ_id.property_account_income_categ_id
+        if not account:
+            return False
+        journal = self.env['account.journal'].search([
+            ('type', '=', 'sale'), ('company_id', '=', self.company_id.id),
+        ], limit=1)
+        if not journal:
+            return False
+        from odoo import fields as odoo_fields
+        today = odoo_fields.Date.context_today(self)
+        invoice = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.partner_id.id,
+            'invoice_origin': self.name,
+            'ref': description,
+            'currency_id': self.currency_id.id,
+            'journal_id': journal.id,
+            'invoice_date': today,
+            'date': today,
+            'company_id': self.company_id.id,
+            'invoice_line_ids': [(0, 0, {
+                'name': description,
+                'product_id': product.id,
+                'product_uom_id': product.uom_id.id,
+                'quantity': 1.0,
+                'price_unit': amount,
+                'account_id': account.id,
+            })],
+        })
+        try:
+            invoice.action_post()
+        except Exception as e:
+            self.message_post(
+                body=_('Bundle upgrade invoice created but could not be posted: %s') % str(e),
+                message_type='comment', subtype_xmlid='mail.mt_note',
+            )
+        return invoice
 
     def _wink_bundle_create_credit_note(self, amount, description):
         """Create and post a credit note for the given amount.
@@ -752,6 +850,10 @@ class SaleOrderWink(models.Model):
             raise exceptions.UserError(
                 _('Self-service cancellation is not enabled for this bundle.')
             )
+        if self.wink_bundle_cancelled:
+            raise exceptions.UserError(
+                _('This bundle has already been cancelled.')
+            )
         if self.state not in ('sale', 'done'):
             raise exceptions.UserError(
                 _('Only confirmed bundle orders can be cancelled.')
@@ -783,7 +885,10 @@ class SaleOrderWink(models.Model):
             'state': 'done',
         })
 
-        # Persist cancellation fields
+        # Persist cancellation fields — wink_bundle_cancelled is ALWAYS set True here,
+        # independent of whether action_cancel() succeeds below. This ensures the portal
+        # reflects the cancelled state even when the order has invoices and cannot be
+        # moved to state='cancel' by Odoo.
         now = odoo_fields.Datetime.now()
         self.sudo().write({
             'wink_cancellation_requested': True,
@@ -791,14 +896,31 @@ class SaleOrderWink(models.Model):
             'wink_cancellation_requested_date': now,
             'wink_cancellation_processed_date': now,
             'wink_cancellation_credit_note_id': credit_note.id if credit_note else False,
+            'wink_bundle_cancelled': True,
         })
 
-        # Cancel the order
+        # Expire all entitlements immediately
+        self.sudo().wink_entitlement_ids.write({'qty_entitled': 0})
+
+        # Close the order in the backend using the native subscription mechanism.
+        # For subscription orders (is_subscription=True), set_close() correctly sets
+        # subscription_state='6_churn' even when posted invoices prevent action_cancel().
+        # For non-subscription orders, fall back to action_cancel().
+        close_reason = None
+        if reason:
+            close_reason = self.env['sale.order.close.reason'].sudo().search(
+                [('name', '=', reason)], limit=1
+            )
+        close_reason_id = close_reason.id if close_reason else None
         try:
-            self.sudo().action_cancel()
+            if self.is_subscription:
+                self.sudo().set_close(close_reason_id=close_reason_id)
+            else:
+                self.sudo().action_cancel()
         except Exception as e:
             self.message_post(
-                body=_('Could not cancel order automatically: %s') % str(e),
+                body=_('Order state could not be updated: %s. '
+                       'The bundle is marked as cancelled in the portal regardless.') % str(e),
                 message_type='comment', subtype_xmlid='mail.mt_note',
             )
 
@@ -844,8 +966,11 @@ class SaleOrderWink(models.Model):
         charge_info = self._wink_bundle_compute_upgrade_charge(new_tier)
         charge_amount = charge_info.get('charge_amount', 0.0)
 
-        # Create SO line for the upgrade charge
+        # Create SO line for the upgrade charge (for order record keeping)
         charge_line = False
+        upgrade_desc = _(
+            'Bundle upgrade to %(tier)s — pro-rata %(days)s days'
+        ) % {'tier': new_tier.name, 'days': charge_info.get('remaining_days', 0)}
         if charge_amount > 0:
             variant = new_tier.product_variant_id
             if not variant and self.wink_source_product_id:
@@ -854,12 +979,17 @@ class SaleOrderWink(models.Model):
                 charge_line = self.env['sale.order.line'].sudo().create({
                     'order_id': self.id,
                     'product_id': variant.id,
-                    'name': _(
-                        'Upgrade to %(tier)s — pro-rata %(days)s days'
-                    ) % {'tier': new_tier.name, 'days': charge_info.get('remaining_days', 0)},
+                    'name': upgrade_desc,
                     'product_uom_qty': 1,
                     'price_unit': charge_amount,
                 })
+
+        # Create a payable invoice for the upgrade charge so customer can pay immediately
+        upgrade_invoice = False
+        if charge_amount > 0:
+            upgrade_invoice = self._wink_bundle_create_upgrade_invoice(
+                charge_amount, new_tier, upgrade_desc
+            )
 
         # Log
         self.env['wink.bundle.change.log'].sudo().create({
@@ -897,7 +1027,7 @@ class SaleOrderWink(models.Model):
             message_type='comment', subtype_xmlid='mail.mt_note',
         )
 
-        return {'charge_amount': charge_amount, 'new_tier': new_tier}
+        return {'charge_amount': charge_amount, 'new_tier': new_tier, 'invoice': upgrade_invoice}
 
     def _wink_bundle_do_downgrade(self, new_tier_id):
         """Portal self-service tier downgrade.
