@@ -625,8 +625,8 @@ class SaleOrderWink(models.Model):
                 'note': 'No refund per policy.' if policy == 'none' else 'No remaining days in period.',
             }
 
-        # Base amount: what the customer actually paid (not the legacy tier.price)
-        paid_amount = self.amount_total or 0.0
+        # Base amount: untaxed amount paid (so credit note taxes are computed correctly by Odoo)
+        paid_amount = self.amount_untaxed or 0.0
 
         if policy == 'monthly_rate':
             # Use standard monthly price — yearly discount is forfeited on cancellation
@@ -640,7 +640,7 @@ class SaleOrderWink(models.Model):
             refund_amount = min(refund_amount, paid_amount)
             note = (
                 f'Monthly rate policy: ({monthly_price:.2f} / 30) × {remaining_days} days'
-                f' = {refund_amount:.2f} (yearly discount forfeited, capped at paid amount {paid_amount:.2f})'
+                f' = {refund_amount:.2f} (yearly discount forfeited, capped at untaxed paid amount {paid_amount:.2f})'
             )
         else:  # pro_rata
             refund_ratio = remaining_days / total_days
@@ -658,6 +658,26 @@ class SaleOrderWink(models.Model):
             'note': note,
         }
 
+    def _wink_get_tier_effective_price(self, tier):
+        """Return effective price for a tier for proration calculations.
+        Prefers tier.price (legacy static). If zero, tries product.pricing
+        linked to the tier's product_variant_id and the order's plan.
+        Help: Used by upgrade/downgrade proration so price source is consistent."""
+        if tier.price:
+            return float(tier.price)
+        variant = tier.product_variant_id
+        if not variant:
+            return 0.0
+        Pricing = self.env.get('product.pricing')
+        if Pricing is None:
+            return 0.0
+        domain = [('product_variant_ids', 'in', [variant.id])]
+        plan = getattr(self, 'plan_id', None)
+        if plan:
+            domain.append(('recurrence_id', '=', plan.id))
+        pricing = Pricing.sudo().search(domain, limit=1)
+        return float(pricing.price) if pricing else 0.0
+
     def _wink_bundle_compute_upgrade_charge(self, new_tier):
         """Compute pro-rata charge amount for upgrading from current tier to new_tier.
         Returns dict: remaining_days, total_days, charge_amount, note.
@@ -665,7 +685,9 @@ class SaleOrderWink(models.Model):
         self.ensure_one()
         remaining_days, total_days = self._wink_bundle_remaining_days()
         current_tier = self.wink_bundle_tier_id
-        price_delta = (new_tier.price or 0.0) - (current_tier.price if current_tier else 0.0)
+        price_delta = self._wink_get_tier_effective_price(new_tier) - (
+            self._wink_get_tier_effective_price(current_tier) if current_tier else 0.0
+        )
         if price_delta <= 0 or remaining_days <= 0 or total_days <= 0:
             return {
                 'remaining_days': remaining_days, 'total_days': total_days,
@@ -692,7 +714,9 @@ class SaleOrderWink(models.Model):
         policy = bundle.downgrade_credit_policy if bundle else 'none'
         remaining_days, total_days = self._wink_bundle_remaining_days()
         current_tier = self.wink_bundle_tier_id
-        price_delta = (current_tier.price if current_tier else 0.0) - (new_tier.price or 0.0)
+        price_delta = (
+            self._wink_get_tier_effective_price(current_tier) if current_tier else 0.0
+        ) - self._wink_get_tier_effective_price(new_tier)
         if policy == 'none' or price_delta <= 0 or remaining_days <= 0 or total_days <= 0:
             return {
                 'remaining_days': remaining_days, 'total_days': total_days,
@@ -811,6 +835,11 @@ class SaleOrderWink(models.Model):
             return False
         from odoo import fields as odoo_fields
         today = odoo_fields.Date.context_today(self)
+        # Find original invoice to link as reversed entry
+        source_invoice = self.invoice_ids.filtered(
+            lambda m: m.state == 'posted' and m.move_type == 'out_invoice'
+        ).sorted('invoice_date', reverse=True)[:1]
+        so_line_ids = self.order_line.ids
         credit_note = self.env['account.move'].create({
             'move_type': 'out_refund',
             'partner_id': self.partner_id.id,
@@ -821,6 +850,7 @@ class SaleOrderWink(models.Model):
             'invoice_date': today,
             'date': today,
             'company_id': self.company_id.id,
+            'reversed_entry_id': source_invoice.id if source_invoice else False,
             'invoice_line_ids': [(0, 0, {
                 'name': description,
                 'product_id': product.id,
@@ -828,6 +858,7 @@ class SaleOrderWink(models.Model):
                 'quantity': 1.0,
                 'price_unit': amount,
                 'account_id': account.id,
+                'sale_line_ids': [(6, 0, so_line_ids)] if so_line_ids else [],
             })],
         })
         try:
@@ -962,6 +993,19 @@ class SaleOrderWink(models.Model):
                 _('Upgrade to "%s" is not configured for this tier.') % new_tier.name
             )
 
+        # Cooldown: prevent rapid tier changes within 24 hours to avoid exploit
+        from datetime import timedelta
+        recent = self.env['wink.bundle.change.log'].sudo().search([
+            ('order_id', '=', self.id),
+            ('date', '>=', fields.Datetime.now() - timedelta(hours=24)),
+            ('state', '=', 'done'),
+        ], limit=1)
+        if recent:
+            raise exceptions.UserError(_(
+                'A tier change was made within the last 24 hours. '
+                'Please wait before changing your tier again.'
+            ))
+
         # Compute charge
         charge_info = self._wink_bundle_compute_upgrade_charge(new_tier)
         charge_amount = charge_info.get('charge_amount', 0.0)
@@ -1006,12 +1050,12 @@ class SaleOrderWink(models.Model):
             'state': 'done',
         })
 
-        # Swap tier and regenerate entitlements
+        # Swap tier and regenerate entitlements — preserve activated counts for
+        # services that exist in both tiers so history is not wiped
         self.sudo().with_context(skip_tier_entitlements=True).write(
             {'wink_bundle_tier_id': new_tier.id}
         )
-        self.sudo().wink_entitlement_ids.unlink()
-        self._generate_tier_entitlements(new_tier)
+        self._generate_tier_entitlements(new_tier, preserve_activated=True)
 
         # Chatter
         self.sudo().message_post(
@@ -1054,6 +1098,19 @@ class SaleOrderWink(models.Model):
                 _('Downgrade to "%s" is not configured for this tier.') % new_tier.name
             )
 
+        # Cooldown: prevent rapid tier changes within 24 hours to avoid exploit
+        from datetime import timedelta
+        recent = self.env['wink.bundle.change.log'].sudo().search([
+            ('order_id', '=', self.id),
+            ('date', '>=', fields.Datetime.now() - timedelta(hours=24)),
+            ('state', '=', 'done'),
+        ], limit=1)
+        if recent:
+            raise exceptions.UserError(_(
+                'A tier change was made within the last 24 hours. '
+                'Please wait before changing your tier again.'
+            ))
+
         # Compute credit
         credit_info = self._wink_bundle_compute_downgrade_credit(new_tier)
         credit_amount = credit_info.get('credit_amount', 0.0)
@@ -1085,12 +1142,12 @@ class SaleOrderWink(models.Model):
             'state': 'done',
         })
 
-        # Swap tier and regenerate entitlements
+        # Swap tier and regenerate entitlements — preserve activated counts for
+        # services that exist in both tiers so history is not wiped
         self.sudo().with_context(skip_tier_entitlements=True).write(
             {'wink_bundle_tier_id': new_tier.id}
         )
-        self.sudo().wink_entitlement_ids.unlink()
-        self._generate_tier_entitlements(new_tier)
+        self._generate_tier_entitlements(new_tier, preserve_activated=True)
 
         # Chatter
         self.sudo().message_post(
@@ -1108,21 +1165,35 @@ class SaleOrderWink(models.Model):
 
         return {'credit_amount': credit_amount, 'credit_note': credit_note, 'new_tier': new_tier}
 
-    def _generate_tier_entitlements(self, tier):
-        """Generates the entitlement records for a given tier on this order."""
+    def _generate_tier_entitlements(self, tier, preserve_activated=False):
+        """Generates the entitlement records for a given tier on this order.
+        If preserve_activated=True, retains qty_activated counts for services
+        that appear in both the old and new tier (used during upgrade/downgrade
+        so already-activated services are not reset to zero)."""
         self.ensure_one()
-        # Clear existing entitlements for this order if any exist
+        # Snapshot activated counts before deletion when changing tiers
+        activated_by_product = {}
+        if preserve_activated:
+            for ent in self.wink_entitlement_ids:
+                pid = ent.service_product_id.id
+                activated_by_product[pid] = max(
+                    activated_by_product.get(pid, 0), ent.qty_activated
+                )
+        # Clear existing entitlements
         self.wink_entitlement_ids.unlink()
-        
+
         entitlement_vals = []
         for item in tier.item_ids.sorted('sequence'):
+            pid = item.service_product_id.id
+            prior_activated = activated_by_product.get(pid, 0) if preserve_activated else 0
             entitlement_vals.append({
                 'order_id': self.id,
                 'tier_id': tier.id,
-                'service_product_id': item.service_product_id.id,
+                'service_product_id': pid,
                 'name': item.description or item.service_product_id.name,
                 'sequence': item.sequence,
                 'qty_entitled': item.qty,
+                'qty_activated': min(prior_activated, item.qty),
             })
         if entitlement_vals:
             self.env['wink.bundle.entitlement'].sudo().create(entitlement_vals)

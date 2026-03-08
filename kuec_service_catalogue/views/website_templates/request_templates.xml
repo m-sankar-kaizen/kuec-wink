@@ -60,9 +60,26 @@
                                             <div class="card-body d-flex flex-column">
                                                 <h5 class="card-title fw-bold mb-2"><t t-esc="p.name"/></h5>
                                                 <p class="card-text text-muted small flex-grow-1 mb-3 wink-line-clamp-2"><t t-esc="short_descs.get(p.id, '')"/></p>
-                                                <t t-if="p.department_ids">
-                                                    <span class="badge border text-dark mb-2"><t t-esc="p.department_ids[0].name"/></span>
-                                                </t>
+                                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                                    <t t-if="p.department_ids">
+                                                        <span class="badge border text-dark"><t t-esc="p.department_ids[0].name"/></span>
+                                                    </t>
+                                                    <t t-if="p.commercial_structure == 'standalone'">
+                                                        <span class="badge rounded-pill" style="background:#e8f0fe;color:#1a56db;">Standalone</span>
+                                                    </t>
+                                                    <t t-elif="p.commercial_structure == 'flexible'">
+                                                        <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;">Flexible</span>
+                                                    </t>
+                                                    <t t-elif="p.commercial_structure == 'bundled'">
+                                                        <span class="badge rounded-pill" style="background:#ede9fe;color:#5b21b6;"><i class="fa fa-th-large me-1"/>Bundle</span>
+                                                    </t>
+                                                    <t t-if="p.delivery_model == 'retainer'">
+                                                        <span class="badge rounded-pill" style="background:#d1fae5;color:#065f46;">Retainer</span>
+                                                    </t>
+                                                    <t t-elif="p.request_frequency == 'one_time'">
+                                                        <span class="badge rounded-pill" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">One-Time</span>
+                                                    </t>
+                                                </div>
                                                 <div class="mt-auto pt-2">
                                                     <span class="text-muted small" t-if="p.price_visibility == 'hidden'" t-esc="p.price_hidden_label"/>
                                                     <span t-else="" class="fw-bold" t-esc="p.list_price" t-options="{'widget': 'monetary', 'display_currency': request.website.currency_id if request.website else request.env.company.currency_id}"/>
@@ -418,32 +435,65 @@
 
                     <!-- Step 1 (Configure) and legacy full form: show when step is 1 or not set. Step 2 (Employees only) shown when step == 2; UI-BUG-003: step 2 only if requires_employee_selection -->
                     <t t-if="step != 3">
-                    <!-- Service context -->
+                    <!-- Service context — enriched with type, frequency, and structure info -->
                     <div class="wink-request-context card mb-4">
-                        <div class="card-body d-flex align-items-center gap-3">
-                            <div>
-                                <h5 class="mb-1">
-                                    <t t-esc="product.name"/>
-                                </h5>
-                                <span class="badge" style="background:var(--wink-primary)">
-                                    <t t-if="product.delivery_model == 'project'">Project-Based</t>
-                                    <t t-if="product.delivery_model == 'retainer'">Retainer</t>
-                                </span>
-                                <span class="ms-2 text-muted">
-                                    <t t-if="product.price_visibility == 'hidden'">
-                                        <t t-esc="product.price_hidden_label"/>
-                                    </t>
-                                    <t t-elif="product.delivery_model == 'retainer'">
-                                        Price based on plan selected below
-                                    </t>
-                                    <t t-elif="product.price_visibility == 'visible'">
-                                        <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': request.website.currency_id if request.website else request.env.company.currency_id}"/>
-                                    </t>
-                                    <t t-else="">
-                                        <t t-esc="product.price_hidden_label"/>
-                                    </t>
-                                </span>
+                        <div class="card-body">
+                            <div class="d-flex align-items-start gap-3 flex-wrap">
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-2">
+                                        <t t-esc="product.name"/>
+                                    </h5>
+                                    <!-- Badge row -->
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <span class="badge rounded-pill" style="background:var(--wink-primary);color:#fff;">
+                                            <t t-if="product.delivery_model == 'project'"><i class="fa fa-briefcase me-1"/>Project-Based</t>
+                                            <t t-if="product.delivery_model == 'retainer'"><i class="fa fa-sync me-1"/>Retainer</t>
+                                        </span>
+                                        <t t-if="product.commercial_structure == 'standalone'">
+                                            <span class="badge rounded-pill" style="background:#e8f0fe;color:#1a56db;"><i class="fa fa-cube me-1"/>Standalone</span>
+                                        </t>
+                                        <t t-elif="product.commercial_structure == 'flexible'">
+                                            <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;"><i class="fa fa-sitemap me-1"/>Flexible</span>
+                                        </t>
+                                        <t t-if="product.request_frequency == 'one_time' and product.delivery_model != 'retainer'">
+                                            <span class="badge rounded-pill" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;"><i class="fa fa-check-circle me-1"/>One-Time</span>
+                                        </t>
+                                        <t t-elif="product.request_frequency == 'repeated'">
+                                            <span class="badge rounded-pill" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;"><i class="fa fa-repeat me-1"/>Repeatable</span>
+                                        </t>
+                                    </div>
+                                    <!-- Price line -->
+                                    <span class="text-muted small">
+                                        <t t-if="product.price_visibility == 'hidden'">
+                                            <i class="fa fa-tag me-1"/><t t-esc="product.price_hidden_label"/>
+                                        </t>
+                                        <t t-elif="product.delivery_model == 'retainer'">
+                                            <i class="fa fa-calendar me-1"/>Price based on plan selected below
+                                        </t>
+                                        <t t-elif="product.price_visibility == 'visible'">
+                                            <i class="fa fa-tag me-1"/>
+                                            <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': request.website.currency_id if request.website else request.env.company.currency_id}"/>
+                                        </t>
+                                        <t t-else="">
+                                            <i class="fa fa-tag me-1"/><t t-esc="product.price_hidden_label"/>
+                                        </t>
+                                    </span>
+                                </div>
                             </div>
+                            <!-- Flexible service note -->
+                            <t t-if="product.commercial_structure == 'flexible'">
+                                <div class="d-flex align-items-start gap-2 mt-3 p-2 rounded-2" style="background:#fffbeb;border:1px solid #fde68a;">
+                                    <i class="fa fa-info-circle text-warning mt-1"/>
+                                    <span class="small">This is a <strong>Flexible</strong> service — available as a standalone purchase or included as part of a bundle package.</span>
+                                </div>
+                            </t>
+                            <!-- One-time service notice -->
+                            <t t-if="product.request_frequency == 'one_time' and product.delivery_model != 'retainer'">
+                                <div class="d-flex align-items-start gap-2 mt-3 p-2 rounded-2" style="background:#eff6ff;border:1px solid #bfdbfe;">
+                                    <i class="fa fa-exclamation-circle mt-1" style="color:#3b82f6;"/>
+                                    <span class="small">This is a <strong>one-time service</strong>. Once submitted, it cannot be re-requested for the same company.</span>
+                                </div>
+                            </t>
                         </div>
                     </div>
 
@@ -599,6 +649,19 @@
                         <input t-if="step == 1" type="hidden" name="next_step" value="2"/>
                         <input t-if="selected_plan and not wink_is_bundle" type="hidden" name="selected_pricing_id" t-att-value="selected_plan['pricing_id']"/>
                         <input t-if="change_from_id" type="hidden" name="change_from_id" t-att-value="change_from_id"/>
+
+                        <!-- Service description panel (standalone/flexible only, when description is available) -->
+                        <t t-if="not wink_is_bundle and product.wink_description">
+                            <div class="card border-0 rounded-3 mb-4" style="background:#f8faff;border-left:4px solid var(--wink-primary) !important;border:1px solid #e2eaf5;">
+                                <div class="card-body py-3 px-4">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fa fa-info-circle" style="color:var(--wink-primary);"/>
+                                        <span class="fw-semibold small" style="color:var(--wink-primary);">About this service</span>
+                                    </div>
+                                    <div class="text-muted small wink-service-desc-preview" t-field="product.wink_description" t-options='{"widget": "html"}'/>
+                                </div>
+                            </div>
+                        </t>
 
                         <!-- v2: Your Selected Plan summary (when coming from detail page with plan, non-bundle only) -->
                         <div t-if="is_subscription_service and selected_plan and not wink_is_bundle" class="mb-4">
@@ -890,24 +953,32 @@
                             </script>
                         </div>
                         <div t-if="is_subscription_service and not wink_is_bundle and subscription_plans and not selected_plan" class="wink-retainer-plan-selector mb-4">
-                            <h5 class="mb-3">Select Your Plan</h5>
-                            <p class="text-muted small mb-2">Price is based on the plan you select.</p>
+                            <h5 class="mb-1"><i class="fa fa-calendar-check-o me-1"/>Select Your Plan</h5>
+                            <p class="text-muted small mb-3">Choose the billing cycle that works best for you.</p>
                             <t t-foreach="subscription_plans" t-as="plan">
-                                <div class="wink-tier-card mb-3">
+                                <div t-att-class="'wink-tier-card mb-3 position-relative' + (' wink-plan-popular' if plan.get('is_most_popular') else '')">
+                                    <!-- Most Popular badge -->
+                                    <t t-if="plan.get('is_most_popular')">
+                                        <div class="position-absolute d-flex justify-content-center" style="top:-12px;left:0;right:0;z-index:1;">
+                                            <span class="badge rounded-pill px-3 py-1 fw-semibold" style="background:var(--wink-primary);color:#fff;font-size:0.72rem;box-shadow:0 2px 6px rgba(0,0,0,.15);">&#9733; Most Popular</span>
+                                        </div>
+                                    </t>
                                     <input type="radio" name="selected_pricing_id" class="d-none wink-plan-radio"
                                            t-att-id="'plan_%s' % plan['pricing_id']"
                                            t-att-value="plan['pricing_id']"
                                            t-att-checked="'checked' if (plan_first or str(plan['pricing_id']) == str(post.get('selected_pricing_id', ''))) else None"/>
                                     <label t-att-for="'plan_%s' % plan['pricing_id']"
-                                           class="wink-tier-label card p-3 w-100 cursor-pointer">
+                                           t-att-class="'wink-tier-label card w-100 cursor-pointer ' + ('pt-4 px-3 pb-3' if plan.get('is_most_popular') else 'p-3')">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <div class="fw-bold fs-5"><t t-esc="plan['plan_name']"/></div>
                                                 <div class="text-muted small"><t t-esc="plan['period_label']"/></div>
-                                                <t t-if="plan.get('show_savings')"><span class="badge bg-success mt-1">Save <t t-esc="plan['savings_pct']"/>%</span></t>
+                                                <div class="mt-1 d-flex flex-wrap gap-1">
+                                                    <t t-if="plan.get('show_savings')"><span class="badge bg-success">Save <t t-esc="plan['savings_pct']"/>%</span></t>
+                                                </div>
                                             </div>
                                             <div class="text-end" t-if="plan['price']">
-                                                <div class="fw-bold fs-4" style="color: var(--wink-primary);">
+                                                <div class="fw-bold fs-4" style="color:var(--wink-primary);">
                                                     <t t-esc="plan.get('currency_symbol', plan.get('currency_name', 'AED'))"/> <t t-esc="'{:,.2f}'.format(plan['price'])"/>
                                                 </div>
                                                 <t t-if="plan.get('monthly_equivalent') and plan['monthly_equivalent'] != plan['price']">
@@ -915,6 +986,14 @@
                                                 </t>
                                             </div>
                                         </div>
+                                        <!-- Features list -->
+                                        <t t-if="plan.get('features')">
+                                            <ul class="list-unstyled small mt-2 mb-0 pt-2 border-top">
+                                                <t t-foreach="plan['features'][:5]" t-as="feat">
+                                                    <li class="mb-1"><i class="fa fa-check me-1" style="color:var(--wink-primary);"/><t t-esc="feat"/></li>
+                                                </t>
+                                            </ul>
+                                        </t>
                                     </label>
                                 </div>
                             </t>
@@ -1276,6 +1355,17 @@
                         <t t-if="quote_message"><t t-esc="quote_message"/></t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
+                    <div t-if="request.httprequest.args.get('error') == 'docs_required'" class="alert alert-warning alert-dismissible fade show d-flex align-items-start gap-3" role="alert">
+                        <i class="fa fa-exclamation-triangle fa-lg mt-1 flex-shrink-0"/>
+                        <div>
+                            <strong>Required documents pending</strong><br/>
+                            All required documents must be uploaded and approved by your coordinator before you can approve or pay for this request.
+                            <a t-attf-href="/my/requests/{{ order.id }}/documents" class="d-block mt-1 fw-semibold small">
+                                <i class="fa fa-upload me-1"/>Go to Documents
+                            </a>
+                        </div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"/>
+                    </div>
 
                     <!-- Order Summary Card -->
                     <div class="card shadow-sm border-0 mt-4 rounded-3 overflow-hidden">
@@ -1350,23 +1440,49 @@
                                 <p>Your coordinator will set the price for this request. Once the price is set you will see it here and can <strong>approve</strong> (to confirm and pay), <strong>reject</strong>, or discuss with the team.</p>
                             </t>
                             <t t-elif="order.state in ['draft', 'sent'] and order.wink_price_confirmed">
+                                <!-- Docs pending blocker -->
+                                <t t-if="not docs_all_approved and pending_doc_names">
+                                    <div class="rounded-3 p-3 mb-3 d-flex align-items-start gap-3" style="background:#fffbeb;border:1px solid #fde68a;">
+                                        <i class="fa fa-exclamation-triangle fa-lg flex-shrink-0 mt-1" style="color:#d97706;"/>
+                                        <div>
+                                            <strong class="d-block mb-1" style="color:#92400e;">Documents Required Before Approval</strong>
+                                            <p class="small mb-2" style="color:#78350f;">Upload and get coordinator approval for these documents first:</p>
+                                            <ul class="small mb-2 ps-3" style="color:#78350f;">
+                                                <t t-foreach="pending_doc_names" t-as="dname">
+                                                    <li><t t-esc="dname"/></li>
+                                                </t>
+                                            </ul>
+                                            <a t-attf-href="/my/requests/{{ order.id }}/documents" class="btn btn-sm fw-semibold" style="background:#f59e0b;color:#fff;border:0;">
+                                                <i class="fa fa-upload me-1"/>Upload Documents
+                                            </a>
+                                        </div>
+                                    </div>
+                                </t>
                                 <div class="bg-light p-4 rounded-3 border mb-3">
                                     <h6 class="fw-bold mb-3"><i class="fa fa-shield me-2 text-success"/> Review &amp; Confirm</h6>
                                     <p class="text-muted small">By approving this quote, you confirm the tier and pricing selected. You will be redirected to the payment screen to finalize your request.</p>
-                                    <div class="d-flex flex-wrap gap-3 mt-4">
-                                        <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
-                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                            <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
-                                                <i class="fa fa-check-circle me-2"/> Approve quote
-                                            </button>
-                                        </form>
-                                        <form method="post" t-attf-action="/my/requests/#{order.id}/reject" class="d-inline">
-                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                            <button type="submit" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-bold">
-                                                Reject quote
-                                            </button>
-                                        </form>
-                                    </div>
+                                    <t t-if="docs_all_approved or not pending_doc_names">
+                                        <div class="d-flex flex-wrap gap-3 mt-4">
+                                            <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
+                                                    <i class="fa fa-check-circle me-2"/> Approve quote
+                                                </button>
+                                            </form>
+                                            <form method="post" t-attf-action="/my/requests/#{order.id}/reject" class="d-inline">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <button type="submit" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-bold">
+                                                    Reject quote
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="mt-3 d-flex align-items-center gap-2 text-muted small">
+                                            <i class="fa fa-lock"/>
+                                            Approve button will unlock once all required documents are approved by your coordinator.
+                                        </div>
+                                    </t>
                                     <p class="text-muted small mt-3 mb-0"><i class="fa fa-question-circle me-1"/> Need clarification? <a t-attf-href="/my/requests/#{order.id}#discussion" class="text-primary fw-semibold">Discuss with your coordinator</a></p>
                                 </div>
                             </t>
@@ -1374,16 +1490,36 @@
                                 <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
                             </t>
                             <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
-                                <div class="mt-4 p-4 rounded-3 border border-2 shadow-sm d-flex align-items-center gap-4 flex-wrap" 
-                                     style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); border-color: #cbdcf0 !important;">
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-1 fw-bold text-primary"><i class="fa fa-credit-card me-2"/> Complete your payment</h5>
-                                        <p class="text-muted small mb-0">Please finalize your payment to activate the service. Amount due: <strong class="text-dark fs-5"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
+                                <!-- Docs pending blocker for payment -->
+                                <t t-if="not docs_all_approved and pending_doc_names">
+                                    <div class="rounded-3 p-3 mb-3 d-flex align-items-start gap-3" style="background:#fffbeb;border:1px solid #fde68a;">
+                                        <i class="fa fa-exclamation-triangle fa-lg flex-shrink-0 mt-1" style="color:#d97706;"/>
+                                        <div>
+                                            <strong class="d-block mb-1" style="color:#92400e;">Documents Required Before Payment</strong>
+                                            <p class="small mb-2" style="color:#78350f;">Your coordinator must approve the following documents before payment can proceed:</p>
+                                            <ul class="small mb-2 ps-3" style="color:#78350f;">
+                                                <t t-foreach="pending_doc_names" t-as="dname">
+                                                    <li><t t-esc="dname"/></li>
+                                                </t>
+                                            </ul>
+                                            <a t-attf-href="/my/requests/{{ order.id }}/documents" class="btn btn-sm fw-semibold" style="background:#f59e0b;color:#fff;border:0;">
+                                                <i class="fa fa-upload me-1"/>View Documents
+                                            </a>
+                                        </div>
                                     </div>
-                                    <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
-                                        <i class="fa fa-arrow-right me-2"/> Proceed to Payment
-                                    </a>
-                                </div>
+                                </t>
+                                <t t-if="docs_all_approved or not pending_doc_names">
+                                    <div class="mt-4 p-4 rounded-3 border border-2 shadow-sm d-flex align-items-center gap-4 flex-wrap"
+                                         style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); border-color: #cbdcf0 !important;">
+                                        <div class="flex-grow-1">
+                                            <h5 class="mb-1 fw-bold text-primary"><i class="fa fa-credit-card me-2"/> Complete your payment</h5>
+                                            <p class="text-muted small mb-0">Please finalize your payment to activate the service. Amount due: <strong class="text-dark fs-5"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
+                                        </div>
+                                        <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
+                                            <i class="fa fa-arrow-right me-2"/> Proceed to Payment
+                                        </a>
+                                    </div>
+                                </t>
                                 <t t-if="request.params.get('payment') == 'pending'">
                                     <div class="alert alert-warning mt-3 mb-0 py-3 shadow-sm border-0">
                                         <i class="fa fa-clock-o me-2 fa-lg"/> <strong>Manual payment logged!</strong> Awaiting coordinator validation.
@@ -1930,6 +2066,17 @@
                     </nav>
 
                     <h3 class="mb-4">Compliance Documents — <t t-esc="order.name"/></h3>
+
+                    <!-- Request submitted — docs required banner -->
+                    <div t-if="just_submitted" class="alert alert-info alert-dismissible fade show d-flex align-items-start gap-3" role="alert">
+                        <i class="fa fa-info-circle fa-lg mt-1 flex-shrink-0"/>
+                        <div>
+                            <strong>Request submitted successfully.</strong><br/>
+                            This service requires documents before it can be processed.
+                            Please upload all required documents below. Your coordinator will review them and notify you once approved.
+                        </div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"/>
+                    </div>
 
                     <!-- Upload success banner -->
                     <div t-if="doc_uploaded" class="alert alert-success alert-dismissible fade show">

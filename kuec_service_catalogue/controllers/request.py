@@ -1193,10 +1193,13 @@ class WinkRequest(http.Controller):
                     ent.sudo().wink_selected_employee_ids = [(6, 0, emp_ids)]
 
 
-        # Only auto-confirm when price is visible and set (customer can pay immediately).
-        # When price is hidden or not set we keep the order as Quotation; coordinator sets
-        # price and unlocks; then customer can approve/reject or pay.
-        is_auto_confirm = order.wink_price_confirmed and (
+        # Only auto-confirm when price is visible/confirmed AND there are no required documents
+        # pending upload/approval. When required docs exist, the order stays as Quotation so the
+        # customer can upload docs; coordinator reviews them; then customer can approve/pay.
+        has_required_docs = bool(product.kuec_document_ids.filtered(
+            lambda d: getattr(d, 'requirement', '') == 'required'
+        )) if not wink_is_bundle else False
+        is_auto_confirm = order.wink_price_confirmed and not has_required_docs and (
             (product.commercial_structure == 'standalone' and product.request_frequency == 'one_time')
             or is_subscription_service
             or wink_is_bundle
@@ -1227,9 +1230,12 @@ class WinkRequest(http.Controller):
 
         # UI-013: Redirect with submitted=1 to show Request Submitted success block
         self._wizard_clear_draft()
-        # Phase 6 & 7.1: If price is confirmed, redirect directly to WINK payment page
-        if order.wink_price_confirmed:
+        # If price is confirmed and no required docs, redirect directly to payment
+        if order.wink_price_confirmed and not has_required_docs:
             return request.redirect(f'/my/requests/{order.id}/pay')
+        # If required docs exist, land directly on the documents page so the customer uploads immediately
+        if has_required_docs:
+            return request.redirect(f'/my/requests/{order.id}/documents?just_submitted=1')
         return request.redirect(f'/my/requests/{order.id}?submitted=1')
 
     @http.route('/my/requests/<int:order_id>', type='http', auth='user', website=True)
@@ -1485,6 +1491,9 @@ class WinkRequest(http.Controller):
         elif order.state == 'done' or is_closed_or_cancelled:
             delivery_stage = 5  # Completed
 
+        # Required documents status: check if all required docs are approved
+        docs_all_approved, pending_doc_names = order.sudo()._wink_all_required_docs_approved()
+
         # UI-012: Activity timeline (last 5 messages or synthetic entries)
         activity_items = []
         try:
@@ -1543,6 +1552,9 @@ class WinkRequest(http.Controller):
             'entitlement_prereqs': entitlement_prereqs,
             'open_modal': kwargs.get('open_modal', ''),
             'doc_uploaded': kwargs.get('doc_uploaded') == '1',
+            # Required documents status for non-bundle orders
+            'docs_all_approved': docs_all_approved,
+            'pending_doc_names': pending_doc_names,
             # UI-BUG-004 (FB-004): partial payment display
             'amount_due_display': amount_due_display,
             'amount_paid_display': amount_paid_display,
@@ -1563,6 +1575,10 @@ class WinkRequest(http.Controller):
             return request.redirect(f'/my/requests/{order_id}')
         if not order.wink_price_confirmed:
             return request.redirect(f'/my/requests/{order_id}?error=price_not_confirmed')
+        # Block approval when required documents are not yet approved by coordinator
+        docs_ok, missing = order.sudo()._wink_all_required_docs_approved()
+        if not docs_ok:
+            return request.redirect(f'/my/requests/{order_id}?error=docs_required')
         try:
             order.sudo().action_confirm()
             order.sudo().message_post(
@@ -2016,6 +2032,10 @@ class WinkRequest(http.Controller):
         source_product = order.wink_source_product_id
         if order.state != 'sale' or (not order.wink_price_confirmed and source_product and source_product.price_visibility == 'hidden'):
             return request.redirect(f'/my/requests/{order.id}?error=payment_not_available')
+        # Block payment when required documents are not yet approved by coordinator
+        docs_ok, _missing = order.sudo()._wink_all_required_docs_approved()
+        if not docs_ok:
+            return request.redirect(f'/my/requests/{order.id}?error=docs_required')
 
         # Use native Odoo CustomerPortal controller to fetch payment providers/tokens
         portal_controller = CustomerPortal()
@@ -2075,6 +2095,7 @@ class WinkRequest(http.Controller):
             'sub_map': sub_map,
             'doc_uploaded': kw.get('doc_uploaded') == '1',
             'doc_error': kw.get('doc_error', False),
+            'just_submitted': kw.get('just_submitted') == '1',
         })
 
     @http.route('/my/requests/<int:order_id>/documents/upload', type='http', auth='user', website=True, methods=['POST'], csrf=True)

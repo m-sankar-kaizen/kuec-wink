@@ -289,6 +289,21 @@
     background-color: rgba(31, 78, 121, 0.06);
 }
 
+/* Standalone retainer plan card — Most Popular highlight */
+.wink-plan-popular .wink-tier-label {
+    border-color: var(--wink-primary) !important;
+    border-width: 2px !important;
+    background: linear-gradient(160deg, #eef5ff 0%, #fff 100%);
+}
+
+/* Service description preview in configure step */
+.wink-service-desc-preview {
+    max-height: 120px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
 /* UI-TAG-001 (FB-001h): Diagonal folded-corner ribbon (like screenshot)
    Use a standard 75x75 clipped corner so ribbon is visible and inside the card */
 .wink-service-card,
