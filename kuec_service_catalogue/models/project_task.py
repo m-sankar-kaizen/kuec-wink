@@ -22,6 +22,23 @@ class ProjectTaskWink(models.Model):
         help='Compliance documents linked to this task.',
     )
 
+    # ── Vendor assignment ────────────────────────────────────────────────────
+    wink_vendor_id = fields.Many2one(
+        'res.partner',
+        string='Vendor',
+        domain=[('supplier_rank', '>', 0)],
+        tracking=True,
+        help='Vendor assigned by the coordinator to deliver this task. '
+             'Saving a vendor and clicking "Create RFQ" will auto-generate a draft Purchase Order.',
+    )
+    wink_purchase_order_id = fields.Many2one(
+        'purchase.order',
+        string='RFQ / Purchase Order',
+        readonly=True,
+        ondelete='set null',
+        help='Auto-created RFQ when the coordinator assigns a vendor to this task.',
+    )
+
     @api.model_create_multi
     def create(self, vals_list):
         tasks = super().create(vals_list)
@@ -82,4 +99,98 @@ class ProjectTaskWink(models.Model):
                             raise UserError(_(
                                 "Compliance Hard-Gate: You cannot move this task out of the 'New' stage because the customer has missing or unapproved documents: %s"
                             ) % ", ".join(pending_names))
-        return super().write(vals)
+
+        res = super().write(vals)
+
+        # When vendor changes, sync rated_partner_id on pending (unconsumed) ratings
+        if 'wink_vendor_id' in vals:
+            for task in self:
+                vendor_id = task.wink_vendor_id.id if task.wink_vendor_id else False
+                self.env['rating.rating'].sudo().search([
+                    ('res_model', '=', 'project.task'),
+                    ('res_id', '=', task.id),
+                    ('consumed', '=', False),
+                ]).write({'rated_partner_id': vendor_id})
+
+        return res
+
+    # ── Rating: vendor is the rated operator ─────────────────────────────────
+
+    def _rating_get_operator(self):
+        """Return the assigned vendor as the rated operator so that customer
+        ratings are linked to the vendor, not the internal user."""
+        self.ensure_one()
+        if self.wink_vendor_id:
+            return self.wink_vendor_id
+        return super()._rating_get_operator()
+
+    # ── Vendor RFQ creation ───────────────────────────────────────────────────
+
+    def action_assign_vendor_rfq(self):
+        """Coordinator assigns vendor and creates a draft RFQ for the service product.
+        If an RFQ already exists, opens it instead of creating a duplicate."""
+        self.ensure_one()
+        if not self.wink_vendor_id:
+            raise UserError(_('Please select a vendor before creating an RFQ.'))
+
+        # If RFQ already exists, open it
+        if self.wink_purchase_order_id:
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'purchase.order',
+                'res_id': self.wink_purchase_order_id.id,
+                'view_mode': 'form',
+                'target': 'current',
+            }
+
+        # Resolve service product from task's sale line or order source product
+        product = None
+        qty = 1.0
+        sale_line = getattr(self, 'sale_line_id', None)
+        if sale_line and sale_line.product_id:
+            product = sale_line.product_id
+            qty = sale_line.product_uom_qty or 1.0
+        elif self.sale_order_id and self.sale_order_id.wink_source_product_id:
+            product = self.sale_order_id.wink_source_product_id.product_variant_ids[:1]
+
+        po_line_vals = []
+        if product:
+            po_line_vals.append((0, 0, {
+                'product_id': product.id,
+                'name': product.display_name,
+                'product_qty': qty,
+                'price_unit': 0.0,
+                'date_planned': fields.Datetime.now(),
+            }))
+
+        origin = self.sale_order_id.name if self.sale_order_id else self.name
+        po = self.env['purchase.order'].sudo().create({
+            'partner_id': self.wink_vendor_id.id,
+            'origin': origin,
+            'notes': _('Auto-generated from WINK task: %s') % self.name,
+            'order_line': po_line_vals,
+        })
+        self.sudo().write({'wink_purchase_order_id': po.id})
+
+        # Sync rated_partner_id on any existing unconsumed ratings
+        self.env['rating.rating'].sudo().search([
+            ('res_model', '=', 'project.task'),
+            ('res_id', '=', self.id),
+            ('consumed', '=', False),
+        ]).write({'rated_partner_id': self.wink_vendor_id.id})
+
+        self.message_post(
+            body=_(
+                'Vendor <b>%s</b> assigned. RFQ <b>%s</b> created.'
+            ) % (self.wink_vendor_id.name, po.name),
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'purchase.order',
+            'res_id': po.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }

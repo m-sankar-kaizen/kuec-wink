@@ -1489,7 +1489,7 @@
                             <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
                                 <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
                             </t>
-                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid">
+                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid and order.amount_total > 0">
                                 <!-- Docs pending blocker for payment -->
                                 <t t-if="not docs_all_approved and pending_doc_names">
                                     <div class="rounded-3 p-3 mb-3 d-flex align-items-start gap-3" style="background:#fffbeb;border:1px solid #fde68a;">
@@ -3049,5 +3049,624 @@
                 </div>
             </t>
         </template>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             EPIC7-DASH-001: Customer Portal Dashboard
+        ═══════════════════════════════════════════════════════════════════ -->
+
+        <!-- Portal home entry: Dashboard (priority 5 = shown first) -->
+        <template id="portal_my_home_dashboard" name="Portal My Home: Dashboard"
+                  inherit_id="portal.portal_my_home" priority="5">
+            <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+                <div class="rounded-3 p-4 mb-4 d-flex align-items-center gap-3 flex-wrap"
+                     style="background:linear-gradient(135deg,var(--wink-primary,#004fac) 0%,#003d8a 100%);color:#fff;">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1 fw-bold"><i class="fa fa-tachometer me-2"/>My Dashboard</h5>
+                        <p class="mb-0 small" style="opacity:.85;">View your requests, subscriptions, outstanding balance and upcoming renewals.</p>
+                    </div>
+                    <a href="/my/dashboard" class="btn btn-sm fw-semibold flex-shrink-0"
+                       style="background:#fff;color:var(--wink-primary,#004fac);border:0;">
+                        <i class="fa fa-arrow-right me-1"/>Open Dashboard
+                    </a>
+                </div>
+            </xpath>
+        </template>
+
+        <!-- Full dashboard page -->
+        <template id="wink_customer_dashboard" name="WINK Customer Dashboard">
+            <t t-call="website.layout">
+                <div class="container mt-4 mb-5">
+
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Header -->
+                    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                        <div>
+                            <h3 class="mb-0 fw-bold" style="color:var(--wink-primary,#004fac);">
+                                <i class="fa fa-tachometer me-2"/>My Dashboard
+                            </h3>
+                            <p class="text-muted small mb-0 mt-1">
+                                Welcome back, <strong t-esc="partner.name"/>
+                                <t t-if="attention_count > 0">
+                                    &#160;—&#160;<span class="badge rounded-pill" style="background:#dc3545;font-size:.7rem;">
+                                        <t t-esc="attention_count"/> item(s) need your attention
+                                    </span>
+                                </t>
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="/services" class="btn btn-sm fw-semibold"
+                               style="background:var(--wink-primary,#004fac);color:#fff;border:0;">
+                                <i class="fa fa-plus me-1"/>New Request
+                            </a>
+                            <a href="/my/requests" class="btn btn-sm btn-outline-secondary">
+                                <i class="fa fa-list me-1"/>All Requests
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- ══ NEEDS ATTENTION PANEL ═══════════════════════════ -->
+                    <t t-if="attention_count > 0">
+                        <div class="card border-0 shadow-sm rounded-3 mb-4" style="border-left:4px solid #dc3545 !important;background:#fff5f5;">
+                            <div class="card-header bg-transparent border-0 pt-3 pb-1">
+                                <h6 class="mb-0 fw-bold" style="color:#991b1b;">
+                                    <i class="fa fa-exclamation-circle me-2"/>Needs Your Attention
+                                    <span class="badge rounded-pill ms-2" style="background:#dc3545;font-size:.7rem;"><t t-esc="attention_count"/></span>
+                                </h6>
+                            </div>
+                            <div class="card-body pt-2 pb-3">
+                                <div class="d-flex flex-column gap-2">
+                                    <!-- Quotes to approve -->
+                                    <t t-foreach="quotes_to_approve" t-as="qa">
+                                        <div class="d-flex align-items-center gap-3 rounded-2 p-2" style="background:#fff;border:1px solid #fecaca;">
+                                            <i class="fa fa-file-text-o flex-shrink-0" style="color:#dc3545;"/>
+                                            <div class="flex-grow-1 min-width-0">
+                                                <div class="small fw-semibold text-truncate">Quote awaiting approval: <t t-esc="qa.wink_source_product_id.name or qa.name"/></div>
+                                                <div class="text-muted" style="font-size:.72rem;"><t t-esc="qa.name"/></div>
+                                            </div>
+                                            <a t-attf-href="/my/requests/{{ qa.id }}" class="btn btn-sm fw-semibold flex-shrink-0"
+                                               style="background:#dc3545;color:#fff;border:0;font-size:.72rem;">Review</a>
+                                        </div>
+                                    </t>
+                                    <!-- Pending documents -->
+                                    <t t-foreach="pending_docs" t-as="pd">
+                                        <div class="d-flex align-items-center gap-3 rounded-2 p-2" style="background:#fff;border:1px solid #fde68a;">
+                                            <i class="fa fa-paperclip flex-shrink-0" style="color:#d97706;"/>
+                                            <div class="flex-grow-1 min-width-0">
+                                                <div class="small fw-semibold text-truncate">
+                                                    <t t-if="pd['state'] == 'change_required'">Change requested:</t>
+                                                    <t t-else="">Document needed:</t>
+                                                    <t t-esc="pd['doc_name']"/>
+                                                </div>
+                                                <div class="text-muted" style="font-size:.72rem;"><t t-esc="pd['order_name']"/></div>
+                                            </div>
+                                            <a t-attf-href="/my/requests/{{ pd['order_id'] }}/documents" class="btn btn-sm fw-semibold flex-shrink-0"
+                                               style="background:#f59e0b;color:#fff;border:0;font-size:.72rem;">Upload</a>
+                                        </div>
+                                    </t>
+                                    <!-- Overdue invoices -->
+                                    <t t-foreach="overdue_invoices" t-as="oi">
+                                        <div class="d-flex align-items-center gap-3 rounded-2 p-2" style="background:#fff;border:1px solid #fecaca;">
+                                            <i class="fa fa-clock-o flex-shrink-0" style="color:#dc2626;"/>
+                                            <div class="flex-grow-1 min-width-0">
+                                                <div class="small fw-semibold text-truncate">Overdue invoice: <t t-esc="oi.name"/></div>
+                                                <div class="text-muted" style="font-size:.72rem;">
+                                                    Due <t t-esc="oi.invoice_date_due" t-options='{"widget":"date"}'/>
+                                                    — <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % oi.amount_residual"/>
+                                                </div>
+                                            </div>
+                                            <a href="/my/invoices" class="btn btn-sm fw-semibold flex-shrink-0"
+                                               style="background:#dc3545;color:#fff;border:0;font-size:.72rem;">Pay</a>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ══ KPI ROW 1: Requests ═══════════════════════════════ -->
+                    <p class="text-muted small fw-semibold text-uppercase mb-2" style="letter-spacing:.05em;">Service Requests</p>
+                    <div class="row g-3 mb-2">
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/requests" class="text-decoration-none">
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     style="border-left:4px solid var(--wink-primary,#004fac) !important;background:#f0f7ff;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width:40px;height:40px;background:var(--wink-primary,#004fac);">
+                                        <i class="fa fa-file-text-o text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1" style="color:var(--wink-primary,#004fac);">
+                                        <t t-esc="kpi_orders"/>
+                                    </div>
+                                    <div class="text-muted small fw-semibold">Active Requests</div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/requests" class="text-decoration-none">
+                                <t t-set="qc" t-value="'#d97706' if kpi_quotes > 0 else '#6c757d'"/>
+                                <t t-set="qb" t-value="'#fffbeb' if kpi_quotes > 0 else '#f8f9fa'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     t-attf-style="border-left:4px solid {{ qc }} !important;background:{{ qb }};">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         t-attf-style="width:40px;height:40px;background:{{ qc }};">
+                                        <i class="fa fa-pencil-square-o text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1" t-attf-style="color:{{ qc }};"><t t-esc="kpi_quotes"/></div>
+                                    <div class="text-muted small fw-semibold">Quotes to Approve</div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/bundles" class="text-decoration-none">
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     style="border-left:4px solid #198754 !important;background:#f0fff4;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width:40px;height:40px;background:#198754;">
+                                        <i class="fa fa-cube text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1" style="color:#198754;"><t t-esc="kpi_subscriptions"/></div>
+                                    <div class="text-muted small fw-semibold">Active Subscriptions</div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/requests" class="text-decoration-none">
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     style="border-left:4px solid #6c757d !important;background:#f8f9fa;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width:40px;height:40px;background:#6c757d;">
+                                        <i class="fa fa-check text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1 text-secondary"><t t-esc="kpi_completed"/></div>
+                                    <div class="text-muted small fw-semibold">Completed</div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/bundles" class="text-decoration-none">
+                                <t t-set="ren_color" t-value="'#f59e0b' if kpi_renewals > 0 else '#6c757d'"/>
+                                <t t-set="ren_bg" t-value="'#fffbeb' if kpi_renewals > 0 else '#f8f9fa'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     t-attf-style="border-left:4px solid {{ ren_color }} !important;background:{{ ren_bg }};">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         t-attf-style="width:40px;height:40px;background:{{ ren_color }};">
+                                        <i class="fa fa-refresh text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1" t-attf-style="color:{{ ren_color }};"><t t-esc="kpi_renewals"/></div>
+                                    <div class="text-muted small fw-semibold">Renewals (30 days)</div>
+                                </div>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <!-- Request status breakdown bar -->
+                    <div class="card border-0 shadow-sm rounded-3 mb-4 p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-semibold text-muted">Request Status Breakdown</span>
+                            <span class="small text-muted"><t t-esc="status_total"/> total</span>
+                        </div>
+                        <div class="d-flex rounded-pill overflow-hidden" style="height:10px;">
+                            <t t-if="status_breakdown['quotation'] > 0">
+                                <div t-attf-style="width:{{ status_breakdown['quotation'] * 100 // status_total }}%;background:#f59e0b;" title="Quotation"/>
+                            </t>
+                            <t t-if="status_breakdown['active'] > 0">
+                                <div t-attf-style="width:{{ status_breakdown['active'] * 100 // status_total }}%;background:#004fac;" title="Active"/>
+                            </t>
+                            <t t-if="status_breakdown['done'] > 0">
+                                <div t-attf-style="width:{{ status_breakdown['done'] * 100 // status_total }}%;background:#198754;" title="Done"/>
+                            </t>
+                            <t t-if="status_breakdown['cancelled'] > 0">
+                                <div t-attf-style="width:{{ status_breakdown['cancelled'] * 100 // status_total }}%;background:#6c757d;" title="Cancelled"/>
+                            </t>
+                        </div>
+                        <div class="d-flex gap-3 mt-2 flex-wrap">
+                            <span class="small text-muted d-flex align-items-center gap-1">
+                                <span class="rounded-circle d-inline-block" style="width:8px;height:8px;background:#f59e0b;"/>
+                                Quotation (<t t-esc="status_breakdown['quotation']"/>)
+                            </span>
+                            <span class="small text-muted d-flex align-items-center gap-1">
+                                <span class="rounded-circle d-inline-block" style="width:8px;height:8px;background:#004fac;"/>
+                                Active (<t t-esc="status_breakdown['active']"/>)
+                            </span>
+                            <span class="small text-muted d-flex align-items-center gap-1">
+                                <span class="rounded-circle d-inline-block" style="width:8px;height:8px;background:#198754;"/>
+                                Done (<t t-esc="status_breakdown['done']"/>)
+                            </span>
+                            <span class="small text-muted d-flex align-items-center gap-1">
+                                <span class="rounded-circle d-inline-block" style="width:8px;height:8px;background:#6c757d;"/>
+                                Cancelled (<t t-esc="status_breakdown['cancelled']"/>)
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ══ KPI ROW 2: Finance ════════════════════════════════ -->
+                    <p class="text-muted small fw-semibold text-uppercase mb-2" style="letter-spacing:.05em;">Finance</p>
+                    <div class="row g-3 mb-4">
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/invoices" class="text-decoration-none">
+                                <t t-set="dr_color" t-value="'#dc3545' if kpi_dr > 0 else '#6c757d'"/>
+                                <t t-set="dr_bg" t-value="'#fff5f5' if kpi_dr > 0 else '#f8f9fa'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-1"
+                                     t-attf-style="border-left:4px solid {{ dr_color }} !important;background:{{ dr_bg }};">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         t-attf-style="width:40px;height:40px;background:{{ dr_color }};">
+                                        <i class="fa fa-arrow-up text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-5 lh-1 mt-1" t-attf-style="color:{{ dr_color }};">
+                                        <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % kpi_dr"/>
+                                    </div>
+                                    <div class="text-muted small fw-semibold">Outstanding (DR)</div>
+                                    <t t-if="next_payment_date">
+                                        <div style="font-size:.7rem;color:#6c757d;">
+                                            Due: <t t-esc="next_payment_date" t-options='{"widget":"date"}'/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/invoices" class="text-decoration-none">
+                                <t t-set="cr_color" t-value="'#198754' if kpi_cr > 0 else '#6c757d'"/>
+                                <t t-set="cr_bg" t-value="'#f0fff4' if kpi_cr > 0 else '#f8f9fa'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-1"
+                                     t-attf-style="border-left:4px solid {{ cr_color }} !important;background:{{ cr_bg }};">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         t-attf-style="width:40px;height:40px;background:{{ cr_color }};">
+                                        <i class="fa fa-arrow-down text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-5 lh-1 mt-1" t-attf-style="color:{{ cr_color }};">
+                                        <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % kpi_cr"/>
+                                    </div>
+                                    <div class="text-muted small fw-semibold">Credit Balance (CR)</div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-4 col-lg">
+                            <a href="/my/invoices" class="text-decoration-none">
+                                <t t-set="ov_color" t-value="'#b91c1c' if kpi_overdue > 0 else '#6c757d'"/>
+                                <t t-set="ov_bg" t-value="'#fef2f2' if kpi_overdue > 0 else '#f8f9fa'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-1"
+                                     t-attf-style="border-left:4px solid {{ ov_color }} !important;background:{{ ov_bg }};">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         t-attf-style="width:40px;height:40px;background:{{ ov_color }};">
+                                        <i class="fa fa-clock-o text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-5 lh-1 mt-1" t-attf-style="color:{{ ov_color }};">
+                                        <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % kpi_overdue"/>
+                                    </div>
+                                    <div class="text-muted small fw-semibold">Overdue Amount</div>
+                                </div>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <!-- ══ KPI ROW 3: People & Work ════════════════════════ -->
+                    <p class="text-muted small fw-semibold text-uppercase mb-2" style="letter-spacing:.05em;">People &amp; Work</p>
+                    <div class="row g-3 mb-4">
+
+                        <div class="col-6 col-md-3">
+                            <a href="/my/projects" class="text-decoration-none">
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     style="border-left:4px solid #0891b2 !important;background:#f0f9ff;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width:40px;height:40px;background:#0891b2;">
+                                        <i class="fa fa-briefcase text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1" style="color:#0891b2;"><t t-esc="kpi_projects"/></div>
+                                    <div class="text-muted small fw-semibold">Open Projects</div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <a href="/my/tasks" class="text-decoration-none">
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     style="border-left:4px solid #7c3aed !important;background:#faf5ff;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         style="width:40px;height:40px;background:#7c3aed;">
+                                        <i class="fa fa-tasks text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1" style="color:#7c3aed;"><t t-esc="kpi_tasks"/></div>
+                                    <div class="text-muted small fw-semibold">Open Tasks</div>
+                                    <!-- Task progress bar -->
+                                    <t t-if="kpi_tasks + kpi_tasks_done > 0">
+                                        <div class="w-100">
+                                            <div class="d-flex justify-content-between" style="font-size:.65rem;color:#6c757d;">
+                                                <span><t t-esc="kpi_tasks_done"/> done</span>
+                                                <span><t t-esc="task_progress_pct"/>%</span>
+                                            </div>
+                                            <div class="rounded-pill overflow-hidden" style="height:4px;background:#e9ecef;">
+                                                <div t-attf-style="width:{{ task_progress_pct }}%;height:100%;background:#7c3aed;"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                 style="border-left:4px solid #0891b2 !important;background:#f0f9ff;">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width:40px;height:40px;background:#0891b2;">
+                                    <i class="fa fa-users text-white"/>
+                                </div>
+                                <div class="fw-bold fs-2 lh-1" style="color:#0891b2;"><t t-esc="kpi_employees"/></div>
+                                <div class="text-muted small fw-semibold">Employees</div>
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <a href="/my/requests" class="text-decoration-none">
+                                <t t-set="pd_color" t-value="'#d97706' if kpi_pending_docs > 0 else '#6c757d'"/>
+                                <t t-set="pd_bg" t-value="'#fffbeb' if kpi_pending_docs > 0 else '#f8f9fa'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column align-items-start gap-2"
+                                     t-attf-style="border-left:4px solid {{ pd_color }} !important;background:{{ pd_bg }};">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                         t-attf-style="width:40px;height:40px;background:{{ pd_color }};">
+                                        <i class="fa fa-paperclip text-white"/>
+                                    </div>
+                                    <div class="fw-bold fs-2 lh-1" t-attf-style="color:{{ pd_color }};"><t t-esc="kpi_pending_docs"/></div>
+                                    <div class="text-muted small fw-semibold">Pending Documents</div>
+                                </div>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <!-- ══ BUNDLE ENTITLEMENT USAGE ════════════════════════ -->
+                    <t t-if="bundle_entitlements">
+                        <p class="text-muted small fw-semibold text-uppercase mb-2" style="letter-spacing:.05em;">Bundle Usage</p>
+                        <div class="card border-0 shadow-sm rounded-3 mb-4">
+                            <div class="card-body p-3">
+                                <div class="row g-3">
+                                    <t t-foreach="bundle_entitlements" t-as="be">
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="d-flex flex-column gap-1">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="small fw-semibold text-truncate" style="max-width:160px;" t-esc="be['name']"/>
+                                                    <span class="small text-muted"><t t-esc="be['activated']"/>/<t t-esc="be['entitled']"/></span>
+                                                </div>
+                                                <div class="rounded-pill overflow-hidden" style="height:8px;background:#e9ecef;">
+                                                    <div t-attf-style="width:{{ be['pct'] }}%;height:100%;background:{{ '#198754' if be['pct'] == 100 else '#004fac' }};transition:width .4s;"/>
+                                                </div>
+                                                <div class="text-muted" style="font-size:.68rem;"><t t-esc="be['pct']"/>% activated</div>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ══ MAIN CONTENT ROW ════════════════════════════════ -->
+                    <div class="row g-4">
+
+                        <!-- Left: Recent Activity + Recent Payments + Upcoming Subs -->
+                        <div class="col-lg-8 d-flex flex-column gap-4">
+
+                            <!-- Recent Activity -->
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3">
+                                    <h6 class="mb-0 fw-semibold"><i class="fa fa-clock-o me-2 text-muted"/>Recent Requests</h6>
+                                    <a href="/my/requests" class="small fw-semibold" style="color:var(--wink-primary,#004fac);">View all</a>
+                                </div>
+                                <div class="card-body p-0">
+                                    <t t-if="recent_orders">
+                                        <div class="list-group list-group-flush">
+                                            <t t-foreach="recent_orders" t-as="ro">
+                                                <a t-attf-href="/my/requests/{{ ro.id }}"
+                                                   class="list-group-item list-group-item-action px-4 py-3 d-flex align-items-center gap-3">
+                                                    <div class="flex-grow-1 min-width-0">
+                                                        <div class="fw-semibold small text-truncate" t-esc="ro.wink_source_product_id.name or ro.name"/>
+                                                        <div class="text-muted" style="font-size:.75rem;">
+                                                            <t t-esc="ro.name"/>
+                                                            <span class="mx-1">·</span>
+                                                            <t t-esc="ro.write_date" t-options='{"widget":"date"}'/>
+                                                        </div>
+                                                    </div>
+                                                    <t t-if="ro.state == 'sent'">
+                                                        <span class="badge rounded-pill" style="background:#fde68a;color:#92400e;">Approve</span>
+                                                    </t>
+                                                    <t t-elif="ro.state == 'draft'">
+                                                        <span class="badge rounded-pill" style="background:#fef9c3;color:#854d0e;">Quotation</span>
+                                                    </t>
+                                                    <t t-elif="ro.state == 'sale'">
+                                                        <span class="badge rounded-pill" style="background:#dcfce7;color:#14532d;">Active</span>
+                                                    </t>
+                                                    <t t-elif="ro.state == 'done'">
+                                                        <span class="badge rounded-pill bg-secondary text-white">Done</span>
+                                                    </t>
+                                                </a>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-5 text-muted">
+                                            <i class="fa fa-inbox fa-2x mb-2"/>
+                                            <p class="small mb-0">No requests yet.</p>
+                                            <a href="/services" class="btn btn-sm mt-3 fw-semibold"
+                                               style="background:var(--wink-primary,#004fac);color:#fff;border:0;">Browse Services</a>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Recent Payments -->
+                            <t t-if="recent_payments">
+                                <div class="card border-0 shadow-sm rounded-3">
+                                    <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3">
+                                        <h6 class="mb-0 fw-semibold"><i class="fa fa-money me-2 text-muted"/>Recent Payments</h6>
+                                        <a href="/my/invoices" class="small fw-semibold" style="color:var(--wink-primary,#004fac);">View invoices</a>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="list-group list-group-flush">
+                                            <t t-foreach="recent_payments" t-as="pay">
+                                                <div class="list-group-item px-4 py-3 d-flex align-items-center gap-3">
+                                                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                                         style="width:32px;height:32px;background:#dcfce7;">
+                                                        <i class="fa fa-check" style="color:#198754;font-size:.7rem;"/>
+                                                    </div>
+                                                    <div class="flex-grow-1 min-width-0">
+                                                        <div class="small fw-semibold text-truncate">
+                                                            <t t-esc="pay.payment_reference or pay.name"/>
+                                                        </div>
+                                                        <div class="text-muted" style="font-size:.75rem;">
+                                                            <t t-esc="pay.date" t-options='{"widget":"date"}'/>
+                                                        </div>
+                                                    </div>
+                                                    <div class="fw-semibold small" style="color:#198754;">
+                                                        <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % pay.amount"/>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Upcoming Subscription Invoices -->
+                            <t t-if="upcoming_subs">
+                                <div class="card border-0 shadow-sm rounded-3">
+                                    <div class="card-header bg-white border-bottom py-3">
+                                        <h6 class="mb-0 fw-semibold"><i class="fa fa-calendar me-2 text-muted"/>Upcoming Invoice Dates (30 days)</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="list-group list-group-flush">
+                                            <t t-foreach="upcoming_subs" t-as="us">
+                                                <a t-attf-href="/my/requests/{{ us['order_id'] }}" class="list-group-item list-group-item-action px-4 py-3 d-flex align-items-center gap-3">
+                                                    <i class="fa fa-refresh flex-shrink-0 text-muted"/>
+                                                    <div class="flex-grow-1 min-width-0">
+                                                        <div class="small fw-semibold text-truncate" t-esc="us['name']"/>
+                                                        <div class="text-muted" style="font-size:.75rem;">
+                                                            Next invoice: <t t-esc="us['date']" t-options='{"widget":"date"}'/>
+                                                        </div>
+                                                    </div>
+                                                    <div class="small fw-semibold text-muted">
+                                                        <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % us['amount']"/>
+                                                    </div>
+                                                </a>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                        </div>
+
+                        <!-- Right: Quick Links + Alerts -->
+                        <div class="col-lg-4 d-flex flex-column gap-3">
+
+                            <!-- Quick Links -->
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h6 class="mb-0 fw-semibold"><i class="fa fa-th-large me-2 text-muted"/>Quick Links</h6>
+                                </div>
+                                <div class="card-body p-3 d-flex flex-column gap-2">
+                                    <a href="/my/requests" class="btn btn-sm w-100 text-start fw-semibold rounded-2"
+                                       style="background:#f0f7ff;color:var(--wink-primary,#004fac);border:0;">
+                                        <i class="fa fa-file-text-o me-2"/>My Requests
+                                    </a>
+                                    <a href="/my/bundles" class="btn btn-sm w-100 text-start fw-semibold rounded-2"
+                                       style="background:#f0fff4;color:#198754;border:0;">
+                                        <i class="fa fa-cube me-2"/>My Bundles
+                                    </a>
+                                    <a href="/my/invoices" class="btn btn-sm w-100 text-start fw-semibold rounded-2"
+                                       style="background:#fff5f5;color:#dc3545;border:0;">
+                                        <i class="fa fa-credit-card me-2"/>My Invoices
+                                    </a>
+                                    <a href="/services" class="btn btn-sm w-100 text-start fw-semibold rounded-2"
+                                       style="background:#faf5ff;color:#7c3aed;border:0;">
+                                        <i class="fa fa-th-large me-2"/>Service Catalogue
+                                    </a>
+                                    <a href="/my/projects" class="btn btn-sm w-100 text-start fw-semibold rounded-2"
+                                       style="background:#f0f9ff;color:#0891b2;border:0;">
+                                        <i class="fa fa-briefcase me-2"/>My Projects
+                                    </a>
+                                    <a href="/my/tasks" class="btn btn-sm w-100 text-start fw-semibold rounded-2"
+                                       style="background:#faf5ff;color:#7c3aed;border:0;">
+                                        <i class="fa fa-tasks me-2"/>My Tasks
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Renewal alert -->
+                            <t t-if="kpi_renewals > 0">
+                                <div class="card border-0 shadow-sm rounded-3" style="background:#fffbeb;border:1px solid #fde68a !important;">
+                                    <div class="card-body p-3 d-flex align-items-start gap-3">
+                                        <i class="fa fa-exclamation-triangle mt-1 flex-shrink-0" style="color:#d97706;"/>
+                                        <div>
+                                            <div class="fw-semibold small" style="color:#92400e;">Renewals Due Soon</div>
+                                            <p class="small mb-2" style="color:#78350f;">
+                                                <strong t-esc="kpi_renewals"/> subscription(s) renew within 30 days.
+                                            </p>
+                                            <a href="/my/bundles" class="btn btn-sm fw-semibold"
+                                               style="background:#f59e0b;color:#fff;border:0;">Review Bundles</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- DR balance alert -->
+                            <t t-if="kpi_dr > 0">
+                                <div class="card border-0 shadow-sm rounded-3" style="background:#fff5f5;border:1px solid #fecaca !important;">
+                                    <div class="card-body p-3 d-flex align-items-start gap-3">
+                                        <i class="fa fa-exclamation-circle mt-1 flex-shrink-0" style="color:#dc2626;"/>
+                                        <div>
+                                            <div class="fw-semibold small" style="color:#991b1b;">Outstanding Balance (DR)</div>
+                                            <p class="small mb-2" style="color:#7f1d1d;">
+                                                <strong><t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % kpi_dr"/></strong> unpaid.
+                                                <t t-if="next_payment_date">
+                                                    <br/><span style="font-size:.72rem;">Due: <t t-esc="next_payment_date" t-options='{"widget":"date"}'/></span>
+                                                </t>
+                                            </p>
+                                            <a href="/my/invoices" class="btn btn-sm fw-semibold"
+                                               style="background:#dc3545;color:#fff;border:0;">Pay Now</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- CR credit alert -->
+                            <t t-if="kpi_cr > 0">
+                                <div class="card border-0 shadow-sm rounded-3" style="background:#f0fff4;border:1px solid #bbf7d0 !important;">
+                                    <div class="card-body p-3 d-flex align-items-start gap-3">
+                                        <i class="fa fa-check-circle mt-1 flex-shrink-0" style="color:#198754;"/>
+                                        <div>
+                                            <div class="fw-semibold small" style="color:#166534;">Credit Balance (CR)</div>
+                                            <p class="small mb-2" style="color:#14532d;">
+                                                <strong><t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % kpi_cr"/></strong> credit available.
+                                            </p>
+                                            <a href="/my/invoices" class="btn btn-sm fw-semibold"
+                                               style="background:#198754;color:#fff;border:0;">View Invoices</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+
+                        </div>
+                    </div>
+
+                </div>
+            </t>
+        </template>
+
     </data>
 </odoo>

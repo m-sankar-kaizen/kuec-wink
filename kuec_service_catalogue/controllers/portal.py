@@ -687,3 +687,256 @@ class KuecCustomerPortal(CustomerPortal):
             })
         except Exception as e:
             return request.redirect(f'/my/bundles/{order_id}/downgrade?error={str(e)[:80]}')
+
+    # ─── EPIC7-DASH-001: Customer Portal Dashboard ────────────────────────────
+
+    @http.route('/my/dashboard', type='http', auth='user', website=True)
+    def portal_dashboard(self, **kw):
+        """EPIC7-DASH-001: Customer-facing KPI dashboard — full enhanced version.
+        Scoped strictly to the customer's commercial_partner_id."""
+        from datetime import timedelta
+        from odoo import fields
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        SaleOrder = request.env['sale.order'].sudo()
+        today = fields.Date.today()
+        in_30 = today + timedelta(days=30)
+
+        base_domain = [
+            ('message_partner_ids', 'child_of', [partner.id]),
+            ('wink_is_portal_request', '=', True),
+        ]
+
+        # ── KPI Row 1: Requests ─────────────────────────────────────────────
+        kpi_orders = SaleOrder.search_count(base_domain + [
+            ('state', 'in', ['draft', 'sent', 'sale']),
+        ])
+        kpi_quotes = SaleOrder.search_count(base_domain + [
+            ('state', '=', 'sent'),
+        ])
+        kpi_subscriptions = SaleOrder.search_count(base_domain + [
+            ('state', '=', 'sale'),
+            '|',
+            ('wink_entitlement_ids', '!=', False),
+            ('is_subscription', '=', True),
+        ])
+        kpi_completed = SaleOrder.search_count(base_domain + [
+            ('state', '=', 'done'),
+        ])
+        kpi_renewals = SaleOrder.search_count(base_domain + [
+            ('state', '=', 'sale'),
+            '|',
+            '&', ('wink_bundle_end_date', '>=', today), ('wink_bundle_end_date', '<=', in_30),
+            '&', ('next_invoice_date', '>=', today), ('next_invoice_date', '<=', in_30),
+        ])
+
+        # Request breakdown by status (for mini-chart)
+        status_breakdown = {
+            'quotation': SaleOrder.search_count(base_domain + [('state', 'in', ['draft', 'sent'])]),
+            'active':    SaleOrder.search_count(base_domain + [('state', '=', 'sale')]),
+            'done':      SaleOrder.search_count(base_domain + [('state', '=', 'done')]),
+            'cancelled': SaleOrder.search_count(base_domain + [('state', '=', 'cancel')]),
+        }
+        status_total = sum(status_breakdown.values()) or 1
+
+        # ── KPI Row 2: Finance ───────────────────────────────────────────────
+        kpi_dr = 0.0
+        kpi_cr = 0.0
+        kpi_overdue = 0.0
+        next_payment_date = None
+        recent_payments = []
+        currency = request.env.company.currency_id
+        try:
+            AccountMove = request.env['account.move'].sudo()
+            inv_base = [('partner_id', 'child_of', [partner.id]), ('state', '=', 'posted')]
+
+            invoices = AccountMove.search(inv_base + [
+                ('move_type', '=', 'out_invoice'),
+                ('payment_state', 'in', ['not_paid', 'partial']),
+            ])
+            kpi_dr = sum(inv.amount_residual for inv in invoices)
+            if invoices:
+                currency = invoices[0].currency_id or currency
+                # Next payment due date
+                due_dates = [inv.invoice_date_due for inv in invoices if inv.invoice_date_due]
+                if due_dates:
+                    next_payment_date = min(due_dates)
+                # Overdue: past due today
+                kpi_overdue = sum(
+                    inv.amount_residual for inv in invoices
+                    if inv.invoice_date_due and inv.invoice_date_due < today
+                )
+
+            credit_notes = AccountMove.search(inv_base + [
+                ('move_type', '=', 'out_refund'),
+                ('payment_state', 'in', ['not_paid', 'partial']),
+            ])
+            kpi_cr = sum(cn.amount_residual for cn in credit_notes)
+            if not invoices and credit_notes:
+                currency = credit_notes[0].currency_id or currency
+
+            # Recent payments (inbound, posted)
+            Payment = request.env['account.payment'].sudo()
+            recent_payments = Payment.search([
+                ('partner_id', 'child_of', [partner.id]),
+                ('payment_type', '=', 'inbound'),
+                ('state', '=', 'posted'),
+            ], order='date desc', limit=5)
+        except Exception:
+            pass
+
+        # ── KPI Row 3: Projects & Tasks ──────────────────────────────────────
+        kpi_projects = 0
+        kpi_tasks = 0
+        kpi_tasks_done = 0
+        task_progress_pct = 0
+        try:
+            Project = request.env['project.project'].sudo()
+            kpi_projects = Project.search_count([
+                ('partner_id', 'child_of', [partner.id]),
+                ('last_update_status', '!=', 'done'),
+            ])
+        except Exception:
+            pass
+        try:
+            Task = request.env['project.task'].sudo()
+            task_domain = [('partner_id', 'child_of', [partner.id])]
+            total_tasks = Task.search_count(task_domain)
+            kpi_tasks_done = Task.search_count(task_domain + [('stage_id.fold', '=', True)])
+            kpi_tasks = total_tasks - kpi_tasks_done
+            if total_tasks:
+                task_progress_pct = round(kpi_tasks_done * 100 / total_tasks)
+        except Exception:
+            pass
+
+        # ── Pending documents needing action ────────────────────────────────
+        pending_docs = []
+        kpi_pending_docs = 0
+        try:
+            DocSub = request.env['kuec.document.submission'].sudo()
+            doc_recs = DocSub.search([
+                ('order_id', 'in', SaleOrder.search(base_domain).ids),
+                ('state', 'in', ['draft', 'change_required']),
+            ])
+            kpi_pending_docs = len(doc_recs)
+            # Group by order for the attention panel (max 5 unique orders)
+            seen_orders = set()
+            for d in doc_recs:
+                if d.order_id.id not in seen_orders and len(pending_docs) < 5:
+                    seen_orders.add(d.order_id.id)
+                    pending_docs.append({
+                        'order_id': d.order_id.id,
+                        'order_name': d.order_id.name,
+                        'doc_name': d.requirement_name or d.requirement_id.name,
+                        'state': d.state,
+                    })
+        except Exception:
+            pass
+
+        # ── Quotes awaiting approval ─────────────────────────────────────────
+        quotes_to_approve = SaleOrder.search(base_domain + [('state', '=', 'sent')], limit=5)
+
+        # ── Overdue invoices list ─────────────────────────────────────────────
+        overdue_invoices = []
+        try:
+            overdue_invoices = request.env['account.move'].sudo().search([
+                ('partner_id', 'child_of', [partner.id]),
+                ('move_type', '=', 'out_invoice'),
+                ('state', '=', 'posted'),
+                ('payment_state', 'in', ['not_paid', 'partial']),
+                ('invoice_date_due', '<', today),
+            ], order='invoice_date_due asc', limit=5)
+        except Exception:
+            pass
+
+        # ── Bundle entitlement usage ─────────────────────────────────────────
+        bundle_entitlements = []
+        try:
+            Entitlement = request.env['wink.bundle.entitlement'].sudo()
+            active_ents = Entitlement.search([
+                ('order_id', 'in', SaleOrder.search(base_domain + [('state', '=', 'sale')]).ids),
+                ('state', 'in', ['available', 'fully_activated']),
+                ('qty_entitled', '>', 0),
+            ], limit=8)
+            for ent in active_ents:
+                pct = round(ent.qty_activated * 100 / ent.qty_entitled) if ent.qty_entitled else 0
+                bundle_entitlements.append({
+                    'name': ent.service_product_id.name,
+                    'activated': ent.qty_activated,
+                    'entitled': ent.qty_entitled,
+                    'pct': pct,
+                    'order_id': ent.order_id.id,
+                })
+        except Exception:
+            pass
+
+        # ── Employee directory count ──────────────────────────────────────────
+        kpi_employees = 0
+        try:
+            kpi_employees = request.env['kuec.employee.directory'].sudo().search_count([
+                ('partner_id', '=', partner.id),
+                ('active', '=', True),
+            ])
+        except Exception:
+            pass
+
+        # ── Upcoming subscription invoice dates ───────────────────────────────
+        upcoming_subs = []
+        try:
+            subs = SaleOrder.search(base_domain + [
+                ('state', '=', 'sale'),
+                ('next_invoice_date', '>=', today),
+                ('next_invoice_date', '<=', in_30),
+            ], order='next_invoice_date asc', limit=5)
+            for s in subs:
+                upcoming_subs.append({
+                    'order_id': s.id,
+                    'name': s.wink_source_product_id.name or s.name,
+                    'date': s.next_invoice_date,
+                    'amount': s.recurring_total or s.amount_total,
+                })
+        except Exception:
+            pass
+
+        # ── Attention items (consolidated) ────────────────────────────────────
+        attention_count = kpi_pending_docs + len(quotes_to_approve) + len(overdue_invoices)
+
+        # ── Recent 5 requests ─────────────────────────────────────────────────
+        recent_orders = SaleOrder.search(base_domain + [
+            ('state', 'in', ['draft', 'sent', 'sale', 'done']),
+        ], order='write_date desc', limit=5)
+
+        return request.render('kuec_service_catalogue.wink_customer_dashboard', {
+            # KPI Row 1
+            'kpi_orders': kpi_orders,
+            'kpi_quotes': kpi_quotes,
+            'kpi_subscriptions': kpi_subscriptions,
+            'kpi_completed': kpi_completed,
+            'kpi_renewals': kpi_renewals,
+            # KPI Row 2
+            'kpi_dr': kpi_dr,
+            'kpi_cr': kpi_cr,
+            'kpi_overdue': kpi_overdue,
+            'next_payment_date': next_payment_date,
+            'currency': currency,
+            # KPI Row 3
+            'kpi_projects': kpi_projects,
+            'kpi_tasks': kpi_tasks,
+            'kpi_tasks_done': kpi_tasks_done,
+            'task_progress_pct': task_progress_pct,
+            'kpi_employees': kpi_employees,
+            # Lists / panels
+            'recent_orders': recent_orders,
+            'recent_payments': recent_payments,
+            'pending_docs': pending_docs,
+            'kpi_pending_docs': kpi_pending_docs,
+            'quotes_to_approve': quotes_to_approve,
+            'overdue_invoices': overdue_invoices,
+            'bundle_entitlements': bundle_entitlements,
+            'upcoming_subs': upcoming_subs,
+            'attention_count': attention_count,
+            'status_breakdown': status_breakdown,
+            'status_total': status_total,
+            'partner': partner,
+            'page_name': 'dashboard',
+        })

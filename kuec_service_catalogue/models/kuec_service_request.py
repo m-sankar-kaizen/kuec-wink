@@ -663,7 +663,7 @@ class SaleOrderWink(models.Model):
         Prefers tier.price (legacy static). If zero, tries product.pricing
         linked to the tier's product_variant_id and the order's plan.
         Help: Used by upgrade/downgrade proration so price source is consistent."""
-        if tier.price:
+        if tier.price is not None and tier.price > 0:
             return float(tier.price)
         variant = tier.product_variant_id
         if not variant:
@@ -988,6 +988,8 @@ class SaleOrderWink(models.Model):
         if not new_tier.exists():
             raise exceptions.UserError(_('Invalid tier selected.'))
         current_tier = self.wink_bundle_tier_id
+        if current_tier and new_tier.id == current_tier.id:
+            raise exceptions.UserError(_('You are already on this tier.'))
         if current_tier and new_tier.id not in current_tier.upgrade_to_ids.ids:
             raise exceptions.UserError(
                 _('Upgrade to "%s" is not configured for this tier.') % new_tier.name
@@ -1093,6 +1095,8 @@ class SaleOrderWink(models.Model):
         if not new_tier.exists():
             raise exceptions.UserError(_('Invalid tier selected.'))
         current_tier = self.wink_bundle_tier_id
+        if current_tier and new_tier.id == current_tier.id:
+            raise exceptions.UserError(_('You are already on this tier.'))
         if current_tier and new_tier.id not in current_tier.downgrade_to_ids.ids:
             raise exceptions.UserError(
                 _('Downgrade to "%s" is not configured for this tier.') % new_tier.name

@@ -19,6 +19,7 @@
         'hr',
         'web',
         'sale_project',
+        'purchase',
     ],
     'data': [
         'security/kuec_service_catalogue_security.xml',

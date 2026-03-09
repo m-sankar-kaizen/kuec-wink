@@ -1588,6 +1588,9 @@ class WinkRequest(http.Controller):
             )
         except Exception:
             pass
+        # UI-REV-003: skip the intermediate confirmed page; go straight to payment when amount > 0
+        if order.amount_total > 0:
+            return request.redirect(f'/my/requests/{order_id}/pay')
         return request.redirect(f'/my/requests/{order_id}')
 
     @http.route('/my/requests/<int:order_id>/reject', type='http', auth='user', website=True, methods=['POST'], csrf=True)
