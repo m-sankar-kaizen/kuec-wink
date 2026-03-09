@@ -746,6 +746,15 @@ input:checked + .wink-slider {
     background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
     color: #fff;
     padding: 1.25rem 1.5rem 1rem;
+
+    // Dropdown menu must not inherit the white text from the header
+    .dropdown-menu {
+        color: #212529;
+        .dropdown-item {
+            color: #212529;
+            &:hover { background: #f8f9fa; color: #1e2125; }
+        }
+    }
 }
 
 .wink-bundle-ring {

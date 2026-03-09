@@ -1618,8 +1618,12 @@ class WinkRequest(http.Controller):
         if order.state not in ('draft', 'sent'):
             return request.redirect(f'/my/requests/{order_id}')
         order.sudo().action_cancel()
+        reject_reason = post.get('reason', '').strip()
+        body = _("Customer rejected this quote from the portal.")
+        if reject_reason:
+            body += _(" Reason: %s") % reject_reason
         order.sudo().message_post(
-            body=_("Customer rejected this quote from the portal."),
+            body=body,
             message_type='comment',
             subtype_xmlid='mail.mt_note',
         )

@@ -26,9 +26,9 @@ class ProjectTaskWink(models.Model):
     wink_vendor_id = fields.Many2one(
         'res.partner',
         string='Vendor',
-        domain=[('supplier_rank', '>', 0)],
         tracking=True,
         help='Vendor assigned by the coordinator to deliver this task. '
+             'Any contact from res.partner can be selected. '
              'Saving a vendor and clicking "Create RFQ" will auto-generate a draft Purchase Order.',
     )
     wink_purchase_order_id = fields.Many2one(

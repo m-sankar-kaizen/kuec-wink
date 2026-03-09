@@ -1276,6 +1276,64 @@
                             <li class="breadcrumb-item active" aria-current="page"><t t-esc="order.name"/></li>
                         </ol>
                     </nav>
+
+                    <!-- ENH-1: Progress Tracker -->
+                    <t t-set="pt_step2_done" t-value="bool(order.wink_price_confirmed)"/>
+                    <t t-set="pt_step3_done" t-value="order.state in ('sale', 'done')"/>
+                    <t t-set="pt_step4_done" t-value="bool(is_paid) and order.state in ('sale', 'done')"/>
+                    <t t-set="pt_step2_active" t-value="not pt_step2_done and not is_closed_or_cancelled"/>
+                    <t t-set="pt_step3_active" t-value="pt_step2_done and not pt_step3_done and not is_closed_or_cancelled"/>
+                    <t t-set="pt_step4_active" t-value="pt_step3_done and not pt_step4_done and not is_closed_or_cancelled"/>
+                    <div t-if="not is_closed_or_cancelled" class="card border-0 shadow-sm mb-4 px-4 py-3">
+                        <style>
+                            .wink-step-node{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+                            .wink-step-done{background:var(--wink-primary);color:#fff;}
+                            .wink-step-active{border:3px solid var(--wink-primary);color:var(--wink-primary);background:#fff;animation:wink-pulse 1.5s ease-in-out infinite;}
+                            .wink-step-future{background:#dee2e6;color:#adb5bd;}
+                            @keyframes wink-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,85,183,0.35);}50%{box-shadow:0 0 0 7px rgba(0,85,183,0);}}
+                        </style>
+                        <div style="display:flex;align-items:flex-start;">
+                            <!-- Step 1: Submitted (always done) -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:60px;">
+                                <div class="wink-step-node wink-step-done"><i class="fa fa-check"/></div>
+                                <small class="mt-1 fw-semibold text-center" style="color:var(--wink-primary);font-size:0.65rem;white-space:nowrap;">Submitted</small>
+                            </div>
+                            <!-- Connector 1→2 -->
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if pt_step2_done else '#dee2e6') + ';'"/>
+                            <!-- Step 2: Under Review -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if pt_step2_done else ('wink-step-active' if pt_step2_active else 'wink-step-future'))">
+                                    <i t-if="pt_step2_done" class="fa fa-check"/>
+                                    <span t-else="">2</span>
+                                </div>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if pt_step2_done or pt_step2_active else '#adb5bd') + ';'">Under Review</small>
+                            </div>
+                            <!-- Connector 2→3 -->
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if pt_step3_done else '#dee2e6') + ';'"/>
+                            <!-- Step 3: Quote Ready -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if pt_step3_done else ('wink-step-active' if pt_step3_active else 'wink-step-future'))">
+                                    <i t-if="pt_step3_done" class="fa fa-check"/>
+                                    <span t-else="">3</span>
+                                </div>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if pt_step3_done or pt_step3_active else '#adb5bd') + ';'">Quote Ready</small>
+                            </div>
+                            <!-- Connector 3→4 -->
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if pt_step4_done else '#dee2e6') + ';'"/>
+                            <!-- Step 4: Active -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:50px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if pt_step4_done else ('wink-step-active' if pt_step4_active else 'wink-step-future'))">
+                                    <i t-if="pt_step4_done" class="fa fa-check"/>
+                                    <span t-else="">4</span>
+                                </div>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if pt_step4_done or pt_step4_active else '#adb5bd') + ';'">Active</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- CR-8, UI-013 Request Submitted success block (Lovable parity) -->
                     <div t-if="submitted" class="text-center py-4 mb-4">
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;background:#d1e7dd;">
@@ -1469,12 +1527,11 @@
                                                     <i class="fa fa-check-circle me-2"/> Approve quote
                                                 </button>
                                             </form>
-                                            <form method="post" t-attf-action="/my/requests/#{order.id}/reject" class="d-inline">
-                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                                <button type="submit" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-bold">
-                                                    Reject quote
-                                                </button>
-                                            </form>
+                                            <!-- ENH-8: opens reject reason modal instead of direct submit -->
+                                            <button type="button" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-bold"
+                                                    data-bs-toggle="modal" data-bs-target="#winkRejectModal">
+                                                Reject quote
+                                            </button>
                                         </div>
                                     </t>
                                     <t t-else="">
@@ -1984,6 +2041,54 @@
                             </t>
                         </div>
                     </div>
+
+                    <!-- ENH-8: Reject Quote Modal -->
+                    <div class="modal fade" id="winkRejectModal" tabindex="-1" aria-labelledby="winkRejectModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-3 border-0 shadow">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title fw-bold" id="winkRejectModalLabel">
+                                        <i class="fa fa-times-circle text-danger me-2"/>Reject this Quote
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"/>
+                                </div>
+                                <form method="post" t-attf-action="/my/requests/#{order.id}/reject">
+                                    <div class="modal-body">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <p class="text-muted small mb-3">This will cancel your quote. You can always submit a new request if your requirements change.</p>
+                                        <label for="winkRejectReason" class="form-label fw-semibold small">
+                                            Reason for rejection <span class="text-muted fw-normal">(optional)</span>
+                                        </label>
+                                        <textarea id="winkRejectReason" name="reason" class="form-control" rows="3"
+                                                  placeholder="e.g. Budget changed, service no longer needed…" style="resize:none;"/>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0 gap-2">
+                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+                                            <i class="fa fa-times me-1"/>Confirm Rejection
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ENH-4: Approve button loading animation -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            var approveForm = document.querySelector('form[action*="/approve"]');
+                            if (approveForm) {
+                                approveForm.addEventListener('submit', function () {
+                                    var btn = approveForm.querySelector('button[type="submit"]');
+                                    if (btn) {
+                                        btn.disabled = true;
+                                        btn.style.minWidth = '180px';
+                                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Processing\u2026';
+                                    }
+                                });
+                            }
+                        });
+                    </script>
 
                     </t>
                 </div>

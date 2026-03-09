@@ -1,6 +1,25 @@
 from odoo import http
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
+try:
+    from odoo.addons.account_payment.controllers.payment import PaymentPortal as AccountPaymentPortal
+
+    class WinkInvoicePaymentFix(AccountPaymentPortal):
+        """Odoo 18 hotfix: invoice_transaction() requires access_token as a positional
+        argument, but authenticated portal users access invoices without a token in the
+        URL, so the payment form renders without data-access-token and the RPC call
+        omits it.  We make the argument optional and generate it on the fly."""
+
+        @http.route('/invoice/transaction/<int:invoice_id>', type='json', auth='public')
+        def invoice_transaction(self, invoice_id, access_token=None, **kwargs):
+            if not access_token:
+                invoice = request.env['account.move'].sudo().browse(invoice_id)
+                if invoice.exists():
+                    access_token = invoice._portal_ensure_token()
+            return super().invoice_transaction(invoice_id, access_token, **kwargs)
+
+except ImportError:
+    pass  # account_payment not installed
 
 class KuecCustomerPortal(CustomerPortal):
 
