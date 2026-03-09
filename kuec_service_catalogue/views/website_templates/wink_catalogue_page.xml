@@ -39,7 +39,7 @@
                     <t t-if="product.commercial_structure == 'standalone'">
                         <span class="badge border text-dark">Standalone</span>
                     </t>
-                    <t t-if="product.commercial_structure == 'bundled'">
+                    <t t-if="product.commercial_structure == 'bundled' or product.wink_is_bundle">
                         <span class="badge border text-dark">Bundled</span>
                     </t>
                     <t t-if="product.commercial_structure == 'flexible'">
@@ -262,225 +262,419 @@
         </t>
     </template>
 
-    <!-- Service Detail Page -->
+    <!-- Service Detail Page - Enhanced -->
     <template id="wink_service_detail_page" name="WINK Service Detail Page">
         <t t-call="website.layout">
-            <div id="wrap" class="oe_structure oe_empty">
-                <div class="container py-5">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb bg-transparent p-0">
-                            <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
-                            <li class="breadcrumb-item"><a href="/services" class="text-decoration-none">Services</a></li>
-                            <li class="breadcrumb-item active" aria-current="page"><t t-esc="product.name"/></li>
-                        </ol>
-                    </nav>
+            <div id="wrap" class="oe_structure oe_empty wink-service-detail-wrap">
+                <!-- is_bundle: true if wink_is_bundle OR commercial_structure == bundled -->
+                <t t-set="is_bundle" t-value="product.wink_is_bundle or product.commercial_structure == 'bundled'"/>
 
-                    <div class="row mt-4">
-                        <div class="col-lg-8 pe-lg-5">
-                            <div class="mb-4 position-relative wink-catalogue-page-detail">
-                                <!-- UI-TAG-001 (FB-001h): Diagonal ribbon on detail; backend color -->
-                                <t t-if="product.wink_ribbon_tag_id">
-                                    <div class="wink-ribbon-wrapper">
-                                        <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
-                                    </div>
-                                </t>
-                                <h1 class="fw-bold text-dark mb-3"><t t-esc="product.name"/></h1>
-                                
-                                <div class="d-flex flex-wrap gap-2 mb-2">
-                                    <t t-if="product.department_ids">
-                                        <span class="badge border text-dark fs-6 fw-normal"><t t-esc="product.department_ids[0].name"/></span>
-                                    </t>
-                                    <t t-if="product.delivery_model == 'project'">
-                                        <span class="badge border text-dark fs-6 fw-normal">Project-Based</span>
-                                    </t>
-                                    <t t-if="product.delivery_model == 'retainer'">
-                                        <span class="badge border text-dark fs-6 fw-normal">Retainer-Based</span>
-                                    </t>
-                                    <t t-if="product.commercial_structure">
-                                        <span class="badge border text-dark fs-6 fw-normal"><t t-esc="dict(product._fields['commercial_structure'].selection).get(product.commercial_structure, '')"/></span>
-                                    </t>
+                <!-- ── Hero Header ── -->
+                <div class="wink-detail-hero">
+                    <div class="container">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb wink-detail-breadcrumb mb-3">
+                                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+                                <li class="breadcrumb-item"><a href="/services" class="text-decoration-none">Services</a></li>
+                                <li class="breadcrumb-item active" aria-current="page"><t t-esc="product.name"/></li>
+                            </ol>
+                        </nav>
+                        <div class="position-relative">
+                            <!-- Diagonal ribbon -->
+                            <t t-if="product.wink_ribbon_tag_id">
+                                <div class="wink-ribbon-wrapper">
+                                    <span class="wink-ribbon"
+                                          t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''"
+                                          t-esc="product.wink_ribbon_tag_id.name"/>
                                 </div>
-                                <!-- Tags: badges use backend tag color -->
-                                <!-- UI-TAG-002 -->
-                                <t t-if="product.product_tag_ids or product.wink_ribbon_tag_id">
-                                    <div class="d-flex flex-wrap gap-1 mb-0">
-                                        <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
-                                            <span t-att-class="'badge wink-tag-badge fs-6 fw-normal' + ('' if tag.color else ' bg-secondary')" t-att-style="tag.color and ('background-color: %s; color: #fff; border: none;' % tag.color) or ''"><t t-esc="tag.name"/></span>
-                                        </t>
-                                        <t t-if="product.wink_ribbon_tag_id">
-                                            <span t-att-class="'badge wink-tag-badge fs-6 fw-normal'" t-att-style="product.wink_ribbon_tag_id.color and ('background-color: %s; color: #fff; border: none;' % product.wink_ribbon_tag_id.color) or 'background: rgba(31, 78, 121, 0.12); color: #1F4E79; border: 1px solid var(--wink-primary);'">
-                                                <i class="fa fa-bookmark me-1"/> <t t-esc="product.wink_ribbon_tag_id.name"/>
-                                            </span>
-                                        </t>
-                                    </div>
+                            </t>
+                            <h1 class="wink-detail-title mb-3"><t t-esc="product.name"/></h1>
+                            <!-- Meta badges row -->
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <t t-if="product.department_ids">
+                                    <span class="wink-detail-badge">
+                                        <i class="fa fa-building-o fa-fw"/>
+                                        <t t-esc="product.department_ids[0].name"/>
+                                    </span>
+                                </t>
+                                <t t-if="product.delivery_model == 'project'">
+                                    <span class="wink-detail-badge"><i class="fa fa-tasks fa-fw"/> Project-Based</span>
+                                </t>
+                                <t t-if="product.delivery_model == 'retainer'">
+                                    <span class="wink-detail-badge wink-badge-retainer"><i class="fa fa-refresh fa-fw"/> Retainer-Based</span>
+                                </t>
+                                <t t-if="product.commercial_structure">
+                                    <span class="wink-detail-badge">
+                                        <t t-esc="dict(product._fields['commercial_structure'].selection).get(product.commercial_structure, '')"/>
+                                    </span>
+                                </t>
+                                <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
+                                    <span class="wink-detail-badge"
+                                          t-att-style="tag.color and ('background-color: %s22; border-color: %s55; color: %s;' % (tag.color, tag.color, tag.color)) or ''">
+                                        <t t-esc="tag.name"/>
+                                    </span>
                                 </t>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <div class="mb-5 oe_structure">
-                                <t t-out="product.wink_description"/>
-                            </div>
+                <!-- ── Main Content ── -->
+                <div class="container wink-detail-main">
+                    <div class="row">
 
+                        <!-- Left: Content -->
+                        <div class="col-lg-8 pe-lg-5">
+
+                            <!-- Service Description -->
+                            <section class="wink-detail-section mb-5">
+                                <div class="wink-prose">
+                                    <t t-out="product.wink_description"/>
+                                </div>
+                            </section>
+
+                            <!-- Required Documents -->
                             <t t-if="product.kuec_document_ids">
-                                <div class="mb-5">
-                                    <h4 class="mb-3 fw-bold border-bottom pb-2">Required Documents</h4>
-                                    <ul class="list-group list-group-flush">
+                                <section class="wink-detail-section mb-5">
+                                    <h4 class="wink-section-heading">Required Documents</h4>
+                                    <div class="wink-doc-list">
                                         <t t-foreach="product.kuec_document_ids" t-as="doc">
-                                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
-                                                <span>
-                                                    <i class="fa fa-file-text-o text-muted me-2"></i>
-                                                    <t t-esc="doc.name"/>
-                                                </span>
-                                                <span t-attf-class="badge rounded-pill #{'bg-danger text-white' if doc.requirement == 'required' else 'bg-secondary text-white'}">
+                                            <div class="wink-doc-item">
+                                                <div class="wink-doc-icon-box">
+                                                    <i class="fa fa-file-text-o"/>
+                                                </div>
+                                                <span class="wink-doc-name flex-grow-1"><t t-esc="doc.name"/></span>
+                                                <span t-attf-class="badge rounded-pill #{'wink-badge-required' if doc.requirement == 'required' else 'wink-badge-optional'}">
                                                     <t t-if="doc.requirement == 'required'">Required</t>
                                                     <t t-else="">Optional</t>
                                                 </span>
-                                            </li>
+                                            </div>
                                         </t>
-                                    </ul>
-                                </div>
+                                    </div>
+                                </section>
                             </t>
 
+                            <!-- FAQs -->
                             <t t-if="product.wink_faq_ids">
-                                <div class="mb-5">
-                                    <h4 class="mb-3 fw-bold border-bottom pb-2">Frequently Asked Questions</h4>
-                                    <div class="accordion accordion-flush" id="kuecFaqAccordion">
+                                <section class="wink-detail-section mb-5">
+                                    <h4 class="wink-section-heading">Frequently Asked Questions</h4>
+                                    <div class="accordion accordion-flush wink-faq-accordion" id="kuecFaqAccordion">
                                         <t t-foreach="product.wink_faq_ids" t-as="faq">
-                                            <div class="accordion-item bg-transparent">
+                                            <div class="accordion-item wink-faq-item">
                                                 <h2 class="accordion-header" t-attf-id="headingFaq#{faq.id}">
-                                                    <button class="accordion-button collapsed bg-transparent fw-bold" type="button" data-bs-toggle="collapse" t-attf-data-bs-target="#collapseFaq#{faq.id}" aria-expanded="false" t-attf-aria-controls="collapseFaq#{faq.id}">
+                                                    <button class="accordion-button collapsed wink-faq-btn" type="button"
+                                                            data-bs-toggle="collapse"
+                                                            t-attf-data-bs-target="#collapseFaq#{faq.id}"
+                                                            aria-expanded="false"
+                                                            t-attf-aria-controls="collapseFaq#{faq.id}">
                                                         <t t-esc="faq.question"/>
                                                     </button>
                                                 </h2>
-                                                <div t-attf-id="collapseFaq#{faq.id}" class="accordion-collapse collapse" t-attf-aria-labelledby="headingFaq#{faq.id}" data-bs-parent="#kuecFaqAccordion">
-                                                    <div class="accordion-body text-muted">
+                                                <div t-attf-id="collapseFaq#{faq.id}"
+                                                     class="accordion-collapse collapse"
+                                                     t-attf-aria-labelledby="headingFaq#{faq.id}"
+                                                     data-bs-parent="#kuecFaqAccordion">
+                                                    <div class="accordion-body wink-faq-body">
                                                         <t t-out="faq.answer"/>
                                                     </div>
                                                 </div>
                                             </div>
                                         </t>
                                     </div>
-                                </div>
+                                </section>
                             </t>
 
                         </div>
 
-                        <div class="col-lg-4">
-                            <!-- UI-LOV-016 Right CTA: premium card with gradient header -->
-                            <div class="card card-premium shadow-sm sticky-top border-0 rounded-2xl overflow-hidden d-none d-lg-block" style="top: 100px;">
-                                <div class="card-header kuec-gradient text-white py-3 px-4 text-center">
-                                    <t t-if="is_subscription_service and subscription_plans and product.commercial_structure != 'bundled'">
-                                        <span class="small d-block opacity-90">Starting at</span>
-                                        <span class="fw-bold fs-4">AED <t t-esc="'{:,.2f}'.format(subscription_plans[0]['price'])"/></span>
+                        <!-- Right: Pricing Sidebar -->
+                        <div class="col-lg-4 d-none d-lg-block">
+                            <div class="wink-pricing-card sticky-top">
+
+                                <!-- Gradient header -->
+                                <div class="wink-pricing-header kuec-gradient">
+                                    <t t-if="is_subscription_service and subscription_plans and not is_bundle">
+                                        <span class="wink-pricing-starting-label">Starting at</span>
+                                        <span class="wink-pricing-header-price">
+                                            AED <t t-esc="'{:,.2f}'.format(subscription_plans[0]['price'])"/>
+                                        </span>
                                     </t>
-                                    <t t-if="not is_subscription_service or not subscription_plans">
-                                        <span class="fw-bold">Get a Quote</span>
+                                    <t t-else="">
+                                        <span class="wink-pricing-header-price" style="font-size: 1.25rem;">Request This Service</span>
                                     </t>
                                 </div>
-                                <div class="card-body p-4 text-center">
-                                    <!-- Price display: FB-005 show selected plan (monthly vs yearly), updated by JS when plan changes -->
-                                    <div class="mb-3" id="wink-detail-price">
+
+                                <div class="wink-pricing-body">
+
+                                    <!-- Live price display -->
+                                    <div class="wink-price-display" id="wink-detail-price">
                                         <t t-if="product.price_visibility == 'hidden'">
-                                            <h4 class="text-muted fw-bold fst-italic mb-0"><t t-esc="product.price_hidden_label"/></h4>
+                                            <div class="wink-price-display-amount text-muted fst-italic" style="font-size: 1.1rem;">
+                                                <t t-esc="product.price_hidden_label"/>
+                                            </div>
                                         </t>
-                                        <t t-elif="is_subscription_service and subscription_plans and product.commercial_structure != 'bundled'">
-                                            <h2 class="fw-bold mb-0" style="color: #1F3864; font-family: 'IBM Plex Mono', monospace;" id="wink-detail-price-amount">
-                                                <t t-if="display_plan">AED <t t-esc="'{:,.2f}'.format(display_plan['price'])"/> <t t-esc="display_plan['period_label']"/></t>
-                                            </h2>
+                                        <t t-elif="is_subscription_service and subscription_plans and not is_bundle">
+                                            <div class="wink-price-display-amount" id="wink-detail-price-amount">
+                                                <t t-if="display_plan">AED <t t-esc="'{:,.2f}'.format(display_plan['price'])"/></t>
+                                            </div>
+                                            <div class="wink-price-display-period" id="wink-detail-price-period">
+                                                <t t-if="display_plan"><t t-esc="display_plan['period_label']"/></t>
+                                            </div>
                                         </t>
                                         <t t-else="">
-                                            <h2 class="fw-bold text-primary mb-0">
+                                            <div class="wink-price-display-amount">
                                                 <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
-                                            </h2>
+                                            </div>
                                         </t>
                                     </div>
-                                    <!-- Plan selector (v2): only when subscription and multiple plans, not for bundles -->
-                                    <t t-if="is_subscription_service and len(subscription_plans) > 1 and product.commercial_structure != 'bundled'">
-                                        <div class="text-start mb-3">
-                                            <p class="small fw-semibold mb-2" style="font-size: 14px;">
-                                                <i class="fa fa-refresh me-1"/> Choose your plan
-                                            </p>
-                                            <p class="text-muted small mb-2">All plans include the same service — choose the billing period that suits you.</p>
+
+                                    <!-- Plan selector: multiple subscription plans -->
+                                    <t t-if="is_subscription_service and len(subscription_plans) > 1 and not is_bundle">
+                                        <div class="mb-3">
+                                            <!-- Period toggle: built by JS when multiple billing periods exist -->
+                                            <div id="wink-period-toggle-wrap"/>
                                             <div id="wink-plan-cards" class="d-flex flex-column gap-2">
                                                 <t t-foreach="subscription_plans" t-as="plan">
-                                                    <label t-attf-class="wink-plan-card position-relative rounded p-3 text-start cursor-pointer #{'border-warning' if plan.get('is_most_popular') else ''}" t-att-data-price="'{:,.2f}'.format(plan['price'])" t-att-data-period="plan['period_label']" t-att-data-recurrence-id="plan['recurrence_id_str']">
-                                                        <input type="radio" name="selected_plan_recurrence_id" class="d-none" t-att-value="plan['recurrence_id_str']" t-att-checked="'checked' if plan['recurrence_id'] == selected_plan_id else None"/>
-                                                        <t t-if="plan.get('is_most_popular')"><span class="position-absolute top-0 end-0 badge rounded-pill me-2 mt-2" style="background: #B8960C; color: white; font-size: 11px;">Most Popular</span></t>
-                                                        <t t-if="plan.get('show_savings')"><span class="badge rounded-pill me-1" style="background: #375623; color: white; font-size: 11px;">Save <t t-esc="plan['savings_pct']"/>%</span></t>
-                                                        <div class="fw-bold mb-1" style="font-size: 16px; color: #1F3864;"><t t-esc="plan['plan_name']"/></div>
-                                                        <div class="mb-1" style="font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: bold; color: #1F3864;">AED <t t-esc="'{:,.2f}'.format(plan['price'])"/></div>
-                                                        <div class="small text-muted mb-1"><t t-esc="plan['period_label']"/></div>
-                                                        <t t-if="plan.get('monthly_equivalent') and plan['monthly_equivalent'] != plan['price']"><div class="small" style="color: #375623;">≈ AED <t t-esc="'{:,.2f}'.format(plan['monthly_equivalent'])"/> per month</div></t>
-                                                        <t t-if="plan.get('features')"><ul class="list-unstyled small mt-2 mb-0"><t t-foreach="plan['features'][:6]" t-as="feat"><li class="mb-1"><i class="fa fa-check text-primary me-1" style="font-size: 14px; color: #2E75B6;"/><t t-esc="feat"/></li></t><t t-if="len(plan.get('features', [])) > 6"><li class="text-muted">+ more</li></t></ul></t>
+                                                    <label t-attf-class="wink-plan-card #{'selected' if plan['recurrence_id'] == selected_plan_id else ''}"
+                                                           t-att-data-price="'{:,.2f}'.format(plan['price'])"
+                                                           t-att-data-period="plan['period_label']"
+                                                           t-att-data-recurrence-id="plan['recurrence_id_str']"
+                                                           t-att-data-tier="plan['plan_name']"
+                                                           t-att-data-savings="plan.get('savings_pct', 0)"
+                                                           t-att-data-monthly-equiv="'{:,.2f}'.format(plan.get('monthly_equivalent') or plan['price'])"
+                                                           t-att-data-popular="'1' if plan.get('is_most_popular') else '0'">
+                                                        <input type="radio" name="selected_plan_recurrence_id"
+                                                               class="d-none"
+                                                               t-att-value="plan['recurrence_id_str']"
+                                                               t-att-checked="'checked' if plan['recurrence_id'] == selected_plan_id else None"/>
+                                                        <!-- Tier name always first -->
+                                                        <div class="wink-plan-name"><t t-esc="plan['plan_name']"/></div>
+                                                        <!-- Badges below tier name -->
+                                                        <t t-if="plan.get('is_most_popular') or plan.get('show_savings')">
+                                                            <div class="d-flex gap-1 mb-1 flex-wrap">
+                                                                <t t-if="plan.get('is_most_popular')">
+                                                                    <span class="badge rounded-pill" style="background:#B8960C;color:white;font-size:10px;">Most Popular</span>
+                                                                </t>
+                                                                <t t-if="plan.get('show_savings')">
+                                                                    <span class="badge rounded-pill" style="background:#375623;color:white;font-size:10px;">Save <t t-esc="plan['savings_pct']"/>%</span>
+                                                                </t>
+                                                            </div>
+                                                        </t>
+                                                        <div class="d-flex align-items-baseline gap-1 mt-1">
+                                                            <span class="wink-plan-price">AED <t t-esc="'{:,.2f}'.format(plan['price'])"/></span>
+                                                            <span class="wink-plan-period"><t t-esc="plan['period_label']"/></span>
+                                                        </div>
+                                                        <t t-if="plan.get('monthly_equivalent') and plan['monthly_equivalent'] != plan['price']">
+                                                            <div class="mt-1" style="font-size: 0.72rem; color: #375623;">
+                                                                ≈ AED <t t-esc="'{:,.2f}'.format(plan['monthly_equivalent'])"/> per month
+                                                            </div>
+                                                        </t>
+                                                        <t t-if="plan.get('features')">
+                                                            <ul class="list-unstyled mt-2 mb-0 wink-plan-features">
+                                                                <t t-foreach="plan['features'][:4]" t-as="feat">
+                                                                    <li class="d-flex align-items-start gap-1 mb-1">
+                                                                        <i class="fa fa-check wink-plan-feature-check"/>
+                                                                        <span><t t-esc="feat"/></span>
+                                                                    </li>
+                                                                </t>
+                                                                <t t-if="len(plan.get('features', [])) > 4">
+                                                                    <li class="text-muted">+ <t t-esc="len(plan['features']) - 4"/> more</li>
+                                                                </t>
+                                                            </ul>
+                                                        </t>
                                                     </label>
                                                 </t>
                                             </div>
                                         </div>
                                     </t>
-                                    <!-- No plans configured (edge case 10.1) -->
-                                    <t t-if="is_subscription_service and not subscription_plans and product.commercial_structure != 'bundled'">
-                                        <p class="text-muted small mb-3">Pricing for this retainer service is customised per client — submit a request and our team will prepare a quote for you.</p>
+
+                                    <!-- No plans edge case -->
+                                    <t t-if="is_subscription_service and not subscription_plans and not is_bundle">
+                                        <p class="text-muted text-center mb-3" style="font-size: 0.85rem;">
+                                            Pricing is customised per client — submit a request and our team will prepare a quote for you.
+                                        </p>
                                     </t>
-                                    <t t-if="product.commercial_structure == 'bundled'">
-                                        <div class="alert alert-info py-3 mb-4 border-0" style="background-color: #f8f9fa;">
-                                            <p class="mb-0 fw-semibold" style="color: #1F3864;"><i class="fa fa-sliders me-2"/> Select your tier and billing cycle on the next step.</p>
-                                            <p class="small text-muted mb-0 mt-1">This service is offered in different tiers. Review the options and configure your package during checkout.</p>
+
+                                    <!-- Bundle info -->
+                                    <t t-if="is_bundle">
+                                        <div class="wink-bundle-info-box mb-3">
+                                            <p class="mb-1 fw-semibold" style="color: #1F3864; font-size: 0.88rem;">
+                                                <i class="fa fa-sliders me-2"/>Select your tier and billing cycle on the next step.
+                                            </p>
+                                            <p class="mb-0 text-muted" style="font-size: 0.78rem;">
+                                                This service is offered in different tiers. Review the options and configure your package during checkout.
+                                            </p>
                                         </div>
                                     </t>
-                                    <div class="d-grid">
+
+                                    <!-- CTA Button -->
+                                    <div class="d-grid mt-3">
                                         <t t-if="request.env.user._is_public()">
-                                            <button type="button" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">
-                                                <t t-if="is_subscription_service and not subscription_plans">Request a Quote</t><t t-else="">Request Service</t>
+                                            <button type="button"
+                                                    class="wink-cta-btn wink-request-btn"
+                                                    t-att-data-product-id="product.id"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#winkLoginModal">
+                                                <t t-if="is_subscription_service and not subscription_plans">Request a Quote</t>
+                                                <t t-else="">Request Service <i class="fa fa-arrow-right ms-1"/></t>
                                             </button>
                                         </t>
                                         <t t-else="">
-                                            <t t-if="product.commercial_structure == 'bundled'">
-                                                <a t-attf-href="/services/#{product.id}/request" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm">Configure Package</a>
+                                            <t t-if="is_bundle">
+                                                <a t-attf-href="/services/#{product.id}/request"
+                                                   class="wink-cta-btn">Configure Package <i class="fa fa-arrow-right ms-1"/></a>
                                             </t>
                                             <t t-elif="is_subscription_service and len(subscription_plans) == 1">
-                                                <a t-attf-href="/services/#{product.id}/request?plan=#{subscription_plans[0]['recurrence_id']}" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm">Request Service</a>
+                                                <a t-attf-href="/services/#{product.id}/request?plan=#{subscription_plans[0]['recurrence_id']}"
+                                                   class="wink-cta-btn">Request Service <i class="fa fa-arrow-right ms-1"/></a>
                                             </t>
                                             <t t-elif="is_subscription_service and subscription_plans">
-                                                <a href="#" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" id="wink-detail-request-btn" t-att-data-product-id="product.id" t-att-data-service-id="product.id">Request Service</a>
+                                                <a href="#"
+                                                   class="wink-cta-btn"
+                                                   id="wink-detail-request-btn"
+                                                   t-att-data-product-id="product.id"
+                                                   t-att-data-service-id="product.id">
+                                                    Request Service <i class="fa fa-arrow-right ms-1"/>
+                                                </a>
                                             </t>
                                             <t t-else="">
-                                                <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-primary btn-lg fw-bold py-3 wink-request-btn shadow-sm" t-att-data-product-id="product.id">Request Service</a>
+                                                <a t-attf-href="/my/requests/new?product_id=#{product.id}"
+                                                   class="wink-cta-btn"
+                                                   t-att-data-product-id="product.id">
+                                                    Request Service <i class="fa fa-arrow-right ms-1"/>
+                                                </a>
                                             </t>
                                         </t>
                                     </div>
-                                </div>
-                            </div>
+
+                                </div><!-- /.wink-pricing-body -->
+                            </div><!-- /.wink-pricing-card -->
+
+                            <!-- Plan selection JS: period toggle + tier cards + URL routing -->
                             <script>
                                 (function() {
-                                    var cards = document.querySelectorAll('#wink-plan-cards .wink-plan-card');
+                                    var cards = Array.prototype.slice.call(document.querySelectorAll('#wink-plan-cards .wink-plan-card'));
                                     var priceEl = document.getElementById('wink-detail-price-amount');
+                                    var periodEl = document.getElementById('wink-detail-price-period');
                                     var btn = document.getElementById('wink-detail-request-btn');
-                                    if (cards.length &amp;&amp; priceEl) {
-                                        cards.forEach(function(card) {
-                                            card.addEventListener('click', function() {
-                                                var price = card.getAttribute('data-price');
-                                                var period = card.getAttribute('data-period');
-                                                if (price &amp;&amp; period) priceEl.innerHTML = 'AED ' + price + ' ' + period;
+                                    var toggleWrap = document.getElementById('wink-period-toggle-wrap');
+
+                                    if (!cards.length) return;
+
+                                    /* ── 1. Collect unique periods ── */
+                                    var periodOrder = [];
+                                    cards.forEach(function(c) {
+                                        var p = c.getAttribute('data-period');
+                                        if (periodOrder.indexOf(p) === -1) periodOrder.push(p);
+                                    });
+
+                                    /* ── 2. Human-readable period labels ── */
+                                    var periodLabel = {
+                                        'per month': 'Monthly', 'per year': 'Yearly',
+                                        'per quarter': 'Quarterly', 'per 6 months': '6-Monthly'
+                                    };
+                                    function nicePeriod(p) { return periodLabel[p] || p; }
+
+                                    /* ── 3. Build period toggle when multiple periods exist ── */
+                                    var activePeriod = periodOrder[0];
+                                    if (periodOrder.length > 1 &amp;&amp; toggleWrap) {
+                                        var toggleHtml = '<div class="wink-period-toggle mb-3">';
+                                        periodOrder.forEach(function(p) {
+                                            var label = nicePeriod(p);
+                                            /* Check if any plan in this period has savings */
+                                            var hasSavings = cards.some(function(c) {
+                                                return c.getAttribute('data-period') === p &amp;&amp; parseInt(c.getAttribute('data-savings') || '0') > 0;
+                                            });
+                                            toggleHtml += '<button type="button" class="wink-period-btn" data-period="' + p + '">'
+                                                + label
+                                                + (hasSavings ? ' <span class="wink-period-save-badge">Save</span>' : '')
+                                                + '</button>';
+                                        });
+                                        toggleHtml += '</div>';
+                                        toggleWrap.innerHTML = toggleHtml;
+
+                                        document.querySelectorAll('.wink-period-btn').forEach(function(pbtn) {
+                                            pbtn.addEventListener('click', function() {
+                                                activePeriod = pbtn.getAttribute('data-period');
+                                                document.querySelectorAll('.wink-period-btn').forEach(function(b) {
+                                                    b.classList.toggle('active', b.getAttribute('data-period') === activePeriod);
+                                                });
+                                                filterCards(activePeriod);
                                             });
                                         });
+                                        /* Activate first period */
+                                        var firstBtn = toggleWrap.querySelector('.wink-period-btn[data-period="' + activePeriod + '"]');
+                                        if (firstBtn) firstBtn.classList.add('active');
+                                        filterCards(activePeriod);
                                     }
-                                    if (btn &amp;&amp; cards.length) {
+
+                                    /* ── 4. Show/hide cards by period; auto-select first visible ── */
+                                    function filterCards(period) {
+                                        var first = null;
+                                        cards.forEach(function(card) {
+                                            var match = card.getAttribute('data-period') === period;
+                                            card.style.display = match ? '' : 'none';
+                                            if (match &amp;&amp; !first) first = card;
+                                        });
+                                        /* Deselect hidden, select first of new period */
+                                        cards.forEach(function(c) { c.classList.remove('selected'); });
+                                        if (first) {
+                                            first.classList.add('selected');
+                                            updatePrice(first);
+                                        }
+                                    }
+
+                                    /* ── 5. Update live price display ── */
+                                    function updatePrice(card) {
+                                        var price = card.getAttribute('data-price');
+                                        var period = card.getAttribute('data-period');
+                                        if (price &amp;&amp; priceEl) priceEl.textContent = 'AED ' + price;
+                                        if (period &amp;&amp; periodEl) periodEl.textContent = period;
+                                    }
+
+                                    /* ── 6. Card click: select + update price ── */
+                                    cards.forEach(function(card) {
+                                        card.addEventListener('click', function() {
+                                            cards.forEach(function(c) { c.classList.remove('selected'); });
+                                            card.classList.add('selected');
+                                            updatePrice(card);
+                                        });
+                                    });
+
+                                    /* ── 7. Request button routing ── */
+                                    if (btn) {
                                         btn.addEventListener('click', function(e) {
                                             e.preventDefault();
-                                            var selected = document.querySelector('input[name="selected_plan_recurrence_id"]:checked');
+                                            var selectedCard = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
+                                            var rid = selectedCard ? selectedCard.getAttribute('data-recurrence-id') : null;
                                             var sid = btn.getAttribute('data-service-id');
-                                            if (selected &amp;&amp; sid) window.location.href = '/services/' + sid + '/request?plan=' + selected.value;
+                                            if (sid) window.location.href = '/services/' + sid + '/request' + (rid ? '?plan=' + rid : '');
                                         });
                                     }
                                 })();
                             </script>
                         </div>
-                    </div>
 
-                    <!-- UI-LOV-017 Mobile sticky CTA bar -->
-                    <div class="wink-cta-bar-mobile d-lg-none">
-                        <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-light btn-lg fw-bold" t-att-data-product-id="product.id">Request Service</a>
                     </div>
                 </div>
+
+                <!-- Mobile Sticky CTA Bar -->
+                <div class="wink-cta-bar-mobile d-lg-none">
+                    <t t-if="request.env.user._is_public()">
+                        <button type="button"
+                                class="btn btn-light btn-lg fw-bold wink-request-btn"
+                                t-att-data-product-id="product.id"
+                                data-bs-toggle="modal"
+                                data-bs-target="#winkLoginModal">
+                            Request Service
+                        </button>
+                    </t>
+                    <t t-else="">
+                        <a t-attf-href="/my/requests/new?product_id=#{product.id}"
+                           class="btn btn-light btn-lg fw-bold"
+                           t-att-data-product-id="product.id">Request Service</a>
+                    </t>
+                </div>
+
             </div>
 
             <!-- Modals -->

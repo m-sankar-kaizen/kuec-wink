@@ -290,25 +290,27 @@ class ProductTemplate(models.Model):
             price = p['price']
             monthly_equivalent = round(price / months, 2) if months else price
             # Derive period_label from billing_period (relativedelta) or plan name
-            billing_period = getattr(recurrence, 'billing_period', None)
+            # Use p['recurrence'] (not the stale loop variable) so each plan uses its own recurrence
+            plan_recurrence = p['recurrence']
+            billing_period = getattr(plan_recurrence, 'billing_period', None)
             if billing_period:
-                years = getattr(billing_period, 'years', 0) or 0
-                months = getattr(billing_period, 'months', 0) or 0
-                if years >= 1:
-                    period_label = 'per year' if years == 1 else 'per %d years' % years
-                elif months >= 12:
+                bp_years = getattr(billing_period, 'years', 0) or 0
+                bp_months = getattr(billing_period, 'months', 0) or 0
+                if bp_years >= 1:
+                    period_label = 'per year' if bp_years == 1 else 'per %d years' % bp_years
+                elif bp_months >= 12:
                     period_label = 'per year'
-                elif months == 3:
+                elif bp_months == 3:
                     period_label = 'per quarter'
-                elif months == 6:
+                elif bp_months == 6:
                     period_label = 'per 6 months'
-                elif months > 1:
-                    period_label = 'per %d months' % months
+                elif bp_months > 1:
+                    period_label = 'per %d months' % bp_months
                 else:
                     period_label = 'per month'
             else:
                 # Fallback: derive from plan name string
-                plan_name_lower = name.lower()
+                plan_name_lower = p['plan_name'].lower()
                 if 'year' in plan_name_lower or 'annual' in plan_name_lower:
                     period_label = 'per year'
                 elif 'quarter' in plan_name_lower:
