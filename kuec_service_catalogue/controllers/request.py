@@ -98,6 +98,19 @@ class WinkRequest(http.Controller):
                             pricing_matrix['%s|%s' % (rid, attr_name.lower().strip())] = p
                 vals['billing_cycles'] = billing_cycles
                 vals['pricing_matrix'] = pricing_matrix
+                # Identify monthly and annual cycles for JS toggle
+                monthly_cycle = None
+                annual_cycle = None
+                for c in billing_cycles:
+                    cname = (c.get('name') or '').lower()
+                    if 'month' in cname:
+                        monthly_cycle = c
+                    elif 'annual' in cname or 'year' in cname:
+                        annual_cycle = c
+                if not monthly_cycle and billing_cycles:
+                    monthly_cycle = billing_cycles[0]
+                vals['monthly_cycle'] = monthly_cycle
+                vals['annual_cycle'] = annual_cycle
         return vals
 
     @http.route(['/services/<int:service_id>/request'], type='http', auth='user', website=True)
