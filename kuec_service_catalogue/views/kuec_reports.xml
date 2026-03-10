@@ -301,10 +301,8 @@
             <search string="Delivery SLA">
                 <field name="name" string="Task"/>
                 <field name="wink_vendor_id" string="Vendor"/>
-                <filter string="Overdue (&gt;14 days)" name="overdue"
-                        domain="[('wink_days_open', '&gt;', 14), ('stage_id.fold', '=', False)]"/>
-                <filter string="At Risk (&gt;7 days)" name="at_risk"
-                        domain="[('wink_days_open', '&gt;', 7), ('stage_id.fold', '=', False)]"/>
+                <filter string="Open Tasks" name="open"
+                        domain="[('stage_id.fold', '=', False)]"/>
                 <filter string="Closed" name="closed"
                         domain="[('stage_id.fold', '=', True)]"/>
                 <group string="Group By" expand="0">
