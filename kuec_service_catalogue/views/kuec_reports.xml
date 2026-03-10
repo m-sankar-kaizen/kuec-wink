@@ -57,8 +57,8 @@
         <field name="model">project.task</field>
         <field name="arch" type="xml">
             <list string="Delivery SLA" default_order="create_date desc"
-                  decoration-danger="wink_days_open &gt; 14 and not stage_id.fold"
-                  decoration-warning="wink_days_open &gt; 7 and not stage_id.fold">
+                  decoration-danger="wink_days_open &gt; 14"
+                  decoration-warning="wink_days_open &gt; 7">
                 <field name="name" string="Task"/>
                 <field name="project_id" string="Project" optional="show"/>
                 <field name="sale_order_id" string="Order" optional="show"/>
@@ -68,7 +68,6 @@
                 <field name="wink_days_open" string="Days Open"
                        decoration-danger="wink_days_open &gt; 14"
                        decoration-warning="wink_days_open &gt; 7"/>
-                <field name="stage_id.fold" column_invisible="1"/>
             </list>
         </field>
     </record>
