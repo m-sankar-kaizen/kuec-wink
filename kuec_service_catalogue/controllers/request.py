@@ -1209,11 +1209,17 @@ class WinkRequest(http.Controller):
         # Only auto-confirm when price is visible/confirmed AND there are no required documents
         # pending upload/approval. When required docs exist, the order stays as Quotation so the
         # customer can upload docs; coordinator reviews them; then customer can approve/pay.
+        #
+        # Auto-confirm rules (EPIC-8 / Story 8.1-A):
+        #   • delivery_model = 'retainer' (subscription)  → always confirm to sale.order
+        #   • delivery_model = 'project' + price set      → confirm to sale.order
+        #   • delivery_model = 'project' + no price       → stay as quotation (wink_price_confirmed=False)
+        #   • wink_is_bundle                              → always confirm to sale.order
         has_required_docs = bool(product.kuec_document_ids.filtered(
             lambda d: getattr(d, 'requirement', '') == 'required'
         )) if not wink_is_bundle else False
         is_auto_confirm = order.wink_price_confirmed and not has_required_docs and (
-            (product.commercial_structure == 'standalone' and product.request_frequency == 'one_time')
+            product.delivery_model == 'project'
             or is_subscription_service
             or wink_is_bundle
         )

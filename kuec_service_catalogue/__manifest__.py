@@ -40,6 +40,7 @@
         'views/res_partner_views.xml',
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
+        'views/coordinator_menu.xml',
         'views/portal_components.xml',
         'views/website_templates/employee_portal_templates.xml',
         'views/website_templates/request_templates.xml',

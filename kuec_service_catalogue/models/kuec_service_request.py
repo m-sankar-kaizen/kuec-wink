@@ -182,6 +182,33 @@ class SaleOrderWink(models.Model):
         help='Comma-separated list of remaining-days values for which a reminder was already sent (cron idempotency).',
     )
 
+    # EPIC-8 / Story 8.2: Coordinator delivery monitoring
+    wink_task_count = fields.Integer(
+        string='Task Count',
+        compute='_compute_wink_task_stage',
+        store=False,
+        help='Number of project tasks linked to this portal request.',
+    )
+    wink_task_stage = fields.Char(
+        string='Task Stage',
+        compute='_compute_wink_task_stage',
+        store=False,
+        help='Current stage(s) of linked project tasks — shown in coordinator queue.',
+    )
+
+    @api.depends('order_line')
+    def _compute_wink_task_stage(self):
+        for order in self:
+            tasks = self.env['project.task'].search(
+                [('sale_order_id', '=', order.id)], limit=10
+            )
+            order.wink_task_count = len(tasks)
+            if not tasks:
+                order.wink_task_stage = ''
+            else:
+                stages = list(dict.fromkeys(t.stage_id.name for t in tasks if t.stage_id))
+                order.wink_task_stage = ', '.join(stages) if stages else 'No stage'
+
     def _wink_compute_proration(self, plan_name_hint=None):
         """Compute prorated remaining credit for the current subscription period.
 

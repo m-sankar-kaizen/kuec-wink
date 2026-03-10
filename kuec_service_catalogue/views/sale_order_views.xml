@@ -114,6 +114,64 @@
         </field>
     </record>
 
+    <!-- EPIC-8: Coordinator Request Queue — standalone list view -->
+    <record id="wink_coordinator_request_list" model="ir.ui.view">
+        <field name="name">sale.order.wink.coordinator.list</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="Request Queue"
+                  decoration-danger="state in ('draft','sent') and not wink_price_confirmed"
+                  decoration-success="state == 'sale'"
+                  decoration-muted="state == 'cancel'">
+                <field name="name" string="Reference"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="wink_source_product_id" string="Service" optional="show"/>
+                <field name="state" string="Status" widget="badge"
+                       decoration-warning="state in ('draft','sent')"
+                       decoration-success="state == 'sale'"
+                       decoration-danger="state == 'cancel'"/>
+                <field name="wink_price_confirmed" string="Price Confirmed" widget="boolean"
+                       optional="show"/>
+                <field name="wink_task_stage" string="Task Stage" optional="show"/>
+                <field name="amount_total" string="Amount" widget="monetary"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="wink_requested_start_date" string="Start Date" optional="show"/>
+                <field name="date_order" string="Submitted" optional="show"/>
+                <field name="user_id" string="Coordinator" widget="many2one_avatar_user"
+                       optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="wink_price_confirmed" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- EPIC-8: Coordinator queue window action -->
+    <record id="action_wink_coordinator_queue" model="ir.actions.act_window">
+        <field name="name">Request Queue</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[('wink_is_portal_request','=',True)]</field>
+        <field name="context">{'search_default_wink_portal_requests': 1}</field>
+    </record>
+
+    <record id="action_wink_coordinator_needs_pricing" model="ir.actions.act_window">
+        <field name="name">Needs Pricing</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[('wink_is_portal_request','=',True),('wink_price_confirmed','=',False),('state','in',['draft','sent'])]</field>
+    </record>
+
+    <record id="action_wink_coordinator_active_subs" model="ir.actions.act_window">
+        <field name="name">Active Subscriptions</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[('wink_is_portal_request','=',True),('state','=','sale')]</field>
+    </record>
+
+    <!-- EPIC-8: Extend search view with coordinator filters -->
     <!-- RET-007: Search filter for cancellation requests -->
     <record id="sale_order_search_inherit_wink" model="ir.ui.view">
         <field name="name">sale.order.search.inherit.wink</field>
@@ -122,8 +180,27 @@
         <field name="arch" type="xml">
             <filter name="my_sale_orders_filter" position="after">
                 <separator/>
-                <filter string="Cancellation Requested" name="wink_cancellation_requested" domain="[('wink_cancellation_requested', '=', True)]"/>
+                <filter string="Portal Requests" name="wink_portal_requests"
+                        domain="[('wink_is_portal_request','=',True)]"/>
+                <filter string="Needs Pricing" name="wink_needs_pricing"
+                        domain="[('wink_is_portal_request','=',True),('wink_price_confirmed','=',False),('state','in',['draft','sent'])]"/>
+                <filter string="Active Orders" name="wink_active_orders"
+                        domain="[('wink_is_portal_request','=',True),('state','=','sale')]"/>
+                <filter string="Retainer Services" name="wink_retainer"
+                        domain="[('wink_is_portal_request','=',True),('wink_source_product_id.delivery_model','=','retainer')]"/>
+                <filter string="Project-Based" name="wink_project"
+                        domain="[('wink_is_portal_request','=',True),('wink_source_product_id.delivery_model','=','project')]"/>
+                <filter string="Cancellation Requested" name="wink_cancellation_requested"
+                        domain="[('wink_cancellation_requested','=',True)]"/>
+                <separator/>
+                <filter string="This Week" name="wink_this_week"
+                        domain="[('date_order','&gt;=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
             </filter>
+            <group expand="0" string="Group By" position="inside">
+                <filter string="Status" name="wink_group_state" context="{'group_by': 'state'}"/>
+                <filter string="Coordinator" name="wink_group_user" context="{'group_by': 'user_id'}"/>
+                <filter string="Service Type" name="wink_group_product" context="{'group_by': 'wink_source_product_id'}"/>
+            </group>
         </field>
     </record>
 
