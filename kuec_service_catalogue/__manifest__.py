@@ -20,6 +20,7 @@
         'web',
         'sale_project',
         'purchase',
+        'rating',
     ],
     'data': [
         'security/kuec_service_catalogue_security.xml',
@@ -52,6 +53,7 @@
         'views/website_templates/project_portal_templates.xml',
         'views/website_templates/wink_bundle_lifecycle_templates.xml',
         'views/wink_bundle_change_log_views.xml',
+        'views/kuec_reports.xml',
     ],
     'demo': [
         'data/demo_data.xml',

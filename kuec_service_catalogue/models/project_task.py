@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from datetime import date as _date
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
@@ -21,6 +23,21 @@ class ProjectTaskWink(models.Model):
         string='Document Submissions',
         help='Compliance documents linked to this task.',
     )
+
+    # EPIC-11: SLA reporting — days the task has been open
+    wink_days_open = fields.Integer(
+        compute='_compute_wink_days_open',
+        string='Days Open',
+        help='Number of calendar days since this task was created. Used in the Delivery SLA report.',
+    )
+
+    def _compute_wink_days_open(self):
+        today = _date.today()
+        for task in self:
+            if task.create_date:
+                task.wink_days_open = (today - task.create_date.date()).days
+            else:
+                task.wink_days_open = 0
 
     # ── Vendor assignment ────────────────────────────────────────────────────
     wink_vendor_id = fields.Many2one(

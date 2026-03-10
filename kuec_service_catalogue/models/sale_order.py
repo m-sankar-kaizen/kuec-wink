@@ -15,6 +15,23 @@ def _parse_days_csv(value):
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    def action_confirm(self):
+        """EPIC-11: After confirming a WINK portal order, enable customer ratings
+        on the auto-created project so evaluations are sent when tasks close."""
+        result = super().action_confirm()
+        for order in self:
+            if not order.wink_is_portal_request:
+                continue
+            projects = self.env['project.task'].search([
+                ('sale_order_id', '=', order.id),
+            ]).mapped('project_id').filtered(lambda p: p and not p.rating_active)
+            if projects:
+                projects.write({
+                    'rating_active': True,
+                    'rating_status': 'stage',
+                })
+        return result
+
     def action_kuec_finalize_price(self):
         for order in self:
             order.wink_price_confirmed = True

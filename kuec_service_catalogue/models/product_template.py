@@ -388,4 +388,21 @@ class ProductTemplate(models.Model):
         help="When enabled, the customer must select one or more employees from their directory when submitting a service request for this service."
     )
 
+    # EPIC-11: Catalogue report — live count of active subscriptions for this service
+    wink_active_order_count = fields.Integer(
+        compute='_compute_wink_active_order_count',
+        string='Active Subscriptions',
+        help='Number of confirmed sale orders (state=sale) where this product is the source service.',
+    )
+
+    def _compute_wink_active_order_count(self):
+        groups = self.env['sale.order'].read_group(
+            [('wink_source_product_id', 'in', self.ids), ('state', '=', 'sale')],
+            ['wink_source_product_id'],
+            ['wink_source_product_id'],
+        )
+        count_map = {g['wink_source_product_id'][0]: g['wink_source_product_id_count'] for g in groups}
+        for product in self:
+            product.wink_active_order_count = count_map.get(product.id, 0)
+
 
