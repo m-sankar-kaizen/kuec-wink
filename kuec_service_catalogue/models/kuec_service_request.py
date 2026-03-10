@@ -1036,6 +1036,13 @@ class SaleOrderWink(models.Model):
             upgrade_invoice = self._wink_bundle_create_upgrade_invoice(
                 charge_amount, new_tier, upgrade_desc
             )
+            # Link the invoice line → SO charge line so qty_invoiced = 1 on charge_line.
+            # Without this, Odoo sees qty_to_invoice = 1 on the SO line and will re-bill
+            # the upgrade charge when the backend clicks "Create Invoice" on this order.
+            if upgrade_invoice and charge_line:
+                inv_line = upgrade_invoice.invoice_line_ids[:1]
+                if inv_line:
+                    inv_line.sudo().write({'sale_line_ids': [(4, charge_line.id)]})
 
         # Log
         self.env['wink.bundle.change.log'].sudo().create({

@@ -16,25 +16,52 @@
                     <h1 class="page-header">Create New Request</h1>
                     <p class="page-subtitle text-muted mb-4">Select a service to get started.</p>
                     <!-- CR-2 Stepper: step 0 active -->
-                    <div class="wink-stepper-row mb-4">
-                        <div t-att-class="'wink-stage-node ' + ('wink-current' if step == 0 else 'wink-done')">
-                            <div class="wink-node-dot"><i t-if="step == 0" class="fa fa-circle" style="font-size:10px;"/><i t-else="" class="fa fa-check"/></div>
-                            <span class="wink-node-label">Service</span>
-                        </div>
-                        <div t-att-class="'wink-stage-connector flex-grow-1 ' + ('wink-done' if step > 0 else 'wink-pending')"/>
-                        <div t-att-class="'wink-stage-node ' + ('wink-current' if step == 1 else ('wink-done' if step > 1 else 'wink-pending'))">
-                            <div class="wink-node-dot"><i t-if="step == 1" class="fa fa-circle" style="font-size:10px;"/><i t-else="" class="fa fa-check" t-if="step > 1"/></div>
-                            <span class="wink-node-label">Configure</span>
-                        </div>
-                        <div t-att-class="'wink-stage-connector flex-grow-1 ' + (('wink-done' if step > 1 else 'wink-pending') if not wink_is_bundle else 'wink-skipped')"/>
-                        <div t-att-class="'wink-stage-node ' + (('wink-current' if step == 2 else ('wink-done' if step > 2 else 'wink-pending')) if not wink_is_bundle else 'wink-skipped-node')">
-                            <div class="wink-node-dot"><i t-if="step == 2" class="fa fa-circle" style="font-size:10px;"/><i t-else="" class="fa fa-check" t-if="step > 2"/></div>
-                            <span class="wink-node-label">Employees</span>
-                        </div>
-                        <div t-att-class="'wink-stage-connector flex-grow-1 ' + (('wink-done' if step > 2 else 'wink-pending') if not wink_is_bundle else ('wink-done' if step > 1 else 'wink-pending'))"/>
-                        <div t-att-class="'wink-stage-node ' + ('wink-current' if step == 3 else 'wink-pending')">
-                            <div class="wink-node-dot"><i t-if="step == 3" class="fa fa-circle" style="font-size:10px;"/></div>
-                            <span class="wink-node-label">Review</span>
+                    <div class="card border-0 shadow-sm mb-4 px-4 py-3">
+                        <div style="display:flex;align-items:flex-start;">
+                            <!-- Step 1: Service -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:60px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if step > 0 else 'wink-step-active')">
+                                    <i t-if="step > 0" class="fa fa-check"/>
+                                    <span t-else="">1</span>
+                                </div>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;color:var(--wink-primary);">Service</small>
+                            </div>
+                            <!-- Connector 1→2 -->
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step > 0 else '#dee2e6') + ';'"/>
+                            <!-- Step 2: Configure -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if step > 1 else ('wink-step-active' if step == 1 else 'wink-step-future'))">
+                                    <i t-if="step > 1" class="fa fa-check"/>
+                                    <span t-else="">2</span>
+                                </div>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if step >= 1 else '#adb5bd') + ';'">Configure</small>
+                            </div>
+                            <!-- Connector 2→3 (skip employees step for bundles) -->
+                            <t t-if="not wink_is_bundle">
+                                <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step > 1 else '#dee2e6') + ';'"/>
+                                <!-- Step 3: Employees -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
+                                    <div t-att-class="'wink-step-node ' + ('wink-step-done' if step > 2 else ('wink-step-active' if step == 2 else 'wink-step-future'))">
+                                        <i t-if="step > 2" class="fa fa-check"/>
+                                        <span t-else="">3</span>
+                                    </div>
+                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                           t-att-style="'color:' + ('var(--wink-primary)' if step >= 2 else '#adb5bd') + ';'">Employees</small>
+                                </div>
+                                <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step > 2 else '#dee2e6') + ';'"/>
+                            </t>
+                            <t t-if="wink_is_bundle">
+                                <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step > 1 else '#dee2e6') + ';'"/>
+                            </t>
+                            <!-- Step 4: Review -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:55px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-active' if step == 3 else 'wink-step-future')">
+                                    <span>4</span>
+                                </div>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if step == 3 else '#adb5bd') + ';'">Review</small>
+                            </div>
                         </div>
                     </div>
                     <!-- CR-3 Step 0: service grid, selectable cards -->
@@ -280,30 +307,48 @@
 
                     <!-- CR-2 Wizard stepper; UI-BUG-003 (FB-003): hide Employees step when not required -->
                     <t t-if="step and not wink_is_bundle">
-                        <div class="wink-stepper-row mb-4">
-                            <div class="wink-stage-node" t-att-class="'wink-done' if step >= 1 else ''">
-                                <div class="wink-node-dot"><i t-if="step >= 1" class="fa fa-check"/></div>
-                                <span class="wink-node-label">Service</span>
-                            </div>
-                            <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 2 else 'wink-pending'"/>
-                            <div class="wink-stage-node" t-att-class="'wink-done' if step > 1 else ('wink-current' if step == 1 else '')">
-                                <div class="wink-node-dot"><i t-if="step > 1" class="fa fa-check"/><i t-if="step == 1" class="fa fa-circle" style="font-size:10px;"/></div>
-                                <span class="wink-node-label">Configure</span>
-                            </div>
-                            <t t-if="product.requires_employee_selection">
-                                <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 3 else 'wink-pending'"/>
-                                <div class="wink-stage-node" t-att-class="'wink-current' if step == 2 else ('wink-done' if step > 2 else '')">
-                                    <div class="wink-node-dot"><i t-if="step > 2" class="fa fa-check"/><i t-if="step == 2" class="fa fa-circle" style="font-size:10px;"/></div>
-                                    <span class="wink-node-label">Employees</span>
+                        <div class="card border-0 shadow-sm mb-4 px-4 py-3">
+                            <div style="display:flex;align-items:flex-start;">
+                                <!-- Step 1: Service (always done at this point) -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:60px;">
+                                    <div class="wink-step-node wink-step-done"><i class="fa fa-check"/></div>
+                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;color:var(--wink-primary);">Service</small>
                                 </div>
-                                <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 3 else 'wink-pending'"/>
-                            </t>
-                            <t t-if="not product.requires_employee_selection">
-                                <div class="wink-stage-connector flex-grow-1" t-att-class="'wink-done' if step >= 3 else 'wink-pending'"/>
-                            </t>
-                            <div class="wink-stage-node" t-att-class="'wink-current' if step == 3 else ''">
-                                <div class="wink-node-dot"><i t-if="step == 3" class="fa fa-circle" style="font-size:10px;"/></div>
-                                <span class="wink-node-label">Review</span>
+                                <!-- Connector 1→2 -->
+                                <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 2 else '#dee2e6') + ';'"/>
+                                <!-- Step 2: Configure -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
+                                    <div t-att-class="'wink-step-node ' + ('wink-step-done' if step > 1 else ('wink-step-active' if step == 1 else 'wink-step-future'))">
+                                        <i t-if="step > 1" class="fa fa-check"/>
+                                        <span t-else="">2</span>
+                                    </div>
+                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                           t-att-style="'color:' + ('var(--wink-primary)' if step >= 1 else '#adb5bd') + ';'">Configure</small>
+                                </div>
+                                <!-- Employees step (only when required) -->
+                                <t t-if="product.requires_employee_selection">
+                                    <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 3 else '#dee2e6') + ';'"/>
+                                    <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
+                                        <div t-att-class="'wink-step-node ' + ('wink-step-done' if step > 2 else ('wink-step-active' if step == 2 else 'wink-step-future'))">
+                                            <i t-if="step > 2" class="fa fa-check"/>
+                                            <span t-else="">3</span>
+                                        </div>
+                                        <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                               t-att-style="'color:' + ('var(--wink-primary)' if step >= 2 else '#adb5bd') + ';'">Employees</small>
+                                    </div>
+                                    <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 3 else '#dee2e6') + ';'"/>
+                                </t>
+                                <t t-if="not product.requires_employee_selection">
+                                    <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 3 else '#dee2e6') + ';'"/>
+                                </t>
+                                <!-- Step 4: Review -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:55px;">
+                                    <div t-att-class="'wink-step-node ' + ('wink-step-active' if step == 3 else 'wink-step-future')">
+                                        <span>4</span>
+                                    </div>
+                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
+                                           t-att-style="'color:' + ('var(--wink-primary)' if step == 3 else '#adb5bd') + ';'">Review</small>
+                                </div>
                             </div>
                         </div>
                     </t>
