@@ -196,11 +196,11 @@
                 <filter string="This Week" name="wink_this_week"
                         domain="[('date_order','&gt;=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
             </filter>
-            <group expand="0" string="Group By" position="inside">
+            <xpath expr="//group[@expand='0']" position="inside">
                 <filter string="Status" name="wink_group_state" context="{'group_by': 'state'}"/>
                 <filter string="Coordinator" name="wink_group_user" context="{'group_by': 'user_id'}"/>
                 <filter string="Service Type" name="wink_group_product" context="{'group_by': 'wink_source_product_id'}"/>
-            </group>
+            </xpath>
         </field>
     </record>
 
