@@ -5,33 +5,45 @@
         <field name="model">project.task</field>
         <field name="inherit_id" ref="project.view_task_form2"/>
         <field name="arch" type="xml">
+
+            <!-- ── Assign Vendor button in header ────────────────────────── -->
+            <xpath expr="//header" position="inside">
+                <button name="action_open_assign_vendor_wizard"
+                        string="Assign Vendor"
+                        type="object"
+                        class="btn-primary"
+                        invisible="not sale_order_id or not sale_order_id.wink_is_portal_request or wink_vendor_id"
+                        help="Opens the Assign Vendor dialog to select a vendor and auto-create a draft RFQ."/>
+            </xpath>
+
+            <!-- ── Smart button: RFQ / PO ─────────────────────────────────── -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_rfq_po"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-shopping-cart"
+                        invisible="not wink_purchase_order_id"
+                        help="View the linked Purchase Order / RFQ for this task.">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="wink_purchase_order_count"/>
+                        </span>
+                        <span class="o_stat_text">RFQ / PO</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- ── WINK / Portal tab ──────────────────────────────────────── -->
             <xpath expr="//notebook" position="inside">
                 <page string="WINK / Portal" name="wink_portal" invisible="not sale_order_id or not sale_order_id.wink_is_portal_request">
 
-                    <!-- Vendor Assignment & RFQ -->
+                    <!-- Vendor Assignment -->
                     <group string="Vendor Assignment">
                         <group>
                             <field name="wink_vendor_id"
                                    options="{'no_create': True}"
                                    placeholder="Search vendor…"/>
                             <field name="wink_purchase_order_id" readonly="1"/>
-                        </group>
-                        <group>
-                            <div class="o_td_label"/>
-                            <div>
-                                <button name="action_assign_vendor_rfq"
-                                        string="Create RFQ"
-                                        type="object"
-                                        class="btn btn-primary me-2"
-                                        invisible="not wink_vendor_id or wink_purchase_order_id"
-                                        help="Creates a draft Purchase Order for the selected vendor with this service as the order line."/>
-                                <button name="action_assign_vendor_rfq"
-                                        string="Open RFQ"
-                                        type="object"
-                                        class="btn btn-secondary"
-                                        invisible="not wink_purchase_order_id"
-                                        help="Opens the existing Purchase Order linked to this task."/>
-                            </div>
                         </group>
                     </group>
 
@@ -67,6 +79,7 @@
                     </group>
                 </page>
             </xpath>
+
         </field>
     </record>
 </odoo>

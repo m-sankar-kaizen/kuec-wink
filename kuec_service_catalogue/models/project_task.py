@@ -55,6 +55,15 @@ class ProjectTaskWink(models.Model):
         ondelete='set null',
         help='Auto-created RFQ when the coordinator assigns a vendor to this task.',
     )
+    wink_purchase_order_count = fields.Integer(
+        compute='_compute_wink_purchase_order_count',
+        string='RFQ / PO Count',
+        help='Number of Purchase Orders linked to this task (0 or 1).',
+    )
+
+    def _compute_wink_purchase_order_count(self):
+        for task in self:
+            task.wink_purchase_order_count = 1 if task.wink_purchase_order_id else 0
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -208,6 +217,37 @@ class ProjectTaskWink(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'purchase.order',
             'res_id': po.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    # ── Wizard: Assign Vendor ─────────────────────────────────────────────────
+
+    def action_open_assign_vendor_wizard(self):
+        """Opens the Assign Vendor wizard so the coordinator can pick a vendor.
+        The wizard will set wink_vendor_id and auto-create the RFQ on confirm."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Assign Vendor'),
+            'res_model': 'wink.assign.vendor.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_task_id': self.id},
+        }
+
+    # ── Smart button: View linked RFQ / PO ───────────────────────────────────
+
+    def action_view_rfq_po(self):
+        """Opens the linked Purchase Order / RFQ from the smart button."""
+        self.ensure_one()
+        if not self.wink_purchase_order_id:
+            return
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('RFQ / Purchase Order'),
+            'res_model': 'purchase.order',
+            'res_id': self.wink_purchase_order_id.id,
             'view_mode': 'form',
             'target': 'current',
         }
