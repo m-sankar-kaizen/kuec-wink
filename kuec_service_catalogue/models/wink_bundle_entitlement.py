@@ -167,16 +167,22 @@ class WinkBundleEntitlement(models.Model):
                 "The service '%s' is a One-Time service and has already been activated."
             ) % self.service_product_id.name)
 
-        # WF-BND-002: Required documents per activated service
+        # Determine activation number early — needed for doc check and line naming
+        activation_num = current_qty_activated + 1
+
+        # WF-BND-002: Required documents per activated service.
+        # For reuse (activation_num > 1), check docs specifically for this activation number
+        # so the customer must upload fresh documents each time (not reuse the 1st activation's docs).
         ok_docs, missing_docs = order._wink_required_docs_approved_for_product(
-            self.service_product_id
+            self.service_product_id,
+            activation_sequence=activation_num,
         )
         if not ok_docs:
             raise UserError(_(
                 "You cannot activate this service yet because some required "
-                "documents are missing or not approved: %s. Please upload "
-                "and get approval from the Documents section of your request."
-            ) % ", ".join(missing_docs))
+                "documents are missing or not approved for activation #%s: %s. "
+                "Please upload new documents and get approval from the Documents section."
+            ) % (activation_num, ", ".join(missing_docs)))
 
         # WF-BND-001: Require employees when service needs selection
         if getattr(self.service_product_id, 'requires_employee_selection', False):
@@ -191,11 +197,6 @@ class WinkBundleEntitlement(models.Model):
             raise UserError(_(
                 "No product variant found for '%(name)s'."
             ) % {'name': self.service_product_id.name})
-
-        # Create a real SO line — Odoo natively creates
-        # Project/Task because the SO is already confirmed.
-        # Reactivation: 2nd+ activations get distinct line/task name (e.g. "Service (2)")
-        activation_num = current_qty_activated + 1
         line_name = self.name if activation_num <= 1 else _('%s (%s)') % (self.name, activation_num)
         line_vals = {
             'order_id': order.id,

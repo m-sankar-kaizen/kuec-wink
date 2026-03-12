@@ -94,12 +94,21 @@
                     <field name="description" placeholder="Describe this tier's benefits..."/>
                     <notebook>
                         <page string="Included Services" name="items">
+                            <!-- Issue 3: Quick multi-select button -->
+                            <div class="mb-2">
+                                <button name="action_open_add_services_wizard"
+                                        type="object"
+                                        string="Add Multiple Services"
+                                        class="btn btn-secondary btn-sm"
+                                        icon="fa-plus-circle"
+                                        help="Search and select multiple services at once to add to this tier."/>
+                            </div>
                             <field name="item_ids">
                                 <!-- F-4: Drag-and-drop via sequence handle -->
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="service_product_id"
-                                           widget="selection"
+                                           widget="many2one"
                                            options="{'no_create': True, 'no_open': True}" />
                                     <field name="qty"/>
                                     <field name="description"/>

@@ -299,11 +299,15 @@ class WinkRequest(http.Controller):
             if request.env.user._is_public():
                 return request.redirect('/web/login?redirect=%s' % werkzeug.urls.url_quote('/my/requests/new'))
             # Step 0: service grid (optional search)
+            # Exclude child/sub-services (commercial_structure='bundled' but NOT a bundle template)
             Product = request.env['product.template'].sudo()
             domain = [
                 ('available_on_wink', '=', True),
                 ('sale_ok', '=', True),
                 ('active', '=', True),
+                '|',
+                ('wink_is_bundle', '=', True),
+                ('commercial_structure', '!=', 'bundled'),
             ]
             search = kwargs.get('search')
             if search:
@@ -1159,14 +1163,12 @@ class WinkRequest(http.Controller):
         if customer_confirmation:
             customer_confirmation.sudo().send_mail(order.id, force_send=True)
 
-        # UI-013: Redirect with submitted=1 to show Request Submitted success block
+        # Always land on the Review page first so the customer can confirm the order summary.
+        # The "Proceed to Payment" button on the review page then goes to /pay.
+        # If required docs exist, also show the review page — it highlights the doc section.
         self._wizard_clear_draft()
-        # If price is confirmed and no required docs, redirect directly to payment
-        if order.wink_price_confirmed and not has_required_docs:
-            return request.redirect(f'/my/requests/{order.id}/pay')
-        # If required docs exist, land directly on the documents page so the customer uploads immediately
         if has_required_docs:
-            return request.redirect(f'/my/requests/{order.id}/documents?just_submitted=1')
+            return request.redirect(f'/my/requests/{order.id}?submitted=1&needs_docs=1')
         return request.redirect(f'/my/requests/{order.id}?submitted=1')
 
     @http.route('/my/requests/<int:order_id>', type='http', auth='user', website=True)
@@ -1196,19 +1198,30 @@ class WinkRequest(http.Controller):
                 ('partner_id', '=', partner_emp.id)
             ])
             for ent in order.wink_entitlement_ids:
-                docs_ok, _missing = order._wink_required_docs_approved_for_product(ent.service_product_id)
+                # activation_sequence = next activation number for this entitlement
+                next_activation = (ent.qty_activated or 0) + 1
+                docs_ok, _missing = order._wink_required_docs_approved_for_product(
+                    ent.service_product_id,
+                    activation_sequence=next_activation,
+                )
                 doc_items = []
                 if ent.service_product_id:
                     for req in ent.service_product_id.kuec_document_ids.filtered(
                         lambda d: getattr(d, 'requirement', '') == 'required'
                     ):
-                        sub = sub_map.get(req.id)
+                        # Look up submission for this specific activation sequence
+                        sub = request.env['kuec.document.submission'].sudo().search([
+                            ('order_id', '=', order_id),
+                            ('requirement_id', '=', req.id),
+                            ('activation_sequence', '=', next_activation),
+                        ], limit=1)
                         doc_items.append({
                             'req_id': req.id,
                             'name': req.name or '',
                             'state': sub.state if sub else 'draft',
                             'filename': sub.filename if sub else '',
                             'notes': (sub.coordinator_notes or '') if sub else '',
+                            'activation_sequence': next_activation,
                         })
                 requires_emps = bool(getattr(ent.service_product_id, 'requires_employee_selection', False))
                 entitlement_prereqs[ent.id] = {
@@ -1217,6 +1230,7 @@ class WinkRequest(http.Controller):
                     'requires_employees': requires_emps,
                     'employees': modal_employees,
                     'can_activate': docs_ok,
+                    'next_activation': next_activation,
                 }
 
         is_retainer = product and product.delivery_model == 'retainer'
@@ -1466,6 +1480,7 @@ class WinkRequest(http.Controller):
             'delivery_stage': delivery_stage,  # UI-011
             'activity_items': activity_items,  # UI-012
             'submitted': kwargs.get('submitted') == '1',  # UI-013
+            'needs_docs': kwargs.get('needs_docs') == '1',  # UI-013: show doc upload CTA on review page
             # WF-BND-002: activation error message when activation blocked (docs/employees)
             'activation_error': kwargs.get('activation_error') or request.params.get('activation_error', '') or '',
             # Activation modal state
@@ -1831,9 +1846,19 @@ class WinkRequest(http.Controller):
             'type': 'binary',
         })
 
+        # activation_sequence: 1 for first activation, 2 for second (reuse), etc.
+        # Each activation requires its own document upload.
+        try:
+            activation_sequence = int(post.get('activation_sequence', 1) or 1)
+        except (TypeError, ValueError):
+            activation_sequence = 1
+        if activation_sequence < 1:
+            activation_sequence = 1
+
         existing = request.env['kuec.document.submission'].sudo().search([
             ('order_id', '=', order_id),
             ('requirement_id', '=', requirement_id),
+            ('activation_sequence', '=', activation_sequence),
         ], limit=1)
 
         now = odoo_fields.Datetime.now()
@@ -1857,6 +1882,7 @@ class WinkRequest(http.Controller):
                 'filename': uploaded.filename,
                 'state': 'under_review',
                 'submitted_date': now,
+                'activation_sequence': activation_sequence,
             })
 
         # Allow redirect back to activation modal when upload came from there

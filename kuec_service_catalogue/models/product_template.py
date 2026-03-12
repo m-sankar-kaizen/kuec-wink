@@ -109,18 +109,30 @@ class ProductTemplate(models.Model):
             if vals.get('wink_is_bundle'):
                 vals['delivery_model'] = 'retainer'
                 vals['recurring_invoice'] = True
+            # Sub-services (bundled but not bundle template) must never appear in catalog
+            if vals.get('commercial_structure') == 'bundled' and not vals.get('wink_is_bundle'):
+                vals['available_on_wink'] = False
         return super().create(vals_list)
 
     def write(self, vals):
-        """Enforce delivery_model=retainer and recurring_invoice when wink_is_bundle is set."""
+        """Enforce delivery_model=retainer and recurring_invoice when wink_is_bundle is set.
+        Enforce available_on_wink=False for bundled sub-services (not bundle templates)."""
         if vals.get('wink_is_bundle'):
             vals['delivery_model'] = 'retainer'
             vals['recurring_invoice'] = True
+        # When commercial_structure is set to 'bundled' and product is not a bundle template
+        if vals.get('commercial_structure') == 'bundled':
+            for rec in self:
+                is_bundle = vals.get('wink_is_bundle', rec.wink_is_bundle)
+                if not is_bundle:
+                    vals['available_on_wink'] = False
+                    break
         return super().write(vals)
 
     @api.onchange('commercial_structure')
     def _onchange_commercial_structure(self):
         if self.commercial_structure == 'bundled' and not self.wink_is_bundle:
+            # Sub-services belong inside a bundle tier only; hide from portal catalog
             self.available_on_wink = False
             self.delivery_model = 'retainer'
             self.recurring_invoice = True

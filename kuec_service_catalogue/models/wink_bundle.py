@@ -285,6 +285,19 @@ class WinkBundleTier(models.Model):
             'context': {'form_view_initial_mode': 'edit'},
         }
 
+    def action_open_add_services_wizard(self):
+        """Open the multi-select Add Services wizard pre-filled with this tier."""
+        self.ensure_one()
+        wizard = self.env['wink.add.services.wizard'].create({'tier_id': self.id})
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Add Services — %s') % self.name,
+            'res_model': 'wink.add.services.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
 
 class WinkBundleTierItem(models.Model):
     _name = 'wink.bundle.tier.item'

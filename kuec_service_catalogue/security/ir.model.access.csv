@@ -33,3 +33,4 @@ access_wink_bundle_change_log_coordinator,wink.bundle.change.log.coordinator,mod
 access_wink_bundle_change_log_user,wink.bundle.change.log.user,model_wink_bundle_change_log,base.group_user,1,1,1,1
 access_wink_bundle_change_log_portal,wink.bundle.change.log.portal,model_wink_bundle_change_log,base.group_portal,1,0,0,0
 access_wink_assign_vendor_wizard_user,wink.assign.vendor.wizard.user,model_wink_assign_vendor_wizard,base.group_user,1,1,1,1
+access_wink_add_services_wizard_user,wink.add.services.wizard.user,model_wink_add_services_wizard,base.group_user,1,1,1,1

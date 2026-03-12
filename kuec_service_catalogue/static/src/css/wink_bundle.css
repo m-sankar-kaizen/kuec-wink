@@ -904,3 +904,7 @@
         -webkit-overflow-scrolling: touch;
     }
 }
+
+/* Issue 4: Reuse button style — distinct from first Activate */
+.wink-btn-reuse { border-color: #198754; color: #198754; background: transparent; font-weight: 600; }
+.wink-btn-reuse:hover { background: #198754; color: #fff; }
