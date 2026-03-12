@@ -19,7 +19,7 @@ class SaleOrderWink(models.Model):
         string='Selected Employees'
     )
     wink_is_portal_request = fields.Boolean(
-        string='Submitted via WINK Portal',
+        string='Submitted via Portal',
         default=False
     )
     wink_source_product_id = fields.Many2one(
@@ -113,24 +113,10 @@ class SaleOrderWink(models.Model):
         tracking=True,
         copy=False,
     )
-    wink_plan_change_target_plan_id = fields.Many2one(
-        'wink.subscription.plan',
-        string='Target Plan',
-        tracking=True,
-        copy=False,
-        ondelete='set null',
-    )
     wink_plan_change_effective_date = fields.Date(
         string='Plan Change Effective Date',
         tracking=True,
         copy=False,
-    )
-    wink_plan_id = fields.Many2one(
-        'wink.subscription.plan',
-        string='Plan Tier (for proration)',
-        ondelete='set null',
-        copy=False,
-        help='Subscription group plan tier (e.g. Bronze, Silver). Used for proration: remaining value = (plan monthly_std_price ÷ 30) × remaining_days.',
     )
     document_submission_ids = fields.One2many(
         'kuec.document.submission',
@@ -211,62 +197,13 @@ class SaleOrderWink(models.Model):
 
     def _wink_compute_proration(self, plan_name_hint=None):
         """Compute prorated remaining credit for the current subscription period.
-
-        Multi-service: uses Odoo Recurring Prices when available (per-product price);
-        fallback: plan.monthly_std_price.
-        Formula: remaining_value = (monthly_price / 30) × remaining_days.
-
-        Returns dict: remaining_days, daily_rate, remaining_value, monthly_std_price, note.
-        """
-        self.ensure_one()
-        product = self.wink_source_product_id
-        if not product:
-            return None
-        group = product.wink_subscription_group_id
-        if not group or not group.plan_ids:
-            return None
-
-        plan = self.wink_plan_id if self.wink_plan_id and self.wink_plan_id.group_id == group else None
-        if not plan and plan_name_hint:
-            plan = group.plan_ids.filtered(
-                lambda p: p.name.strip().lower() == plan_name_hint.strip().lower()
-            )[:1]
-        if not plan:
-            plan = group.plan_ids.sorted('sequence')[:1]
-
-        end_date = getattr(self, 'next_date', None) or getattr(self, 'next_invoice_date', None)
-        from datetime import date
-        today = date.today()
-        if not end_date or end_date <= today:
-            remaining_days = 0
-        else:
-            remaining_days = (end_date - today).days
-
-        # Resolve monthly price: Odoo pricing (per service) first, else plan.monthly_std_price
-        Service = self.env['wink.retainer.change.service'].sudo()
-        monthly_price, _ = Service._resolve_monthly_price_for_proration(self, plan, product, pricing_record=None)
-
-        daily_rate = monthly_price / 30.0
-        remaining_value = round(daily_rate * remaining_days, 2)
-
-        return {
-            'remaining_days': remaining_days,
-            'daily_rate': round(daily_rate, 4),
-            'remaining_value': remaining_value,
-            'monthly_std_price': monthly_price,
-            'note': (
-                f'Remaining value = ({monthly_price:,.2f} ÷ 30) × {remaining_days} days '
-                f'= {remaining_value:,.2f} (from Odoo pricing when available, else plan standard)'
-            ),
-        }
+        Returns None — subscription group / plan tier support has been removed."""
+        return None
 
     def _wink_get_policy(self):
-        """Return the wink.subscription.group policy for this order's product, or None."""
-        self.ensure_one()
-        product = self.wink_source_product_id
-        if not product:
-            return None
-        return product.wink_subscription_group_id or None
+        """Return the policy for this order's product, or None.
+        Subscription group support has been removed."""
+        return None
 
     def _wink_remaining_days(self):
         """Return remaining days in current subscription period (0 if not applicable)."""

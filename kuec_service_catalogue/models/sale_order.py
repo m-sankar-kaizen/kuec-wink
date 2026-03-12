@@ -17,19 +17,34 @@ class SaleOrder(models.Model):
 
     def action_confirm(self):
         """EPIC-11: After confirming a WINK portal order, enable customer ratings
-        on the auto-created project so evaluations are sent when tasks close."""
+        on the auto-created project so evaluations are sent when tasks close.
+        Also ensures all folded stages of the project have rating_template_id set
+        so Odoo actually dispatches the email."""
         result = super().action_confirm()
+        rating_template = self.env.ref(
+            'project.rating_project_request_email_template',
+            raise_if_not_found=False,
+        )
         for order in self:
             if not order.wink_is_portal_request:
                 continue
             projects = self.env['project.task'].search([
                 ('sale_order_id', '=', order.id),
-            ]).mapped('project_id').filtered(lambda p: p and not p.rating_active)
-            if projects:
-                projects.write({
-                    'rating_active': True,
-                    'rating_status': 'stage',
-                })
+            ]).mapped('project_id').filtered(lambda p: p)
+            if not projects:
+                continue
+            projects.filtered(lambda p: not p.rating_active).write({
+                'rating_active': True,
+                'rating_status': 'stage',
+            })
+            # Ensure every folded stage of the project has a rating template so
+            # that _send_task_rating_mail() actually dispatches the email.
+            if rating_template:
+                folded_stages = projects.mapped('type_ids').filtered(
+                    lambda s: s.fold and not s.rating_template_id
+                )
+                if folded_stages:
+                    folded_stages.sudo().write({'rating_template_id': rating_template.id})
         return result
 
     def action_kuec_finalize_price(self):

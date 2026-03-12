@@ -739,7 +739,7 @@
                                     <span class="wink-slider"></span>
                                 </label>
                                 <span class="wink-toggle-label" id="label-annual">Annual</span>
-                                <span t-if="annual_cycle" class="badge bg-success rounded-pill ms-2">Save 20%</span>
+                                <span t-if="annual_cycle and annual_cycle.get('show_savings')" class="badge bg-success rounded-pill ms-2">Save <t t-esc="annual_cycle.get('savings_pct', 0)"/>%</span>
                             </div>
 
                             <!-- UI-REV-001: Tier Comparison Grid — tier name + most popular badge visible -->
@@ -759,7 +759,8 @@
                                         <div class="wink-tier-name"><t t-esc="td['tier'].name"/></div>
 
                                         <div class="wink-tier-price-wrapper">
-                                            <div class="wink-tier-amount-row">
+                                            <div class="wink-tier-amount-row d-flex align-items-baseline flex-wrap gap-1">
+                                                <span class="wink-tier-original-amount d-none"></span>
                                                 <span class="wink-tier-amount">—</span>
                                             </div>
                                             <span class="wink-tier-price-subtext">Billed <span class="wink-cycle-label">monthly</span>.</span>
@@ -896,14 +897,25 @@
                                             }
 
                                             var amountEl = card.querySelector('.wink-tier-amount');
+                                            var originalEl = card.querySelector('.wink-tier-original-amount');
                                             var cycleEl = card.querySelector('.wink-cycle-label');
                                             if (plan) {
                                                 var symbol = plan.currency_symbol || 'AED';
-                                                amountEl.textContent = symbol + ' ' + Number(plan.price).toLocaleString('en-US', {minimumFractionDigits:2});
+                                                var priceStr = symbol + ' ' + Number(plan.price).toLocaleString('en-US', {minimumFractionDigits:2});
+                                                amountEl.textContent = priceStr;
+                                                if (plan.show_savings &amp;&amp; plan.reference_price &amp;&amp; plan.reference_price > plan.price) {
+                                                    var refStr = symbol + ' ' + Number(plan.reference_price).toLocaleString('en-US', {minimumFractionDigits:2});
+                                                    originalEl.textContent = refStr;
+                                                    originalEl.classList.remove('d-none');
+                                                } else {
+                                                    originalEl.textContent = '';
+                                                    originalEl.classList.add('d-none');
+                                                }
                                                 if (cycleEl) cycleEl.textContent = isAnnual ? 'annually' : 'monthly';
                                                 card.dataset.pricingId = plan.pricing_id;
                                             } else {
                                                 amountEl.textContent = '—';
+                                                if (originalEl) { originalEl.textContent = ''; originalEl.classList.add('d-none'); }
                                                 card.dataset.pricingId = '';
                                             }
 

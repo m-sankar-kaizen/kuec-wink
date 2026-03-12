@@ -120,7 +120,6 @@
                 <field name="name" string="Reference"/>
                 <field name="partner_id" string="Customer"/>
                 <field name="wink_source_product_id" string="Service" optional="show"/>
-                <field name="wink_plan_id" string="Plan" optional="show"/>
                 <field name="date_order" string="Start Date" optional="show"/>
                 <field name="next_invoice_date" string="Next Renewal" optional="show"/>
                 <field name="recurring_monthly" string="MRR" widget="monetary"
@@ -142,7 +141,7 @@
         <field name="arch" type="xml">
             <pivot string="MRR Pivot">
                 <field name="wink_source_product_id" type="row"/>
-                <field name="wink_plan_id" type="col"/>
+                <field name="partner_id" type="col"/>
                 <field name="recurring_monthly" type="measure"/>
             </pivot>
         </field>

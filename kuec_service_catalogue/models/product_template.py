@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 
 
 class ProductTemplate(models.Model):
@@ -62,13 +63,6 @@ class ProductTemplate(models.Model):
         ondelete='set null',
         help="The bundle this product belongs to. Only for bundled services.",
     )
-    wink_subscription_group_id = fields.Many2one(
-        'wink.subscription.group',
-        string='Subscription Group',
-        ondelete='set null',
-        help='Links this retainer service to its upgrade/downgrade/cancellation policy group. '
-             'Defines standard monthly prices per plan tier for proration calculations.',
-    )
     # Odoo native subscription plans (quotation templates); used when product has no Recurring Prices
     wink_subscription_plan_ids = fields.Many2many(
         'sale.order.template',
@@ -94,6 +88,35 @@ class ProductTemplate(models.Model):
             self.recurring_invoice = True
             self.commercial_structure = 'bundled'
             self.available_on_wink = True
+
+    @api.constrains('wink_is_bundle')
+    def _check_bundle_delivery_model(self):
+        """Bundles must have delivery_model=retainer and recurring_invoice=True."""
+        for rec in self:
+            if rec.wink_is_bundle:
+                if rec.delivery_model != 'retainer':
+                    raise ValidationError(
+                        _('Bundle products must use Delivery Model "Retainer".')
+                    )
+                if not getattr(rec, 'recurring_invoice', True):
+                    raise ValidationError(
+                        _('Bundle products must have Subscriptions (recurring invoice) enabled.')
+                    )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('wink_is_bundle'):
+                vals['delivery_model'] = 'retainer'
+                vals['recurring_invoice'] = True
+        return super().create(vals_list)
+
+    def write(self, vals):
+        """Enforce delivery_model=retainer and recurring_invoice when wink_is_bundle is set."""
+        if vals.get('wink_is_bundle'):
+            vals['delivery_model'] = 'retainer'
+            vals['recurring_invoice'] = True
+        return super().write(vals)
 
     @api.onchange('commercial_structure')
     def _onchange_commercial_structure(self):
@@ -206,11 +229,13 @@ class ProductTemplate(models.Model):
         return []
 
     def _recurrence_duration_months(self, recurrence):
-        """Return duration in months for a recurrence record (sale.temporal.recurrence or similar)."""
+        """Return duration in months for a recurrence record (sale.temporal.recurrence,
+        sale.subscription.plan, or similar)."""
         if not recurrence:
             return 1
-        duration = getattr(recurrence, 'duration', 1) or 1
-        unit = (getattr(recurrence, 'unit', 'month') or 'month').lower()
+        # sale.subscription.plan uses billing_period_value / billing_period_unit
+        duration = getattr(recurrence, 'duration', None) or getattr(recurrence, 'billing_period_value', 1) or 1
+        unit = (getattr(recurrence, 'unit', None) or getattr(recurrence, 'billing_period_unit', 'month') or 'month').lower()
         if unit == 'year':
             return duration * 12
         if unit == 'month':
@@ -281,9 +306,30 @@ class ProductTemplate(models.Model):
             return []
         # Sort by duration ascending (Monthly first)
         plans_raw.sort(key=lambda p: (p['months'], p['recurrence_id']))
-        # Period label and monthly equivalent
-        unit_labels = {'month': 'month', 'year': 'year', 'week': 'weeks'}
-        baseline_price_per_month = plans_raw[0]['price'] / plans_raw[0]['months'] if plans_raw[0]['months'] else plans_raw[0]['price']
+        # Build baseline per variant: for bundles with multiple tiers, each tier needs its own
+        # reference (monthly) to compute savings. Key by (variant_id, variant_attribute_names).
+        def _variant_key(p):
+            vid = p.get('variant_id')
+            if vid:
+                return ('id', vid)
+            attrs = tuple(sorted((a or '').lower() for a in p.get('variant_attribute_names', [])))
+            return ('attrs', attrs) if attrs else ('default', 0)
+
+        baseline_by_variant = {}
+        reference_plan = next((p for p in plans_raw if getattr(p['recurrence'], 'kuec_is_reference_plan', False)), None)
+        if reference_plan and reference_plan['months'] > 0:
+            ref_key = _variant_key(reference_plan)
+            baseline_by_variant[ref_key] = reference_plan['price'] / reference_plan['months']
+        # Fallback: use shortest-period plan per variant as baseline
+        for p in plans_raw:
+            k = _variant_key(p)
+            if k not in baseline_by_variant and p['months'] > 0:
+                baseline_by_variant[k] = p['price'] / p['months']
+        # Global fallback when no per-variant baseline
+        default_baseline = (
+            reference_plan['price'] / reference_plan['months'] if reference_plan and reference_plan['months']
+            else plans_raw[0]['price'] / plans_raw[0]['months'] if plans_raw[0]['months'] else plans_raw[0]['price']
+        )
         result = []
         for p in plans_raw:
             months = p['months']
@@ -319,14 +365,21 @@ class ProductTemplate(models.Model):
                     period_label = 'per 6 months'
                 else:
                     period_label = 'per month'
-            # Savings vs baseline (shortest plan)
-            savings_pct = 0
-            if months > plans_raw[0]['months'] and baseline_price_per_month > 0:
-                pct = (1 - (monthly_equivalent / baseline_price_per_month)) * 100
-                savings_pct = max(0, round(pct))
-            show_savings = savings_pct >= 1
-            # Features and most popular from product.pricing
+            # Savings vs baseline (per-variant: each tier compares to its own monthly)
             line = p['line']
+            is_reference_plan = bool(getattr(p['recurrence'], 'kuec_is_reference_plan', False))
+            savings_pct = 0
+            if not is_reference_plan:
+                baseline_price_per_month = baseline_by_variant.get(_variant_key(p)) or default_baseline
+                if baseline_price_per_month > 0:
+                    pct = (1 - (monthly_equivalent / baseline_price_per_month)) * 100
+                    savings_pct = max(0, round(pct))
+            show_savings = savings_pct >= 1
+            # Reference (pre-discount) price for crossed-out display: reference = price / (1 - pct/100)
+            reference_price = price
+            if show_savings and savings_pct and savings_pct < 100:
+                reference_price = round(price / (1 - savings_pct / 100.0), 2)
+            # Features and most popular from pricing line
             features = []
             if getattr(line, 'kuec_plan_features', None):
                 features = [s.strip() for s in (line.kuec_plan_features or '').splitlines() if s.strip()][:6]
@@ -342,6 +395,7 @@ class ProductTemplate(models.Model):
                 'monthly_equivalent': monthly_equivalent,
                 'savings_pct': savings_pct,
                 'show_savings': show_savings,
+                'reference_price': reference_price,
                 'is_most_popular': is_most_popular,
                 'features': features,
                 'currency_symbol': currency_symbol,

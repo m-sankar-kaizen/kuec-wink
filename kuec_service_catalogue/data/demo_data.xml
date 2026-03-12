@@ -420,26 +420,8 @@
             <field name="description">4 On-Site Visits / Month</field>
         </record>
 
-        <!-- Recurring Prices setup (requires a subscription group and plans) -->
-        <record id="kuec_demo_sub_group" model="wink.subscription.group">
-            <field name="name">Standard Retainer Plans</field>
-        </record>
-        <record id="kuec_demo_plan_monthly" model="wink.subscription.plan">
-            <field name="name">Monthly</field>
-            <field name="group_id" ref="kuec_demo_sub_group"/>
-            <field name="sequence">10</field>
-            <field name="monthly_std_price">1500.00</field>
-        </record>
-        <record id="kuec_demo_plan_annual" model="wink.subscription.plan">
-            <field name="name">Annually</field>
-            <field name="group_id" ref="kuec_demo_sub_group"/>
-            <field name="sequence">20</field>
-            <field name="monthly_std_price">1250.00</field>
-        </record>
-
-        <!-- Link IT Support to the Group -->
+        <!-- Link IT Support recurring invoice -->
         <record id="kuec_demo_svc_it_support" model="product.template">
-            <field name="wink_subscription_group_id" ref="kuec_demo_sub_group"/>
             <field name="recurring_invoice">True</field>
         </record>
 

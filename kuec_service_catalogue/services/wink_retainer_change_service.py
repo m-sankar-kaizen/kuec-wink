@@ -146,10 +146,10 @@ class WinkRetainerChangeService(models.AbstractModel):
         remaining_days = (end_date - today).days
         result['remaining_days'] = remaining_days
 
-        source_plan = source_order.wink_plan_id
+        source_plan = getattr(source_order, 'wink_plan_id', None)
         if not source_plan:
-            group = product and product.wink_subscription_group_id
-            if group and group.plan_ids:
+            group = product and getattr(product, 'wink_subscription_group_id', None)
+            if group and getattr(group, 'plan_ids', None) and group.plan_ids:
                 source_plan = group.plan_ids.sorted('sequence')[:1]
 
         # Resolve monthly prices: Odoo pricing (per service) first, else plan.monthly_std_price
@@ -260,10 +260,8 @@ class WinkRetainerChangeService(models.AbstractModel):
             'wink_change_type': change_type,
             'wink_proration_credit': proration_credit,
             'wink_proration_charge': proration_charge,
-            'wink_plan_change_target_plan_id': target_plan.id,
             'wink_plan_change_effective_date': effective_date,
-            'wink_plan_id': target_plan.id,
-            'origin': 'WINK Portal — Plan Change',
+            'origin': 'Service Portal — Plan Change',
         }
         if recurrence_id and 'recurrence_id' in self.env['sale.order']._fields:
             order_vals['recurrence_id'] = recurrence_id

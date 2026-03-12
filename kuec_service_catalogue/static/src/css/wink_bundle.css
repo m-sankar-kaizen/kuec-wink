@@ -497,6 +497,15 @@
     display: block;
 }
 
+/* Crossed-out original price per tier (annual discount) */
+.wink-tier-original-amount:not(.d-none) {
+    font-size: 1.25rem;
+    color: #94a3b8;
+    text-decoration: line-through;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
 /* U-6: Crossed-out monthly equivalent for annual */
 .wink-price-original {
     font-size: 1rem;

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from . import product_template
+from . import sale_subscription_pricing
+from . import sale_subscription_plan
 from . import kuec_service_document
 from . import kuec_classification
 from . import res_partner
@@ -18,4 +20,3 @@ from . import kuec_document_submission
 from . import wink_bundle
 from . import wink_bundle_entitlement
 from . import wink_bundle_change_log
-from . import wink_subscription_group

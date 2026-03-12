@@ -35,7 +35,6 @@
                 <page string="Portal Request" name="portal_request" invisible="not wink_is_portal_request">
                     <group string="Request details" col="2">
                         <field name="wink_source_product_id" readonly="1"/>
-                        <field name="wink_plan_id" options="{'no_create': True}" help="Plan tier (e.g. Bronze) for proration: remaining value = (monthly_std_price ÷ 30) × remaining_days"/>
                         <field name="wink_requested_start_date" readonly="1"/>
                         <field name="wink_price_confirmed" readonly="1"/>
                         <field name="wink_bundle_tier_id" readonly="1" invisible="not wink_bundle_tier_id"/>
@@ -52,7 +51,6 @@
                         <field name="wink_change_type" readonly="1" invisible="not wink_change_type"/>
                         <field name="wink_proration_credit" readonly="1" invisible="not wink_change_type"/>
                         <field name="wink_proration_charge" readonly="1" invisible="not wink_change_type"/>
-                        <field name="wink_plan_change_target_plan_id" readonly="1" invisible="not wink_change_type"/>
                         <field name="wink_plan_change_effective_date" readonly="1" invisible="not wink_change_type"/>
                         <field name="wink_request_notes" readonly="1" colspan="2" nolabel="1"/>
                     </group>

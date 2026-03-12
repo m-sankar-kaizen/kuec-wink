@@ -37,8 +37,6 @@
                                help="Standalone: sold independently. Bundled: only available inside a bundle. Flexible: can be standalone or bundled."/>
                         <field name="wink_bundle_id" invisible="commercial_structure != 'bundled' or not wink_is_bundle"
                                help="Link this product to a bundle package so tiers and services are configured there."/>
-                        <field name="wink_subscription_group_id" invisible="delivery_model != 'retainer'"
-                               help="Links this retainer service to its upgrade/downgrade/cancellation policy group with proration rules."/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
                         <field name="price_visibility" required="available_on_wink"/>
