@@ -1391,26 +1391,60 @@
                         </div>
                     </div>
 
-                    <!-- CR-8, UI-013 Request Submitted success block (Lovable parity) -->
+                    <!-- CR-8, UI-013 Request Submitted success block (Review page) -->
                     <div t-if="submitted" class="text-center py-4 mb-4">
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;background:#d1e7dd;">
                             <i class="fa fa-check-circle text-success" style="font-size:32px;"/>
                         </div>
                         <h1 class="h3 fw-bold mb-2">Request Submitted!</h1>
-                        <p class="text-muted mb-4">Your request for <strong><t t-esc="product.name if product else (order.order_line[0].product_id.name if order.order_line else '')"/></strong> has been submitted successfully. Your coordinator will review it and set the pricing.</p>
-                        <div class="card card-premium rounded-2xl text-start mb-4 mx-auto" style="max-width:480px;">
-                            <div class="card-body p-4">
-                                <h6 class="fw-bold mb-2">What happens next?</h6>
-                                <ul class="mb-0 ps-3">
-                                    <li>Your coordinator will review your request</li>
-                                    <li>Once the price is confirmed, you'll see it on your request</li>
-                                    <li>You can then approve, reject, or discuss the quote</li>
-                                </ul>
+                        <p class="text-muted mb-3">Your request for <strong><t t-esc="product.name if product else (order.order_line[0].product_id.name if order.order_line else '')"/></strong> has been received. Please review the summary below.</p>
+
+                        <!-- CTA: price confirmed + no docs → Proceed to Payment -->
+                        <t t-if="order.wink_price_confirmed and not needs_docs and not pending_doc_names">
+                            <div class="mt-3 p-4 rounded-3 border border-2 shadow-sm d-flex align-items-center gap-4 flex-wrap justify-content-center mx-auto" style="max-width:540px;background:linear-gradient(135deg,#f0f7ff 0%,#ffffff 100%);border-color:#cbdcf0 !important;">
+                                <div class="flex-grow-1 text-start">
+                                    <h5 class="mb-1 fw-bold text-primary"><i class="fa fa-credit-card me-2"/>Ready for Payment</h5>
+                                    <p class="text-muted small mb-0">Amount due: <strong class="text-dark"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
+                                </div>
+                                <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-sm" style="background:#28a745;border:0;">
+                                    <i class="fa fa-arrow-right me-2"/>Proceed to Payment
+                                </a>
                             </div>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                        </t>
+
+                        <!-- CTA: docs required → Upload Documents -->
+                        <t t-elif="needs_docs or pending_doc_names">
+                            <div class="alert alert-info d-flex align-items-start gap-3 text-start mx-auto mt-3" style="max-width:540px;">
+                                <i class="fa fa-file-text-o fa-lg mt-1 flex-shrink-0"/>
+                                <div>
+                                    <strong>Documents required before processing.</strong><br/>
+                                    Please upload the required documents below. Your coordinator will review and approve them.
+                                    <div class="mt-2">
+                                        <a t-attf-href="/my/requests/#{order.id}/documents?just_submitted=1" class="btn btn-primary btn-sm">
+                                            <i class="fa fa-upload me-1"/>Upload Documents
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- CTA: price not yet confirmed → coordinator review -->
+                        <t t-else="">
+                            <div class="card card-premium rounded-2xl text-start mb-4 mx-auto" style="max-width:480px;">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold mb-2">What happens next?</h6>
+                                    <ul class="mb-0 ps-3">
+                                        <li>Your coordinator will review your request</li>
+                                        <li>Once the price is confirmed, you'll be notified</li>
+                                        <li>You can then proceed to payment</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </t>
+
+                        <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
                             <a href="/my/requests" class="btn btn-outline-secondary rounded-xl touch-target">View My Requests</a>
-                            <a href="/services" class="btn btn-primary rounded-xl touch-target">Browse More Services</a>
+                            <a href="/services" class="btn btn-outline-primary rounded-xl touch-target">Browse More Services</a>
                         </div>
                     </div>
                     <t t-if="not submitted">
@@ -1731,11 +1765,21 @@
                                         </t>
                                         <!-- Modal-driven activation (handles docs + employees inline) -->
                                         <t t-if="order.state in ('sale', 'done')">
-                                            <button type="button" class="btn btn-sm wink-btn-primary"
-                                                    t-attf-data-bs-target="#wink-activate-modal-#{ent.id}"
-                                                    data-bs-toggle="modal">
-                                                <i class="fa fa-play me-1"/>Activate
-                                            </button>
+                                            <!-- Issue 4: label is "Reuse" on 2nd+ activation -->
+                                            <t t-if="ent.qty_activated >= 1">
+                                                <button type="button" class="btn btn-sm btn-outline-success wink-btn-reuse"
+                                                        t-attf-data-bs-target="#wink-activate-modal-#{ent.id}"
+                                                        data-bs-toggle="modal">
+                                                    <i class="fa fa-refresh me-1"/>Reuse
+                                                </button>
+                                            </t>
+                                            <t t-else="">
+                                                <button type="button" class="btn btn-sm wink-btn-primary"
+                                                        t-attf-data-bs-target="#wink-activate-modal-#{ent.id}"
+                                                        data-bs-toggle="modal">
+                                                    <i class="fa fa-play me-1"/>Activate
+                                                </button>
+                                            </t>
                                         </t>
                                         <t t-else="">
                                             <small class="text-muted fst-italic">Available after order confirmation</small>
@@ -1755,7 +1799,14 @@
                                 <div class="modal-content wink-activate-modal-content">
                                     <div class="modal-header wink-activate-modal-header">
                                         <h5 class="modal-title">
-                                            <i class="fa fa-play-circle me-2"/>Activate: <t t-esc="ent_m.name"/>
+                                            <!-- Issue 4: show Reuse title on 2nd+ activation -->
+                                            <t t-if="ent_m.qty_activated >= 1">
+                                                <i class="fa fa-refresh me-2"/>Reuse: <t t-esc="ent_m.name"/>
+                                                <small class="ms-2 opacity-75">(Activation #<t t-esc="ent_m.qty_activated + 1"/>)</small>
+                                            </t>
+                                            <t t-else="">
+                                                <i class="fa fa-play-circle me-2"/>Activate: <t t-esc="ent_m.name"/>
+                                            </t>
                                         </h5>
                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"/>
                                     </div>
@@ -1810,6 +1861,8 @@
                                                                       class="wink-inline-upload-form">
                                                                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                                                     <input type="hidden" name="requirement_id" t-att-value="doc['req_id']"/>
+                                                                    <!-- Issue 6: pass activation_sequence so each reuse gets its own doc record -->
+                                                                    <input type="hidden" name="activation_sequence" t-att-value="doc.get('activation_sequence', 1)"/>
                                                                     <input type="hidden" name="redirect_to"
                                                                            t-attf-value="/my/requests/#{order.id}?open_modal=#{ent_m.id}&amp;doc_uploaded=1"/>
                                                                     <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -1832,6 +1885,8 @@
                                                                   class="wink-inline-upload-form mt-2">
                                                                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                                                 <input type="hidden" name="requirement_id" t-att-value="doc['req_id']"/>
+                                                                <!-- Issue 6: pass activation_sequence so each reuse gets its own doc record -->
+                                                                <input type="hidden" name="activation_sequence" t-att-value="doc.get('activation_sequence', 1)"/>
                                                                 <input type="hidden" name="redirect_to"
                                                                        t-attf-value="/my/requests/#{order.id}?open_modal=#{ent_m.id}&amp;doc_uploaded=1"/>
                                                                 <div class="d-flex gap-2 align-items-center flex-wrap">

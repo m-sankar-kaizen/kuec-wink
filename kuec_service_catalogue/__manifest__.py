@@ -50,6 +50,7 @@
         'views/project_stage_views.xml',
         'views/sale_subscription_pricing_views.xml',
         'wizard/wink_assign_vendor_wizard_views.xml',
+        'wizard/wink_add_services_wizard_views.xml',
         'views/project_task_views.xml',
         'views/kuec_document_submission_views.xml',
         'views/website_templates/wink_catalogue_page.xml',

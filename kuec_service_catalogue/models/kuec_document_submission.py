@@ -74,6 +74,12 @@ class KuecDocumentSubmission(models.Model):
         readonly=True,
         ondelete='set null',
     )
+    activation_sequence = fields.Integer(
+        string='Activation #',
+        default=1,
+        help='Which activation number this document was uploaded for. '
+             'Each reuse (2nd, 3rd activation) requires its own document upload.',
+    )
     requirement_name = fields.Char(
         related='requirement_id.name',
         string='Document Name',

@@ -273,10 +273,14 @@ class SaleOrderWink(models.Model):
         return self.env['kuec.service.document'].browse()
 
     # WF-BND-002 / WF-BND-003: required docs per service product only
-    def _wink_required_docs_approved_for_product(self, product_tmpl):
+    def _wink_required_docs_approved_for_product(self, product_tmpl, activation_sequence=1):
         """Return (ok, missing_names) for required docs of given product on this order.
 
-        ok is True when all required documents for product_tmpl are approved for this order.
+        activation_sequence: which activation number to check (default=1 for first activation).
+        On reuse (2nd+ activation), each activation must have its own fresh approved upload.
+
+        ok is True when all required documents for product_tmpl are approved for this order
+        and the given activation_sequence.
         missing_names is a list of human-friendly document names that are missing or not approved.
         """
         self.ensure_one()
@@ -289,11 +293,15 @@ class SaleOrderWink(models.Model):
         if not required_docs:
             return True, []
         required_ids = set(required_docs.ids)
-        # Build map requirement_id -> submission for this order
+        # Build map requirement_id -> submission for this order AND this activation_sequence.
+        # Each reuse (activation_sequence > 1) requires a fresh upload — the previously
+        # approved doc for activation 1 does NOT satisfy activation 2.
         sub_map = {
             sub.requirement_id.id: sub
             for sub in self.document_submission_ids
-            if sub.requirement_id and sub.requirement_id.id in required_ids
+            if (sub.requirement_id
+                and sub.requirement_id.id in required_ids
+                and (getattr(sub, 'activation_sequence', 1) or 1) == activation_sequence)
         }
         missing_names = []
         for doc in required_docs:

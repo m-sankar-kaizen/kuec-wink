@@ -14,10 +14,15 @@ class WinkCatalogue(http.Controller):
         Product = request.env['product.template'].sudo()
         
         # Base domain — all users see all available services
+        # Exclude child/sub-services (commercial_structure='bundled' but NOT a bundle template).
+        # Those are only accessible inside a bundle activation, not as standalone catalog items.
         domain = [
             ('available_on_wink', '=', True),
             ('sale_ok', '=', True),
-            ('active', '=', True)
+            ('active', '=', True),
+            '|',
+            ('wink_is_bundle', '=', True),
+            ('commercial_structure', '!=', 'bundled'),
         ]
 
         # URL Filters
@@ -53,7 +58,10 @@ class WinkCatalogue(http.Controller):
         base_domain = [
             ('available_on_wink', '=', True),
             ('sale_ok', '=', True),
-            ('active', '=', True)
+            ('active', '=', True),
+            '|',
+            ('wink_is_bundle', '=', True),
+            ('commercial_structure', '!=', 'bundled'),
         ]
         dept_counts = {}
         for dept in departments:
