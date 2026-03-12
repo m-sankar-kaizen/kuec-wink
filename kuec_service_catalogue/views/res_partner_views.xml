@@ -1,20 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="res_partner_form_kuec_eligibility" model="ir.ui.view">
-        <field name="name">res.partner.form.kuec.eligibility</field>
+    <record id="res_partner_form_kuec_wink" model="ir.ui.view">
+        <field name="name">res.partner.form.kuec.wink</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <!-- Add Eligibility tags inside the Sales & Purchase tab -->
+            <!-- WINK Partner fields inside the Sales &amp; Purchase tab -->
             <xpath expr="//page[@name='sales_purchases']/group[@name='container_row_2']" position="inside">
-                <group string="WINK Eligibility" name="kuec_eligibility">
-                    <field name="eligibility_tag_ids" widget="many2many_tags" placeholder="Eligibility Tags..." options="{'color_field': 'color'}"/>
+                <group string="WINK Details" name="kuec_wink_details">
+                    <field name="legal_entity_type" invisible="not is_company" required="is_company"/>
+                    <field name="wink_company_type" invisible="not is_company"/>
                     <field name="trade_license_number"/>
                     <field name="tax_license_number"/>
                 </group>
             </xpath>
             <xpath expr="//field[@name='category_id']" position="after">
                 <field name="employee_directory_enabled" widget="boolean_toggle"/>
+            </xpath>
+            <!-- EPIC-11: Vendor performance rating (visible when vendor has ratings) -->
+            <xpath expr="//page[@name='sales_purchases']/group[@name='container_row_2']" position="after">
+                <group string="WINK Vendor Performance" name="kuec_vendor_rating"
+                      invisible="wink_rating_count == 0">
+                    <field name="wink_avg_rating" widget="float" string="Average Rating (1–5)"
+                           help="Average score from customer evaluations on completed WINK service tasks."/>
+                    <field name="wink_rating_count" string="Total Evaluations"
+                           help="Number of customer ratings submitted for tasks where this partner was the assigned vendor."/>
+                </group>
             </xpath>
         </field>
     </record>

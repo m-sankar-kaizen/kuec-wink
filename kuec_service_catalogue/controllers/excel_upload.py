@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import datetime
 from odoo import http, _
 from odoo.http import request
@@ -8,6 +9,12 @@ try:
     import openpyxl
 except ImportError:
     openpyxl = None
+
+# ISSUE-002: Max upload size (bytes) for employee Excel bulk import.
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+
+_logger = logging.getLogger(__name__)
+
 
 class KuecEmployeeExcel(http.Controller):
 
@@ -49,14 +56,22 @@ class KuecEmployeeExcel(http.Controller):
             ]
         )
 
-    @http.route('/my/employees/upload', type='http', auth='user', website=True, methods=['POST'], csrf=False)
+    # ISSUE-002: csrf=True; X-Requested-With and file size checks; sanitized logging.
+    @http.route('/my/employees/upload', type='http', auth='user', website=True, methods=['POST'], csrf=True)
     def upload_employees(self, upload_file=None, **post):
         partner = request.env.user.partner_id.commercial_partner_id
         if not partner.employee_directory_enabled:
             return request.redirect('/my')
-            
         if not openpyxl or not upload_file:
             return request.redirect('/my/employees')
+        upload_file.seek(0, 2)
+        size = upload_file.tell()
+        upload_file.seek(0)
+        if size > MAX_UPLOAD_BYTES:
+            return request.make_response(json.dumps({
+                "success_count": 0,
+                "errors": [{"row": 0, "reason": _("File size exceeds the maximum allowed (%s MB).") % (MAX_UPLOAD_BYTES // (1024 * 1024))}]
+            }), headers=[('Content-Type', 'application/json')])
 
         try:
             wb = openpyxl.load_workbook(filename=io.BytesIO(upload_file.read()), data_only=True)
@@ -199,6 +214,8 @@ class KuecEmployeeExcel(http.Controller):
                     "errors": [{"row": 0, "reason": f"Database Validation Error: {str(e)}"}]
                 }), headers=[('Content-Type', 'application/json')])
 
+        # ISSUE-002: Sanitized log (counts only, no PII).
+        _logger.info("Employee bulk import: success_count=%s", len(parsed_data))
         return request.make_response(json.dumps({
             "success_count": len(parsed_data),
             "errors": []

@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ============================================================
+     Shared: bundle lifecycle page wrapper (nav breadcrumb)
+     ============================================================ -->
+<template id="wink_bundle_lifecycle_layout" name="Bundle Lifecycle Layout">
+    <t t-call="portal.portal_layout">
+        <t t-set="breadcrumbs_searchbar" t-value="True"/>
+        <t t-call="portal.portal_record_layout">
+            <t t-set="card_header">
+                <div class="d-flex align-items-center gap-2 px-1 py-1">
+                    <a href="/my/bundles" class="text-decoration-none" style="color:var(--wink-primary);">
+                        <i class="fa fa-th-large me-1"/>My Bundles
+                    </a>
+                    <i class="fa fa-chevron-right small text-muted"/>
+                    <span class="text-muted small" t-esc="page_title"/>
+                </div>
+            </t>
+            <t t-set="card_body"><t t-raw="card_body_content"/></t>
+        </t>
+    </t>
+</template>
+
+<!-- ============================================================
+     P3 — Cancel Bundle Page
+     ============================================================ -->
+<template id="wink_bundle_cancel_page" name="Cancel Bundle">
+    <t t-call="portal.portal_layout">
+        <t t-set="breadcrumbs_searchbar" t-value="True"/>
+        <div class="container py-4" style="max-width:720px;">
+
+            <!-- Breadcrumb -->
+            <nav class="mb-3">
+                <ol class="breadcrumb small mb-0">
+                    <li class="breadcrumb-item"><a href="/my">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/my/bundles">My Bundles</a></li>
+                    <li class="breadcrumb-item active">Cancel Bundle</li>
+                </ol>
+            </nav>
+
+            <!-- Error banner -->
+            <t t-if="error">
+                <div class="alert alert-danger small mb-3" role="alert">
+                    <i class="fa fa-exclamation-circle me-1"/>
+                    <t t-esc="error"/>
+                </div>
+            </t>
+
+            <!-- Page heading -->
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header py-3 rounded-top-3" style="background:linear-gradient(135deg,#c62753 0%,#8b1a35 100%);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa fa-times-circle fa-lg text-white"/>
+                        <div>
+                            <div class="fw-bold text-white fs-6">Cancel Bundle</div>
+                            <div class="text-white small opacity-75" t-esc="order.name"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Current bundle summary -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="text-muted small mb-1">Bundle</div>
+                            <div class="fw-semibold small" t-esc="order.wink_source_product_id.name or order.name"/>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-muted small mb-1">Current Tier</div>
+                            <div class="fw-semibold small" t-esc="tier.name if tier else '—'"/>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-muted small mb-1">Start Date</div>
+                            <div class="fw-semibold small">
+                                <t t-set="display_start" t-value="order.wink_bundle_start_date or order.start_date"/>
+                                <t t-if="display_start">
+                                    <t t-esc="display_start" t-options='{"widget": "date"}'/>
+                                </t>
+                                <t t-else="">—</t>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-muted small mb-1">End Date</div>
+                            <div class="fw-semibold small">
+                                <t t-set="display_end" t-value="order.wink_bundle_end_date or order.next_invoice_date"/>
+                                <t t-if="display_end">
+                                    <t t-esc="display_end" t-options='{"widget": "date"}'/>
+                                </t>
+                                <t t-else="">—</t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Refund preview -->
+                    <div class="rounded-3 p-3 mb-4"
+                         t-attf-style="background:{{ 'rgba(198,39,83,0.07)' if refund_info.get('refund_amount',0)>0 else 'rgba(0,0,0,0.04)' }};border:1px solid {{ '#c62753' if refund_info.get('refund_amount',0)>0 else '#dee2e6' }};">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="fw-semibold small">Estimated Refund</span>
+                            <span t-attf-class="fw-bold fs-5 {{ 'text-danger' if refund_info.get('refund_amount',0)>0 else 'text-muted' }}">
+                                <t t-esc="order.currency_id.symbol or order.currency_id.name"/>
+                                <t t-esc="'%.2f' % refund_info.get('refund_amount',0)"/>
+                            </span>
+                        </div>
+                        <div class="text-muted small" t-esc="refund_info.get('note', '')"/>
+                        <t t-if="refund_info.get('policy') == 'monthly_rate'">
+                            <div class="mt-2 small text-warning-emphasis fw-semibold">
+                                <i class="fa fa-info-circle me-1"/>
+                                Note: The yearly discount is <strong>not applied</strong> to the refund.
+                                Refund is calculated at the standard monthly rate.
+                            </div>
+                        </t>
+                        <t t-if="refund_info.get('remaining_days', 0) > 0">
+                            <div class="mt-1 small text-muted">
+                                <i class="fa fa-calendar-o me-1"/>
+                                <t t-esc="refund_info.get('remaining_days', 0)"/> days remaining in current period.
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- Warning -->
+                    <div class="alert alert-warning small mb-4" role="alert">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <strong>This action is irreversible.</strong> All bundle services and active entitlements
+                        will be deactivated immediately upon cancellation. Activated tasks will remain in place
+                        but no new services can be activated.
+                    </div>
+
+                    <!-- Cancel form -->
+                    <form t-attf-action="/my/bundles/{{ order.id }}/cancel" method="post">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                        <div class="mb-3">
+                            <label for="cancel_reason" class="form-label small fw-semibold">
+                                Reason for Cancellation <span class="text-muted fw-normal">(optional)</span>
+                            </label>
+                            <select class="form-select form-select-sm" id="cancel_reason" name="cancel_reason">
+                                <option value="">Select a reason...</option>
+                                <t t-foreach="close_reasons" t-as="cr">
+                                    <option t-att-value="cr.name" t-esc="cr.name"/>
+                                </t>
+                            </select>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input" id="confirm_cancel"
+                                   name="confirm_cancel" value="1" required="required"/>
+                            <label class="form-check-label small" for="confirm_cancel">
+                                I understand this is permanent and cannot be undone.
+                                All remaining entitlements will be deactivated immediately.
+                            </label>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="/my/bundles" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa fa-arrow-left me-1"/>Keep My Bundle
+                            </a>
+                            <button type="submit" class="btn btn-sm fw-semibold"
+                                    style="background:#c62753;color:#fff;border-color:#c62753;">
+                                <i class="fa fa-times-circle me-1"/>Confirm Cancellation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </t>
+</template>
+
+<!-- Cancel confirmation / done page -->
+<template id="wink_bundle_cancel_done" name="Bundle Cancelled">
+    <t t-call="portal.portal_layout">
+        <div class="container py-5 text-center" style="max-width:560px;">
+            <div class="mb-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:64px;height:64px;background:rgba(198,39,83,0.12);">
+                    <i class="fa fa-check fa-2x" style="color:#c62753;"/>
+                </div>
+                <h4 class="fw-bold mb-1">Bundle Cancelled</h4>
+                <p class="text-muted small">Your bundle <strong t-esc="order.name"/> has been cancelled.</p>
+            </div>
+
+            <t t-if="refund_amount and refund_amount > 0">
+                <div class="card border-0 shadow-sm rounded-3 mb-4 mx-auto text-start" style="max-width:400px;">
+                    <div class="card-body p-3">
+                        <div class="text-muted small mb-1">Refund Amount</div>
+                        <div class="fw-bold fs-5" style="color:var(--wink-primary);">
+                            <t t-esc="currency.symbol or currency.name"/>
+                            <t t-esc="'%.2f' % refund_amount"/>
+                        </div>
+                        <t t-if="credit_note">
+                            <div class="text-muted small mt-1">
+                                Credit note <strong t-esc="credit_note.name"/> has been created.
+                                Your finance team will process the refund.
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+            <t t-else="">
+                <p class="text-muted small mb-4">No refund is applicable per the bundle policy.</p>
+            </t>
+
+            <a href="/my/bundles" class="btn btn-sm me-2" style="background:var(--wink-primary);color:#fff;">
+                <i class="fa fa-th-large me-1"/>My Bundles
+            </a>
+            <a href="/my/requests" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-list me-1"/>All Requests
+            </a>
+        </div>
+    </t>
+</template>
+
+<!-- ============================================================
+     P4 — Upgrade Bundle Page
+     ============================================================ -->
+<template id="wink_bundle_upgrade_page" name="Upgrade Bundle">
+    <t t-call="portal.portal_layout">
+        <t t-set="breadcrumbs_searchbar" t-value="True"/>
+        <div class="container py-4" style="max-width:800px;">
+
+            <nav class="mb-3">
+                <ol class="breadcrumb small mb-0">
+                    <li class="breadcrumb-item"><a href="/my">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/my/bundles">My Bundles</a></li>
+                    <li class="breadcrumb-item active">Upgrade Bundle</li>
+                </ol>
+            </nav>
+
+            <t t-if="error">
+                <div class="alert alert-danger small mb-3" role="alert">
+                    <i class="fa fa-exclamation-circle me-1"/><t t-esc="error"/>
+                </div>
+            </t>
+
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header py-3 rounded-top-3" style="background:linear-gradient(135deg,var(--wink-primary) 0%,#003d8a 100%);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa fa-arrow-circle-up fa-lg text-white"/>
+                        <div>
+                            <div class="fw-bold text-white fs-6">Upgrade Bundle Tier</div>
+                            <div class="text-white small opacity-75" t-esc="order.name"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Current tier summary -->
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4"
+                         style="background:rgba(0,85,183,0.06);border:1px solid rgba(0,85,183,0.15);">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;background:var(--wink-primary);">
+                            <i class="fa fa-cube text-white small"/>
+                        </div>
+                        <div>
+                            <div class="text-muted small">Current Tier</div>
+                            <div class="fw-semibold" t-esc="current_tier.name if current_tier else '—'"/>
+                        </div>
+                        <t t-set="renews_date" t-value="order.wink_bundle_end_date or order.next_invoice_date"/>
+                        <t t-if="renews_date">
+                            <div class="ms-auto text-end">
+                                <div class="text-muted small">Renews</div>
+                                <div class="fw-semibold small">
+                                    <t t-esc="renews_date" t-options='{"widget": "date"}'/>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <t t-if="upgrade_tiers">
+                        <h6 class="fw-semibold mb-3">Choose an upgrade tier</h6>
+                        <form t-attf-action="/my/bundles/{{ order.id }}/upgrade" method="post">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <div class="row g-3 mb-4">
+                                <t t-foreach="upgrade_tiers" t-as="ut">
+                                    <div class="col-12 col-md-6">
+                                        <label t-attf-for="tier_{{ ut['tier'].id }}"
+                                               class="wink-tier-choice-card d-block rounded-3 p-3 cursor-pointer h-100"
+                                               style="border:2px solid #dee2e6;cursor:pointer;transition:border-color .2s;">
+                                            <div class="d-flex align-items-start gap-2">
+                                                <input type="radio" name="tier_id"
+                                                       t-attf-id="tier_{{ ut['tier'].id }}"
+                                                       t-att-value="ut['tier'].id"
+                                                       class="mt-1 wink-tier-radio"
+                                                       required="required"/>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold small" t-esc="ut['tier'].name"/>
+                                                    <t t-if="ut['tier'].description">
+                                                        <div class="text-muted small mt-1" t-esc="ut['tier'].description"/>
+                                                    </t>
+                                                    <div class="mt-2 d-flex align-items-center gap-2">
+                                                        <t t-if="ut['charge_amount'] > 0">
+                                                            <span class="badge rounded-pill fw-semibold"
+                                                                  style="background:rgba(0,85,183,0.1);color:var(--wink-primary);">
+                                                                + <t t-esc="currency.symbol or currency.name"/>
+                                                                <t t-esc="'%.2f' % ut['charge_amount']"/> today
+                                                            </span>
+                                                            <span class="text-muted small">
+                                                                (<t t-esc="ut['remaining_days']"/> days remaining)
+                                                            </span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="badge rounded-pill fw-semibold"
+                                                                  style="background:rgba(25,135,84,0.1);color:#198754;">
+                                                                No charge today
+                                                            </span>
+                                                        </t>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <div class="alert alert-info small mb-4" role="alert">
+                                <i class="fa fa-info-circle me-1"/>
+                                Upgrade takes effect <strong>immediately</strong>.
+                                A pro-rata charge for the remaining billing period will be added to your account.
+                                Your existing activated services are preserved.
+                            </div>
+
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="/my/bundles" class="btn btn-outline-secondary btn-sm">Cancel</a>
+                                <button type="submit" class="btn btn-sm fw-semibold"
+                                        style="background:var(--wink-primary);color:#fff;border-color:var(--wink-primary);">
+                                    <i class="fa fa-arrow-circle-up me-1"/>Confirm Upgrade
+                                </button>
+                            </div>
+                        </form>
+                    </t>
+                    <t t-else="">
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa fa-arrow-circle-up fa-2x mb-2 d-block opacity-25"/>
+                            <p class="small mb-0">No upgrade tiers are currently available for your plan.</p>
+                            <p class="small">Please contact your coordinator for assistance.</p>
+                        </div>
+                        <div class="text-center">
+                            <a href="/my/bundles" class="btn btn-outline-secondary btn-sm">Back to My Bundles</a>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+<!-- ============================================================
+     P5 — Downgrade Bundle Page
+     ============================================================ -->
+<template id="wink_bundle_downgrade_page" name="Downgrade Bundle">
+    <t t-call="portal.portal_layout">
+        <t t-set="breadcrumbs_searchbar" t-value="True"/>
+        <div class="container py-4" style="max-width:800px;">
+
+            <nav class="mb-3">
+                <ol class="breadcrumb small mb-0">
+                    <li class="breadcrumb-item"><a href="/my">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/my/bundles">My Bundles</a></li>
+                    <li class="breadcrumb-item active">Downgrade Bundle</li>
+                </ol>
+            </nav>
+
+            <t t-if="error">
+                <div class="alert alert-danger small mb-3" role="alert">
+                    <i class="fa fa-exclamation-circle me-1"/><t t-esc="error"/>
+                </div>
+            </t>
+
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header py-3 rounded-top-3"
+                     style="background:linear-gradient(135deg,#6c757d 0%,#495057 100%);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa fa-arrow-circle-down fa-lg text-white"/>
+                        <div>
+                            <div class="fw-bold text-white fs-6">Downgrade Bundle Tier</div>
+                            <div class="text-white small opacity-75" t-esc="order.name"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+
+                    <!-- Current tier summary -->
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4"
+                         style="background:rgba(108,117,125,0.08);border:1px solid rgba(108,117,125,0.2);">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;background:#6c757d;">
+                            <i class="fa fa-cube text-white small"/>
+                        </div>
+                        <div>
+                            <div class="text-muted small">Current Tier</div>
+                            <div class="fw-semibold" t-esc="current_tier.name if current_tier else '—'"/>
+                        </div>
+                        <t t-set="renews_date" t-value="order.wink_bundle_end_date or order.next_invoice_date"/>
+                        <t t-if="renews_date">
+                            <div class="ms-auto text-end">
+                                <div class="text-muted small">Renews</div>
+                                <div class="fw-semibold small">
+                                    <t t-esc="renews_date" t-options='{"widget": "date"}'/>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+
+                    <t t-if="downgrade_tiers">
+                        <h6 class="fw-semibold mb-3">Choose a lower tier</h6>
+                        <form t-attf-action="/my/bundles/{{ order.id }}/downgrade" method="post">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <div class="row g-3 mb-4">
+                                <t t-foreach="downgrade_tiers" t-as="dt">
+                                    <div class="col-12 col-md-6">
+                                        <label t-attf-for="tier_{{ dt['tier'].id }}"
+                                               class="d-block rounded-3 p-3 h-100"
+                                               style="border:2px solid #dee2e6;cursor:pointer;transition:border-color .2s;">
+                                            <div class="d-flex align-items-start gap-2">
+                                                <input type="radio" name="tier_id"
+                                                       t-attf-id="tier_{{ dt['tier'].id }}"
+                                                       t-att-value="dt['tier'].id"
+                                                       class="mt-1 wink-tier-radio"
+                                                       required="required"/>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold small" t-esc="dt['tier'].name"/>
+                                                    <t t-if="dt['tier'].description">
+                                                        <div class="text-muted small mt-1" t-esc="dt['tier'].description"/>
+                                                    </t>
+                                                    <div class="mt-2 d-flex align-items-center gap-2">
+                                                        <t t-if="dt['credit_amount'] > 0">
+                                                            <span class="badge rounded-pill fw-semibold"
+                                                                  style="background:rgba(25,135,84,0.1);color:#198754;">
+                                                                Credit: <t t-esc="currency.symbol or currency.name"/>
+                                                                <t t-esc="'%.2f' % dt['credit_amount']"/>
+                                                            </span>
+                                                            <span class="text-muted small">
+                                                                (<t t-esc="dt['remaining_days']"/> days)
+                                                            </span>
+                                                        </t>
+                                                        <t t-elif="dt['policy'] == 'none'">
+                                                            <span class="badge rounded-pill fw-semibold"
+                                                                  style="background:rgba(108,117,125,0.1);color:#6c757d;">
+                                                                No credit per policy
+                                                            </span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="badge rounded-pill fw-semibold"
+                                                                  style="background:rgba(108,117,125,0.1);color:#6c757d;">
+                                                                No credit (same period)
+                                                            </span>
+                                                        </t>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <div class="alert alert-warning small mb-4" role="alert">
+                                <i class="fa fa-exclamation-triangle me-1"/>
+                                Downgrade takes effect <strong>immediately</strong>.
+                                Services included in your current tier but not in the new tier will be marked
+                                as expired. Previously activated tasks remain unchanged.
+                            </div>
+
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="/my/bundles" class="btn btn-outline-secondary btn-sm">Cancel</a>
+                                <button type="submit" class="btn btn-warning btn-sm fw-semibold text-dark">
+                                    <i class="fa fa-arrow-circle-down me-1"/>Confirm Downgrade
+                                </button>
+                            </div>
+                        </form>
+                    </t>
+                    <t t-else="">
+                        <div class="text-center py-4 text-muted">
+                            <i class="fa fa-arrow-circle-down fa-2x mb-2 d-block opacity-25"/>
+                            <p class="small mb-0">No downgrade tiers are currently available for your plan.</p>
+                            <p class="small">Please contact your coordinator for assistance.</p>
+                        </div>
+                        <div class="text-center">
+                            <a href="/my/bundles" class="btn btn-outline-secondary btn-sm">Back to My Bundles</a>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</template>
+
+<!-- ============================================================
+     Shared: Change Done (upgrade / downgrade success)
+     ============================================================ -->
+<template id="wink_bundle_change_done" name="Bundle Change Done">
+    <t t-call="portal.portal_layout">
+        <div class="container py-5 text-center" style="max-width:560px;">
+            <div class="mb-4">
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:64px;height:64px;background:rgba(0,85,183,0.1);">
+                    <i class="fa fa-check fa-2x" style="color:var(--wink-primary);"/>
+                </div>
+                <h4 class="fw-bold mb-1">
+                    Bundle <t t-if="change_type == 'upgrade'">Upgraded</t>
+                    <t t-else="">Downgraded</t>
+                </h4>
+                <p class="text-muted small">
+                    Your bundle has been switched to
+                    <strong t-esc="new_tier.name if new_tier else '—'"/>.
+                    Your new entitlements are ready.
+                </p>
+            </div>
+
+            <t t-if="amount and amount > 0">
+                <div class="card border-0 shadow-sm rounded-3 mb-4 mx-auto text-start" style="max-width:420px;">
+                    <div class="card-body p-3">
+                        <div class="text-muted small mb-1" t-esc="amount_label"/>
+                        <div class="fw-bold fs-5" t-attf-style="color:{{ 'var(--wink-primary)' if change_type=='upgrade' else '#198754' }};">
+                            <t t-esc="currency.symbol or currency.name"/>
+                            <t t-esc="'%.2f' % amount"/>
+                        </div>
+                        <t t-if="change_type == 'upgrade' and upgrade_invoice">
+                            <div class="text-muted small mt-1 mb-2">
+                                Invoice <strong t-esc="upgrade_invoice.name"/> has been issued for the pro-rata charge.
+                                Pay it now to complete your upgrade.
+                            </div>
+                            <a t-attf-href="/my/invoices/{{ upgrade_invoice.id }}"
+                               class="btn btn-sm fw-semibold w-100"
+                               style="background:var(--wink-primary);color:#fff;">
+                                <i class="fa fa-credit-card me-1"/>View Invoice &amp; Pay
+                            </a>
+                        </t>
+                        <t t-elif="change_type == 'upgrade'">
+                            <div class="text-muted small mt-1">This charge has been added to your account. Your coordinator will invoice you shortly.</div>
+                        </t>
+                        <t t-else="">
+                            <div class="text-muted small mt-1">A credit note has been issued to your account.</div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+            <a href="/my/bundles" class="btn btn-sm me-2"
+               style="background:var(--wink-primary);color:#fff;">
+                <i class="fa fa-th-large me-1"/>View My Bundles
+            </a>
+            <a href="/my/requests" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-list me-1"/>All Requests
+            </a>
+        </div>
+    </t>
+</template>
+
+</odoo>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EPIC-8: WINK Operations — Coordinator menu -->
+<odoo>
+    <!-- Top-level menu: WINK Operations -->
+    <menuitem id="menu_wink_operations_root"
+              name="WINK Operations"
+              sequence="50"
+              web_icon="kuec_service_catalogue,static/description/icon.png"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- Sub-menu: Request Queue (all portal requests) -->
+    <menuitem id="menu_wink_coordinator_queue"
+              name="Request Queue"
+              parent="menu_wink_operations_root"
+              action="action_wink_coordinator_queue"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- Sub-menu: Needs Pricing (draft/sent, price not confirmed) -->
+    <menuitem id="menu_wink_coordinator_needs_pricing"
+              name="Needs Pricing"
+              parent="menu_wink_operations_root"
+              action="action_wink_coordinator_needs_pricing"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- Sub-menu: Active Subscriptions (state=sale) -->
+    <menuitem id="menu_wink_coordinator_active_subs"
+              name="Active Subscriptions"
+              parent="menu_wink_operations_root"
+              action="action_wink_coordinator_active_subs"
+              sequence="30"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- EPIC-11: Reports sub-menu group -->
+    <menuitem id="menu_wink_reports_root"
+              name="Reports"
+              parent="menu_wink_operations_root"
+              sequence="90"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_catalogue"
+              name="Catalogue"
+              parent="menu_wink_reports_root"
+              action="action_wink_catalogue_report"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_sla"
+              name="Delivery SLA"
+              parent="menu_wink_reports_root"
+              action="action_wink_delivery_sla_report"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_financial"
+              name="Financial (MRR / ARR)"
+              parent="menu_wink_reports_root"
+              action="action_wink_financial_report"
+              sequence="30"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_compliance"
+              name="Compliance"
+              parent="menu_wink_reports_root"
+              action="action_wink_compliance_report"
+              sequence="40"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_cx"
+              name="Customer Experience"
+              parent="menu_wink_reports_root"
+              action="action_wink_cx_report"
+              sequence="50"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+</odoo>

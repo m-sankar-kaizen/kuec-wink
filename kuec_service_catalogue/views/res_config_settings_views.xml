@@ -8,9 +8,11 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app data-string="Wink" string="Wink" name="kuec_service_catalogue" groups="base.group_user">
+                    <!-- ISSUE-006: Company reminder days + global default. -->
                     <block title="Subscription Settings" name="kuec_wink_subscription_setting_container">
                         <setting id="kuec_reminder_days" string="Expiry Reminder Intervals" help="Define default comma-separated days to send expiry reminders before a Wink subscription ends.">
                             <field name="kuec_default_reminder_days"/>
+                            <field name="wink_company_reminder_days"/>
                         </setting>
                     </block>
                 </app>

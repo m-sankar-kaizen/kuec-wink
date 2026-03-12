@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Bundle Change Log — List View (admin/coordinator) -->
+    <record id="wink_bundle_change_log_view_list" model="ir.ui.view">
+        <field name="name">wink.bundle.change.log.list</field>
+        <field name="model">wink.bundle.change.log</field>
+        <field name="arch" type="xml">
+            <list string="Bundle Change History" default_order="date desc" create="false" delete="false">
+                <field name="date"/>
+                <field name="order_id" string="Order"/>
+                <field name="change_type" widget="badge"
+                       decoration-success="change_type == 'upgrade'"
+                       decoration-warning="change_type == 'downgrade'"
+                       decoration-danger="change_type == 'cancel'"/>
+                <field name="from_tier_id" optional="show"/>
+                <field name="to_tier_id" optional="show"/>
+                <field name="refund_amount" optional="show"/>
+                <field name="charge_amount" optional="show"/>
+                <field name="credit_note_id" optional="show"/>
+                <field name="user_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'failed'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Bundle Change Log — Form View -->
+    <record id="wink_bundle_change_log_view_form" model="ir.ui.view">
+        <field name="name">wink.bundle.change.log.form</field>
+        <field name="model">wink.bundle.change.log</field>
+        <field name="arch" type="xml">
+            <form string="Bundle Change Log" create="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="order_id" readonly="1"/>
+                            <field name="change_type" readonly="1"/>
+                            <field name="state" readonly="1"/>
+                            <field name="date" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="from_tier_id" readonly="1"/>
+                            <field name="to_tier_id" readonly="1"/>
+                            <field name="remaining_days" readonly="1"/>
+                            <field name="total_days" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Financial">
+                        <field name="refund_amount" readonly="1"/>
+                        <field name="charge_amount" readonly="1"/>
+                        <field name="credit_note_id" readonly="1"/>
+                        <field name="charge_line_id" readonly="1"/>
+                    </group>
+                    <field name="note" readonly="1" placeholder="Customer reason or internal note..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Menu Action -->
+    <record id="action_wink_bundle_change_log" model="ir.actions.act_window">
+        <field name="name">Bundle Change History</field>
+        <field name="res_model">wink.bundle.change.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'create': False}</field>
+    </record>
+
+    <menuitem
+        id="menu_wink_bundle_change_log"
+        name="Bundle Change History"
+        parent="kuec_service_catalogue.menu_kuec_wink_config_root"
+        action="action_wink_bundle_change_log"
+        sequence="50"/>
+</odoo>

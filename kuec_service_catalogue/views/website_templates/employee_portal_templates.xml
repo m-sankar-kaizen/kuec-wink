@@ -139,24 +139,24 @@
                                 <h5 class="mt-2 mb-3">Personal Information</h5>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Full Name *</label>
-                                        <input type="text" class="form-control" name="name" t-att-value="employee.name if employee else ''" required="True"/>
+                                        <label class="form-label fw-bold" for="emp_name">Full Name *</label>
+                                        <input id="emp_name" type="text" class="form-control" name="name" t-att-value="employee.name if employee else ''" required="True"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Full Name in Arabic</label>
-                                        <input type="text" class="form-control" name="full_name_arabic" t-att-value="employee.full_name_arabic if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_full_name_arabic">Full Name in Arabic</label>
+                                        <input id="emp_full_name_arabic" type="text" class="form-control" name="full_name_arabic" t-att-value="employee.full_name_arabic if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Gender</label>
-                                        <select class="form-select" name="gender">
+                                        <label class="form-label fw-bold" for="emp_gender">Gender</label>
+                                        <select id="emp_gender" class="form-select" name="gender">
                                             <option value=""/>
                                             <option value="male" t-att-selected="employee and employee.gender == 'male'">Male</option>
                                             <option value="female" t-att-selected="employee and employee.gender == 'female'">Female</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Nationality</label>
-                                        <select name="nationality_id" class="form-select">
+                                        <label class="form-label fw-bold" for="emp_nationality_id">Nationality</label>
+                                        <select id="emp_nationality_id" name="nationality_id" class="form-select">
                                             <option value="">Select Country...</option>
                                             <t t-foreach="countries" t-as="c">
                                                 <option t-att-value="c.id" t-att-selected="employee and employee.nationality_id.id == c.id">
@@ -166,16 +166,16 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Date of Birth</label>
-                                        <input type="date" class="form-control" name="date_of_birth" t-att-value="employee.date_of_birth if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_date_of_birth">Date of Birth</label>
+                                        <input id="emp_date_of_birth" type="date" class="form-control" name="date_of_birth" t-att-value="employee.date_of_birth if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Place of Birth</label>
-                                        <input type="text" class="form-control" name="place_of_birth" t-att-value="employee.place_of_birth if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_place_of_birth">Place of Birth</label>
+                                        <input id="emp_place_of_birth" type="text" class="form-control" name="place_of_birth" t-att-value="employee.place_of_birth if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Marital Status</label>
-                                        <select class="form-select" name="marital_status">
+                                        <label class="form-label fw-bold" for="emp_marital_status">Marital Status</label>
+                                        <select id="emp_marital_status" class="form-select" name="marital_status">
                                             <option value=""/>
                                             <option value="single" t-att-selected="employee and employee.marital_status == 'single'">Single</option>
                                             <option value="married" t-att-selected="employee and employee.marital_status == 'married'">Married</option>
@@ -184,48 +184,48 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Mobile Number</label>
-                                        <input type="tel" class="form-control" name="mobile" t-att-value="employee.mobile if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_mobile">Mobile Number</label>
+                                        <input id="emp_mobile" type="tel" class="form-control" name="mobile" t-att-value="employee.mobile if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Email</label>
-                                        <input type="email" class="form-control" name="email" t-att-value="employee.email if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_email">Email</label>
+                                        <input id="emp_email" type="email" class="form-control" name="email" t-att-value="employee.email if employee else ''"/>
                                     </div>
                                 </div>
 
                                 <h5 class="mt-4 mb-3">Passport Details</h5>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Passport Number</label>
-                                        <input type="text" class="form-control" name="passport_number" t-att-value="employee.passport_number if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_passport_number">Passport Number</label>
+                                        <input id="emp_passport_number" type="text" class="form-control" name="passport_number" t-att-value="employee.passport_number if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Place of Issue</label>
-                                        <input type="text" class="form-control" name="passport_place_of_issue" t-att-value="employee.passport_place_of_issue if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_passport_place_of_issue">Place of Issue</label>
+                                        <input id="emp_passport_place_of_issue" type="text" class="form-control" name="passport_place_of_issue" t-att-value="employee.passport_place_of_issue if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Passport Issue Date</label>
-                                        <input type="date" class="form-control" name="passport_issue_date" t-att-value="employee.passport_issue_date if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_passport_issue_date">Passport Issue Date</label>
+                                        <input id="emp_passport_issue_date" type="date" class="form-control" name="passport_issue_date" t-att-value="employee.passport_issue_date if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Passport Expiry Date</label>
-                                        <input type="date" class="form-control" name="passport_expiry_date" t-att-value="employee.passport_expiry_date if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_passport_expiry_date">Passport Expiry Date</label>
+                                        <input id="emp_passport_expiry_date" type="date" class="form-control" name="passport_expiry_date" t-att-value="employee.passport_expiry_date if employee else ''"/>
                                     </div>
                                 </div>
 
                                 <h5 class="mt-4 mb-3">UAE Context</h5>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Current Location</label>
-                                        <select class="form-select" name="current_location">
+                                        <label class="form-label fw-bold" for="emp_current_location">Current Location</label>
+                                        <select id="emp_current_location" class="form-select" name="current_location">
                                             <option value=""/>
                                             <option value="inside_uae" t-att-selected="employee and employee.current_location == 'inside_uae'">Inside UAE</option>
                                             <option value="outside_uae" t-att-selected="employee and employee.current_location == 'outside_uae'">Outside UAE</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">UAE Status</label>
-                                        <select class="form-select" name="uae_status" required="True">
+                                        <label class="form-label fw-bold" for="emp_uae_status">UAE Status</label>
+                                        <select id="emp_uae_status" class="form-select" name="uae_status" required="True">
                                             <option value="none" t-att-selected="employee and employee.uae_status == 'none' or not employee">No Status (Abroad)</option>
                                             <option value="resident" t-att-selected="employee and employee.uae_status == 'resident'">UAE Resident</option>
                                             <option value="citizen" t-att-selected="employee and employee.uae_status == 'citizen'">UAE Citizen</option>
@@ -241,16 +241,16 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">UID Number</label>
-                                        <input type="text" class="form-control" name="uid_number" t-att-value="employee.uid_number if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_uid_number">UID Number</label>
+                                        <input id="emp_uid_number" type="text" class="form-control" name="uid_number" t-att-value="employee.uid_number if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Emirates ID</label>
-                                        <input type="text" class="form-control" name="emirates_id" t-att-value="employee.emirates_id if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_emirates_id">Emirates ID</label>
+                                        <input id="emp_emirates_id" type="text" class="form-control" name="emirates_id" t-att-value="employee.emirates_id if employee else ''"/>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-bold">Visa Expiry D.</label>
-                                        <input type="date" class="form-control" name="visa_expiry_date" t-att-value="employee.visa_expiry_date if employee else ''"/>
+                                        <label class="form-label fw-bold" for="emp_visa_expiry_date">Visa Expiry D.</label>
+                                        <input id="emp_visa_expiry_date" type="date" class="form-control" name="visa_expiry_date" t-att-value="employee.visa_expiry_date if employee else ''"/>
                                     </div>
                                 </div>
 

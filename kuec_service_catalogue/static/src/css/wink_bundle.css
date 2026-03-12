@@ -1,0 +1,906 @@
+/* ============================================================
+   SERVICE DETAIL PAGE — Enhanced UI/UX
+   ============================================================ */
+
+/* Hero header */
+.wink-detail-hero {
+    background: linear-gradient(160deg, #f0f4ff 0%, #eef2fb 60%, #f8faff 100%);
+    border-bottom: 1px solid #dde5f5;
+    padding: 2.25rem 0 2rem;
+}
+
+.wink-detail-breadcrumb .breadcrumb-item a {
+    color: #6b7fa3;
+    font-size: 0.82rem;
+    text-decoration: none;
+}
+.wink-detail-breadcrumb .breadcrumb-item a:hover { color: #1F4E79; }
+.wink-detail-breadcrumb .breadcrumb-item.active { font-size: 0.82rem; color: #9aa5be; }
+.wink-detail-breadcrumb .breadcrumb-item + .breadcrumb-item::before { color: #b0bcd4; }
+
+.wink-detail-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.25;
+}
+
+@media (max-width: 768px) {
+    .wink-detail-title { font-size: 1.5rem; }
+    .wink-detail-hero { padding: 1.5rem 0 1.25rem; }
+}
+
+/* Meta badges */
+.wink-detail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid #dde3ef;
+    background: #fff;
+    color: #374151;
+    white-space: nowrap;
+}
+.wink-badge-retainer {
+    background: #d1fae5 !important;
+    border-color: #a7f3d0 !important;
+    color: #065f46 !important;
+}
+
+/* Main content area */
+.wink-detail-main { padding: 2.5rem 0 4rem; }
+
+/* Section headings with left accent */
+.wink-section-heading {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    padding-left: 0.875rem;
+    border-left: 3px solid #2E75B6;
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+}
+
+/* Prose description */
+.wink-prose { color: #374151; line-height: 1.75; }
+.wink-prose p { margin-bottom: 1rem; }
+
+/* Document list */
+.wink-doc-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.wink-doc-item {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border: 1px solid #eaecf4;
+    border-radius: 10px;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.wink-doc-item:hover {
+    background: #eef3fd;
+    border-color: #c5d5ef;
+}
+.wink-doc-icon-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #e8f0fe;
+    color: #2E75B6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+}
+.wink-doc-name { font-weight: 500; color: #374151; font-size: 0.88rem; }
+.wink-badge-required { background: #fee2e2; color: #991b1b; }
+.wink-badge-optional { background: #f1f5f9; color: #475569; }
+
+/* FAQ accordion */
+.wink-faq-item {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #eaecf4;
+}
+.wink-faq-btn {
+    background: transparent !important;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: #1e293b;
+    padding: 1rem 0;
+    box-shadow: none !important;
+}
+.wink-faq-btn:not(.collapsed) { color: #2E75B6; }
+.wink-faq-body { color: #64748b; font-size: 0.9rem; padding: 0.5rem 0 1rem; }
+
+/* ── Pricing card ── */
+.wink-pricing-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.09);
+    overflow: hidden;
+    top: 100px;
+}
+.wink-pricing-header {
+    padding: 1.5rem 1.5rem 1.25rem;
+    text-align: center;
+    color: #fff;
+}
+.wink-pricing-starting-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.82;
+    margin-bottom: 0.2rem;
+}
+.wink-pricing-header-price {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+.wink-pricing-body { padding: 1.375rem 1.375rem 1.5rem; }
+
+/* Live price display */
+.wink-price-display {
+    text-align: center;
+    padding-bottom: 1.125rem;
+    margin-bottom: 1.125rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+.wink-price-display-amount {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #1F3864;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.1;
+}
+.wink-price-display-period {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+/* Billing period toggle */
+.wink-period-toggle {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+.wink-period-btn {
+    flex: 1;
+    padding: 0.45rem 0.5rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+}
+.wink-period-btn.active {
+    background: #fff;
+    color: #1F3864;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.wink-period-btn:hover:not(.active) { background: rgba(255,255,255,0.6); color: #374151; }
+.wink-period-save-badge {
+    display: inline-block;
+    background: #375623;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 999px;
+    margin-left: 3px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+}
+
+/* Plan section label */
+.wink-plan-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #6b7fa3;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Plan cards */
+.wink-plan-card {
+    display: block;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    background: #fafbfd;
+    position: relative;
+}
+.wink-plan-card:hover {
+    border-color: #7aabdb;
+    background: #f0f6ff;
+}
+.wink-plan-card.selected {
+    border-color: #2E75B6;
+    background: #eef4fd;
+    box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.12);
+}
+.wink-plan-name { font-weight: 800; color: #1F3864; font-size: 1rem; margin-bottom: 4px; }
+.wink-plan-price {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1F3864;
+    font-family: 'IBM Plex Mono', monospace;
+}
+.wink-plan-period { font-size: 0.72rem; color: #64748b; }
+.wink-plan-features { font-size: 0.75rem; color: #475569; }
+.wink-plan-feature-check { color: #2E75B6; font-size: 0.65rem; margin-top: 3px; flex-shrink: 0; }
+
+/* Bundle info box */
+.wink-bundle-info-box {
+    background: #f0f6ff;
+    border: 1px solid #c7ddf5;
+    border-radius: 10px;
+    padding: 0.875rem 1rem;
+}
+
+/* CTA Button */
+.wink-cta-btn {
+    display: block;
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    background: linear-gradient(135deg, #2E75B6 0%, #1F4E79 100%);
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 4px 12px rgba(31, 78, 121, 0.22);
+}
+.wink-cta-btn:hover {
+    opacity: 0.92;
+    box-shadow: 0 6px 18px rgba(31, 78, 121, 0.32);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ============================================================
+   END SERVICE DETAIL PAGE
+   ============================================================ */
+
+/* WINK Bundle Configurator - Enhanced UI/UX */
+
+:root {
+    --wink-bundle-card-bg: #ffffff;
+    --wink-bundle-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 40px rgba(0, 0, 0, 0.03);
+    --wink-bundle-card-hover-shadow: 0 20px 50px rgba(0, 85, 183, 0.1);
+    --wink-bundle-accent: #6366f1;
+    --wink-bundle-border-radius: 12px;
+    --wink-bundle-transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --wink-success: #10b981;
+    --wink-warning: #f59e0b;
+}
+
+/* Main Container - Clean and Minimal */
+.wink-bundle-configurator {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+}
+
+/* ============================
+   BILLING TOGGLE (U-5: Animated)
+   ============================ */
+.wink-billing-toggle-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 3rem;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 8px;
+    width: fit-content;
+    margin-left: auto;
+}
+
+.wink-toggle-label {
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: var(--wink-bundle-transition);
+    user-select: none;
+}
+
+.wink-toggle-label.active {
+    background: white;
+    color: #4338ca;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* U-6: Savings badge in toggle */
+.wink-savings-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    margin-left: 0.5rem;
+    animation: pulseSavings 2s ease-in-out infinite;
+    vertical-align: middle;
+}
+
+@keyframes pulseSavings {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Hide standard slider */
+.wink-switch {
+    display: none;
+}
+
+/* ============================
+   TIER GRID
+   ============================ */
+.wink-tier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.wink-tier-card-premium {
+    background: white;
+    border: 1px solid #f1f5f9;
+    border-radius: var(--wink-bundle-border-radius);
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: var(--wink-bundle-transition);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--wink-bundle-card-shadow);
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.wink-tier-card-premium:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--wink-bundle-card-hover-shadow);
+}
+
+.wink-tier-card-premium.selected {
+    border: 2px solid var(--wink-bundle-accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* U-4: Most Popular card ring */
+.wink-tier-card-premium.wink-most-popular {
+    border: 2px solid var(--wink-warning);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15), var(--wink-bundle-card-shadow);
+}
+
+.wink-tier-card-premium.wink-most-popular.selected {
+    border-color: var(--wink-bundle-accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.wink-tier-card-premium:nth-child(2) {
+    animation-delay: 0.1s;
+}
+.wink-tier-card-premium:nth-child(3) {
+    animation-delay: 0.2s;
+}
+.wink-tier-card-premium:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+/* ============================
+   U-4: MOST POPULAR BADGE
+   ============================ */
+.wink-popular-ribbon {
+    position: absolute;
+    top: -1px;
+    right: 1.5rem;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.4rem 0.8rem 0.35rem;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Ref Icons & Badges */
+.wink-tier-icon-box {
+    color: var(--wink-bundle-accent);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.wink-tier-secondary-badge {
+    position: absolute;
+    top: 2.5rem;
+    right: 2rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--wink-bundle-accent);
+}
+
+.wink-tier-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================
+   U-5: ANIMATED PRICE DISPLAY
+   ============================ */
+.wink-tier-price-wrapper {
+    margin-bottom: 1.5rem;
+}
+
+.wink-tier-amount {
+    font-size: 2.75rem;
+    font-weight: 800;
+    color: #1e293b;
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: opacity 0.2s ease, transform 0.3s ease;
+}
+
+/* U-5: Animated slide-in when price changes */
+.wink-tier-amount.wink-price-changing {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.wink-tier-amount.wink-price-entered {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.wink-tier-price-subtext {
+    font-size: 0.85rem;
+    color: #64748b;
+    display: block;
+}
+
+/* Crossed-out original price per tier (annual discount) */
+.wink-tier-original-amount:not(.d-none) {
+    font-size: 1.25rem;
+    color: #94a3b8;
+    text-decoration: line-through;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+/* U-6: Crossed-out monthly equivalent for annual */
+.wink-price-original {
+    font-size: 1rem;
+    color: #94a3b8;
+    text-decoration: line-through;
+    margin-right: 0.5rem;
+    font-weight: 600;
+}
+
+.wink-price-savings-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    margin-top: 0.35rem;
+}
+
+/* Feature Progression */
+.wink-tier-progression-header {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 1.5rem 0 1rem 0;
+}
+
+.wink-tier-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+    flex-grow: 1;
+}
+
+.wink-tier-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+    color: #475569;
+}
+
+.wink-tier-feature-item i {
+    color: #6366f1;
+    margin-top: 4px;
+    font-size: 0.9rem;
+}
+
+/* Buttons */
+.wink-select-btn {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    transition: var(--wink-bundle-transition);
+    border: none;
+    cursor: pointer;
+}
+
+.wink-btn-primary {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: white;
+}
+
+.wink-btn-primary:hover {
+    background: #4f46e5;
+}
+
+.wink-btn-outline {
+    background: transparent;
+    border: 1.5px solid #e2e8f0;
+    color: #6366f1;
+}
+
+.wink-btn-outline:hover {
+    border-color: #6366f1;
+    background: #f5f3ff;
+}
+
+/* ============================
+   U-1: TIER COMPARISON TABLE
+   ============================ */
+.wink-comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.wink-comparison-table th {
+    background: #f8fafc;
+    padding: 1rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.wink-comparison-table th.wink-popular-col {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-bottom-color: #f59e0b;
+}
+
+.wink-comparison-table td {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.88rem;
+    color: #475569;
+}
+
+.wink-comparison-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.wink-comparison-table tr:hover td {
+    background: #fafbff;
+}
+
+.wink-comparison-check {
+    color: var(--wink-success);
+    font-size: 1rem;
+}
+
+.wink-comparison-cross {
+    color: #cbd5e1;
+    font-size: 0.85rem;
+}
+
+.wink-comparison-qty {
+    display: inline-block;
+    background: #ede9fe;
+    color: var(--wink-bundle-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+/* Toggle for comparison table */
+.wink-compare-toggle {
+    text-align: center;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.wink-compare-toggle a {
+    color: var(--wink-bundle-accent);
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.wink-compare-toggle a:hover {
+    text-decoration: underline;
+}
+
+.wink-comparison-wrapper {
+    display: none;
+    animation: fadeInUp 0.4s ease;
+}
+
+.wink-comparison-wrapper.visible {
+    display: block;
+}
+
+/* Floating Summary Bar */
+.wink-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.06);
+    padding: 1.25rem 0;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border-top: 1px solid #f1f5f9;
+}
+
+.wink-bottom-bar.visible {
+    transform: translateY(0);
+}
+
+/* ============================
+   U-3: ENTITLEMENT DASHBOARD
+   ============================ */
+.wink-bundles-dashboard {
+    padding: 2rem 0;
+}
+
+.wink-bundle-progress-ring {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--wink-bundle-accent);
+}
+
+.wink-entitlement-card {
+    background: white;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: var(--wink-bundle-transition);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.wink-entitlement-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: #e2e8f0;
+}
+
+.wink-entitlement-status {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.wink-entitlement-status.available {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.wink-entitlement-status.activated {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.wink-entitlement-status.expired {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* ============================
+   U-8: ACTIVATION MODAL
+   ============================ */
+.wink-activation-modal .modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.wink-activation-modal .modal-header {
+    background: linear-gradient(135deg, var(--wink-bundle-accent), #4f46e5);
+    color: white;
+    border: none;
+    padding: 1.5rem 2rem;
+}
+
+.wink-activation-modal .modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.wink-activation-modal .modal-body {
+    padding: 2rem;
+}
+
+.wink-activation-modal .modal-footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 1rem 2rem;
+}
+
+.wink-activation-loading {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+}
+
+.wink-activation-loading.active {
+    display: block;
+}
+
+.wink-activation-loading .spinner-border {
+    width: 2rem;
+    height: 2rem;
+    color: var(--wink-bundle-accent);
+}
+
+.wink-activation-result {
+    display: none;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.wink-activation-result.active {
+    display: block;
+}
+
+.wink-activation-result.success i {
+    font-size: 3rem;
+    color: var(--wink-success);
+    margin-bottom: 1rem;
+}
+
+.wink-activation-result.error i {
+    font-size: 3rem;
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+/* ============================
+   ANIMATIONS
+   ============================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* U-5: Price count-up animation helper */
+@keyframes priceSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.wink-price-animate-in {
+    animation: priceSlideDown 0.35s ease forwards;
+}
+
+/* ============================
+   RESPONSIVE (U-7 aspects)
+   ============================ */
+@media (max-width: 768px) {
+    .wink-tier-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .wink-tier-card-premium {
+        padding: 1.75rem 1.5rem;
+    }
+
+    .wink-tier-amount {
+        font-size: 2rem;
+    }
+
+    .wink-bundle-configurator {
+        padding: 1.5rem 1rem;
+    }
+
+    .wink-billing-toggle-wrapper {
+        margin-left: 0;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .wink-comparison-table {
+        font-size: 0.8rem;
+    }
+
+    .wink-comparison-table th,
+    .wink-comparison-table td {
+        padding: 0.5rem;
+    }
+
+    /* Horizontal scroll for comparison table on mobile */
+    .wink-comparison-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

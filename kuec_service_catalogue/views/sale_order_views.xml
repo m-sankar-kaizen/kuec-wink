@@ -1,51 +1,216 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- RET-003, RET-007 -->
 <odoo>
-    <record id="sale_order_form_kuec_plan_change" model="ir.ui.view">
-        <field name="name">sale.order.form.inherit.kuec.plan.change</field>
+    <record id="sale_order_form_kuec_wink" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.kuec.wink</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <!-- Depending on Odoo 18 subscription module status, we place custom actions here. -->
-                <!-- Upgrade -->
-                <button name="%(action_kuec_plan_change_wizard)d"
-                        string="Upgrade Plan"
-                        type="action"
-                        context="{'default_change_type': 'upgrade'}"
-                        groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        invisible="not is_subscription or state not in ['sale', 'done']"/>
-
-                <!-- Downgrade -->
-                <button name="%(action_kuec_plan_change_wizard)d"
-                        string="Downgrade Plan"
-                        type="action"
-                        context="{'default_change_type': 'downgrade'}"
-                        groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        invisible="not is_subscription or state not in ['sale', 'done']"/>
-
-                <!-- Cancel with Refund -->
-                <button name="%(action_kuec_plan_change_wizard)d"
-                        string="Cancel &amp; Refund"
-                        type="action"
-                        context="{'default_change_type': 'cancel'}"
-                        groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        class="btn-danger"
-                        invisible="not is_subscription or state not in ['sale', 'done']"/>
-                <button name="action_kuec_finalize_price" 
-                        string="Finalize &amp; Unlock Payment" 
-                        type="object" 
-                        class="btn-primary" 
+                <button name="action_view_source_subscription"
+                        string="Source Subscription"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="not wink_change_from_order_id"/>
+                <button name="action_view_cancellation_credit_note"
+                        string="Credit Note"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="not wink_cancellation_credit_note_id"/>
+                <button name="action_kuec_finalize_price"
+                        string="Finalize &amp; Unlock Payment"
+                        type="object"
+                        class="btn-primary"
                         groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
                         invisible="state not in ['draft', 'sent'] or wink_price_confirmed"/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="wink_price_confirmed" readonly="1" invisible="not wink_price_confirmed"/>
                 <field name="wink_is_portal_request" invisible="1"/>
-                <field name="wink_source_product_id" readonly="1" invisible="not wink_is_portal_request"/>
-                <field name="wink_requested_start_date" readonly="1" invisible="not wink_is_portal_request"/>
-                <field name="wink_selected_employee_ids" widget="many2many_tags" readonly="1" invisible="not wink_is_portal_request"/>
-                <field name="wink_request_notes" readonly="1" invisible="not wink_is_portal_request"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/list" position="inside">
+                <field name="wink_entitlement_id" column_invisible="1"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <!-- Single organized tab for all Portal/WINK request data -->
+                <page string="Portal Request" name="portal_request" invisible="not wink_is_portal_request">
+                    <group string="Request details" col="2">
+                        <field name="wink_source_product_id" readonly="1"/>
+                        <field name="wink_requested_start_date" readonly="1"/>
+                        <field name="wink_price_confirmed" readonly="1"/>
+                        <field name="wink_bundle_tier_id" readonly="1" invisible="not wink_bundle_tier_id"/>
+                        <field name="wink_recurring_pricing_id" invisible="1"/>
+                        <field name="wink_sale_order_template_id" readonly="1" invisible="not wink_sale_order_template_id"/>
+                        <field name="wink_cancellation_requested" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_requested_date" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_reason" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_effective_date" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_processed_by" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_processed_date" readonly="1" invisible="not wink_cancellation_requested"/>
+                        <field name="wink_cancellation_credit_note_id" readonly="1" invisible="not wink_cancellation_credit_note_id" options="{'no_create': True}"/>
+                        <field name="wink_change_from_order_id" readonly="1" invisible="not wink_change_from_order_id" string="Plan Change From"/>
+                        <field name="wink_change_type" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_proration_credit" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_proration_charge" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_plan_change_effective_date" readonly="1" invisible="not wink_change_type"/>
+                        <field name="wink_request_notes" readonly="1" colspan="2" nolabel="1"/>
+                    </group>
+                    <group string="Employees (standalone)" invisible="wink_entitlement_ids">
+                        <field name="wink_selected_employee_ids" widget="many2many_tags" nolabel="1"/>
+                        <div class="oe_inline">
+                            <button name="action_wink_add_all_employees" type="object"
+                                    string="Add all from directory" class="btn-link"/>
+                        </div>
+                    </group>
+                    <group string="Compliance Documents">
+                        <field name="document_submission_ids" nolabel="1" colspan="2">
+                            <list string="Documents" editable="bottom">
+                                <field name="requirement_name" readonly="1"/>
+                                <field name="task_id" optional="show" options="{'no_create': True}"/>
+                                <field name="attachment_id" column_invisible="True"/>
+                                <field name="filename" readonly="1"/>
+                                <field name="state" readonly="1"
+                                       decoration-success="state == 'approved'"
+                                       decoration-info="state == 'under_review'"
+                                       decoration-warning="state == 'change_required'"
+                                       decoration-danger="state == 'rejected'"/>
+                                <field name="submitted_date" readonly="1"/>
+                                <field name="reviewed_by" readonly="1"/>
+                                <field name="coordinator_notes"/>
+                                <button name="action_view_attachment" string="View" type="object"
+                                        icon="fa-eye" invisible="not attachment_id" class="btn-secondary"/>
+                                <button name="action_download_attachment" string="Download" type="object"
+                                        icon="fa-download" invisible="not attachment_id" class="btn-primary"/>
+                                <button name="action_approve" string="Approve" type="object"
+                                        icon="fa-check" invisible="state != 'under_review'" class="btn-success"/>
+                                <button name="action_request_change" string="Change" type="object"
+                                        icon="fa-refresh" invisible="state != 'under_review'" class="btn-warning"/>
+                                <button name="action_reject" string="Reject" type="object"
+                                        icon="fa-times" invisible="state != 'under_review'" class="btn-danger"/>
+                            </list>
+                        </field>
+                    </group>
+                    <group string="Bundle Entitlements" invisible="not wink_entitlement_ids">
+                        <field name="wink_entitlement_ids" nolabel="1" colspan="2">
+                            <list string="Included services" editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="name"/>
+                                <field name="service_product_id"/>
+                                <field name="wink_selected_employee_ids" widget="many2many_tags" optional="show"/>
+                                <button name="action_add_all_employees" type="object"
+                                        string="Add all" icon="fa-users" title="Add all company employees to this service"/>
+                                <field name="qty_entitled"/>
+                                <field name="qty_activated"/>
+                                <field name="state"
+                                       decoration-success="state == 'fully_activated'"
+                                       decoration-info="state == 'available'"
+                                       widget="badge"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
             </xpath>
         </field>
+    </record>
+
+    <!-- EPIC-8: Coordinator Request Queue — standalone list view -->
+    <record id="wink_coordinator_request_list" model="ir.ui.view">
+        <field name="name">sale.order.wink.coordinator.list</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="Request Queue"
+                  decoration-danger="state in ('draft','sent') and not wink_price_confirmed"
+                  decoration-success="state == 'sale'"
+                  decoration-muted="state == 'cancel'">
+                <field name="name" string="Reference"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="wink_source_product_id" string="Service" optional="show"/>
+                <field name="state" string="Status" widget="badge"
+                       decoration-warning="state in ('draft','sent')"
+                       decoration-success="state == 'sale'"
+                       decoration-danger="state == 'cancel'"/>
+                <field name="wink_price_confirmed" string="Price Confirmed" widget="boolean"
+                       optional="show"/>
+                <field name="wink_task_stage" string="Task Stage" optional="show"/>
+                <field name="amount_total" string="Amount" widget="monetary"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="wink_requested_start_date" string="Start Date" optional="show"/>
+                <field name="date_order" string="Submitted" optional="show"/>
+                <field name="user_id" string="Coordinator" widget="many2one_avatar_user"
+                       optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="wink_price_confirmed" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- EPIC-8: Coordinator queue window action -->
+    <record id="action_wink_coordinator_queue" model="ir.actions.act_window">
+        <field name="name">Request Queue</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[('wink_is_portal_request','=',True)]</field>
+        <field name="context">{'search_default_wink_portal_requests': 1}</field>
+    </record>
+
+    <record id="action_wink_coordinator_needs_pricing" model="ir.actions.act_window">
+        <field name="name">Needs Pricing</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[('wink_is_portal_request','=',True),('wink_price_confirmed','=',False),('state','in',['draft','sent'])]</field>
+    </record>
+
+    <record id="action_wink_coordinator_active_subs" model="ir.actions.act_window">
+        <field name="name">Active Subscriptions</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[('wink_is_portal_request','=',True),('state','=','sale')]</field>
+    </record>
+
+    <!-- EPIC-8: Extend search view with coordinator filters -->
+    <!-- RET-007: Search filter for cancellation requests -->
+    <record id="sale_order_search_inherit_wink" model="ir.ui.view">
+        <field name="name">sale.order.search.inherit.wink</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <filter name="my_sale_orders_filter" position="after">
+                <separator/>
+                <filter string="Portal Requests" name="wink_portal_requests"
+                        domain="[('wink_is_portal_request','=',True)]"/>
+                <filter string="Needs Pricing" name="wink_needs_pricing"
+                        domain="[('wink_is_portal_request','=',True),('wink_price_confirmed','=',False),('state','in',['draft','sent'])]"/>
+                <filter string="Active Orders" name="wink_active_orders"
+                        domain="[('wink_is_portal_request','=',True),('state','=','sale')]"/>
+                <filter string="Retainer Services" name="wink_retainer"
+                        domain="[('wink_is_portal_request','=',True),('wink_source_product_id.delivery_model','=','retainer')]"/>
+                <filter string="Project-Based" name="wink_project"
+                        domain="[('wink_is_portal_request','=',True),('wink_source_product_id.delivery_model','=','project')]"/>
+                <filter string="Cancellation Requested" name="wink_cancellation_requested"
+                        domain="[('wink_cancellation_requested','=',True)]"/>
+                <separator/>
+                <filter string="This Week" name="wink_this_week"
+                        domain="[('date_order','&gt;=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+            </filter>
+            <xpath expr="//group[@expand='0']" position="inside">
+                <filter string="Status" name="wink_group_state" context="{'group_by': 'state'}"/>
+                <filter string="Coordinator" name="wink_group_user" context="{'group_by': 'user_id'}"/>
+                <filter string="Service Type" name="wink_group_product" context="{'group_by': 'wink_source_product_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- RET-007: Server action to mark cancellation as processed -->
+    <record id="action_wink_process_cancellation" model="ir.actions.server">
+        <field name="name">Mark Cancellation Processed</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">records.action_wink_mark_cancellation_processed()
+action = {}</field>
+        <field name="groups_id" eval="[(4, ref('kuec_portal_foundation.group_kuec_coordinator'))]"/>
     </record>
 </odoo>

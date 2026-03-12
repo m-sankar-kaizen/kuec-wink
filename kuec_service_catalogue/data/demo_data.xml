@@ -24,25 +24,27 @@
         <record id="kuec_demo_dept_bd" model="kuec.department">
             <field name="name">Business Development</field>
         </record>
-
-        <!-- ============================================== -->
-        <!-- 2. BUNDLE GROUPS                               -->
-        <!-- ============================================== -->
-        <record id="kuec_demo_bundle_startup" model="kuec.bundle.group">
-            <field name="name">Startup Enablement Packages</field>
-            <field name="allow_upgrade">True</field>
-            <field name="allow_downgrade">True</field>
-            <field name="allow_cancellation">True</field>
-            <field name="credit_routing">wallet</field>
+        
+        <record id="kuec_demo_dept_visa" model="kuec.department">
+            <field name="name">Visa and Insurance</field>
         </record>
         
-        <record id="kuec_demo_bundle_compliance" model="kuec.bundle.group">
-            <field name="name">Corporate Compliance Packages</field>
-            <field name="allow_upgrade">True</field>
-            <field name="allow_downgrade">False</field>
-            <field name="allow_cancellation">True</field>
-            <field name="credit_routing">credit_note</field>
+        <record id="kuec_demo_dept_pro" model="kuec.department">
+            <field name="name">PRO Services</field>
         </record>
+        
+        <record id="kuec_demo_dept_procurement" model="kuec.department">
+            <field name="name">Procurement</field>
+        </record>
+        
+        <record id="kuec_demo_dept_fm" model="kuec.department">
+            <field name="name">Facility Management &amp; General Services</field>
+        </record>
+        
+        <record id="kuec_demo_dept_marketing" model="kuec.department">
+            <field name="name">Marketing &amp; Public Relations</field>
+        </record>
+
 
         <!-- ============================================== -->
         <!-- 3. PRODUCTS (SERVICES)                         -->
@@ -56,10 +58,9 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">1500.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_legal')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae'), ref('kuec_service_catalogue.kuec_eligibility_abroad')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">one_time</field>
             <field name="wink_description"><![CDATA[<p>Professional assistance with company registration procedures across all UAE free zones and mainland authorities. Our team handles documentation, submission, and follow-up on your behalf.</p>]]></field>
@@ -105,10 +106,9 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">3200.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">one_time</field>
             <field name="wink_description"><![CDATA[<p>Comprehensive audit of your IT infrastructure including network security, hardware inventory, software licensing compliance, and risk assessment with a detailed executive report.</p>]]></field>
@@ -141,12 +141,10 @@
             <field name="sale_ok">True</field>
             <field name="available_on_wink">True</field>
             <field name="list_price">2500.00</field>
-            <field name="standard_monthly_price">2500.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_hr')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">flexible</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">30</field>
@@ -174,10 +172,9 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">0.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_legal')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_kuec')])]"/>
             <field name="price_visibility">hidden</field>
             <field name="price_hidden_label">Contact us for pricing</field>
             <field name="request_frequency">one_time</field>
@@ -217,12 +214,10 @@
             <field name="sale_ok">True</field>
             <field name="available_on_wink">True</field>
             <field name="list_price">800.00</field>
-            <field name="standard_monthly_price">800.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_finance')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">flexible</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">14</field>
@@ -257,10 +252,9 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">0.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_bd')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">standalone</field>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
             <field name="price_visibility">hidden</field>
             <field name="price_hidden_label">Request a custom proposal</field>
             <field name="request_frequency">one_time</field>
@@ -282,11 +276,9 @@
             <field name="available_on_wink">True</field>
             <field name="list_price">650.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_hr')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_governmental"/>
             <field name="delivery_model">project</field>
             <field name="commercial_structure">bundled</field>
-            <field name="bundle_group_id" ref="kuec_demo_bundle_compliance"/>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae'), ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">one_time</field>
             <field name="requires_employee_selection">True</field>
@@ -331,24 +323,106 @@
             <field name="sequence">20</field>
         </record>
 
-        <!-- SERVICE 8 -->
+        <!-- SERVICE 8: IT Support (Bundle Retainer with Variants) -->
+        <record id="kuec_demo_attr_tier" model="product.attribute">
+            <field name="name">Tier</field>
+            <field name="create_variant">always</field>
+        </record>
+        <record id="kuec_demo_attr_val_essential" model="product.attribute.value">
+            <field name="name">Essential</field>
+            <field name="attribute_id" ref="kuec_demo_attr_tier"/>
+        </record>
+        <record id="kuec_demo_attr_val_premium" model="product.attribute.value">
+            <field name="name">Premium</field>
+            <field name="attribute_id" ref="kuec_demo_attr_tier"/>
+        </record>
+
+        <!-- The underlying bundle definition -->
+        <record id="kuec_demo_bundle_it" model="wink.bundle">
+            <field name="name">IT Support Packages</field>
+            <field name="description">Managed IT support and infrastructure.</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- Service Product for the Bundle -->
         <record id="kuec_demo_svc_it_support" model="product.template">
             <field name="name">IT Support - Monthly Retainer</field>
             <field name="type">service</field>
             <field name="sale_ok">True</field>
-            <field name="available_on_wink">True</field>
+            <field name="available_on_wink">False</field>
+            <field name="wink_is_bundle">True</field>
             <field name="list_price">1800.00</field>
-            <field name="standard_monthly_price">1800.00</field>
             <field name="department_ids" eval="[(6, 0, [ref('kuec_demo_dept_it')])]"/>
-            <field name="nature_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_service_nature_non_governmental')])]"/>
+            <field name="nature_id" ref="kuec_service_catalogue.kuec_service_nature_non_governmental"/>
             <field name="delivery_model">retainer</field>
             <field name="commercial_structure">bundled</field>
-            <field name="bundle_group_id" ref="kuec_demo_bundle_startup"/>
-            <field name="eligibility_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_all')])]"/>
+            <field name="wink_bundle_id" ref="kuec_demo_bundle_it"/>
             <field name="price_visibility">visible</field>
             <field name="request_frequency">repeated</field>
             <field name="reminder_days_before">7</field>
             <field name="wink_description"><![CDATA[<p>Dedicated monthly IT support retainer covering helpdesk tickets, on-site visits, software troubleshooting, and infrastructure maintenance with guaranteed SLA response times.</p>]]></field>
+        </record>
+
+        <!-- Variant Attribute Lines to generate the physical variants -->
+        <record id="kuec_demo_it_support_attr_line" model="product.template.attribute.line">
+            <field name="product_tmpl_id" ref="kuec_demo_svc_it_support"/>
+            <field name="attribute_id" ref="kuec_demo_attr_tier"/>
+            <field name="value_ids" eval="[(6, 0, [ref('kuec_demo_attr_val_essential'), ref('kuec_demo_attr_val_premium')])]"/>
+        </record>
+
+        <!-- Child Services to include in the bundle -->
+        <record id="kuec_demo_svc_helpdesk" model="product.template">
+            <field name="name">Remote Helpdesk Ticket</field>
+            <field name="type">service</field>
+            <field name="sale_ok">False</field>
+        </record>
+        <record id="kuec_demo_svc_onsite" model="product.template">
+            <field name="name">On-Site Support Visit</field>
+            <field name="type">service</field>
+            <field name="sale_ok">False</field>
+        </record>
+
+        <!-- Bundle Tiers mapping back to variants isn't purely declarable in XML easily directly 
+             if variants are dynamically generated. We will use a python script or default price.
+             Wait, Odoo allows mapping to dynamically created variants using unique lookups, but we can do our best.
+             For demo purposes, we will leave product_variant_id empty and let the UI fallback to standard if not found, 
+             OR we can just provide the Tier definitions and WINK pricing.
+        -->
+        <record id="kuec_demo_tier_essential" model="wink.bundle.tier">
+            <field name="bundle_id" ref="kuec_demo_bundle_it"/>
+            <field name="name">Essential Plan</field>
+            <field name="sequence">10</field>
+            <field name="price">1500.00</field> <!-- fallback legacy price -->
+        </record>
+        <record id="kuec_demo_tier_essential_item1" model="wink.bundle.tier.item">
+            <field name="tier_id" ref="kuec_demo_tier_essential"/>
+            <field name="service_product_id" ref="kuec_demo_svc_helpdesk"/>
+            <field name="qty">10</field>
+            <field name="description">10 Remote Helpdesk Tickets / Month</field>
+        </record>
+
+        <record id="kuec_demo_tier_premium" model="wink.bundle.tier">
+            <field name="bundle_id" ref="kuec_demo_bundle_it"/>
+            <field name="name">Premium Plan</field>
+            <field name="sequence">20</field>
+            <field name="price">3000.00</field>
+        </record>
+        <record id="kuec_demo_tier_premium_item1" model="wink.bundle.tier.item">
+            <field name="tier_id" ref="kuec_demo_tier_premium"/>
+            <field name="service_product_id" ref="kuec_demo_svc_helpdesk"/>
+            <field name="qty">30</field>
+            <field name="description">30 Remote Helpdesk Tickets / Month</field>
+        </record>
+        <record id="kuec_demo_tier_premium_item2" model="wink.bundle.tier.item">
+            <field name="tier_id" ref="kuec_demo_tier_premium"/>
+            <field name="service_product_id" ref="kuec_demo_svc_onsite"/>
+            <field name="qty">4</field>
+            <field name="description">4 On-Site Visits / Month</field>
+        </record>
+
+        <!-- Link IT Support recurring invoice -->
+        <record id="kuec_demo_svc_it_support" model="product.template">
+            <field name="recurring_invoice">True</field>
         </record>
 
         <!-- ============================================== -->
@@ -362,18 +436,16 @@
             <field name="phone">+971 4 123 4567</field>
             <field name="country_id" ref="base.ae"/>
             <field name="employee_directory_enabled">True</field>
-            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_uae')])]"/>
         </record>
         
         <record id="kuec_demo_partner_ku" model="res.partner">
-            <field name="name">Kuwait University - Main Campus</field>
+            <field name="name">Khalifa University - Main Campus</field>
             <field name="is_company">True</field>
             <field name="company_type">company</field>
             <field name="email">services@ku.edu.kw</field>
             <field name="phone">+965 2498 0000</field>
             <field name="country_id" ref="base.kw"/>
             <field name="employee_directory_enabled">True</field>
-            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_ku')])]"/>
         </record>
         
         <record id="kuec_demo_partner_horizon" model="res.partner">
@@ -384,7 +456,6 @@
             <field name="phone">+971 4 987 6543</field>
             <field name="country_id" ref="base.ae"/>
             <field name="employee_directory_enabled">False</field>
-            <field name="eligibility_tag_ids" eval="[(6, 0, [ref('kuec_service_catalogue.kuec_eligibility_abroad')])]"/>
         </record>
 
         <!-- ============================================== -->
@@ -417,7 +488,8 @@
             <field name="name">Sarah Johnson</field>
             <field name="full_name_arabic">سارة جونسون</field>
             <field name="gender">female</field>
-            <field name="nationality_id" ref="base.gb"/>
+            <!-- nationality: base.gb (UK) not in all Odoo bases; use base.ae for demo load -->
+            <field name="nationality_id" ref="base.ae"/>
             <field name="date_of_birth">1988-11-22</field>
             <field name="place_of_birth">London</field>
             <field name="marital_status">single</field>

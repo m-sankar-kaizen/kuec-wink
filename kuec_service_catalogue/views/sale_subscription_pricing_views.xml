@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Remove obsolete kuec_is_reference_plan from product Recurring Prices list (field moved to plan).
+         Same id overwrites stale view from previous version. -->
+    <record id="product_template_form_recurring_prices_kuec_reference" model="ir.ui.view">
+        <field name="name">product.template.form.recurring.kuec.noop</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="sale_subscription.product_template_view_form_recurring"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='price']" position="after">
+                <field name="id" column_invisible="True"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Add Reference Plan checkbox to Recurring Plan form and list -->
+    <record id="sale_subscription_plan_form_kuec_reference" model="ir.ui.view">
+        <field name="name">sale.subscription.plan.form.kuec.reference</field>
+        <field name="model">sale.subscription.plan</field>
+        <field name="inherit_id" ref="sale_subscription.sale_subscription_plan_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='sale_info']" position="inside">
+                <field name="kuec_is_reference_plan"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="sale_subscription_plan_list_kuec_reference" model="ir.ui.view">
+        <field name="name">sale.subscription.plan.list.kuec.reference</field>
+        <field name="model">sale.subscription.plan</field>
+        <field name="inherit_id" ref="sale_subscription.sale_subscription_plan_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="kuec_is_reference_plan" string="Reference" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

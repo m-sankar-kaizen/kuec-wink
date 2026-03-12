@@ -1,51 +1,194 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data noupdate="0">
+        <!-- Force-delete stale mail.template records so every upgrade recreates them clean.
+             This resolves "old template body cached in DB" errors where the upgrade loads new XML
+             but the DB-cached compiled QWeb body is not refreshed. -->
+        <!-- Legacy: delete old WINK-branded templates -->
+        <delete model="mail.template" search="[('name','=','WINK Portal: Welcome Email')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: New Service Request')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: Service Request Confirmation (Customer)')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: Document Review Update')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: Cancellation Request Confirmation (Customer)')]"/>
+        <delete model="mail.template" search="[('name','=','WINK Portal: New Cancellation Request (Coordinator)')]"/>
+        <delete model="mail.template" search="[('name','=','Portal: Welcome Email')]"/>
+        <delete model="mail.template" search="[('name','=','Portal: New Service Request')]"/>
+        <delete model="mail.template" search="[('name','=','Portal: Service Request Confirmation (Customer)')]"/>
+        <delete model="mail.template" search="[('name','=','Portal: Document Review Update')]"/>
+        <delete model="mail.template" search="[('name','=','Portal: Cancellation Request Confirmation (Customer)')]"/>
+        <delete model="mail.template" search="[('name','=','Portal: New Cancellation Request (Coordinator)')]"/>
+
         <!-- Welcome Email Template -->
-        <record id="kuec_portal_welcome_email" model="mail.template">
-            <field name="name">WINK Portal: Welcome Email</field>
+        <record id="kuec_portal_welcome_email_v5" model="mail.template">
+            <field name="name">Portal: Welcome Email</field>
             <field name="model_id" ref="base.model_res_partner"/>
-            <field name="subject">Welcome to WINK — Set Your Password</field>
+            <field name="subject">Welcome — Set Your Password</field>
             <field name="email_to">{{ object.email_formatted }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
-                        Welcome to WINK, <t t-out="object.name"/>!<br/><br/>
-                        Your WINK portal account has been created.<br/>
+                        Welcome, {{ object.name }}!<br/><br/>
+                        Your portal account has been created.<br/>
                         Click the button below to set your password and access your dashboard.<br/><br/>
-                        <div style="text-align: center; margin: 16px 0px 16px 0px;">
-                            <a t-att-href="object.signup_url" style="background-color: #1F4E79; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
-                                Set My Password
-                            </a>
-                        </div>
-                        <br/><br/>
-                        <span style="color: #666666; font-size: 11px;">
-                            This link expires in 24 hours.<br/>
-                            If you did not request this account, please ignore this email.
-                        </span>
-                        <br/><br/>
-                        The WINK Team — KUEC
                     </p>
+                    <div style="text-align: center; margin: 16px 0px 16px 0px;">
+                        <a href="{{ ctx.get('reset_url', '#') }}" style="background-color: #1F4E79; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                            Set My Password
+                        </a>
+                    </div>
+                    <br/><br/>
+                    <span style="color: #666666; font-size: 11px;">
+                        This link expires in 24 hours.<br/>
+                        If you did not request this account, please ignore this email.
+                    </span>
+                    <br/><br/>
+                    The KUEC Team
                 </div>
             </field>
         </record>
 
         <!-- Coordinator Notification Template -->
-        <record id="kuec_coordinator_notification_email" model="mail.template">
-            <field name="name">WINK Portal: New Service Request</field>
+        <record id="kuec_coordinator_notification_email_v5" model="mail.template">
+            <field name="name">Portal: New Service Request</field>
             <field name="model_id" ref="sale.model_sale_order"/>
             <field name="subject">New Service Request — {{ object.name }}</field>
-            <field name="email_to">{{ ','.join(object.env.ref('kuec_service_catalogue.group_kuec_coordinator').users.mapped('email')) }}</field>
+            <field name="email_to">{{ ','.join([e for e in object.env.ref('kuec_portal_foundation.group_kuec_coordinator').users.mapped('email') if e]) }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px;">
                     <p style="margin: 0px; padding: 0px; font-size: 13px;">
                         A new service request has been submitted.<br/><br/>
-                        <b>Customer:</b> <t t-out="object.partner_id.name"/><br/>
-                        <b>Service:</b> <t t-out="object.order_line[0].product_id.name if object.order_line else 'N/A'"/><br/>
-                        <b>Date:</b> <t t-out="object.date_order"/><br/><br/>
+                        <b>Customer:</b> {{ object.partner_id.name }}<br/>
+                        <b>Service:</b> {{ object.order_line[0].product_id.name if object.order_line else 'N/A' }}<br/>
+                        <b>Date:</b> {{ object.date_order }}<br/><br/>
                         <div style="text-align: center; margin: 16px 0px 16px 0px;">
-                            <a t-attf-href="/web#id={{ object.id }}&amp;model=sale.order&amp;view_type=form" style="background-color: #1F4E79; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                            <a t-att-href="'/web#id=' + str(object.id) + '&amp;model=sale.order&amp;view_type=form'" style="background-color: #1F4E79; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
                                 View in Odoo
+                            </a>
+                        </div>
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- Customer: Service Request Confirmation -->
+        <record id="kuec_request_confirmation_template" model="mail.template">
+            <field name="name">Portal: Service Request Confirmation (Customer)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Your service request has been received — {{ object.name }}</field>
+            <field name="email_to">{{ object.partner_id.email_formatted }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear {{ object.partner_id.name }},<br/><br/>
+                        Thank you for submitting your service request. We have received the following details.
+                    </p>
+                    <p style="margin: 12px 0px; font-size: 13px;">
+                        <b>Request:</b> {{ object.name }}<br/>
+                        <b>Service:</b> {{ object.order_line[0].product_id.name if object.order_line else 'N/A' }}<br/>
+                        <b>Date:</b> {{ object.date_order }}
+                    </p>
+                    <p style="margin: 16px 0px 0px 0px; font-size: 13px;">
+                        <b>Next steps:</b> Our team will review your request and contact you if needed. You can track the status from your portal at any time.
+                    </p>
+                    <div style="text-align: center; margin: 16px 0px;">
+                        <a t-att-href="object.env['ir.config_parameter'].sudo().get_param('web.base.url', '') + '/my/requests/' + str(object.id)"
+                           style="background-color: #1F4E79; padding: 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+                            View My Request
+                        </a>
+                    </div>
+                    <br/><br/>
+                    <span style="color: #666666; font-size: 11px;">The KUEC Team</span>
+                </div>
+            </field>
+        </record>
+
+        <!-- Document Review Notification Template -->
+        <record id="kuec_doc_review_notification" model="mail.template">
+            <field name="name">Portal: Document Review Update</field>
+            <field name="model_id" ref="kuec_service_catalogue.model_kuec_document_submission"/>
+            <field name="subject">Document Update: {{ object.requirement_name }}</field>
+            <field name="email_to">{{ object.partner_id.email_formatted }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear {{ object.partner_id.name }},<br/><br/>
+                        Your document <strong>{{ object.requirement_name }}</strong>
+                        for request <strong>{{ object.order_id.name }}</strong>
+                        has been reviewed.<br/><br/>
+                        <strong>Status:</strong>
+                        {{ dict(object._fields['state'].selection).get(object.state, object.state) }}<br/><br/>
+                    </p>
+                    <t t-if="object.coordinator_notes">
+                        <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 12px; margin: 12px 0px;">
+                            <strong style="color: #856404;">Notes from our team:</strong><br/>
+                            <span style="color: #856404;"><t t-out="object.coordinator_notes"/></span>
+                        </div>
+                    </t>
+                    <t t-if="object.state in ('change_required', 'rejected')">
+                        <div style="text-align: center; margin: 16px 0px;">
+                            <a t-att-href="'/my/requests/' + str(object.order_id.id) + '/documents'"
+                               style="background-color: #1F4E79; padding: 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+                                Review &amp; Re-upload
+                            </a>
+                        </div>
+                    </t>
+                    <br/><br/>
+                    <span style="color: #666666; font-size: 11px;">
+                        The KUEC Team
+                    </span>
+                </div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- Customer: Cancellation Request Confirmation -->
+        <record id="kuec_cancellation_confirmation_template" model="mail.template">
+            <field name="name">Portal: Cancellation Request Confirmation (Customer)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Retainer Cancellation Received — {{ object.name }}</field>
+            <field name="email_to">{{ object.partner_id.email_formatted }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Dear {{ object.partner_id.name }},<br/><br/>
+                        We have received your request to cancel the retainer service <strong>{{ object.wink_source_product_id.name }}</strong> (Ref: {{ object.name }}).
+                    </p>
+                    <p style="margin: 12px 0px; font-size: 13px;">
+                        <b>Effective Date:</b> {{ object.wink_cancellation_effective_date }}<br/>
+                        <b>Reason:</b> {{ object.wink_cancellation_reason or 'Not specified' }}
+                    </p>
+                    <p style="margin: 16px 0px 0px 0px; font-size: 13px;">
+                        <b>Next steps:</b> Our team will process your request shortly. You will receive a final confirmation and credit note (if applicable) once processed.
+                    </p>
+                    <div style="text-align: center; margin: 16px 0px;">
+                        <a t-att-href="object.env['ir.config_parameter'].sudo().get_param('web.base.url', '') + '/my/requests/' + str(object.id)"
+                           style="background-color: #1F4E79; padding: 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+                            View Request Details
+                        </a>
+                    </div>
+                    <br/><br/>
+                    <span style="color: #666666; font-size: 11px;">The KUEC Team</span>
+                </div>
+            </field>
+        </record>
+
+        <!-- Coordinator: New Cancellation Request -->
+        <record id="kuec_coordinator_cancellation_notification" model="mail.template">
+            <field name="name">Portal: New Cancellation Request (Coordinator)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Cancellation Requested — {{ object.name }}</field>
+            <field name="email_to">{{ ','.join([e for e in object.env.ref('kuec_portal_foundation.group_kuec_coordinator').users.mapped('email') if e]) }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        A customer has requested to cancel their retainer service.<br/><br/>
+                        <b>Customer:</b> {{ object.partner_id.name }}<br/>
+                        <b>Service:</b> {{ object.wink_source_product_id.name }}<br/>
+                        <b>Effective Date:</b> {{ object.wink_cancellation_effective_date }}<br/>
+                        <b>Reason:</b> {{ object.wink_cancellation_reason or 'N/A' }}<br/><br/>
+                        <div style="text-align: center; margin: 16px 0px 16px 0px;">
+                            <a t-att-href="'/web#id=' + str(object.id) + '&amp;model=sale.order&amp;view_type=form'" style="background-color: #d9534f; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                                Review in Odoo
                             </a>
                         </div>
                     </p>

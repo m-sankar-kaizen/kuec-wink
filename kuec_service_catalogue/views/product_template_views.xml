@@ -5,51 +5,73 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
-            <!-- Add available_on_wink to General Information page under sale part -->
-            <xpath expr="//group[@name='sale']" position="inside">
-                <group invisible="type != 'service' or not sale_ok">
-                    <field name="available_on_wink" widget="boolean_toggle"/>
-                </group>
+            <!-- Move Available on Wink and Is Bundle to the top options div -->
+            <xpath expr="//div[@name='options']" position="inside">
+                <span class="d-inline-block">
+                    <field name="available_on_wink"/>
+                    <label for="available_on_wink"/>
+                </span>
+                <span class="d-inline-block">
+                    <field name="wink_is_bundle"/>
+                    <label for="wink_is_bundle"/>
+                </span>
             </xpath>
 
-            <!-- Add Wink and Required Documents tabs inside the notebook -->
+            <!-- WF-BUG-001: Wink and Required Documents only for sellable services; hide when Can be Sold unchecked or type != service -->
             <xpath expr="//notebook" position="inside">
-                <page string="Wink" name="wink_tab" invisible="not available_on_wink">
+                <page string="Wink" name="wink_tab" invisible="not available_on_wink or type != 'service' or not sale_ok">
                     <group name="wink_core_settings">
                         <separator string="Classification"/>
                         <field name="department_ids" widget="many2many_tags"/>
-                        <field name="nature_ids" widget="many2many_tags"/>
+                        <field name="nature_id"/>
 
                         <separator string="Delivery"/>
-                        <field name="delivery_model" widget="radio"/>
-                        <field name="request_frequency" widget="radio"/>
-                        <field name="project_template_id" invisible="delivery_model != 'project'"/>
-                        <separator string="Commercial"/>
-                        <field name="commercial_structure" widget="radio"/>
-                        <field name="wink_bundle_id" invisible="commercial_structure != 'bundled'"/>
+                        <field name="delivery_model" widget="radio" readonly="wink_is_bundle or commercial_structure == 'bundled'"
+                               help="Project: one-time delivery with a defined scope. Retainer: recurring subscription-based delivery."/>
+                        <field name="request_frequency" widget="radio" invisible="wink_is_bundle"
+                               help="One Time: customer can request only once. Repeated: customer can request multiple times."/>
+                        <field name="project_template_id" invisible="delivery_model != 'project'"
+                               help="Odoo project template used to auto-create projects on order confirmation."/>
+                        <separator string="Commercial" invisible="wink_is_bundle"/>
+                        <field name="commercial_structure" widget="radio" invisible="wink_is_bundle"
+                               help="Standalone: sold independently. Bundled: only available inside a bundle. Flexible: can be standalone or bundled."/>
+                        <field name="wink_bundle_id" invisible="commercial_structure != 'bundled' or not wink_is_bundle"
+                               help="Link this product to a bundle package so tiers and services are configured there."/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
                         <field name="price_visibility" required="available_on_wink"/>
                         <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
                         <field name="wink_payment_term_id" invisible="delivery_model == 'retainer'"/>
                         <separator string="Portal Configuration"/>
-                        <field name="requires_employee_selection"/>
+                        <field name="requires_employee_selection" invisible="wink_is_bundle"/>
                         <field name="reminder_days_before"/>
+                        <separator string="Tags &amp; Ribbon (Portal)"/>
+                        <field name="product_tag_ids" widget="many2many_tags" placeholder="Tags shown on portal cards and detail"/>
+                        <field name="wink_ribbon_tag_id" placeholder="Select a ribbon tag"/>
+                    </group>
+                    <group string="Tags &amp; Ribbon" name="wink_tags_help">
+                        <div class="text-muted">
+                            <p class="mb-1"><strong>Tags:</strong> Shown as badges on the service catalogue and detail page.</p>
+                            <p class="mb-0"><strong>Ribbon:</strong> Choose a single ribbon tag in the field above. Ribbon tags are defined in Product Catalog → Product Tags by enabling \"Show as Ribbon on Website\".</p>
+                        </div>
                     </group>
 
-                    <group string="Service Content &amp; Media" name="wink_content">
+                    <separator string="Service Content &amp; Media"/>
+                    <group string="Service Overview (Portal)" name="wink_content_desc" col="1">
                         <field name="wink_description" nolabel="1" placeholder="Enter the rich text description that will appear on the portal service page..."/>
+                    </group>
+                    <group string="Service FAQs" name="wink_content_faq" col="1">
                         <field name="wink_faq_ids" nolabel="1">
-                            <list editable="bottom">
+                            <list string="Questions &amp; Answers" editable="bottom" create="1" delete="1">
                                 <field name="sequence" widget="handle"/>
                                 <field name="question"/>
-                                <field name="answer"/>
+                                <field name="answer" widget="html"/>
                             </list>
                         </field>
                     </group>
                 </page>
 
-                <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink">
+                <page string="Required Documents" name="required_documents_tab" invisible="not available_on_wink or type != 'service' or not sale_ok or wink_is_bundle">
                     <field name="kuec_document_ids" widget="one2many">
                         <list string="Documents" editable="bottom">
                             <field name="sequence" widget="handle"/>
@@ -71,7 +93,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='categ_id']" position="after">
                 <field name="department_ids" string="Wink Department"/>
-                <field name="nature_ids" string="Wink Service Nature"/>
+                <field name="nature_id" string="Wink Service Nature"/>
             </xpath>
             <xpath expr="//filter[@name='filter_to_sell']" position="after">
                 <separator/>
@@ -79,7 +101,7 @@
             </xpath>
             <xpath expr="//filter[@name='categ_id']" position="after">
                 <filter string="Wink Department" name="groupby_department" context="{'group_by': 'department_ids'}"/>
-                <filter string="Wink Service Nature" name="groupby_nature" context="{'group_by': 'nature_ids'}"/>
+                <filter string="Wink Service Nature" name="groupby_nature" context="{'group_by': 'nature_id'}"/>
             </xpath>
         </field>
     </record>
