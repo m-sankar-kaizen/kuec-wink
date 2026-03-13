@@ -227,6 +227,17 @@
                         </div>
 
                         <div class="col-md-9 pt-3 pt-md-0 space-y-6">
+                            <!-- Fix 4: Packages Only toggle -->
+                            <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                                <a href="/services"
+                                   t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if not bundles_only else 'btn-outline-secondary'}">
+                                    All Services
+                                </a>
+                                <a t-attf-href="/services?bundles_only=1"
+                                   t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if bundles_only else 'btn-outline-secondary'}">
+                                    <i class="fa fa-th-large me-1"/> Packages Only
+                                </a>
+                            </div>
                             <p class="text-muted small mb-3">Showing <t t-esc="len(products)"/> service<t t-if="len(products) != 1">s</t></p>
                             <div class="row g-4" id="wink-services-grid">
                                 <t t-if="products">
