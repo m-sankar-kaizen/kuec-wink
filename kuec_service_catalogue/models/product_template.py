@@ -88,6 +88,7 @@ class ProductTemplate(models.Model):
             self.recurring_invoice = True
             self.commercial_structure = 'bundled'
             self.available_on_wink = True
+            self.request_frequency = 'repeated'
 
     @api.constrains('wink_is_bundle')
     def _check_bundle_delivery_model(self):
@@ -109,6 +110,7 @@ class ProductTemplate(models.Model):
             if vals.get('wink_is_bundle'):
                 vals['delivery_model'] = 'retainer'
                 vals['recurring_invoice'] = True
+                vals.setdefault('request_frequency', 'repeated')
             # Sub-services (bundled but not bundle template) must never appear in catalog
             if vals.get('commercial_structure') == 'bundled' and not vals.get('wink_is_bundle'):
                 vals['available_on_wink'] = False
@@ -120,6 +122,8 @@ class ProductTemplate(models.Model):
         if vals.get('wink_is_bundle'):
             vals['delivery_model'] = 'retainer'
             vals['recurring_invoice'] = True
+            if 'request_frequency' not in vals:
+                vals['request_frequency'] = 'repeated'
         # When commercial_structure is set to 'bundled' and product is not a bundle template
         if vals.get('commercial_structure') == 'bundled':
             for rec in self:

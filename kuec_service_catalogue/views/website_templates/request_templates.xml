@@ -385,12 +385,6 @@
                                     <span class="wink-review-label"><i class="fa fa-calendar-o me-1"/>Start Date</span>
                                     <span class="wink-review-value"><t t-esc="wizard_draft.get('start_date') or '—'"/></span>
                                 </div>
-                                <t t-if="wizard_draft.get('notes')">
-                                    <div class="wink-review-row">
-                                        <span class="wink-review-label"><i class="fa fa-comment-o me-1"/>Notes</span>
-                                        <span class="wink-review-value"><t t-esc="wizard_draft.get('notes')"/></span>
-                                    </div>
-                                </t>
                                 <t t-if="review_display.get('employee_names')">
                                     <div class="wink-review-row">
                                         <span class="wink-review-label"><i class="fa fa-users me-1"/>Employees</span>
@@ -1105,28 +1099,19 @@
                             </script>
                         </div>
 
-                        <!-- Common Fields: Notes Only for Bundles (Start Date hidden/default today) -->
+                        <!-- Common Fields: Request Date (readonly, auto today) -->
                         <div class="row g-3 mt-4 pt-3 border-top">
                             <div t-if="not wink_is_bundle" class="col-md-6">
-                                <label class="form-label text-danger fw-bold" for="request_start_date">
-                                    <i class="fa fa-calendar me-1"/> Requested Start Date *
+                                <label class="form-label fw-bold" for="request_start_date">
+                                    <i class="fa fa-calendar me-1 text-muted"/> Request Date
                                 </label>
-                                <input id="request_start_date" type="date" class="form-control form-control-lg border-2" 
-                                       name="start_date" required="required"
-                                       t-att-value="post.get('start_date') or ''"/>
-                                <div class="form-text">When would you like this service to begin?</div>
+                                <input id="request_start_date" type="date" class="form-control form-control-lg border-2 bg-light"
+                                       name="start_date" readonly="readonly"
+                                       t-att-value="post.get('start_date') or datetime.date.today().strftime('%Y-%m-%d')"/>
+                                <div class="form-text">Date this request is being submitted.</div>
                             </div>
-                            <!-- Hidden input for bundles to ensure start_date is sent if needed, but logic also in controller -->
+                            <!-- Hidden input for bundles -->
                             <input t-if="wink_is_bundle" type="hidden" name="start_date" t-att-value="datetime.date.today().strftime('%Y-%m-%d')"/>
-
-                            <div class="col-12">
-                                <label class="form-label fw-bold" for="request_notes">
-                                    <i class="fa fa-sticky-note me-1 text-muted"/> Special Requirements / Notes
-                                </label>
-                                <textarea id="request_notes" class="form-control border-2" name="notes" rows="4" 
-                                          placeholder="Any specific requirements, preferences, or additional context for this request..."
-                                          t-esc="post.get('notes') or ''"/>
-                            </div>
                         </div>
 
                         <!-- Employee selection — conditional (hidden when step==1, shown when no step or step==2) -->
@@ -1540,6 +1525,12 @@
                                             <td class="ps-4 py-4 text-muted fw-bold">REQUESTED START</td>
                                             <td class="pe-4 py-4 fw-semibold text-end text-primary"><i class="fa fa-calendar-check-o me-1"/> <t t-esc="order.wink_requested_start_date or 'N/A'"/></td>
                                         </tr>
+                                        <t t-if="order.recurrence_id">
+                                        <tr class="border-bottom">
+                                            <td class="ps-4 py-4 text-muted fw-bold">BILLING CYCLE</td>
+                                            <td class="pe-4 py-4 fw-semibold text-end text-primary"><i class="fa fa-repeat me-1"/> <t t-esc="order.recurrence_id.name"/></td>
+                                        </tr>
+                                        </t>
                                         <tr class="border-bottom">
                                             <td class="ps-4 py-4 text-muted fw-bold">STATUS</td>
                                             <td class="pe-4 py-4 fw-semibold text-end">

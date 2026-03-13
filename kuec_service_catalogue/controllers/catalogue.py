@@ -12,7 +12,10 @@ class WinkCatalogue(http.Controller):
     @http.route(['/services'], type='http', auth='public', website=True, sitemap=True)
     def service_catalogue(self, **kwargs):
         Product = request.env['product.template'].sudo()
-        
+
+        # Fix 4: "Packages Only" toggle
+        bundles_only = kwargs.get('bundles_only') == '1'
+
         # Base domain — all users see all available services
         # Exclude child/sub-services (commercial_structure='bundled' but NOT a bundle template).
         # Those are only accessible inside a bundle activation, not as standalone catalog items.
@@ -24,6 +27,9 @@ class WinkCatalogue(http.Controller):
             ('wink_is_bundle', '=', True),
             ('commercial_structure', '!=', 'bundled'),
         ]
+
+        if bundles_only:
+            domain.append(('wink_is_bundle', '=', True))
 
         # URL Filters
         department_ids = request.httprequest.args.getlist('department_ids')
@@ -101,6 +107,7 @@ class WinkCatalogue(http.Controller):
             'active_filter_count': active_filter_count,
             'search': search,
             'short_descs': short_descs,
+            'bundles_only': bundles_only,
         }
         return request.render('kuec_service_catalogue.wink_catalogue_page', values)
 
