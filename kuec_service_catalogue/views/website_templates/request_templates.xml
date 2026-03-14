@@ -305,21 +305,51 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
 
-                    <!-- Wizard progress indicator — 2 steps for standalone, original for bundles -->
+                    <!-- Full 6-step journey preview for standalone (non-bundle) -->
                     <t t-if="step and not wink_is_bundle">
-                        <div class="card border-0 shadow-sm mb-4 px-4 py-3">
-                            <div style="display:flex;align-items:flex-start;">
-                                <!-- Step 1: Service (done) -->
-                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:60px;">
-                                    <div class="wink-step-node wink-step-done"><i class="fa fa-check"/></div>
-                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;color:var(--wink-primary);">Service</small>
+                        <div class="card border-0 shadow-sm mb-4 px-3 py-3">
+                            <style>
+                                .wink-step-node{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+                                .wink-step-done{background:var(--wink-primary);color:#fff;}
+                                .wink-step-active{border:3px solid var(--wink-primary);color:var(--wink-primary);background:#fff;animation:wink-pulse 1.5s ease-in-out infinite;}
+                                .wink-step-future{background:#dee2e6;color:#adb5bd;}
+                                @keyframes wink-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,85,183,0.3);}50%{box-shadow:0 0 0 6px rgba(0,85,183,0);}}
+                            </style>
+                            <div style="display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:4px;">
+                                <!-- 1: Initiated (active — filling form) -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:56px;">
+                                    <div class="wink-step-node wink-step-active"><span>1</span></div>
+                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.6rem;white-space:nowrap;color:var(--wink-primary);">Initiated</small>
                                 </div>
-                                <!-- Connector -->
-                                <div style="flex:1;height:3px;margin-top:16px;background:var(--wink-primary);"/>
-                                <!-- Step 2: Submit (active) -->
-                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
-                                    <div class="wink-step-node wink-step-active"><span>2</span></div>
-                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;color:var(--wink-primary);">Submit</small>
+                                <div style="flex:1;height:3px;margin-top:15px;min-width:8px;background:#dee2e6;"/>
+                                <!-- 2: Submitted -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:58px;">
+                                    <div class="wink-step-node wink-step-future"><span>2</span></div>
+                                    <small class="mt-1 text-center" style="font-size:0.6rem;white-space:nowrap;color:#adb5bd;">Submitted</small>
+                                </div>
+                                <div style="flex:1;height:3px;margin-top:15px;min-width:8px;background:#dee2e6;"/>
+                                <!-- 3: Processing -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:62px;">
+                                    <div class="wink-step-node wink-step-future"><span>3</span></div>
+                                    <small class="mt-1 text-center" style="font-size:0.6rem;white-space:nowrap;color:#adb5bd;">Processing</small>
+                                </div>
+                                <div style="flex:1;height:3px;margin-top:15px;min-width:8px;background:#dee2e6;"/>
+                                <!-- 4: Ready for Payment -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:68px;">
+                                    <div class="wink-step-node wink-step-future"><span>4</span></div>
+                                    <small class="mt-1 text-center" style="font-size:0.6rem;color:#adb5bd;">Ready for<br/>Payment</small>
+                                </div>
+                                <div style="flex:1;height:3px;margin-top:15px;min-width:8px;background:#dee2e6;"/>
+                                <!-- 5: Confirmed -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:60px;">
+                                    <div class="wink-step-node wink-step-future"><span>5</span></div>
+                                    <small class="mt-1 text-center" style="font-size:0.6rem;white-space:nowrap;color:#adb5bd;">Confirmed</small>
+                                </div>
+                                <div style="flex:1;height:3px;margin-top:15px;min-width:8px;background:#dee2e6;"/>
+                                <!-- 6: Completed -->
+                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:58px;">
+                                    <div class="wink-step-node wink-step-future"><span>6</span></div>
+                                    <small class="mt-1 text-center" style="font-size:0.6rem;white-space:nowrap;color:#adb5bd;">Completed</small>
                                 </div>
                             </div>
                         </div>
@@ -654,7 +684,7 @@
 
                     <!-- Request form: single combined screen (step 1 or legacy) -->
                     <t t-if="step != 2">
-                    <form method="post" action="/my/requests/submit">
+                    <form method="post" action="/my/requests/submit" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                         <input type="hidden" name="product_id" t-att-value="product.id"/>
                         <input t-if="selected_plan and not wink_is_bundle" type="hidden" name="selected_pricing_id" t-att-value="selected_plan['pricing_id']"/>
@@ -1085,80 +1115,138 @@
                             <input t-if="wink_is_bundle" type="hidden" name="start_date" t-att-value="datetime.date.today().strftime('%Y-%m-%d')"/>
                         </div>
 
-                        <!-- Employee selection — shown inline for standalone services that require it -->
-                        <div t-if="product.requires_employee_selection and not wink_is_bundle" class="mt-4">
-                            <h5 class="border-bottom pb-2"><i class="fa fa-users me-1 text-muted"/> Select Employees for This Service</h5>
-                            <t t-if="employees">
-                                <div class="mb-2 d-flex gap-2 flex-wrap">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm wink-select-all-employees" data-target="employee_ids">Select all</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm wink-deselect-all-employees" data-target="employee_ids">Deselect all</button>
+                        <!-- Employee selection — clean card grid for standalone services -->
+                        <t t-if="product.requires_employee_selection and not wink_is_bundle">
+                            <div class="mt-4 pt-3 border-top">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h6 class="fw-semibold mb-0"><i class="fa fa-users me-2" style="color:var(--wink-primary);"/>Select Employees</h6>
+                                    <div class="d-flex gap-3">
+                                        <button type="button" class="btn btn-link btn-sm p-0 fw-semibold wink-select-all-employees" data-target="employee_ids"
+                                                style="color:var(--wink-primary);font-size:0.8rem;">Select all</button>
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-muted wink-deselect-all-employees" data-target="employee_ids"
+                                                style="font-size:0.8rem;">Deselect all</button>
+                                    </div>
                                 </div>
-                                <div class="row g-2" id="employee_ids_container">
-                                    <t t-foreach="employees" t-as="emp">
-                                        <div class="col-md-6">
-                                            <div class="form-check border rounded p-3">
-                                                <input type="checkbox" class="form-check-input" t-att-id="'request_emp_%s' % emp.id" name="employee_ids" t-att-value="emp.id"/>
-                                                <label class="form-check-label" t-att-for="'request_emp_%s' % emp.id">
-                                                    <strong><t t-esc="emp.name"/></strong><br/>
-                                                    <small class="text-muted"><t t-esc="emp.passport_number or 'No passport on file'"/></small>
+                                <t t-if="employees">
+                                    <div class="row g-2" id="employee_ids_container">
+                                        <t t-foreach="employees" t-as="emp">
+                                            <t t-set="initials_r" t-value="''.join([(n[0] or '').upper() for n in (emp.name or '').split()[:2]]) or '?'"/>
+                                            <div class="col-md-6">
+                                                <label class="d-block mb-0" t-attf-for="request_emp_#{emp.id}" style="cursor:pointer;">
+                                                    <div class="border rounded-3 p-3 d-flex align-items-center gap-3 emp-card-hover"
+                                                         style="transition:border-color 0.15s,background 0.15s;">
+                                                        <input type="checkbox" class="form-check-input flex-shrink-0 wink-emp-inline-cb"
+                                                               t-att-id="'request_emp_%s' % emp.id"
+                                                               name="employee_ids" t-att-value="emp.id"
+                                                               style="margin-top:0;width:18px;height:18px;cursor:pointer;"/>
+                                                        <span class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
+                                                              style="width:36px;height:36px;background:var(--wink-primary);font-size:0.75rem;">
+                                                            <t t-esc="initials_r"/>
+                                                        </span>
+                                                        <div class="flex-grow-1 min-width-0">
+                                                            <div class="fw-semibold small text-truncate"><t t-esc="emp.name"/></div>
+                                                            <div class="text-muted" style="font-size:0.72rem;">
+                                                                <t t-esc="emp.passport_number or 'No passport on file'"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </label>
                                             </div>
-                                        </div>
-                                    </t>
-                                </div>
-                            </t>
-                            <t t-else="">
-                                <div class="alert alert-warning">
-                                    No employees found in your directory.
-                                    <a href="/my/employees">Add employees here</a> before submitting this request.
-                                </div>
-                            </t>
-                        </div>
-
-                        <!-- Required Documents Info (informational — upload happens on the request page after submission) -->
-                        <t t-if="not wink_is_bundle and product.kuec_document_ids">
-                            <div class="mt-4 pt-3 border-top">
-                                <h6 class="fw-semibold mb-1"><i class="fa fa-paperclip me-1" style="color:var(--wink-primary);"/>Required Documents</h6>
-                                <p class="text-muted small mb-3">The following documents are needed. You can upload them from your request page after submission.</p>
-                                <ul class="list-unstyled mb-0">
-                                    <t t-foreach="product.kuec_document_ids.sorted('sequence')" t-as="doc">
-                                        <li class="d-flex align-items-center gap-2 mb-2 small">
-                                            <i class="fa fa-circle" style="font-size:0.35rem;color:var(--wink-primary);flex-shrink:0;margin-top:5px;"/>
-                                            <span><t t-esc="doc.name"/></span>
-                                            <span t-if="doc.requirement == 'required'" class="badge rounded-pill ms-1" style="background:rgba(220,53,69,0.1);color:#dc3545;font-size:0.6rem;padding:2px 6px;">Required</span>
-                                            <span t-else="" class="badge rounded-pill ms-1" style="background:rgba(108,117,125,0.1);color:#6c757d;font-size:0.6rem;padding:2px 6px;">Optional</span>
-                                        </li>
-                                    </t>
-                                </ul>
+                                        </t>
+                                    </div>
+                                    <a href="/my/employees" class="small mt-2 d-inline-block" style="color:var(--wink-primary);">
+                                        <i class="fa fa-plus me-1"/>Add employee
+                                    </a>
+                                </t>
+                                <t t-else="">
+                                    <div class="alert alert-warning py-2 small">
+                                        No employees in your directory.
+                                        <a href="/my/employees" class="fw-semibold">Add employees</a> before submitting.
+                                    </div>
+                                </t>
                             </div>
                         </t>
 
-                        <!-- T&C acceptance checkbox -->
-                        <div class="form-check mt-4 mb-3">
-                            <input type="checkbox" class="form-check-input" id="wink-tnc-check"/>
-                            <label class="form-check-label small text-muted" for="wink-tnc-check">
-                                I have read and agree to the <a href="/terms" target="_blank">Terms &amp; Conditions</a> and confirm I am authorised to submit this request.
-                            </label>
-                        </div>
-                        <div class="d-flex gap-2 mb-5">
-                            <a t-attf-href="/services/#{product.id}" class="btn btn-outline-secondary rounded-xl">Back</a>
-                            <button type="submit" id="wink-request-submit-btn" class="btn btn-primary rounded-xl touch-target" disabled="disabled" style="background:var(--wink-primary); border-color:var(--wink-primary)">
-                                <i class="fa fa-paper-plane me-1"/>Submit Request
-                            </button>
+                        <!-- Required Documents — actual upload inputs (files attached to order on submit) -->
+                        <t t-if="not wink_is_bundle and product.kuec_document_ids">
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="fw-semibold mb-1"><i class="fa fa-paperclip me-2" style="color:var(--wink-primary);"/>Required Documents</h6>
+                                <p class="text-muted small mb-3">Upload any documents you have ready. You can also add more after submission.</p>
+                                <div class="d-flex flex-column gap-3">
+                                    <t t-foreach="product.kuec_document_ids.sorted('sequence')" t-as="doc">
+                                        <div class="rounded-3 border p-3 d-flex align-items-center gap-3 flex-wrap"
+                                             style="background:#fafafa;">
+                                            <div class="flex-grow-1">
+                                                <span class="fw-semibold small"><t t-esc="doc.name"/></span>
+                                                <span t-if="doc.requirement == 'required'" class="badge ms-2 rounded-pill"
+                                                      style="background:rgba(220,53,69,0.1);color:#dc3545;font-size:0.65rem;">Required</span>
+                                                <span t-else="" class="badge ms-2 rounded-pill"
+                                                      style="background:rgba(108,117,125,0.1);color:#6c757d;font-size:0.65rem;">Optional</span>
+                                            </div>
+                                            <input type="hidden" t-att-name="'doc_req_name_%s' % doc.id" t-att-value="doc.name"/>
+                                            <label class="btn btn-sm btn-outline-primary rounded-pill mb-0 flex-shrink-0" style="cursor:pointer;font-size:0.8rem;">
+                                                <i class="fa fa-paperclip me-1"/>Attach files
+                                                <input type="file" t-att-name="'doc_file_%s' % doc.id" multiple="multiple" style="display:none;"
+                                                       onchange="(function(inp){
+                                                           var lbl=inp.parentElement.querySelector('.wink-file-count');
+                                                           if(lbl)lbl.textContent=inp.files.length>0?(inp.files.length+' file(s)'):'';
+                                                       })(this)"/>
+                                            </label>
+                                            <small class="wink-file-count text-success" style="font-size:0.75rem;min-width:60px;text-align:right;"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- T&C + Submit -->
+                        <div class="mt-4 pt-3 border-top">
+                            <div class="form-check mb-4 p-3 rounded-3 border" style="background:#f8f9fa;">
+                                <input type="checkbox" class="form-check-input" id="wink-tnc-check"/>
+                                <label class="form-check-label ms-2 small" for="wink-tnc-check">
+                                    I have read and agree to the
+                                    <a href="/terms" target="_blank" class="fw-semibold" style="color:var(--wink-primary);">Terms &amp; Conditions</a>
+                                    and confirm I am authorised to submit this request.
+                                </label>
+                            </div>
+                            <div class="d-flex gap-3 mb-4">
+                                <a t-attf-href="/services/#{product.id}" class="btn btn-outline-secondary rounded-pill px-4">
+                                    <i class="fa fa-arrow-left me-1"/>Back
+                                </a>
+                                <button type="submit" id="wink-request-submit-btn"
+                                        class="btn btn-lg fw-bold rounded-pill px-5 shadow-sm"
+                                        disabled="disabled"
+                                        style="background:var(--wink-primary);border:0;color:#fff;opacity:0.5;pointer-events:none;">
+                                    <i class="fa fa-paper-plane me-2"/>Submit Request
+                                </button>
+                            </div>
                         </div>
                     </form>
+                    <style>
+                        .emp-card-hover:hover{border-color:var(--wink-primary)!important;background:#f0f5ff!important;}
+                        .wink-emp-inline-cb:checked ~ .emp-card-hover,
+                        input[type=checkbox]:checked + label .emp-card-hover{border-color:var(--wink-primary)!important;background:#f0f5ff!important;}
+                    </style>
 
                     </t>
                     <script>
                         (function() {
                             var form = document.querySelector('form[action="/my/requests/submit"]');
                             if (!form) return;
-                            // T&amp;C checkbox enables Submit button
+                            // T&amp;C checkbox enables Submit button (with full style toggle)
                             var tncCb = document.getElementById('wink-tnc-check');
                             var submitBtn = document.getElementById('wink-request-submit-btn');
                             if (tncCb &amp;&amp; submitBtn) {
                                 tncCb.addEventListener('change', function() {
-                                    submitBtn.disabled = !tncCb.checked;
+                                    if (tncCb.checked) {
+                                        submitBtn.disabled = false;
+                                        submitBtn.style.opacity = '1';
+                                        submitBtn.style.pointerEvents = '';
+                                    } else {
+                                        submitBtn.disabled = true;
+                                        submitBtn.style.opacity = '0.5';
+                                        submitBtn.style.pointerEvents = 'none';
+                                    }
                                 });
                             }
                             // Employee select/deselect all helpers

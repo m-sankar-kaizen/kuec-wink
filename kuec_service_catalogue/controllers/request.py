@@ -1164,6 +1164,30 @@ class WinkRequest(http.Controller):
         if customer_confirmation:
             customer_confirmation.sudo().send_mail(order.id, force_send=True)
 
+        # Process any doc files uploaded directly in the wizard form
+        if not wink_is_bundle:
+            import base64 as _b64
+            doc_files = request.httprequest.files
+            # Look for keys like doc_file_<doc_id>
+            for key in list(doc_files.keys()):
+                if not key.startswith('doc_file_'):
+                    continue
+                doc_id_str = key[len('doc_file_'):]
+                req_name = post.get(f'doc_req_name_{doc_id_str}', doc_id_str.replace('_', ' '))
+                uploaded = doc_files.getlist(key)
+                for uf in uploaded:
+                    if uf and uf.filename:
+                        content = uf.read()
+                        if content:
+                            request.env['ir.attachment'].sudo().create({
+                                'name': uf.filename,
+                                'res_model': 'sale.order',
+                                'res_id': order.id,
+                                'datas': _b64.b64encode(content).decode(),
+                                'mimetype': uf.content_type or 'application/octet-stream',
+                                'description': f'Required doc: {req_name}',
+                            })
+
         self._wizard_clear_draft()
         if has_required_docs:
             return request.redirect(f'/my/requests/{order.id}?submitted=1&needs_docs=1')
