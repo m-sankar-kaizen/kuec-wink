@@ -1407,7 +1407,13 @@ class WinkRequest(http.Controller):
         elif order.wink_price_confirmed:
             portal_stage = 'ready_for_payment'
         else:
-            portal_stage = 'processing'
+            # Submitted → Processing only when product has required documents
+            _has_req_docs = bool(
+                product and product.kuec_document_ids.filtered(
+                    lambda d: d.requirement == 'required'
+                )
+            ) if not wink_is_bundle else False
+            portal_stage = 'processing' if _has_req_docs else 'submitted'
 
         # UI-012: Activity timeline (last 5 messages or synthetic entries)
         activity_items = []
@@ -1458,6 +1464,9 @@ class WinkRequest(http.Controller):
         except Exception:
             pass
 
+        required_docs = product.kuec_document_ids.sorted('sequence') if product and not wink_is_bundle else request.env['kuec.service.document']
+        has_required_docs = bool(required_docs.filtered(lambda d: d.requirement == 'required'))
+
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
             'product': product,
@@ -1485,6 +1494,8 @@ class WinkRequest(http.Controller):
             'is_paid': is_paid,
             'portal_stage': portal_stage,
             'wink_is_bundle': wink_is_bundle,
+            'required_docs': required_docs,
+            'has_required_docs': has_required_docs,
             'recurrence_name': recurrence_name,
             'activity_items': activity_items,  # UI-012
             'submitted': kwargs.get('submitted') == '1',  # UI-013
@@ -1867,7 +1878,7 @@ class WinkRequest(http.Controller):
 
     @http.route('/my/requests/<int:order_id>/documents/upload', type='http', auth='user', website=True, methods=['POST'], csrf=True)
     def upload_document(self, order_id, **post):
-        """Legacy upload endpoint — post file directly to order chatter."""
+        """Upload one or more files for a document requirement — stored as M2M ir.attachment on the order."""
         import base64
 
         order = request.env['sale.order'].sudo().search([
@@ -1877,29 +1888,48 @@ class WinkRequest(http.Controller):
         if not order:
             raise NotFound()
 
-        uploaded = request.httprequest.files.get('doc_file')
-        if not uploaded or not uploaded.filename:
+        doc_req_name = post.get('doc_req_name', '').strip()
+
+        # Support multi-file (name="doc_files") and legacy single-file (name="doc_file")
+        uploaded_files = request.httprequest.files.getlist('doc_files') or []
+        if not uploaded_files:
+            single = request.httprequest.files.get('doc_file')
+            if single and single.filename:
+                uploaded_files = [single]
+
+        if not uploaded_files:
             return request.redirect(f'/my/requests/{order_id}')
 
-        file_data = base64.b64encode(uploaded.read())
-        attachment = request.env['ir.attachment'].sudo().create({
-            'name': uploaded.filename,
-            'datas': file_data,
-            'res_model': 'sale.order',
-            'res_id': order_id,
-            'mimetype': uploaded.content_type or 'application/octet-stream',
-            'type': 'binary',
-        })
-        order.sudo().message_post(
-            body=_('Document uploaded: <b>%s</b>') % uploaded.filename,
-            message_type='comment',
-            subtype_xmlid='mail.mt_note',
-            attachment_ids=[attachment.id],
-        )
-        redirect_to = post.get('redirect_to', '')
-        if redirect_to and redirect_to.startswith('/my/requests/'):
-            return request.redirect(redirect_to)
-        return request.redirect(f'/my/requests/{order_id}')
+        attachment_ids = []
+        file_names = []
+        for uploaded in uploaded_files:
+            if not uploaded or not uploaded.filename:
+                continue
+            file_data = base64.b64encode(uploaded.read())
+            att = request.env['ir.attachment'].sudo().create({
+                'name': uploaded.filename,
+                'datas': file_data,
+                'res_model': 'sale.order',
+                'res_id': order_id,
+                'mimetype': uploaded.content_type or 'application/octet-stream',
+                'type': 'binary',
+            })
+            attachment_ids.append(att.id)
+            file_names.append(uploaded.filename)
+
+        if attachment_ids:
+            label = doc_req_name or _('Document')
+            body = _('Document(s) uploaded for <b>%(req)s</b>: %(files)s') % {
+                'req': label,
+                'files': ', '.join(file_names),
+            }
+            order.sudo().message_post(
+                body=body,
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+                attachment_ids=attachment_ids,
+            )
+        return request.redirect(f'/my/requests/{order_id}?doc_uploaded=1')
 
     # ── Bundle Activation Route ──
     # WF-BND-001 / WF-BND-002 / WF-BND-005: bundle activation with per-activation employees & docs
