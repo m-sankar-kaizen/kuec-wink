@@ -221,6 +221,7 @@ class WinkRequest(http.Controller):
         vals['subscription_plans'] = subscription_plans
         vals['selected_plan'] = selected_plan
         vals['post'] = dict(kwargs, selected_pricing_id=selected_plan['pricing_id'] if selected_plan else None)
+        vals['step'] = 1  # Show the journey stepper on the request form
         return request.render('kuec_service_catalogue.wink_request_form', vals)
 
     def _wizard_draft_key(self):
@@ -1415,19 +1416,31 @@ class WinkRequest(http.Controller):
         wink_is_bundle = bool(product and getattr(product, 'wink_is_bundle', False))
 
         # Portal stage string — drives the 5-step stepper and action bar
+        # Option B: completed when all linked project tasks are in a closed stage.
+        # sale_project adds tasks_count + closed_task_count on sale.order.
+        def _all_tasks_done(so):
+            """Return True when every project task linked to the SO is in a closed stage."""
+            try:
+                count = so.sudo().tasks_count
+                closed = so.sudo().closed_task_count
+                return count > 0 and closed >= count
+            except Exception:
+                return False
+
         if order.state == 'cancel' or is_closed_or_cancelled:
             portal_stage = 'cancelled'
-        elif order.state == 'done':
+        elif order.state == 'done' or (order.state == 'sale' and not wink_is_bundle and _all_tasks_done(order)):
             portal_stage = 'completed'
         elif order.state == 'sale':
-            if wink_is_bundle:
-                # Bundle: separate states for pre/post coordinator activation
+            if wink_is_bundle or is_retainer:
+                # Bundle + retainer: require coordinator activation call before going live
                 if getattr(order, 'wink_bundle_activated', False):
                     portal_stage = 'active'          # coordinator activated → fully live
                 else:
                     portal_stage = 'pending_activation'  # paid but awaiting confirmation call
             else:
-                portal_stage = 'confirmed'
+                # Project-based: pending_activation until paid, then confirmed
+                portal_stage = 'confirmed' if is_paid else 'pending_activation'
         elif order.wink_price_confirmed:
             portal_stage = 'ready_for_payment'
         else:
@@ -1688,7 +1701,9 @@ class WinkRequest(http.Controller):
         policy = order._wink_get_policy()
         cancel_sel = dict(policy._fields['cancellation_credit_policy'].selection).get(policy.cancellation_credit_policy, '') if policy else ''
         end_date = getattr(order, 'next_date', None) or getattr(order, 'next_invoice_date', None)
+        start_date = getattr(order, 'start_date', None) or getattr(order, 'wink_bundle_start_date', None)
         show_refund = policy and policy.cancellation_credit_policy != 'no_refund'
+        close_reasons = request.env['sale.order.close.reason'].sudo().search([], order='id')
 
         return request.render('kuec_service_catalogue.wink_retainer_cancel_preview', {
             'order': order,
@@ -1696,8 +1711,11 @@ class WinkRequest(http.Controller):
             'proration': proration,
             'policy_label': cancel_sel,
             'end_date': end_date,
+            'start_date': start_date,
             'show_refund': show_refund,
             'effective_date_policy': (policy and policy.effective_date_policy) or 'immediate',
+            'close_reasons': close_reasons,
+            'error': kwargs.get('error', ''),
         })
 
     @http.route('/my/requests/<int:order_id>/retainer/cancel', type='http', auth='user', website=True, methods=['POST'], csrf=True)
@@ -1721,16 +1739,21 @@ class WinkRequest(http.Controller):
         end_date = getattr(order, 'next_date', None) or getattr(order, 'next_invoice_date', None)
         effective_date = date.today() if (policy and policy.effective_date_policy == 'immediate') else (end_date if end_date else date.today())
 
+        confirm = post.get('confirm_cancel')
+        if not confirm:
+            return request.redirect(f'/my/requests/{order_id}/retainer/cancel/preview?error=confirm_required')
+
+        reason = post.get('cancel_reason', '').strip() or False
         order.sudo().write({
             'wink_cancellation_requested': True,
             'wink_cancellation_requested_date': odoo_fields.Datetime.now(),
-            'wink_cancellation_reason': post.get('reason', '').strip() or False,
+            'wink_cancellation_reason': reason,
             'wink_cancellation_effective_date': effective_date,
         })
         order.sudo().message_post(
             body=_("Customer requested cancellation of this retainer from the portal. Effective date: %s. Reason: %s") % (
                 effective_date,
-                post.get('reason', '').strip() or _('(none)'),
+                reason or _('(none)'),
             ),
             message_type='comment',
             subtype_xmlid='mail.mt_note',

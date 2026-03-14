@@ -425,7 +425,7 @@
                             <!-- Hidden price / quote flow -->
                             <div class="alert alert-info d-flex align-items-start gap-2 mb-3" style="border-radius:10px;">
                                 <i class="fa fa-info-circle mt-1"/>
-                                <div>A coordinator will review your request and confirm pricing. You will be notified when your quote is ready.</div>
+                                <div>A coordinator will review your request and confirm pricing. You will be notified once it is ready for your approval.</div>
                             </div>
                         </t>
 
@@ -1176,25 +1176,53 @@
                                 <p class="text-muted small mb-3">Upload any documents you have ready. You can also add more after submission.</p>
                                 <div class="d-flex flex-column gap-3">
                                     <t t-foreach="product.kuec_document_ids.sorted('sequence')" t-as="doc">
-                                        <div class="rounded-3 border p-3 d-flex align-items-center gap-3 flex-wrap"
-                                             style="background:#fafafa;">
-                                            <div class="flex-grow-1">
-                                                <span class="fw-semibold small"><t t-esc="doc.name"/></span>
-                                                <span t-if="doc.requirement == 'required'" class="badge ms-2 rounded-pill"
-                                                      style="background:rgba(220,53,69,0.1);color:#dc3545;font-size:0.65rem;">Required</span>
-                                                <span t-else="" class="badge ms-2 rounded-pill"
-                                                      style="background:rgba(108,117,125,0.1);color:#6c757d;font-size:0.65rem;">Optional</span>
+                                        <div class="rounded-3 border p-3" style="background:#fafafa;">
+                                            <!-- Row 1: doc name + badge + attach button -->
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <div class="flex-grow-1">
+                                                    <span class="fw-semibold small"><t t-esc="doc.name"/></span>
+                                                    <span t-if="doc.requirement == 'required'" class="badge ms-2 rounded-pill"
+                                                          style="background:rgba(220,53,69,0.1);color:#dc3545;font-size:0.65rem;">Required</span>
+                                                    <span t-else="" class="badge ms-2 rounded-pill"
+                                                          style="background:rgba(108,117,125,0.1);color:#6c757d;font-size:0.65rem;">Optional</span>
+                                                </div>
+                                                <input type="hidden" t-att-name="'doc_req_name_%s' % doc.id" t-att-value="doc.name"/>
+                                                <label t-att-id="'wink-doc-label-%s' % doc.id"
+                                                       class="btn btn-sm btn-outline-primary rounded-pill mb-0 flex-shrink-0"
+                                                       style="cursor:pointer;font-size:0.8rem;">
+                                                    <i class="fa fa-paperclip me-1"/>Attach files
+                                                    <input type="file"
+                                                           t-att-name="'doc_file_%s' % doc.id"
+                                                           t-att-id="'wink-doc-input-%s' % doc.id"
+                                                           multiple="multiple"
+                                                           style="display:none;"
+                                                           onchange="(function(inp){
+                                                               var container = inp.closest('.rounded-3');
+                                                               var list = container ? container.querySelector('.wink-file-list') : null;
+                                                               var btn  = inp.closest('label');
+                                                               if (!list) return;
+                                                               list.innerHTML = '';
+                                                               if (inp.files.length === 0) {
+                                                                   if (btn) { btn.classList.remove('btn-success','border-success'); btn.classList.add('btn-outline-primary'); btn.querySelector('i').className='fa fa-paperclip me-1'; }
+                                                                   return;
+                                                               }
+                                                               if (btn) { btn.classList.remove('btn-outline-primary'); btn.classList.add('btn-success','border-success'); btn.querySelector('i').className='fa fa-check me-1'; }
+                                                               for (var i=0; i &lt; inp.files.length; i++){
+                                                                   var f = inp.files[i];
+                                                                   var size = f.size &lt; 1024*1024 ? (Math.round(f.size/1024)+'KB') : (Math.round(f.size/1024/1024*10)/10+'MB');
+                                                                   var el = document.createElement('div');
+                                                                   el.className = 'wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';
+                                                                   el.style.cssText = 'background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:260px;';
+                                                                   el.innerHTML = '&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;&quot;&gt;'+size+'&lt;/span&gt;';
+                                                                   list.appendChild(el);
+                                                               }
+                                                           })(this)"/>
+                                                </label>
                                             </div>
-                                            <input type="hidden" t-att-name="'doc_req_name_%s' % doc.id" t-att-value="doc.name"/>
-                                            <label class="btn btn-sm btn-outline-primary rounded-pill mb-0 flex-shrink-0" style="cursor:pointer;font-size:0.8rem;">
-                                                <i class="fa fa-paperclip me-1"/>Attach files
-                                                <input type="file" t-att-name="'doc_file_%s' % doc.id" multiple="multiple" style="display:none;"
-                                                       onchange="(function(inp){
-                                                           var lbl=inp.parentElement.querySelector('.wink-file-count');
-                                                           if(lbl)lbl.textContent=inp.files.length>0?(inp.files.length+' file(s)'):'';
-                                                       })(this)"/>
-                                            </label>
-                                            <small class="wink-file-count text-success" style="font-size:0.75rem;min-width:60px;text-align:right;"/>
+                                            <!-- Row 2: file chips shown after selection -->
+                                            <div class="wink-doc-row">
+                                                <div class="wink-file-list d-flex flex-wrap gap-2 mt-2"/>
+                                            </div>
                                         </div>
                                     </t>
                                 </div>
@@ -1320,79 +1348,152 @@
 
         <!-- Already have active subscription for this service (edge case 10.3) -->
         <template id="wink_request_already_subscription" name="Already Have Subscription">
-            <t t-call="website.layout">
-                <div class="container mt-5 mb-5" style="max-width:680px;">
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" t-value="True"/>
+                <t t-set="is_bundle_order" t-value="bool(order.wink_entitlement_ids or (order.wink_source_product_id and order.wink_source_product_id.wink_is_bundle))"/>
+                <div class="container py-4" style="max-width:720px;">
 
-                    <!-- Header -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header py-3" style="background:var(--wink-primary,#0055b7); color:#fff;">
-                            <h4 class="mb-0">
-                                <i class="fa fa-check-circle me-2"/>
-                                Active Retainer: <t t-esc="product.name"/>
-                            </h4>
+                    <!-- Breadcrumb -->
+                    <nav class="mb-3">
+                        <ol class="breadcrumb small mb-0">
+                            <li class="breadcrumb-item"><a href="/my">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/services">Services</a></li>
+                            <li class="breadcrumb-item active"><t t-esc="product.name"/></li>
+                        </ol>
+                    </nav>
+
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+
+                        <!-- Header -->
+                        <div class="d-flex align-items-center gap-3 px-4 py-3"
+                             style="background:linear-gradient(135deg,#1a5276 0%,#2471a3 100%);color:#fff;">
+                            <i class="fa fa-check-circle fa-lg opacity-75 flex-shrink-0"/>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="font-size:1rem;">
+                                    <t t-if="is_bundle_order">Active Bundle</t>
+                                    <t t-else="">Active Retainer</t>:
+                                    <t t-esc="product.name"/>
+                                </div>
+                                <div class="opacity-75" style="font-size:0.8rem;">
+                                    Reference: <t t-esc="order.name"/>
+                                    <t t-if="allow_upgrade or allow_downgrade or allow_cancel">
+                                        — use the options below to manage your service.
+                                    </t>
+                                </div>
+                            </div>
+                            <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                  style="background:rgba(255,255,255,0.18);font-size:0.75rem;">
+                                <i class="fa fa-check me-1"/>Active
+                            </span>
                         </div>
-                        <div class="card-body">
-                            <p class="mb-1">
-                                You already have an active retainer for <strong><t t-esc="product.name"/></strong>.
-                            </p>
-                            <p class="text-muted small mb-0">
-                                Reference: <strong><t t-esc="order.name"/></strong>
-                                <t t-if="allow_upgrade or allow_downgrade or allow_cancel">
-                                    — use the options below to change or cancel your plan.
+
+                        <!-- Explanatory message -->
+                        <div class="px-4 pt-4 pb-2">
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3"
+                                 style="background:rgba(0,85,183,0.05);border-left:4px solid var(--wink-primary,#0055b7);">
+                                <i class="fa fa-info-circle fa-lg flex-shrink-0 mt-1" style="color:var(--wink-primary,#0055b7);"/>
+                                <div>
+                                    <div class="fw-semibold text-dark mb-1">
+                                        You already have an active
+                                        <t t-if="is_bundle_order">bundle</t><t t-else="">retainer</t>
+                                        for <strong><t t-esc="product.name"/></strong>.
+                                    </div>
+                                    <div class="text-muted small">
+                                        <t t-if="is_bundle_order">
+                                            A new bundle cannot be requested while one is already active.
+                                            You can upgrade, downgrade, or cancel your current bundle using the options below.
+                                        </t>
+                                        <t t-else="">
+                                            A new retainer cannot be requested while one is already active.
+                                            You can change your plan or request cancellation using the options below.
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Min days notice -->
+                        <t t-if="min_days_notice and min_days_notice > 0 and (allow_upgrade or allow_downgrade or allow_cancel)">
+                            <div class="px-4 pt-3">
+                                <div class="alert alert-info small mb-0 py-2">
+                                    <i class="fa fa-info-circle me-1"/>
+                                    Plan changes require at least <strong><t t-esc="min_days_notice"/> days</strong> notice before the period end.
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Policy blocked notice -->
+                        <t t-if="not allow_upgrade and not allow_downgrade and not allow_cancel">
+                            <div class="px-4 pt-3">
+                                <div class="alert alert-warning small mb-0">
+                                    <i class="fa fa-lock me-1"/>
+                                    <t t-if="change_disallowed_message">
+                                        <t t-esc="change_disallowed_message"/>
+                                    </t>
+                                    <t t-else="">
+                                        Plan changes and cancellations must be requested through our support team.
+                                        <a href="/contactus" class="alert-link ms-1">Contact us</a>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Action buttons -->
+                        <div class="px-4 py-4 d-flex flex-wrap align-items-center gap-3">
+
+                            <!-- BUNDLE actions -->
+                            <t t-if="is_bundle_order">
+                                <t t-if="allow_upgrade">
+                                    <a t-attf-href="/my/bundles/#{order.id}/upgrade"
+                                       class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
+                                        <i class="fa fa-arrow-up me-2"/>Upgrade
+                                    </a>
                                 </t>
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Action buttons -->
-                    <div class="d-flex flex-wrap gap-3 mb-4">
-
-                        <!-- RET-006: Upgrade / Downgrade → change-plan page -->
-                        <t t-if="allow_upgrade or allow_downgrade">
-                            <a t-att-href="'/my/requests/' + str(order.id) + '/retainer/change-plan'"
-                               class="btn btn-primary">
-                                <i class="fa fa-exchange me-1"/>
-                                Change Plan
-                            </a>
-                        </t>
-
-                        <!-- RET-006: Cancellation → preview page -->
-                        <t t-if="allow_cancel">
-                            <a t-att-href="'/my/requests/' + str(order.id) + '/retainer/cancel/preview'"
-                               class="btn btn-outline-danger">
-                                <i class="fa fa-times-circle me-1"/>
-                                Request Cancellation
-                            </a>
-                        </t>
-
-                        <!-- View in portal -->
-                        <a t-att-href="'/my/requests/' + str(order.id)" class="btn btn-outline-secondary">
-                            <i class="fa fa-eye me-1"/>
-                            View My Request
-                        </a>
-                    </div>
-
-                    <!-- Policy blocked notice -->
-                    <t t-if="not allow_upgrade and not allow_downgrade and not allow_cancel">
-                        <div class="alert alert-warning">
-                            <i class="fa fa-lock me-2"/>
-                            <t t-if="change_disallowed_message">
-                                <t t-esc="change_disallowed_message"/>
+                                <t t-if="allow_downgrade">
+                                    <a t-attf-href="/my/bundles/#{order.id}/downgrade"
+                                       class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">
+                                        <i class="fa fa-arrow-down me-2"/>Downgrade
+                                    </a>
+                                </t>
+                                <t t-if="allow_cancel">
+                                    <a t-attf-href="/my/bundles/#{order.id}/cancel"
+                                       class="btn btn-outline-danger rounded-pill px-4 fw-semibold">
+                                        <i class="fa fa-times-circle me-2"/>Cancel Bundle
+                                    </a>
+                                </t>
+                                <div class="ms-auto">
+                                    <a t-attf-href="/my/bundles"
+                                       class="btn btn-outline-secondary rounded-pill px-4">
+                                        <i class="fa fa-th me-1"/>My Bundles
+                                    </a>
+                                </div>
                             </t>
+
+                            <!-- RETAINER actions -->
                             <t t-else="">
-                                Plan changes and cancellations for this service must be requested through our support team.
-                                <a href="/contactus" class="alert-link ms-1">Contact us</a>
+                                <t t-if="allow_upgrade or allow_downgrade">
+                                    <a t-attf-href="/my/requests/#{order.id}/retainer/change-plan"
+                                       class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
+                                        <i class="fa fa-exchange me-2"/>Change Plan
+                                    </a>
+                                </t>
+                                <t t-if="allow_cancel">
+                                    <a t-attf-href="/my/requests/#{order.id}/retainer/cancel/preview"
+                                       class="btn btn-outline-danger rounded-pill px-4 fw-semibold">
+                                        <i class="fa fa-times-circle me-2"/>Request Cancellation
+                                    </a>
+                                </t>
+                                <div class="ms-auto">
+                                    <a t-attf-href="/my/requests/#{order.id}"
+                                       class="btn btn-outline-secondary rounded-pill px-4">
+                                        <i class="fa fa-eye me-1"/>View My Request
+                                    </a>
+                                </div>
                             </t>
-                        </div>
-                    </t>
 
-                    <!-- Min days notice (when changes are still allowed) -->
-                    <t t-if="min_days_notice and min_days_notice > 0 and (allow_upgrade or allow_downgrade or allow_cancel)">
-                        <p class="text-muted small">
-                            <i class="fa fa-info-circle me-1"/>
-                            Plan changes require at least <strong><t t-esc="min_days_notice"/> days</strong> before period end.
-                        </p>
-                    </t>
+                        </div>
+
+                    </div>
 
                 </div>
             </t>
@@ -1615,8 +1716,8 @@
                         </div>
                     </div>
 
-                    <!-- Standalone Action Bar — shown for non-bundle, non-retainer services only -->
-                    <t t-if="not wink_is_bundle and not is_retainer and ps != 'cancelled'">
+                    <!-- Action Bar — shown for non-bundle services (retainer + standalone/project) -->
+                    <t t-if="not wink_is_bundle and ps != 'cancelled'">
 
                         <!-- SUBMITTED: awaiting coordinator review -->
                         <t t-if="ps == 'submitted'">
@@ -1625,7 +1726,7 @@
                                 <i class="fa fa-info-circle fa-2x flex-shrink-0" style="color:var(--wink-primary);"/>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1 fw-semibold" style="color:var(--wink-primary);">Request received</h6>
-                                    <p class="mb-0 text-muted small">Our team is reviewing your request and will notify you once the quote is ready.</p>
+                                    <p class="mb-0 text-muted small">Our team is reviewing your request and will notify you once pricing is confirmed.</p>
                                 </div>
                                 <a href="#discussion" class="btn btn-outline-primary btn-sm rounded-pill flex-shrink-0"
                                    onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
@@ -1634,73 +1735,110 @@
                             </div>
                         </t>
 
-                        <!-- PROCESSING: documents required — show upload section -->
-                        <t t-if="ps == 'processing'">
-                            <div class="card border-0 shadow-sm rounded-3 mb-4">
-                                <div class="card-header border-0 py-3 px-4 fw-semibold" style="background:rgba(0,85,183,0.06);color:var(--wink-primary);">
-                                    <i class="fa fa-paperclip me-2"/>Required Documents
-                                </div>
-                                <div class="card-body p-4">
-                                    <p class="text-muted small mb-3">Upload the required documents below. Our team will review them before proceeding.</p>
-                                    <t t-foreach="required_docs" t-as="doc">
-                                        <div class="d-flex align-items-start gap-3 mb-4 pb-3 border-bottom">
-                                            <div class="flex-grow-1">
-                                                <span class="fw-semibold small">
-                                                    <i class="fa fa-circle me-1" style="font-size:0.4rem;vertical-align:middle;color:var(--wink-primary);"/>
-                                                    <t t-esc="doc.name"/>
-                                                </span>
-                                                <span t-if="doc.requirement == 'required'" class="badge ms-2 rounded-pill"
-                                                      style="background:rgba(220,53,69,0.12);color:#dc3545;font-size:0.65rem;">Required</span>
-                                                <span t-else="" class="badge ms-2 rounded-pill"
-                                                      style="background:rgba(108,117,125,0.12);color:#6c757d;font-size:0.65rem;">Optional</span>
-                                            </div>
-                                            <form method="post" t-attf-action="/my/requests/#{order.id}/upload_document"
-                                                  enctype="multipart/form-data" class="flex-shrink-0">
-                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                                <input type="hidden" name="doc_req_name" t-att-value="doc.name"/>
-                                                <label class="btn btn-sm btn-outline-primary rounded-pill mb-0" style="cursor:pointer;">
-                                                    <i class="fa fa-paperclip me-1"/>Attach files
-                                                    <input type="file" name="doc_files" multiple="multiple"
-                                                           style="display:none;" onchange="this.form.submit();"/>
-                                                </label>
-                                            </form>
-                                        </div>
-                                    </t>
-                                    <div class="text-end">
-                                        <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
-                                           onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
-                                            <i class="fa fa-comments me-1"/>Feedback
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </t>
 
-                        <!-- READY FOR PAYMENT: Accept & Pay + Reject + Feedback -->
+                        <!-- READY FOR PAYMENT: Proposal Summary + Confirm & Pay -->
                         <t t-if="ps == 'ready_for_payment'">
-                            <div class="card border-0 shadow-sm rounded-3 mb-4">
-                                <div class="card-body p-4">
-                                    <h6 class="fw-semibold mb-1" style="color:var(--wink-primary);">
-                                        <i class="fa fa-check-circle me-1"/>Quote ready for your approval
-                                    </h6>
-                                    <p class="text-muted small mb-4">Review the order details below, then accept to proceed to payment or reject if you need changes.</p>
-                                    <div class="d-flex flex-wrap gap-3 align-items-center">
-                                        <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
-                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                            <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-sm">
-                                                <i class="fa fa-check me-2"/>Accept &amp; Pay
-                                            </button>
-                                        </form>
-                                        <button type="button" class="btn btn-outline-danger btn-lg px-4 rounded-pill fw-bold"
-                                                data-bs-toggle="modal" data-bs-target="#winkRejectModal">
-                                            <i class="fa fa-times me-1"/>Reject
-                                        </button>
-                                        <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill ms-auto"
-                                           onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
-                                            <i class="fa fa-comments me-1"/>Feedback
-                                        </a>
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+
+                                <!-- Header banner -->
+                                <div class="d-flex align-items-center gap-3 px-4 py-3"
+                                     style="background:linear-gradient(135deg,#1a5276 0%,#2471a3 100%);color:#fff;">
+                                    <i class="fa fa-file-text-o fa-lg opacity-75 flex-shrink-0"/>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold" style="font-size:1rem;">Proposal ready for your review</div>
+                                        <div class="opacity-75" style="font-size:0.8rem;">
+                                            Please review the summary below and confirm to proceed to payment.
+                                        </div>
+                                    </div>
+                                    <span class="badge rounded-pill px-3 py-2 fw-bold"
+                                          style="background:rgba(255,255,255,0.2);font-size:0.75rem;letter-spacing:0.5px;">
+                                        <t t-esc="order.name"/>
+                                    </span>
+                                </div>
+
+                                <!-- Service line items -->
+                                <div class="px-4 pt-4 pb-2">
+                                    <table class="table table-borderless mb-0" style="font-size:0.9rem;">
+                                        <thead>
+                                            <tr style="border-bottom:2px solid #e9ecef;">
+                                                <th class="ps-0 text-muted fw-semibold" style="font-size:0.75rem;letter-spacing:0.5px;text-transform:uppercase;">Service</th>
+                                                <th class="text-center text-muted fw-semibold" style="font-size:0.75rem;letter-spacing:0.5px;text-transform:uppercase;">Qty</th>
+                                                <th class="text-end pe-0 text-muted fw-semibold" style="font-size:0.75rem;letter-spacing:0.5px;text-transform:uppercase;">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="order.order_line.filtered(lambda l: not l.display_type)" t-as="line">
+                                                <tr style="border-bottom:1px solid #f0f0f0;">
+                                                    <td class="ps-0 py-3">
+                                                        <div class="fw-semibold text-dark"><t t-esc="line.product_id.name or line.name"/></div>
+                                                        <div t-if="line.name and line.name != line.product_id.name"
+                                                             class="text-muted small mt-1" style="white-space:pre-wrap;"><t t-esc="line.name"/></div>
+                                                    </td>
+                                                    <td class="text-center py-3 text-muted"><t t-esc="int(line.product_uom_qty)"/></td>
+                                                    <td class="text-end pe-0 py-3 fw-semibold">
+                                                        <t t-esc="line.price_subtotal" t-options="{'widget':'monetary','display_currency':order.currency_id}"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Billing cycle row (retainer only) -->
+                                <t t-if="recurrence_name">
+                                    <div class="px-4 pb-3 d-flex align-items-center gap-2" style="font-size:0.85rem;">
+                                        <i class="fa fa-repeat text-muted flex-shrink-0"/>
+                                        <span class="text-muted">Billing cycle:</span>
+                                        <span class="fw-semibold text-dark"><t t-esc="recurrence_name"/></span>
+                                    </div>
+                                </t>
+
+                                <!-- Totals row -->
+                                <div class="mx-4 mb-4 rounded-3 p-3 d-flex justify-content-between align-items-center"
+                                     style="background:#f0f7ff;border:1px solid #cce0f5;">
+                                    <div>
+                                        <div class="fw-bold text-dark" style="font-size:0.9rem;">Total Due</div>
+                                        <div class="text-muted" style="font-size:0.75rem;">
+                                            <t t-if="order.payment_term_id">
+                                                <t t-esc="order.payment_term_id.name"/>
+                                            </t>
+                                            <t t-else="">Due on confirmation</t>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-primary" style="font-size:1.8rem;line-height:1;">
+                                            <t t-esc="order.amount_total" t-options="{'widget':'monetary','display_currency':order.currency_id}"/>
+                                        </div>
+                                        <div t-if="order.amount_tax" class="text-muted" style="font-size:0.75rem;">
+                                            incl. <t t-esc="order.amount_tax" t-options="{'widget':'monetary','display_currency':order.currency_id}"/> tax
+                                        </div>
                                     </div>
                                 </div>
+
+                                <!-- Action footer -->
+                                <div class="px-4 py-3 d-flex flex-wrap align-items-center gap-3"
+                                     style="background:#f8f9fa;border-top:1px solid #e9ecef;">
+                                    <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline m-0">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <button type="submit" id="wink-confirm-pay-btn"
+                                                class="btn btn-lg fw-bold px-5 py-3 rounded-pill shadow"
+                                                style="background:linear-gradient(135deg,#1a9e5c 0%,#27ae60 100%);border:0;color:#fff;font-size:1rem;letter-spacing:0.3px;">
+                                            <i class="fa fa-lock me-2"/>Confirm &amp; Pay
+                                        </button>
+                                    </form>
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-semibold"
+                                            style="font-size:0.95rem;"
+                                            data-bs-toggle="modal" data-bs-target="#winkRejectModal">
+                                        <i class="fa fa-times me-2"/>Decline
+                                    </button>
+                                    <a href="#wink-portal-chatter"
+                                       class="btn btn-outline-secondary btn-sm rounded-pill ms-auto px-3"
+                                       onclick="(function(e){e.preventDefault();var el=document.getElementById('wink-portal-chatter');if(el){el.scrollIntoView({behavior:'smooth'});}})(event)">
+                                        <i class="fa fa-comments me-1"/>Have a question?
+                                    </a>
+                                </div>
+
                             </div>
                         </t>
 
@@ -1733,6 +1871,123 @@
                             </div>
                         </t>
 
+                        <!-- PENDING ACTIVATION: paid, awaiting coordinator confirmation call -->
+                        <t t-if="ps == 'pending_activation'">
+                            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                <div class="card-body p-4 d-flex flex-wrap align-items-center gap-3">
+                                    <div class="flex-grow-1">
+                                        <t t-if="not is_paid and order.amount_total > 0">
+                                            <h6 class="fw-semibold mb-1 text-primary">
+                                                <i class="fa fa-credit-card me-1"/>Payment required
+                                            </h6>
+                                            <p class="mb-0 text-muted small">Your request has been confirmed. Complete payment to proceed.</p>
+                                        </t>
+                                        <t t-else="">
+                                            <h6 class="fw-semibold mb-1 text-warning">
+                                                <i class="fa fa-clock-o me-1"/>Awaiting service activation
+                                            </h6>
+                                            <t t-if="wink_is_bundle or is_retainer">
+                                                <p class="mb-0 text-muted small">Payment received. Your coordinator will contact you to confirm the start date and activate the service.</p>
+                                            </t>
+                                            <t t-else="">
+                                                <p class="mb-0 text-muted small">Payment received. Your coordinator will be in touch shortly to begin delivering the service.</p>
+                                            </t>
+                                        </t>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <t t-if="not is_paid and order.amount_total > 0">
+                                            <a t-attf-href="/my/requests/#{order.id}/pay"
+                                               class="btn btn-primary btn-lg px-4 rounded-pill fw-bold shadow-sm">
+                                                <i class="fa fa-credit-card me-2"/>Proceed to Payment
+                                            </a>
+                                        </t>
+                                        <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                           onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                            <i class="fa fa-comments me-1"/>Feedback
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- ACTIVE: coordinator has activated the service -->
+                        <t t-if="ps == 'active'">
+                            <!-- Status banner -->
+                            <div class="d-flex align-items-center gap-3 p-4 mb-4 rounded-3 shadow-sm"
+                                 style="background:rgba(40,167,69,0.07);border-left:4px solid #28a745;">
+                                <i class="fa fa-check-circle fa-2x flex-shrink-0 text-success"/>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 fw-semibold text-success">Service is active</h6>
+                                    <p class="mb-0 text-muted small">Your service has been activated by your coordinator and is now live.</p>
+                                </div>
+                                <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill flex-shrink-0"
+                                   onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                    <i class="fa fa-comments me-1"/>Feedback
+                                </a>
+                            </div>
+
+                            <!-- Service summary card -->
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                                <div class="card-header border-0 py-3 px-4 fw-semibold d-flex align-items-center gap-2"
+                                     style="background:rgba(0,85,183,0.06);color:var(--wink-primary);">
+                                    <i class="fa fa-info-circle"/>
+                                    <span>Service Details</span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="row g-0">
+                                        <!-- Service -->
+                                        <div class="col-6 col-md-3 p-4 border-end border-bottom">
+                                            <div class="text-muted small mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Service</div>
+                                            <div class="fw-semibold" style="font-size:0.88rem;">
+                                                <t t-esc="product.name if product else order.order_line[0].product_id.name if order.order_line else 'N/A'"/>
+                                            </div>
+                                        </div>
+                                        <!-- Plan -->
+                                        <t t-if="retainer_plan_label">
+                                        <div class="col-6 col-md-3 p-4 border-end border-bottom">
+                                            <div class="text-muted small mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Plan</div>
+                                            <div class="fw-semibold" style="font-size:0.88rem;"><t t-esc="retainer_plan_label"/></div>
+                                        </div>
+                                        </t>
+                                        <!-- Billing Cycle -->
+                                        <t t-if="recurrence_name">
+                                        <div class="col-6 col-md-3 p-4 border-end border-bottom">
+                                            <div class="text-muted small mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Billing Cycle</div>
+                                            <div class="fw-semibold" style="font-size:0.88rem;"><i class="fa fa-repeat me-1 text-muted"/><t t-esc="recurrence_name"/></div>
+                                        </div>
+                                        </t>
+                                        <!-- Start Date -->
+                                        <t t-if="order.wink_bundle_activation_date or order.wink_requested_start_date">
+                                        <div class="col-6 col-md-3 p-4 border-bottom">
+                                            <div class="text-muted small mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Start Date</div>
+                                            <div class="fw-semibold" style="font-size:0.88rem;">
+                                                <i class="fa fa-calendar me-1 text-muted"/>
+                                                <t t-esc="order.wink_bundle_activation_date or order.wink_requested_start_date"/>
+                                            </div>
+                                        </div>
+                                        </t>
+                                        <!-- Next Renewal -->
+                                        <t t-if="is_retainer and order.next_invoice_date">
+                                        <div class="col-6 col-md-3 p-4 border-end">
+                                            <div class="text-muted small mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Next Renewal</div>
+                                            <div class="fw-semibold" style="font-size:0.88rem;">
+                                                <i class="fa fa-refresh me-1 text-muted"/>
+                                                <t t-esc="order.next_invoice_date"/>
+                                            </div>
+                                        </div>
+                                        </t>
+                                        <!-- Amount -->
+                                        <div class="col-6 col-md-3 p-4">
+                                            <div class="text-muted small mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Amount</div>
+                                            <div class="fw-bold" style="font-size:0.95rem;color:var(--wink-primary);">
+                                                <t t-esc="order.amount_total" t-options="{'widget':'monetary','display_currency':order.currency_id}"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
                         <!-- COMPLETED: Feedback only -->
                         <t t-if="ps == 'completed'">
                             <div class="d-flex align-items-center gap-3 p-4 mb-4 rounded-3 shadow-sm"
@@ -1752,15 +2007,15 @@
                     </t>
                     <!-- /Standalone Action Bar -->
 
-                    <!-- Submission success banner — bundles/retainers only (standalone uses action bar) -->
-                    <div t-if="submitted and (wink_is_bundle or is_retainer)" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
+                    <!-- Submission success banner — bundles only (retainer + standalone use action bar) -->
+                    <div t-if="submitted and wink_is_bundle" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
                         <i class="fa fa-check-circle fa-2x flex-shrink-0"/>
                         <div class="flex-grow-1">
                             <h5 class="mb-1 fw-bold">Request submitted successfully!</h5>
                             <p class="mb-0 opacity-90 small">
-                                <t t-if="portal_stage == 'ready_for_payment'">Your quote is ready — review the details below and proceed to payment.</t>
+                                <t t-if="portal_stage == 'ready_for_payment'">Your proposal is ready — review the details below and proceed to payment.</t>
                                 <t t-elif="portal_stage == 'processing'">Documents are required. Upload them below so our team can proceed.</t>
-                                <t t-else="">Our team will review your request and notify you once the quote is ready.</t>
+                                <t t-else="">Our team will review your request and notify you once pricing is confirmed.</t>
                             </p>
                         </div>
                         <div class="d-flex gap-2 flex-shrink-0 flex-wrap">
@@ -1777,10 +2032,10 @@
                         <t t-if="close_reason_name"> (<t t-esc="close_reason_name"/>)</t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
-                    <!-- Old state banners — bundles/retainers only; standalone uses the action bar -->
-                    <t t-if="wink_is_bundle or is_retainer">
+                    <!-- Old state banners — bundles only; retainer + standalone now use the action bar -->
+                    <t t-if="wink_is_bundle">
                     <div t-if="order.state == 'sale' and not is_paid" class="alert alert-info alert-dismissible fade show" role="alert">
-                        <strong>Quote approved — complete your payment</strong>
+                        <strong>Request approved — complete your payment</strong>
                         <t t-if="order.wink_price_confirmed"> to confirm your request.</t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
@@ -1796,11 +2051,11 @@
                         </div>
                         <div class="flex-grow-1">
                             <t t-if="not order.wink_price_confirmed">
-                                <h5 class="mb-1 fw-bold">Quote — pending coordinator review</h5>
+                                <h5 class="mb-1 fw-bold">Pricing — pending coordinator review</h5>
                                 <p class="mb-0 opacity-75">Your coordinator is currently setting the price. You'll be notified once it's ready for your approval.</p>
                             </t>
                             <t t-else="">
-                                <h5 class="mb-1 fw-bold">Quote — ready for your approval</h5>
+                                <h5 class="mb-1 fw-bold">Pricing confirmed — ready for your approval</h5>
                                 <p class="mb-0 opacity-75">The price has been set. Please review the details below to confirm and proceed.</p>
                             </t>
                         </div>
@@ -1816,8 +2071,8 @@
                     <div t-if="quote_rejected" class="alert alert-secondary border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3">
                         <i class="fa fa-times-circle fa-2x"/>
                         <div>
-                            <h5 class="mb-1 fw-bold">Quote Rejected</h5>
-                            <p class="mb-0 opacity-75">You have rejected this quote. Feel free to submit a new request if your requirements change.</p>
+                            <h5 class="mb-1 fw-bold">Request Declined</h5>
+                            <p class="mb-0 opacity-75">You have declined this service request. Feel free to submit a new request if your requirements change.</p>
                         </div>
                     </div>
                     <div t-if="quote_error == 'cancel_not_allowed'" class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -1842,152 +2097,6 @@
                         <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"/>
                     </div>
 
-                    <!-- Order Summary Card -->
-                    <div class="card shadow-sm border-0 mt-4 rounded-3 overflow-hidden">
-                        <div class="card-header border-0 py-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:var(--wink-primary); color:#fff;">
-                            <h4 class="mb-0 fw-bold"><i class="fa fa-file-text-o me-2 opacity-75"/> Order Summary: <t t-esc="order.name"/></h4>
-                            <div class="d-flex align-items-center gap-2">
-                                <t t-if="not is_closed_or_cancelled">
-                                    <span t-if="order.state in ('draft', 'sent')" class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill">QUOTATION</span>
-                                    <span t-if="order.state in ('sale', 'done')" class="badge bg-success text-white fw-bold px-3 py-2 rounded-pill">SALES ORDER</span>
-                                </t>
-                                <span t-if="is_closed_or_cancelled" class="badge bg-secondary text-white fw-bold px-3 py-2 rounded-pill" t-esc="close_reason_name.upper()"/>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-borderless mb-0">
-                                    <tbody class="text-dark">
-                                        <tr class="border-bottom">
-                                            <td class="ps-4 py-4 text-muted fw-bold" style="width: 30%;">SERVICE</td>
-                                            <td class="pe-4 py-4 fw-semibold text-end"><t t-esc="product.name if product else (order.order_line[0].product_id.name if order.order_line else 'N/A')"/></td>
-                                        </tr>
-                                        <tr class="border-bottom">
-                                            <td class="ps-4 py-4 text-muted fw-bold">REQUESTED START</td>
-                                            <td class="pe-4 py-4 fw-semibold text-end text-primary"><i class="fa fa-calendar-check-o me-1"/> <t t-esc="order.wink_requested_start_date or 'N/A'"/></td>
-                                        </tr>
-                                        <t t-if="recurrence_name">
-                                        <tr class="border-bottom">
-                                            <td class="ps-4 py-4 text-muted fw-bold">BILLING CYCLE</td>
-                                            <td class="pe-4 py-4 fw-semibold text-end text-primary"><i class="fa fa-repeat me-1"/> <t t-esc="recurrence_name"/></td>
-                                        </tr>
-                                        </t>
-                                        <tr class="border-bottom">
-                                            <td class="ps-4 py-4 text-muted fw-bold">STATUS</td>
-                                            <td class="pe-4 py-4 fw-semibold text-end">
-                                                <t t-if="is_closed_or_cancelled">
-                                                    <span class="text-muted"><t t-esc="close_reason_name"/></span>
-                                                </t>
-                                                <t t-else="">
-                                                    <t t-esc="dict(order._fields['state'].selection).get(order.state)"/>
-                                                </t>
-                                            </td>
-                                        </tr>
-                                        <tr class="bg-light">
-                                            <td class="ps-4 py-4 text-muted fw-bold fs-5 align-middle">AMOUNT DUE</td>
-                                            <td class="pe-4 py-4 text-end align-middle">
-                                                <t t-if="not order.wink_price_confirmed">
-                                                    <span class="badge bg-soft-warning text-warning fw-bold"><i class="fa fa-clock-o me-1"/> Pending Confirmation</span>
-                                                </t>
-                                                <t t-else="">
-                                                    <div class="d-flex flex-column align-items-end">
-                                                        <span class="fs-2 fw-bold text-primary"><t t-esc="amount_due_display" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></span>
-                                                        <t t-if="has_partial_payment">
-                                                            <small class="text-muted">(remaining of <t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>)</small>
-                                                        </t>
-                                                    </div>
-                                                </t>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!-- Card body continues to include Next Steps -->
-
-                            <!-- Subscription managed from /my/subscriptions — no ORM widget calls here -->
-
-                            <hr/>
-
-                            <t t-set="tx_paid" t-value="order.transaction_ids.filtered(lambda tx: tx.state in ('authorized', 'done', 'pending'))"/>
-                            <t t-set="inv_paid" t-value="order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid'))"/>
-                            <t t-set="is_paid" t-value="tx_paid or inv_paid"/>
-
-                            <t t-if="is_closed_or_cancelled">
-                                <p class="text-muted">This request has been closed. If you have any questions, please contact your coordinator.</p>
-                            </t>
-                            <!-- Inline approve/reject UI — bundles and retainers only; standalone uses the action bar above -->
-                            <t t-elif="wink_is_bundle or is_retainer">
-                                <t t-if="order.state in ['draft', 'sent'] and not order.wink_price_confirmed">
-                                    <p>Your coordinator will set the price for this request. Once the price is set you will see it here and can <strong>approve</strong> (to confirm and pay), <strong>reject</strong>, or discuss with the team.</p>
-                                </t>
-                                <t t-elif="order.state in ['draft', 'sent'] and order.wink_price_confirmed">
-                                    <div class="bg-light p-4 rounded-3 border mb-3">
-                                        <h6 class="fw-bold mb-3"><i class="fa fa-shield me-2 text-success"/> Review &amp; Confirm</h6>
-                                        <p class="text-muted small">By approving this quote, you confirm the tier and pricing selected. You will be redirected to the payment screen to finalize your request.</p>
-                                        <div class="d-flex flex-wrap gap-3 mt-4">
-                                            <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
-                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                                <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
-                                                    <i class="fa fa-check-circle me-2"/> Approve quote
-                                                </button>
-                                            </form>
-                                            <button type="button" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-bold"
-                                                    data-bs-toggle="modal" data-bs-target="#winkRejectModal">
-                                                Reject quote
-                                            </button>
-                                        </div>
-                                        <p class="text-muted small mt-3 mb-0"><i class="fa fa-question-circle me-1"/> Need clarification? <a t-attf-href="/my/requests/#{order.id}#discussion" class="text-primary fw-semibold">Discuss with your coordinator</a></p>
-                                    </div>
-                                </t>
-                                <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
-                                    <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
-                                </t>
-                                <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid and order.amount_total > 0">
-                                    <div class="mt-4 p-4 rounded-3 border border-2 shadow-sm d-flex align-items-center gap-4 flex-wrap"
-                                         style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); border-color: #cbdcf0 !important;">
-                                        <div class="flex-grow-1">
-                                            <h5 class="mb-1 fw-bold text-primary"><i class="fa fa-credit-card me-2"/> Complete your payment</h5>
-                                            <p class="text-muted small mb-0">Please finalize your payment to activate the service. Amount due: <strong class="text-dark fs-5"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
-                                        </div>
-                                        <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
-                                            <i class="fa fa-arrow-right me-2"/> Proceed to Payment
-                                        </a>
-                                    </div>
-                                    <t t-if="request.params.get('payment') == 'pending'">
-                                        <div class="alert alert-warning mt-3 mb-0 py-3 shadow-sm border-0">
-                                            <i class="fa fa-clock-o me-2 fa-lg"/> <strong>Manual payment logged!</strong> Awaiting coordinator validation.
-                                        </div>
-                                    </t>
-                                </t>
-                                <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid and not is_closed_or_cancelled">
-                                    <div class="mt-3 alert alert-success py-2 mb-0 border-0">
-                                        <i class="fa fa-check-circle"/> Payment received successfully.
-                                    </div>
-                                    <!-- UI-BUG-004 (FB-004): partial payment — show remaining amount, due date, and Pay remaining button -->
-                                    <t t-if="has_partial_payment and amount_due_display > 0">
-                                        <div class="mt-3 p-4 rounded-3 border border-2" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                                            <div class="d-flex align-items-center gap-3 flex-wrap">
-                                                <div class="flex-grow-1">
-                                                    <h6 class="mb-1 fw-bold">Amount remaining to pay</h6>
-                                                    <p class="text-muted small mb-0">Due: <strong class="text-dark"><t t-esc="amount_due_display" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
-                                                    <t t-if="next_due_date">
-                                                        <p class="text-muted small mb-0 mt-1">Due date: <strong><t t-esc="next_due_date" t-options="{'widget': 'date'}"/></strong></p>
-                                                    </t>
-                                                </div>
-                                                <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-4">
-                                                    <i class="fa fa-credit-card me-2"/> Pay remaining
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </t>
-                                </t>
-                            </t>
-                        </div>
-                        <div class="card-footer bg-light d-flex justify-content-between">
-                            <a href="/my/requests" class="btn btn-outline-secondary">View My Requests</a>
-                            <a href="/services" class="btn btn-outline-primary">Browse More Services</a>
-                        </div>
-                    </div>
 
                     <!-- WF-BND-004: Bundle Entitlements (Package) — directly after Order Summary; hide when request is closed/cancelled -->
                     <div t-if="order.wink_entitlement_ids and not is_closed_or_cancelled and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
@@ -2295,83 +2404,112 @@
                     </script>
 
 
-                    <!-- UI-012 Activity &amp; Updates -->
-                    <div t-if="activity_items" class="card mt-3 shadow-sm border-0">
-                        <div class="card-header py-3 border-bottom" style="background:#fff;">
-                            <span class="fw-bold" style="font-size:15px;">Activity &amp; Updates</span>
+                    <!-- Portal Chatter: communication history between customer and coordinator -->
+                    <div id="wink-portal-chatter" class="mt-4">
+                        <h5 class="border-bottom pb-2"><i class="fa fa-comments me-2"/>Communication History</h5>
+                        <t t-call="portal.message_thread">
+                            <t t-set="object" t-value="order"/>
+                            <t t-set="chatter_mode" t-value="'view'"/>
+                            <t t-set="allow_composer" t-value="True"/>
+                            <t t-set="display_rating" t-value="False"/>
+                            <t t-set="token" t-value="order.access_token"/>
+                        </t>
+                    </div>
+
+
+                    <!-- Retainer: manage plan + cancellation — only when active, paid, not closed -->
+                    <t t-if="is_retainer and not order.wink_entitlement_ids and is_paid and not is_closed_or_cancelled and order.state in ('sale', 'done')">
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mt-4">
+
+                        <!-- Header -->
+                        <div class="d-flex align-items-center gap-3 px-4 py-3"
+                             style="background:linear-gradient(135deg,#1a5276 0%,#2471a3 100%);color:#fff;">
+                            <i class="fa fa-cog fa-lg opacity-75 flex-shrink-0"/>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="font-size:1rem;">Manage your retainer</div>
+                                <div class="opacity-75" style="font-size:0.8rem;">
+                                    <t t-if="retainer_plan_label"><t t-esc="retainer_plan_label"/></t>
+                                    <t t-if="retainer_plan_price_str"> — <t t-esc="retainer_plan_price_str"/> <t t-esc="retainer_plan_currency_sym"/></t>
+                                </div>
+                            </div>
+                            <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                  style="background:rgba(255,255,255,0.18);font-size:0.75rem;letter-spacing:0.4px;">
+                                <i class="fa fa-check-circle me-1"/>Active
+                            </span>
                         </div>
-                        <div class="card-body py-2 px-4">
-                            <t t-foreach="activity_items" t-as="act">
-                                <div class="wink-timeline-item">
-                                    <span t-att-class="'wink-timeline-icon' + (' wink-icon-system' if act.get('type') == 'system' else '')">
-                                        <i t-att-class="'fa ' + (act.get('icon') or ('fa-cog' if act.get('type') == 'system' else 'fa-paper-plane'))"/>
-                                    </span>
-                                    <div class="wink-timeline-body">
-                                        <div class="wink-timeline-text"><t t-esc="act.get('text', '')"/></div>
-                                        <span class="wink-timeline-time" t-if="act.get('date')">
-                                            <t t-esc="act.get('date')" t-options="{'widget': 'datetime'}"/>
+
+                        <!-- Normal state: plan actions + cancel -->
+                        <t t-if="not order.wink_cancellation_requested">
+                        <div class="px-4 py-4">
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <t t-if="retainer_allow_plan_change">
+                                    <a t-attf-href="/my/requests/#{order.id}/retainer/change-plan"
+                                       class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
+                                        <i class="fa fa-exchange me-2"/>Change Plan
+                                    </a>
+                                </t>
+                                <!-- Cancel pushed to the right -->
+                                <div class="ms-auto">
+                                    <a t-attf-href="/my/requests/#{order.id}/retainer/cancel/preview"
+                                       class="btn btn-outline-danger rounded-pill px-4 fw-semibold">
+                                        <i class="fa fa-times-circle me-2"/>Request Cancellation
+                                    </a>
+                                </div>
+                            </div>
+                            <p class="text-muted small mt-3 mb-0">
+                                <i class="fa fa-info-circle me-1"/>
+                                <t t-if="retainer_allow_plan_change">Plan changes show proration before you commit. </t>
+                                Cancellation shows the refund amount before you confirm.
+                            </p>
+                        </div>
+                        </t>
+
+                        <!-- Cancellation requested state -->
+                        <t t-else="">
+                        <div class="px-4 py-4">
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-3"
+                                 style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.35);">
+                                <i class="fa fa-clock-o fa-lg text-warning flex-shrink-0 mt-1"/>
+                                <div>
+                                    <div class="fw-semibold text-dark">Cancellation requested</div>
+                                    <div class="text-muted small mt-1">Our team will process your cancellation shortly and issue any applicable credit.</div>
+                                </div>
+                            </div>
+                            <t t-if="cancellation_proration">
+                                <div class="p-3 rounded-3" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                                    <div class="fw-semibold small text-muted mb-2" style="text-transform:uppercase;letter-spacing:0.5px;">Expected Refund</div>
+                                    <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                                        <span class="fw-bold text-success" style="font-size:1.4rem;">
+                                            <t t-esc="order.currency_id.symbol or 'AED'"/>&#160;<t t-esc="'{:,.2f}'.format(cancellation_proration.get('remaining_value', 0))"/>
+                                        </span>
+                                        <span class="text-muted small">
+                                            <t t-esc="cancellation_proration.get('remaining_days', 0)"/> days ×
+                                            <t t-esc="order.currency_id.symbol or 'AED'"/>&#160;<t t-esc="'{:,.2f}'.format(cancellation_proration.get('daily_rate', 0))"/>/day
+                                            <t t-if="cancellation_credit_policy_label"> · <t t-esc="cancellation_credit_policy_label"/></t>
                                         </span>
                                     </div>
                                 </div>
                             </t>
                         </div>
-                    </div>
+                        </t>
 
-                    <!-- Retainer: current plan, upgrade/downgrade, cancel — only after payment (hide when closed) -->
-                    <div t-if="is_retainer and not order.wink_entitlement_ids and is_paid and not is_closed_or_cancelled and order.state in ('sale', 'done') and not order.wink_cancellation_requested" class="card mt-3 shadow-sm">
-                        <div class="card-header d-flex align-items-center py-3" style="background:var(--wink-primary,#0055b7); color:#fff;">
-                            <i class="fa fa-cog me-2"/> Manage your retainer
-                        </div>
-                        <div class="card-body">
-                            <t t-if="retainer_plan">
-                                <div class="d-flex align-items-center mb-3">
-                                    <span class="badge rounded-pill me-2" style="background:#e9ecef; color:#495057; font-size:0.9rem;">
-                                        <i class="fa fa-refresh me-1"/> <t t-esc="retainer_plan_label or 'Current Plan'"/>
-                                        <t t-if="retainer_plan_has_price"> — <t t-esc="retainer_plan_price_str"/> <t t-esc="retainer_plan_currency_sym"/></t>
-                                    </span>
-                                </div>
-                            </t>
-                            <div class="d-flex flex-wrap gap-2">
-                                <t t-if="retainer_allow_plan_change">
-                                    <a t-attf-href="/my/requests/#{order.id}/retainer/change-plan" class="btn btn-outline-primary">
-                                        <i class="fa fa-exchange me-1"/> Change plan
-                                    </a>
-                                </t>
-                                <a t-attf-href="/my/requests/#{order.id}/retainer/cancel/preview" class="btn btn-outline-danger">
-                                    <i class="fa fa-times-circle me-1"/> Request cancellation
-                                </a>
-                            </div>
-                            <p class="text-muted small mt-2 mb-0"><i class="fa fa-info-circle me-1"/> Change plan shows proration before you commit. Cancellation shows refund amount before you confirm.</p>
-                        </div>
                     </div>
-                    <div t-if="is_retainer and not order.wink_entitlement_ids and order.wink_cancellation_requested and not is_closed_or_cancelled" class="card mt-3 border-warning">
-                        <div class="card-body py-2">
-                            <span class="text-warning"><i class="fa fa-info-circle"/> Cancellation requested — our team will process it shortly.</span>
-                            <t t-if="cancellation_proration">
-                                <div class="mt-2 pt-2 border-top border-warning">
-                                    <strong>Refund (at standard monthly rate):</strong>
-                                    <t t-if="cancellation_credit_policy_label"> <t t-esc="cancellation_credit_policy_label"/> — </t>
-                                    <strong><t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(cancellation_proration.get('remaining_value', 0))"/></strong>
-                                    <span class="text-muted small">(<t t-esc="cancellation_proration.get('remaining_days', 0)"/> days × <t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(cancellation_proration.get('daily_rate', 0))"/>/day)</span>
-                                </div>
-                            </t>
-                        </div>
-                    </div>
+                    </t>
 
-                    <!-- ENH-8: Reject Quote Modal -->
+                    <!-- ENH-8: Decline Request Modal -->
                     <div class="modal fade" id="winkRejectModal" tabindex="-1" aria-labelledby="winkRejectModalLabel" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content rounded-3 border-0 shadow">
                                 <div class="modal-header border-0 pb-0">
                                     <h5 class="modal-title fw-bold" id="winkRejectModalLabel">
-                                        <i class="fa fa-times-circle text-danger me-2"/>Reject this Quote
+                                        <i class="fa fa-times-circle text-danger me-2"/>Decline this Request
                                     </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"/>
                                 </div>
                                 <form method="post" t-attf-action="/my/requests/#{order.id}/reject">
                                     <div class="modal-body">
                                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                        <p class="text-muted small mb-3">This will cancel your quote. You can always submit a new request if your requirements change.</p>
+                                        <p class="text-muted small mb-3">This will cancel your service request. You can always submit a new request if your requirements change.</p>
                                         <label for="winkRejectReason" class="form-label fw-semibold small">
                                             Reason for rejection <span class="text-muted fw-normal">(optional)</span>
                                         </label>
@@ -2406,17 +2544,6 @@
                         });
                     </script>
 
-                    <!-- Portal Chatter: communication history between customer and coordinator -->
-                    <div id="wink-portal-chatter" class="mt-5">
-                        <h5 class="border-bottom pb-2"><i class="fa fa-comments me-2"/>Communication History</h5>
-                        <t t-call="portal.message_thread">
-                            <t t-set="object" t-value="order"/>
-                            <t t-set="chatter_mode" t-value="'view'"/>
-                            <t t-set="allow_composer" t-value="True"/>
-                            <t t-set="display_rating" t-value="False"/>
-                            <t t-set="token" t-value="order.access_token"/>
-                        </t>
-                    </div>
 
                     </t><!-- /not submitted -->
                     </t><!-- /normal view (t-else of bundle_review) -->
@@ -2739,42 +2866,147 @@
             </t>
         </template>
 
-        <!-- RET-006: Cancellation preview page -->
+        <!-- RET-006: Cancellation preview page — matches bundle cancel page design -->
         <template id="wink_retainer_cancel_preview" name="Cancel Retainer — Preview">
-            <t t-call="website.layout">
-                <div class="container mt-5 mb-5" style="max-width:600px;">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header py-3" style="background:var(--wink-primary,#0055b7); color:#fff;">
-                            <h4 class="mb-0"><i class="fa fa-times-circle me-2"/>Request Cancellation</h4>
+            <t t-call="portal.portal_layout">
+                <t t-set="breadcrumbs_searchbar" t-value="True"/>
+                <div class="container py-4" style="max-width:720px;">
+
+                    <!-- Breadcrumb -->
+                    <nav class="mb-3">
+                        <ol class="breadcrumb small mb-0">
+                            <li class="breadcrumb-item"><a href="/my">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/my/requests">My Requests</a></li>
+                            <li class="breadcrumb-item"><a t-attf-href="/my/requests/#{order.id}"><t t-esc="order.name"/></a></li>
+                            <li class="breadcrumb-item active">Cancel Service</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Error banner -->
+                    <t t-if="error">
+                        <div class="alert alert-danger small mb-3" role="alert">
+                            <i class="fa fa-exclamation-circle me-1"/>
+                            <t t-if="error == 'confirm_required'">Please tick the confirmation checkbox before submitting.</t>
+                            <t t-else=""><t t-esc="error"/></t>
                         </div>
-                        <div class="card-body">
-                            <p class="mb-2">Service: <strong><t t-esc="product.name"/></strong></p>
-                            <t t-if="end_date">
-                                <p class="mb-1">Subscription ends: <strong><t t-esc="end_date"/></strong></p>
-                            </t>
-                            <p class="text-muted small mb-2" t-if="effective_date_policy"><strong>Effective:</strong> <t t-if="effective_date_policy == 'next_cycle'">Next billing cycle</t><t t-else="">Immediate</t> — <t t-if="effective_date_policy == 'next_cycle'">cancellation applies at next renewal (coordinator may schedule).</t><t t-else="">cancellation applies now.</t></p>
-                            <t t-if="proration">
-                                <p class="mb-1">Remaining days: <strong><t t-esc="proration.get('remaining_days', 0)"/></strong></p>
-                                <p class="mb-2"><strong>Policy:</strong> <t t-esc="policy_label"/></p>
-                                <p class="mb-3" t-if="show_refund">
-                                    <strong>Amount:</strong> <t t-esc="order.currency_id.symbol or 'AED'"/> <t t-esc="'{:,.2f}'.format(proration.get('remaining_value', 0))"/>
-                                    <span class="text-muted small">(<t t-esc="'{:,.2f}'.format(proration.get('daily_rate', 0))"/> × <t t-esc="proration.get('remaining_days', 0)"/> days)</span>
-                                </p>
-                                <p t-else="" class="mb-3 text-muted">No refund will be issued.</p>
-                            </t>
-                            <form method="post" t-attf-action="/my/requests/#{order.id}/retainer/cancel">
-                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                <div class="mb-3">
-                                    <label class="form-label" for="cancel_reason">Reason (optional)</label>
-                                    <textarea id="cancel_reason" name="reason" class="form-control" rows="2" placeholder="Let us know why you're cancelling..."/>
+                    </t>
+
+                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+
+                        <!-- Header -->
+                        <div class="card-header py-3 rounded-top-3"
+                             style="background:linear-gradient(135deg,#c62753 0%,#8b1a35 100%);">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa fa-times-circle fa-lg text-white"/>
+                                <div>
+                                    <div class="fw-bold text-white fs-6">Cancel Service</div>
+                                    <div class="text-white small opacity-75"><t t-esc="order.name"/></div>
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-danger">Confirm cancellation</button>
-                                    <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary">Back</a>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4">
+
+                            <!-- Summary grid -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small mb-1">Service</div>
+                                    <div class="fw-semibold small"><t t-esc="product.name or order.name"/></div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small mb-1">Current Plan</div>
+                                    <div class="fw-semibold small"><t t-esc="order.plan_id.name if order.plan_id else (order.recurring_plan_id.name if order.recurring_plan_id else '—')"/></div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small mb-1">Start Date</div>
+                                    <div class="fw-semibold small">
+                                        <t t-if="start_date"><t t-esc="start_date" t-options='{"widget":"date"}'/></t>
+                                        <t t-else="">—</t>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="text-muted small mb-1">Next Renewal</div>
+                                    <div class="fw-semibold small">
+                                        <t t-if="end_date"><t t-esc="end_date" t-options='{"widget":"date"}'/></t>
+                                        <t t-else="">—</t>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Refund preview box -->
+                            <t t-set="refund_amount" t-value="proration.get('remaining_value', 0) if proration else 0"/>
+                            <div class="rounded-3 p-3 mb-4"
+                                 t-attf-style="background:{{ 'rgba(198,39,83,0.07)' if refund_amount > 0 else 'rgba(0,0,0,0.04)' }};border:1px solid {{ '#c62753' if refund_amount > 0 else '#dee2e6' }};">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="fw-semibold small">Estimated Refund</span>
+                                    <span t-attf-class="fw-bold fs-5 {{ 'text-danger' if refund_amount > 0 else 'text-muted' }}">
+                                        <t t-esc="order.currency_id.symbol or 'AED'"/>&#160;<t t-esc="'%.2f' % refund_amount"/>
+                                    </span>
+                                </div>
+                                <t t-if="proration and proration.get('remaining_days', 0) > 0">
+                                    <div class="text-muted small">
+                                        <t t-esc="proration.get('remaining_days', 0)"/> days remaining ×
+                                        <t t-esc="order.currency_id.symbol or 'AED'"/>&#160;<t t-esc="'%.4f' % proration.get('daily_rate', 0)"/>/day
+                                        <t t-if="policy_label"> · <t t-esc="policy_label"/></t>
+                                    </div>
+                                </t>
+                                <t t-if="not show_refund">
+                                    <div class="text-muted small">No refund will be issued per the cancellation policy.</div>
+                                </t>
+                                <t t-if="effective_date_policy == 'next_cycle'">
+                                    <div class="mt-2 small text-warning-emphasis fw-semibold">
+                                        <i class="fa fa-info-circle me-1"/>
+                                        Cancellation takes effect at the next billing cycle.
+                                    </div>
+                                </t>
+                            </div>
+
+                            <!-- Warning -->
+                            <div class="alert alert-warning small mb-4" role="alert">
+                                <i class="fa fa-exclamation-triangle me-1"/>
+                                <strong>This action is irreversible.</strong>
+                                The service will be cancelled and no new requests can be made under this subscription.
+                                Your coordinator will process the cancellation and issue any applicable credit.
+                            </div>
+
+                            <!-- Form -->
+                            <form t-attf-action="/my/requests/#{order.id}/retainer/cancel" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                <div class="mb-3">
+                                    <label for="cancel_reason" class="form-label small fw-semibold">
+                                        Reason for Cancellation <span class="text-muted fw-normal">(optional)</span>
+                                    </label>
+                                    <select class="form-select form-select-sm" id="cancel_reason" name="cancel_reason">
+                                        <option value="">Select a reason...</option>
+                                        <t t-foreach="close_reasons" t-as="cr">
+                                            <option t-att-value="cr.name"><t t-esc="cr.name"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+
+                                <div class="form-check mb-4">
+                                    <input type="checkbox" class="form-check-input" id="confirm_cancel"
+                                           name="confirm_cancel" value="1" required="required"/>
+                                    <label class="form-check-label small" for="confirm_cancel">
+                                        I understand this is permanent and cannot be undone.
+                                    </label>
+                                </div>
+
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a t-attf-href="/my/requests/#{order.id}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fa fa-arrow-left me-1"/>Keep My Service
+                                    </a>
+                                    <button type="submit" class="btn btn-sm fw-semibold"
+                                            style="background:#c62753;color:#fff;border-color:#c62753;">
+                                        <i class="fa fa-times-circle me-1"/>Confirm Cancellation
+                                    </button>
                                 </div>
                             </form>
+
                         </div>
                     </div>
+
                 </div>
             </t>
         </template>
@@ -3511,7 +3743,7 @@
                                         <div class="d-flex align-items-center gap-3 rounded-2 p-2" style="background:#fff;border:1px solid #fecaca;">
                                             <i class="fa fa-file-text-o flex-shrink-0" style="color:#dc3545;"/>
                                             <div class="flex-grow-1 min-width-0">
-                                                <div class="small fw-semibold text-truncate">Quote awaiting approval: <t t-esc="qa.wink_source_product_id.name or qa.name"/></div>
+                                                <div class="small fw-semibold text-truncate">Awaiting your approval: <t t-esc="qa.wink_source_product_id.name or qa.name"/></div>
                                                 <div class="text-muted" style="font-size:.72rem;"><t t-esc="qa.name"/></div>
                                             </div>
                                             <a t-attf-href="/my/requests/{{ qa.id }}" class="btn btn-sm fw-semibold flex-shrink-0"
