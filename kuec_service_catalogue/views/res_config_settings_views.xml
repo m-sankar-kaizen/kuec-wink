@@ -15,6 +15,16 @@
                             <field name="wink_company_reminder_days"/>
                         </setting>
                     </block>
+
+                    <!-- Terms & Conditions editor -->
+                    <block title="Portal Terms &amp; Conditions" name="kuec_wink_terms_setting_container">
+                        <setting id="kuec_terms_html" string="Terms &amp; Conditions Content"
+                                 help="HTML content displayed at /terms-and-conditions on the customer portal. Shown to customers before bundle payment.">
+                            <div class="col-12 mt-2">
+                                <field name="wink_terms_html" widget="html" style="min-height:300px;"/>
+                            </div>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

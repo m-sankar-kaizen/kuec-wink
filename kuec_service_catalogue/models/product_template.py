@@ -391,10 +391,13 @@ class ProductTemplate(models.Model):
                     pct = (1 - (monthly_equivalent / baseline_price_per_month)) * 100
                     savings_pct = max(0, round(pct))
             show_savings = savings_pct >= 1
-            # Reference (pre-discount) price for crossed-out display: reference = price / (1 - pct/100)
+            # Reference (pre-discount) price for crossed-out display: baseline_monthly × period_months
+            # e.g. monthly=6000, annual=60000 → reference = 6000 × 12 = 72000 (not 60000/0.83)
             reference_price = price
-            if show_savings and savings_pct and savings_pct < 100:
-                reference_price = round(price / (1 - savings_pct / 100.0), 2)
+            if show_savings and months and months > 0:
+                _baseline = baseline_by_variant.get(_variant_key(p)) or default_baseline
+                if _baseline > 0:
+                    reference_price = round(_baseline * months, 2)
             # Features and most popular from pricing line
             features = []
             if getattr(line, 'kuec_plan_features', None):

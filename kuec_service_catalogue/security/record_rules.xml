@@ -12,17 +12,6 @@
             <field name="perm_unlink" eval="False"/>
         </record>
 
-        <record id="kuec_doc_submission_portal_rule" model="ir.rule">
-            <field name="name">Document Submission: Portal Isolation</field>
-            <field name="model_id" ref="model_kuec_document_submission"/>
-            <field name="domain_force">[('order_id.partner_id', 'child_of', [user.partner_id.commercial_partner_id.id])]</field>
-            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_unlink" eval="False"/>
-        </record>
-
         <record id="wink_entitlement_portal_rule" model="ir.rule">
             <field name="name">Bundle Entitlement: Portal Isolation</field>
             <field name="model_id" ref="model_wink_bundle_entitlement"/>

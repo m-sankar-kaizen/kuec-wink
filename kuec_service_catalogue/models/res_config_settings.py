@@ -20,3 +20,10 @@ class ResConfigSettings(models.TransientModel):
         readonly=False,
         help="This company's reminder days (e.g. 30, 14, 7). Empty = use global default."
     )
+    wink_terms_html = fields.Html(
+        related='company_id.wink_terms_html',
+        string='Terms & Conditions',
+        readonly=False,
+        sanitize=False,
+        help='HTML content shown at /terms-and-conditions on the customer portal.'
+    )

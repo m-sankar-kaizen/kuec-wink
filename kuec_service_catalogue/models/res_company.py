@@ -12,3 +12,9 @@ class ResCompany(models.Model):
         help='Comma-separated days before subscription end to send a reminder (e.g. 30, 14, 7). '
              'Used when product has no override. Empty = use global default.'
     )
+    wink_terms_html = fields.Html(
+        string='Terms & Conditions',
+        sanitize=False,
+        help='HTML content shown at /terms-and-conditions on the customer portal. '
+             'Editable here or via Settings → Wink → Terms & Conditions.'
+    )
