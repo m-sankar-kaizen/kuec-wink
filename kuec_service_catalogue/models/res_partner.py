@@ -74,26 +74,4 @@ class ResPartner(models.Model):
             partner.wink_rating_count = len(scores)
             partner.wink_avg_rating = sum(scores) / len(scores) if scores else 0.0
 
-    # ── eWallet ──────────────────────────────────────────────────────────────
-
-    wallet_transaction_ids = fields.One2many(
-        'kuec.wallet.transaction',
-        'partner_id',
-        string='Wallet Transactions',
-        help='All WINK eWallet transactions for this customer.',
-    )
-
-    wink_wallet_balance = fields.Monetary(
-        string='eWallet Balance',
-        currency_field='currency_id',
-        compute='_compute_wink_wallet_balance',
-        store=True,
-        help='Current WINK eWallet balance. Top-ups add credit; service payments deduct.',
-    )
-
-    @api.depends('wallet_transaction_ids.amount', 'wallet_transaction_ids.state')
-    def _compute_wink_wallet_balance(self):
-        """Sum all done wallet transaction amounts for each partner to derive the current balance."""
-        for partner in self:
-            txns = partner.wallet_transaction_ids.filtered(lambda t: t.state == 'done')
-            partner.wink_wallet_balance = sum(txns.mapped('amount'))
+    # eWallet fields removed — wallet module (kuec_wallet.py) not yet committed

@@ -305,56 +305,28 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
 
-                    <!-- CR-2 Wizard stepper; UI-BUG-003 (FB-003): hide Employees step when not required -->
+                    <!-- Wizard progress indicator — 2 steps for standalone, original for bundles -->
                     <t t-if="step and not wink_is_bundle">
                         <div class="card border-0 shadow-sm mb-4 px-4 py-3">
                             <div style="display:flex;align-items:flex-start;">
-                                <!-- Step 1: Service (always done at this point) -->
+                                <!-- Step 1: Service (done) -->
                                 <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:60px;">
                                     <div class="wink-step-node wink-step-done"><i class="fa fa-check"/></div>
                                     <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;color:var(--wink-primary);">Service</small>
                                 </div>
-                                <!-- Connector 1→2 -->
-                                <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 2 else '#dee2e6') + ';'"/>
-                                <!-- Step 2: Configure -->
+                                <!-- Connector -->
+                                <div style="flex:1;height:3px;margin-top:16px;background:var(--wink-primary);"/>
+                                <!-- Step 2: Submit (active) -->
                                 <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
-                                    <div t-att-class="'wink-step-node ' + ('wink-step-done' if step > 1 else ('wink-step-active' if step == 1 else 'wink-step-future'))">
-                                        <i t-if="step > 1" class="fa fa-check"/>
-                                        <span t-else="">2</span>
-                                    </div>
-                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
-                                           t-att-style="'color:' + ('var(--wink-primary)' if step >= 1 else '#adb5bd') + ';'">Configure</small>
-                                </div>
-                                <!-- Employees step (only when required) -->
-                                <t t-if="product.requires_employee_selection">
-                                    <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 3 else '#dee2e6') + ';'"/>
-                                    <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
-                                        <div t-att-class="'wink-step-node ' + ('wink-step-done' if step > 2 else ('wink-step-active' if step == 2 else 'wink-step-future'))">
-                                            <i t-if="step > 2" class="fa fa-check"/>
-                                            <span t-else="">3</span>
-                                        </div>
-                                        <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
-                                               t-att-style="'color:' + ('var(--wink-primary)' if step >= 2 else '#adb5bd') + ';'">Employees</small>
-                                    </div>
-                                    <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 3 else '#dee2e6') + ';'"/>
-                                </t>
-                                <t t-if="not product.requires_employee_selection">
-                                    <div t-att-style="'flex:1;height:3px;margin-top:16px;background:' + ('var(--wink-primary)' if step >= 3 else '#dee2e6') + ';'"/>
-                                </t>
-                                <!-- Step 4: Review -->
-                                <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:55px;">
-                                    <div t-att-class="'wink-step-node ' + ('wink-step-active' if step == 3 else 'wink-step-future')">
-                                        <span>4</span>
-                                    </div>
-                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
-                                           t-att-style="'color:' + ('var(--wink-primary)' if step == 3 else '#adb5bd') + ';'">Review</small>
+                                    <div class="wink-step-node wink-step-active"><span>2</span></div>
+                                    <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;color:var(--wink-primary);">Submit</small>
                                 </div>
                             </div>
                         </div>
                     </t>
 
-                    <!-- CR-6 / UI-REV-002: Step 3 — Review Your Request (redesigned order summary card) -->
-                    <t t-if="step == 3 and wizard_draft">
+                    <!-- CR-6 / UI-REV-002: Step 3 — Review (bundles only; standalone submits directly) -->
+                    <t t-if="step == 3 and wizard_draft and wink_is_bundle">
                         <!-- UI-REV-002: Premium review card with gradient header -->
                         <div class="wink-review-card mb-4">
                             <div class="wink-review-header">
@@ -1143,6 +1115,24 @@
                             </t>
                         </div>
 
+                        <!-- Required Documents Info (informational — upload happens on the request page after submission) -->
+                        <t t-if="not wink_is_bundle and product.kuec_document_ids">
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="fw-semibold mb-1"><i class="fa fa-paperclip me-1" style="color:var(--wink-primary);"/>Required Documents</h6>
+                                <p class="text-muted small mb-3">The following documents are needed. You can upload them from your request page after submission.</p>
+                                <ul class="list-unstyled mb-0">
+                                    <t t-foreach="product.kuec_document_ids.sorted('sequence')" t-as="doc">
+                                        <li class="d-flex align-items-center gap-2 mb-2 small">
+                                            <i class="fa fa-circle" style="font-size:0.35rem;color:var(--wink-primary);flex-shrink:0;margin-top:5px;"/>
+                                            <span><t t-esc="doc.name"/></span>
+                                            <span t-if="doc.requirement == 'required'" class="badge rounded-pill ms-1" style="background:rgba(220,53,69,0.1);color:#dc3545;font-size:0.6rem;padding:2px 6px;">Required</span>
+                                            <span t-else="" class="badge rounded-pill ms-1" style="background:rgba(108,117,125,0.1);color:#6c757d;font-size:0.6rem;padding:2px 6px;">Optional</span>
+                                        </li>
+                                    </t>
+                                </ul>
+                            </div>
+                        </t>
+
                         <!-- T&C acceptance checkbox -->
                         <div class="form-check mt-4 mb-3">
                             <input type="checkbox" class="form-check-input" id="wink-tnc-check"/>
@@ -1449,7 +1439,7 @@
                     <!-- Normal request detail view -->
                     <t t-else="">
 
-                    <!-- 5-step Progress Tracker (portal_stage-driven) -->
+                    <!-- 6-step Progress Tracker (portal_stage-driven) -->
                     <t t-set="ps" t-value="portal_stage"/>
                     <div t-if="ps != 'cancelled'" class="card border-0 shadow-sm mb-4 px-4 py-3">
                         <style>
@@ -1460,61 +1450,74 @@
                             @keyframes wink-pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,85,183,0.35);}50%{box-shadow:0 0 0 7px rgba(0,85,183,0);}}
                         </style>
                         <div style="display:flex;align-items:flex-start;overflow-x:auto;">
-                            <!-- Step 1: Submitted (always done once on this page) -->
-                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:60px;">
+                            <!-- Step 1: Initiated (always done — they're on this page) -->
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:58px;">
                                 <div class="wink-step-node wink-step-done"><i class="fa fa-check"/></div>
-                                <small class="mt-1 fw-semibold text-center" style="color:var(--wink-primary);font-size:0.65rem;white-space:nowrap;">Submitted</small>
+                                <small class="mt-1 fw-semibold text-center" style="color:var(--wink-primary);font-size:0.62rem;white-space:nowrap;">Initiated</small>
                             </div>
-                            <!-- Connector 1→2 -->
-                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:12px;background:' + ('var(--wink-primary)' if ps not in ('submitted',) else '#dee2e6') + ';'"/>
-                            <!-- Step 2: Processing -->
-                            <t t-set="s2_done" t-value="ps not in ('submitted', 'processing')"/>
-                            <t t-set="s2_active" t-value="ps == 'processing'"/>
-                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
+                            <!-- Connector 1→2 (always done) -->
+                            <div style="flex:1;height:3px;margin-top:16px;min-width:10px;background:var(--wink-primary);"/>
+                            <!-- Step 2: Submitted -->
+                            <t t-set="s2_done" t-value="ps not in ('submitted',)"/>
+                            <t t-set="s2_active" t-value="ps == 'submitted'"/>
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:62px;">
                                 <div t-att-class="'wink-step-node ' + ('wink-step-done' if s2_done else ('wink-step-active' if s2_active else 'wink-step-future'))">
                                     <i t-if="s2_done" class="fa fa-check"/>
                                     <span t-else="">2</span>
                                 </div>
-                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
-                                       t-att-style="'color:' + ('var(--wink-primary)' if s2_done or s2_active else '#adb5bd') + ';'">Processing</small>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.62rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if s2_done or s2_active else '#adb5bd') + ';'">Submitted</small>
                             </div>
                             <!-- Connector 2→3 -->
-                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:12px;background:' + ('var(--wink-primary)' if ps in ('ready_for_payment', 'confirmed', 'completed', 'active', 'pending_activation') else '#dee2e6') + ';'"/>
-                            <!-- Step 3: Ready for Payment -->
-                            <t t-set="s3_done" t-value="ps in ('confirmed', 'completed', 'active', 'pending_activation')"/>
-                            <t t-set="s3_active" t-value="ps == 'ready_for_payment'"/>
-                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:80px;">
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps not in ('submitted', 'processing') else '#dee2e6') + ';'"/>
+                            <!-- Step 3: Processing -->
+                            <t t-set="s3_done" t-value="ps not in ('submitted', 'processing')"/>
+                            <t t-set="s3_active" t-value="ps == 'processing'"/>
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:66px;">
                                 <div t-att-class="'wink-step-node ' + ('wink-step-done' if s3_done else ('wink-step-active' if s3_active else 'wink-step-future'))">
                                     <i t-if="s3_done" class="fa fa-check"/>
                                     <span t-else="">3</span>
                                 </div>
-                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;"
-                                       t-att-style="'color:' + ('var(--wink-primary)' if s3_done or s3_active else '#adb5bd') + ';'">Ready for<br/>Payment</small>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.62rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if s3_done or s3_active else '#adb5bd') + ';'">Processing</small>
                             </div>
                             <!-- Connector 3→4 -->
-                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:12px;background:' + ('var(--wink-primary)' if ps in ('confirmed', 'completed', 'active') else '#dee2e6') + ';'"/>
-                            <!-- Step 4: Confirmed -->
-                            <t t-set="s4_done" t-value="ps in ('completed', 'active')"/>
-                            <t t-set="s4_active" t-value="ps in ('confirmed', 'pending_activation')"/>
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps in ('ready_for_payment', 'confirmed', 'completed', 'active', 'pending_activation') else '#dee2e6') + ';'"/>
+                            <!-- Step 4: Ready for Payment -->
+                            <t t-set="s4_done" t-value="ps in ('confirmed', 'completed', 'active', 'pending_activation')"/>
+                            <t t-set="s4_active" t-value="ps == 'ready_for_payment'"/>
                             <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:70px;">
                                 <div t-att-class="'wink-step-node ' + ('wink-step-done' if s4_done else ('wink-step-active' if s4_active else 'wink-step-future'))">
                                     <i t-if="s4_done" class="fa fa-check"/>
                                     <span t-else="">4</span>
                                 </div>
-                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
-                                       t-att-style="'color:' + ('var(--wink-primary)' if s4_done or s4_active else '#adb5bd') + ';'">Confirmed</small>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.62rem;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if s4_done or s4_active else '#adb5bd') + ';'">Ready for<br/>Payment</small>
                             </div>
                             <!-- Connector 4→5 -->
-                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:12px;background:' + ('var(--wink-primary)' if ps in ('completed', 'active') else '#dee2e6') + ';'"/>
-                            <!-- Step 5: Active (bundle) / Completed (other) -->
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps in ('confirmed', 'completed', 'active') else '#dee2e6') + ';'"/>
+                            <!-- Step 5: Confirmed -->
                             <t t-set="s5_done" t-value="ps in ('completed', 'active')"/>
-                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:65px;">
-                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if s5_done else 'wink-step-future')">
+                            <t t-set="s5_active" t-value="ps in ('confirmed', 'pending_activation')"/>
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:66px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if s5_done else ('wink-step-active' if s5_active else 'wink-step-future'))">
                                     <i t-if="s5_done" class="fa fa-check"/>
                                     <span t-else="">5</span>
                                 </div>
-                                <small class="mt-1 fw-semibold text-center" style="font-size:0.65rem;white-space:nowrap;"
-                                       t-att-style="'color:' + ('var(--wink-primary)' if s5_done else '#adb5bd') + ';'">
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.62rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if s5_done or s5_active else '#adb5bd') + ';'">Confirmed</small>
+                            </div>
+                            <!-- Connector 5→6 -->
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps in ('completed', 'active') else '#dee2e6') + ';'"/>
+                            <!-- Step 6: Active / Completed -->
+                            <t t-set="s6_done" t-value="ps in ('completed', 'active')"/>
+                            <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:62px;">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if s6_done else 'wink-step-future')">
+                                    <i t-if="s6_done" class="fa fa-check"/>
+                                    <span t-else="">6</span>
+                                </div>
+                                <small class="mt-1 fw-semibold text-center" style="font-size:0.62rem;white-space:nowrap;"
+                                       t-att-style="'color:' + ('var(--wink-primary)' if s6_done else '#adb5bd') + ';'">
                                     <t t-if="wink_is_bundle or is_retainer">Active</t>
                                     <t t-else="">Completed</t>
                                 </small>
@@ -1522,8 +1525,145 @@
                         </div>
                     </div>
 
-                    <!-- Submission success banner (shown only on first landing after submit) -->
-                    <div t-if="submitted" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
+                    <!-- Standalone Action Bar — shown for non-bundle, non-retainer services only -->
+                    <t t-if="not wink_is_bundle and not is_retainer and ps != 'cancelled'">
+
+                        <!-- SUBMITTED: awaiting coordinator review -->
+                        <t t-if="ps == 'submitted'">
+                            <div class="d-flex align-items-center gap-3 p-4 mb-4 rounded-3 shadow-sm"
+                                 style="background:rgba(0,85,183,0.06);border-left:4px solid var(--wink-primary);">
+                                <i class="fa fa-info-circle fa-2x flex-shrink-0" style="color:var(--wink-primary);"/>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 fw-semibold" style="color:var(--wink-primary);">Request received</h6>
+                                    <p class="mb-0 text-muted small">Our team is reviewing your request and will notify you once the quote is ready.</p>
+                                </div>
+                                <a href="#discussion" class="btn btn-outline-primary btn-sm rounded-pill flex-shrink-0"
+                                   onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                    <i class="fa fa-comments me-1"/>Feedback
+                                </a>
+                            </div>
+                        </t>
+
+                        <!-- PROCESSING: documents required — show upload section -->
+                        <t t-if="ps == 'processing'">
+                            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                <div class="card-header border-0 py-3 px-4 fw-semibold" style="background:rgba(0,85,183,0.06);color:var(--wink-primary);">
+                                    <i class="fa fa-paperclip me-2"/>Required Documents
+                                </div>
+                                <div class="card-body p-4">
+                                    <p class="text-muted small mb-3">Upload the required documents below. Our team will review them before proceeding.</p>
+                                    <t t-foreach="required_docs" t-as="doc">
+                                        <div class="d-flex align-items-start gap-3 mb-4 pb-3 border-bottom">
+                                            <div class="flex-grow-1">
+                                                <span class="fw-semibold small">
+                                                    <i class="fa fa-circle me-1" style="font-size:0.4rem;vertical-align:middle;color:var(--wink-primary);"/>
+                                                    <t t-esc="doc.name"/>
+                                                </span>
+                                                <span t-if="doc.requirement == 'required'" class="badge ms-2 rounded-pill"
+                                                      style="background:rgba(220,53,69,0.12);color:#dc3545;font-size:0.65rem;">Required</span>
+                                                <span t-else="" class="badge ms-2 rounded-pill"
+                                                      style="background:rgba(108,117,125,0.12);color:#6c757d;font-size:0.65rem;">Optional</span>
+                                            </div>
+                                            <form method="post" t-attf-action="/my/requests/#{order.id}/upload_document"
+                                                  enctype="multipart/form-data" class="flex-shrink-0">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <input type="hidden" name="doc_req_name" t-att-value="doc.name"/>
+                                                <label class="btn btn-sm btn-outline-primary rounded-pill mb-0" style="cursor:pointer;">
+                                                    <i class="fa fa-paperclip me-1"/>Attach files
+                                                    <input type="file" name="doc_files" multiple="multiple"
+                                                           style="display:none;" onchange="this.form.submit();"/>
+                                                </label>
+                                            </form>
+                                        </div>
+                                    </t>
+                                    <div class="text-end">
+                                        <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                           onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                            <i class="fa fa-comments me-1"/>Feedback
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- READY FOR PAYMENT: Accept & Pay + Reject + Feedback -->
+                        <t t-if="ps == 'ready_for_payment'">
+                            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-semibold mb-1" style="color:var(--wink-primary);">
+                                        <i class="fa fa-check-circle me-1"/>Quote ready for your approval
+                                    </h6>
+                                    <p class="text-muted small mb-4">Review the order details below, then accept to proceed to payment or reject if you need changes.</p>
+                                    <div class="d-flex flex-wrap gap-3 align-items-center">
+                                        <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill fw-bold shadow-sm">
+                                                <i class="fa fa-check me-2"/>Accept &amp; Pay
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-outline-danger btn-lg px-4 rounded-pill fw-bold"
+                                                data-bs-toggle="modal" data-bs-target="#winkRejectModal">
+                                            <i class="fa fa-times me-1"/>Reject
+                                        </button>
+                                        <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill ms-auto"
+                                           onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                            <i class="fa fa-comments me-1"/>Feedback
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- CONFIRMED: View Service + optional Proceed to Payment + Feedback -->
+                        <t t-if="ps == 'confirmed'">
+                            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                <div class="card-body p-4 d-flex flex-wrap align-items-center gap-3">
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-semibold mb-1 text-success">
+                                            <i class="fa fa-check-circle me-1"/>Request confirmed
+                                        </h6>
+                                        <p class="mb-0 text-muted small">Your service is being delivered. Track progress in your tasks.</p>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <t t-if="not is_paid and order.amount_total > 0">
+                                            <a t-attf-href="/my/requests/#{order.id}/pay"
+                                               class="btn btn-success btn-lg px-4 rounded-pill fw-bold shadow-sm">
+                                                <i class="fa fa-credit-card me-2"/>Proceed to Payment
+                                            </a>
+                                        </t>
+                                        <a href="/my/tasks" class="btn btn-outline-primary btn-sm rounded-pill">
+                                            <i class="fa fa-eye me-1"/>View Service
+                                        </a>
+                                        <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                           onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                            <i class="fa fa-comments me-1"/>Feedback
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- COMPLETED: Feedback only -->
+                        <t t-if="ps == 'completed'">
+                            <div class="d-flex align-items-center gap-3 p-4 mb-4 rounded-3 shadow-sm"
+                                 style="background:rgba(40,167,69,0.07);border-left:4px solid #28a745;">
+                                <i class="fa fa-check-circle fa-2x flex-shrink-0 text-success"/>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 fw-semibold text-success">Service completed</h6>
+                                    <p class="mb-0 text-muted small">This request has been completed. Thank you for choosing KUEC.</p>
+                                </div>
+                                <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill flex-shrink-0"
+                                   onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                    <i class="fa fa-comments me-1"/>Feedback
+                                </a>
+                            </div>
+                        </t>
+
+                    </t>
+                    <!-- /Standalone Action Bar -->
+
+                    <!-- Submission success banner — bundles/retainers only (standalone uses action bar) -->
+                    <div t-if="submitted and (wink_is_bundle or is_retainer)" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
                         <i class="fa fa-check-circle fa-2x flex-shrink-0"/>
                         <div class="flex-grow-1">
                             <h5 class="mb-1 fw-bold">Request submitted successfully!</h5>
@@ -1547,7 +1687,9 @@
                         <t t-if="close_reason_name"> (<t t-esc="close_reason_name"/>)</t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
-                    <div t-elif="order.state == 'sale' and not is_paid" class="alert alert-info alert-dismissible fade show" role="alert">
+                    <!-- Old state banners — bundles/retainers only; standalone uses the action bar -->
+                    <t t-if="wink_is_bundle or is_retainer">
+                    <div t-if="order.state == 'sale' and not is_paid" class="alert alert-info alert-dismissible fade show" role="alert">
                         <strong>Quote approved — complete your payment</strong>
                         <t t-if="order.wink_price_confirmed"> to confirm your request.</t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
@@ -1557,7 +1699,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
                     <!-- Modern Action Banners -->
-                    <div t-if="order.state in ['draft', 'sent'] and not quote_rejected" class="alert shadow-sm border-0 d-flex align-items-center gap-3 p-4 mb-4 rounded-3" 
+                    <div t-if="order.state in ['draft', 'sent'] and not quote_rejected" class="alert shadow-sm border-0 d-flex align-items-center gap-3 p-4 mb-4 rounded-3"
                          t-att-style="'background:rgba(0,85,183,0.05); color:var(--wink-primary); border-left: 5px solid var(--wink-primary) !important;'">
                         <div class="flex-shrink-0">
                             <i class="fa fa-info-circle fa-2x"/>
@@ -1573,13 +1715,13 @@
                             </t>
                         </div>
                     </div>
-                    
                     <div t-if="submitted and not is_closed_or_cancelled and order.state in ['draft', 'sent']" class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background: #28a745;">
                         <i class="fa fa-check-circle fa-2x"/>
                         <div>
                             <h5 class="mb-0 fw-bold">Request successfully submitted!</h5>
                         </div>
                     </div>
+                    </t>
 
                     <div t-if="quote_rejected" class="alert alert-secondary border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3">
                         <i class="fa fa-times-circle fa-2x"/>
@@ -1683,68 +1825,71 @@
                             <t t-if="is_closed_or_cancelled">
                                 <p class="text-muted">This request has been closed. If you have any questions, please contact your coordinator.</p>
                             </t>
-                            <t t-elif="order.state in ['draft', 'sent'] and not order.wink_price_confirmed">
-                                <p>Your coordinator will set the price for this request. Once the price is set you will see it here and can <strong>approve</strong> (to confirm and pay), <strong>reject</strong>, or discuss with the team.</p>
-                            </t>
-                            <t t-elif="order.state in ['draft', 'sent'] and order.wink_price_confirmed">
-                                <div class="bg-light p-4 rounded-3 border mb-3">
-                                    <h6 class="fw-bold mb-3"><i class="fa fa-shield me-2 text-success"/> Review &amp; Confirm</h6>
-                                    <p class="text-muted small">By approving this quote, you confirm the tier and pricing selected. You will be redirected to the payment screen to finalize your request.</p>
-                                    <div class="d-flex flex-wrap gap-3 mt-4">
-                                        <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
-                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-                                            <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
-                                                <i class="fa fa-check-circle me-2"/> Approve quote
+                            <!-- Inline approve/reject UI — bundles and retainers only; standalone uses the action bar above -->
+                            <t t-elif="wink_is_bundle or is_retainer">
+                                <t t-if="order.state in ['draft', 'sent'] and not order.wink_price_confirmed">
+                                    <p>Your coordinator will set the price for this request. Once the price is set you will see it here and can <strong>approve</strong> (to confirm and pay), <strong>reject</strong>, or discuss with the team.</p>
+                                </t>
+                                <t t-elif="order.state in ['draft', 'sent'] and order.wink_price_confirmed">
+                                    <div class="bg-light p-4 rounded-3 border mb-3">
+                                        <h6 class="fw-bold mb-3"><i class="fa fa-shield me-2 text-success"/> Review &amp; Confirm</h6>
+                                        <p class="text-muted small">By approving this quote, you confirm the tier and pricing selected. You will be redirected to the payment screen to finalize your request.</p>
+                                        <div class="d-flex flex-wrap gap-3 mt-4">
+                                            <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
+                                                    <i class="fa fa-check-circle me-2"/> Approve quote
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-bold"
+                                                    data-bs-toggle="modal" data-bs-target="#winkRejectModal">
+                                                Reject quote
                                             </button>
-                                        </form>
-                                        <button type="button" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-bold"
-                                                data-bs-toggle="modal" data-bs-target="#winkRejectModal">
-                                            Reject quote
-                                        </button>
-                                    </div>
-                                    <p class="text-muted small mt-3 mb-0"><i class="fa fa-question-circle me-1"/> Need clarification? <a t-attf-href="/my/requests/#{order.id}#discussion" class="text-primary fw-semibold">Discuss with your coordinator</a></p>
-                                </div>
-                            </t>
-                            <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
-                                <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
-                            </t>
-                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid and order.amount_total > 0">
-                                <div class="mt-4 p-4 rounded-3 border border-2 shadow-sm d-flex align-items-center gap-4 flex-wrap"
-                                     style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); border-color: #cbdcf0 !important;">
-                                    <div class="flex-grow-1">
-                                        <h5 class="mb-1 fw-bold text-primary"><i class="fa fa-credit-card me-2"/> Complete your payment</h5>
-                                        <p class="text-muted small mb-0">Please finalize your payment to activate the service. Amount due: <strong class="text-dark fs-5"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
-                                    </div>
-                                    <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
-                                        <i class="fa fa-arrow-right me-2"/> Proceed to Payment
-                                    </a>
-                                </div>
-                                <t t-if="request.params.get('payment') == 'pending'">
-                                    <div class="alert alert-warning mt-3 mb-0 py-3 shadow-sm border-0">
-                                        <i class="fa fa-clock-o me-2 fa-lg"/> <strong>Manual payment logged!</strong> Awaiting coordinator validation.
+                                        </div>
+                                        <p class="text-muted small mt-3 mb-0"><i class="fa fa-question-circle me-1"/> Need clarification? <a t-attf-href="/my/requests/#{order.id}#discussion" class="text-primary fw-semibold">Discuss with your coordinator</a></p>
                                     </div>
                                 </t>
-                            </t>
-                            <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid and not is_closed_or_cancelled">
-                                <div class="mt-3 alert alert-success py-2 mb-0 border-0">
-                                    <i class="fa fa-check-circle"/> Payment received successfully.
-                                </div>
-                                <!-- UI-BUG-004 (FB-004): partial payment — show remaining amount, due date, and Pay remaining button -->
-                                <t t-if="has_partial_payment and amount_due_display > 0">
-                                    <div class="mt-3 p-4 rounded-3 border border-2" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1 fw-bold">Amount remaining to pay</h6>
-                                                <p class="text-muted small mb-0">Due: <strong class="text-dark"><t t-esc="amount_due_display" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
-                                                <t t-if="next_due_date">
-                                                    <p class="text-muted small mb-0 mt-1">Due date: <strong><t t-esc="next_due_date" t-options="{'widget': 'date'}"/></strong></p>
-                                                </t>
-                                            </div>
-                                            <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-4">
-                                                <i class="fa fa-credit-card me-2"/> Pay remaining
-                                            </a>
+                                <t t-elif="order.state == 'sale' and not order.wink_price_confirmed">
+                                    <p>Your coordinator will finalize pricing and unlock your payment shortly.</p>
+                                </t>
+                                <t t-elif="order.state == 'sale' and order.wink_price_confirmed and not is_paid and order.amount_total > 0">
+                                    <div class="mt-4 p-4 rounded-3 border border-2 shadow-sm d-flex align-items-center gap-4 flex-wrap"
+                                         style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); border-color: #cbdcf0 !important;">
+                                        <div class="flex-grow-1">
+                                            <h5 class="mb-1 fw-bold text-primary"><i class="fa fa-credit-card me-2"/> Complete your payment</h5>
+                                            <p class="text-muted small mb-0">Please finalize your payment to activate the service. Amount due: <strong class="text-dark fs-5"><t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
                                         </div>
+                                        <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-5 py-3 rounded-pill fw-bold shadow-sm" style="background: #28a745; border:0;">
+                                            <i class="fa fa-arrow-right me-2"/> Proceed to Payment
+                                        </a>
                                     </div>
+                                    <t t-if="request.params.get('payment') == 'pending'">
+                                        <div class="alert alert-warning mt-3 mb-0 py-3 shadow-sm border-0">
+                                            <i class="fa fa-clock-o me-2 fa-lg"/> <strong>Manual payment logged!</strong> Awaiting coordinator validation.
+                                        </div>
+                                    </t>
+                                </t>
+                                <t t-elif="order.state == 'sale' and order.wink_price_confirmed and is_paid and not is_closed_or_cancelled">
+                                    <div class="mt-3 alert alert-success py-2 mb-0 border-0">
+                                        <i class="fa fa-check-circle"/> Payment received successfully.
+                                    </div>
+                                    <!-- UI-BUG-004 (FB-004): partial payment — show remaining amount, due date, and Pay remaining button -->
+                                    <t t-if="has_partial_payment and amount_due_display > 0">
+                                        <div class="mt-3 p-4 rounded-3 border border-2" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1 fw-bold">Amount remaining to pay</h6>
+                                                    <p class="text-muted small mb-0">Due: <strong class="text-dark"><t t-esc="amount_due_display" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/></strong></p>
+                                                    <t t-if="next_due_date">
+                                                        <p class="text-muted small mb-0 mt-1">Due date: <strong><t t-esc="next_due_date" t-options="{'widget': 'date'}"/></strong></p>
+                                                    </t>
+                                                </div>
+                                                <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-success btn-lg px-4">
+                                                    <i class="fa fa-credit-card me-2"/> Pay remaining
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </t>
                                 </t>
                             </t>
                         </div>

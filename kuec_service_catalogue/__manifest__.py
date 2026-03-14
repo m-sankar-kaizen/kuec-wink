@@ -34,7 +34,7 @@
         'data/ir_cron_data.xml',
         'data/kuec_payment_terms_data.xml',
         'data/mail_template_request.xml',
-        'data/kuec_wallet_journal_data.xml',
+        # 'data/kuec_wallet_journal_data.xml',  # wallet module not yet committed
         'views/kuec_classification_views.xml',
         'views/wink_bundle_views.xml',
         'views/kuec_service_faq_views.xml',
@@ -56,9 +56,9 @@
         'views/website_templates/wink_catalogue_page.xml',
         'views/website_templates/project_portal_templates.xml',
         'views/website_templates/wink_bundle_lifecycle_templates.xml',
-        'views/website_templates/terms_templates.xml',
+        # 'views/website_templates/terms_templates.xml',  # wallet module not yet committed
         'views/wink_bundle_change_log_views.xml',
-        'views/kuec_wallet_views.xml',
+        # 'views/kuec_wallet_views.xml',  # wallet module not yet committed
     ],
     'demo': [
         'data/demo_data.xml',
