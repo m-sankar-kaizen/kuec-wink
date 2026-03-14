@@ -60,13 +60,6 @@
               sequence="30"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
-    <menuitem id="menu_wink_report_compliance"
-              name="Compliance"
-              parent="menu_wink_reports_root"
-              action="action_wink_compliance_report"
-              sequence="40"
-              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
-
     <menuitem id="menu_wink_report_cx"
               name="Customer Experience"
               parent="menu_wink_reports_root"

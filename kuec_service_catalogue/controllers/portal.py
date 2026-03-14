@@ -382,7 +382,6 @@ class KuecCustomerPortal(CustomerPortal):
         bundle_data = []
         total_services = 0
         total_activated = 0
-        total_docs_needed = 0
 
         for order in orders:
             entitlements = order.wink_entitlement_ids.sorted(key=lambda e: e.sequence)
@@ -437,37 +436,22 @@ class KuecCustomerPortal(CustomerPortal):
                 ent_activation_map = {}
 
             # Per-entitlement docs + employee prereqs
-            order_has_docs_needed = False
             for ent in entitlements:
-                docs_ok, _missing = order._wink_required_docs_approved_for_product(ent.service_product_id)
                 doc_items = []
                 if ent.service_product_id:
-                    for req in ent.service_product_id.kuec_document_ids.filtered(
-                        lambda r: r.requirement == 'required'
-                    ):
-                        sub = request.env['kuec.document.submission'].sudo().search([
-                            ('order_id', '=', order.id),
-                            ('requirement_id', '=', req.id),
-                        ], limit=1)
+                    for req in ent.service_product_id.kuec_document_ids:
                         doc_items.append({
                             'req_id': req.id,
                             'name': req.name,
-                            'state': sub.state if sub else 'draft',
-                            'notes': sub.coordinator_notes or '' if sub else '',
                         })
-                if not docs_ok:
-                    order_has_docs_needed = True
                 requires_emps = bool(getattr(ent.service_product_id, 'requires_employee_selection', False))
                 entitlement_prereqs[ent.id] = {
-                    'docs_ok': docs_ok,
+                    'docs_ok': True,
                     'doc_items': doc_items,
                     'requires_employees': requires_emps,
                     'employees': modal_employees,
                     'order_id': order.id,
                 }
-
-            if order_has_docs_needed:
-                total_docs_needed += 1
 
             bundle_obj = None
             if order.wink_source_product_id and order.wink_source_product_id.wink_bundle_id:
@@ -488,6 +472,21 @@ class KuecCustomerPortal(CustomerPortal):
         open_modal = kw.get('open_modal', '')
         doc_uploaded = kw.get('doc_uploaded') == '1'
 
+        kpi_live = len([
+            b for b in bundle_data
+            if b['order'].wink_bundle_activated
+            and b['order'].state in ('sale', 'done')
+            and not b['order'].wink_bundle_cancelled
+            and getattr(b['order'], 'subscription_state', None) != '6_churn'
+        ])
+        kpi_awaiting = len([
+            b for b in bundle_data
+            if not b['order'].wink_bundle_activated
+            and b['order'].state in ('sale', 'done')
+            and not b['order'].wink_bundle_cancelled
+            and getattr(b['order'], 'subscription_state', None) != '6_churn'
+        ])
+
         values = {
             'bundle_data': bundle_data,
             'entitlement_prereqs': entitlement_prereqs,
@@ -500,7 +499,8 @@ class KuecCustomerPortal(CustomerPortal):
             'kpi_total_services': total_services,
             'kpi_activated': total_activated,
             'kpi_pending': total_services - total_activated,
-            'kpi_docs_needed': total_docs_needed,
+            'kpi_live': kpi_live,
+            'kpi_awaiting': kpi_awaiting,
         }
         return request.render('kuec_service_catalogue.portal_my_bundles', values)
 
@@ -739,6 +739,11 @@ class KuecCustomerPortal(CustomerPortal):
             ('wink_entitlement_ids', '!=', False),
             ('is_subscription', '=', True),
         ])
+        kpi_project_based = SaleOrder.search_count(base_domain + [
+            ('state', 'in', ['draft', 'sent', 'sale']),
+            ('is_subscription', '=', False),
+            ('wink_entitlement_ids', '=', False),
+        ])
         kpi_completed = SaleOrder.search_count(base_domain + [
             ('state', '=', 'done'),
         ])
@@ -762,6 +767,7 @@ class KuecCustomerPortal(CustomerPortal):
         kpi_dr = 0.0
         kpi_cr = 0.0
         kpi_overdue = 0.0
+        kpi_open_invoices = 0
         next_payment_date = None
         recent_payments = []
         currency = request.env.company.currency_id
@@ -774,6 +780,7 @@ class KuecCustomerPortal(CustomerPortal):
                 ('payment_state', 'in', ['not_paid', 'partial']),
             ])
             kpi_dr = sum(inv.amount_residual for inv in invoices)
+            kpi_open_invoices = len(invoices)
             if invoices:
                 currency = invoices[0].currency_id or currency
                 # Next payment due date
@@ -828,29 +835,9 @@ class KuecCustomerPortal(CustomerPortal):
         except Exception:
             pass
 
-        # ── Pending documents needing action ────────────────────────────────
+        # Pending documents removed — attachments go directly to chatter
         pending_docs = []
         kpi_pending_docs = 0
-        try:
-            DocSub = request.env['kuec.document.submission'].sudo()
-            doc_recs = DocSub.search([
-                ('order_id', 'in', SaleOrder.search(base_domain).ids),
-                ('state', 'in', ['draft', 'change_required']),
-            ])
-            kpi_pending_docs = len(doc_recs)
-            # Group by order for the attention panel (max 5 unique orders)
-            seen_orders = set()
-            for d in doc_recs:
-                if d.order_id.id not in seen_orders and len(pending_docs) < 5:
-                    seen_orders.add(d.order_id.id)
-                    pending_docs.append({
-                        'order_id': d.order_id.id,
-                        'order_name': d.order_id.name,
-                        'doc_name': d.requirement_name or d.requirement_id.name,
-                        'state': d.state,
-                    })
-        except Exception:
-            pass
 
         # ── Quotes awaiting approval ─────────────────────────────────────────
         quotes_to_approve = SaleOrder.search(base_domain + [('state', '=', 'sent')], limit=5)
@@ -899,6 +886,36 @@ class KuecCustomerPortal(CustomerPortal):
         except Exception:
             pass
 
+        # ── eWallet balance ───────────────────────────────────────────────────
+        wallet_balance = 0.0
+        last_wallet_txn = None
+        try:
+            WalletTxn = request.env['kuec.wallet.transaction'].sudo()
+            txns = WalletTxn.search([
+                ('partner_id', '=', partner.id),
+                ('state', '=', 'done'),
+            ], order='create_date desc')
+            wallet_balance = sum(txns.mapped('amount'))
+            last_txn = txns[:1] if txns else None
+            if last_txn:
+                last_wallet_txn = {
+                    'type': last_txn.transaction_type,
+                    'amount': last_txn.amount,
+                    'date': last_txn.date,
+                }
+        except Exception:
+            pass
+
+        # ── Helpdesk tickets ──────────────────────────────────────────────────
+        kpi_tickets = 0
+        try:
+            kpi_tickets = request.env['helpdesk.ticket'].sudo().search_count([
+                ('partner_id', 'child_of', [partner.id]),
+                ('stage_id.is_close', '=', False),
+            ])
+        except Exception:
+            pass
+
         # ── Upcoming subscription invoice dates ───────────────────────────────
         upcoming_subs = []
         try:
@@ -930,12 +947,14 @@ class KuecCustomerPortal(CustomerPortal):
             'kpi_orders': kpi_orders,
             'kpi_quotes': kpi_quotes,
             'kpi_subscriptions': kpi_subscriptions,
+            'kpi_project_based': kpi_project_based,
             'kpi_completed': kpi_completed,
             'kpi_renewals': kpi_renewals,
             # KPI Row 2
             'kpi_dr': kpi_dr,
             'kpi_cr': kpi_cr,
             'kpi_overdue': kpi_overdue,
+            'kpi_open_invoices': kpi_open_invoices,
             'next_payment_date': next_payment_date,
             'currency': currency,
             # KPI Row 3
@@ -957,5 +976,136 @@ class KuecCustomerPortal(CustomerPortal):
             'status_breakdown': status_breakdown,
             'status_total': status_total,
             'partner': partner,
+            'wallet_balance': wallet_balance,
+            'last_wallet_txn': last_wallet_txn,
+            'kpi_tickets': kpi_tickets,
             'page_name': 'dashboard',
+        })
+
+    @http.route('/my/wallet', type='http', auth='user', website=True)
+    def portal_wallet(self, **kw):
+        """Customer eWallet page: balance, transaction history, top-up."""
+        partner = request.env.user.partner_id.commercial_partner_id
+        wallet_balance = partner.sudo().wink_wallet_balance or 0.0
+        transactions = request.env['kuec.wallet.transaction'].sudo().search([
+            ('partner_id', '=', partner.id),
+            ('state', '=', 'done'),
+        ], order='date desc, id desc', limit=50)
+        return request.render('kuec_service_catalogue.wink_portal_wallet', {
+            'wallet_balance': wallet_balance,
+            'transactions': transactions,
+            'partner': partner,
+            'currency': request.env.company.currency_id,
+            'topup_success': kw.get('topup_success') == '1',
+            'topup_pending': kw.get('topup_pending') == '1',
+            'page_name': 'wallet',
+        })
+
+    @http.route('/my/wallet/topup', type='http', auth='user', website=True, methods=['POST'])
+    def portal_wallet_topup_initiate(self, **post):
+        """Store top-up amount in session and redirect to wallet payment page."""
+        try:
+            amount = round(float(post.get('amount', 0)), 2)
+            if amount <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            return request.redirect('/my/wallet?error=invalid_amount')
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        currency = request.env.company.currency_id
+
+        request.session['wink_topup_amount'] = amount
+        request.session['wink_topup_partner_id'] = partner.id
+        request.session['wink_topup_currency_id'] = currency.id
+        return request.redirect('/my/wallet/pay')
+
+    @http.route('/my/wallet/pay', type='http', auth='user', website=True)
+    def portal_wallet_pay(self, **kw):
+        """Dedicated payment page for wallet top-up — owns its own payment.form context."""
+        partner = request.env.user.partner_id.commercial_partner_id
+        amount = request.session.get('wink_topup_amount')
+        session_partner_id = request.session.get('wink_topup_partner_id')
+        currency_id = request.session.get('wink_topup_currency_id')
+
+        if not amount or session_partner_id != partner.id:
+            return request.redirect('/my/wallet')
+
+        currency = request.env['res.currency'].sudo().browse(currency_id)
+
+        # Build payment form context manually — avoids /payment/pay landing_route conflict
+        from odoo.addons.payment import utils as payment_utils
+        access_token = payment_utils.generate_access_token(partner.id, amount, currency.id)
+
+        providers_sudo = request.env['payment.provider'].sudo().search([
+            ('state', 'in', ['enabled', 'test']),
+            ('company_id', '=', request.env.company.id),
+        ])
+        tokens_sudo = request.env['payment.token'].sudo().search([
+            ('provider_id', 'in', providers_sudo.ids),
+            ('partner_id', 'child_of', [partner.id]),
+        ])
+
+        return request.render('kuec_service_catalogue.wink_wallet_pay_page', {
+            'amount': amount,
+            'currency': currency,
+            'partner_id': partner.id,
+            'partner': partner,
+            'providers_sudo': providers_sudo,
+            'tokens_sudo': tokens_sudo,
+            'default_payment_provider_id': providers_sudo[:1].id if providers_sudo else False,
+            'access_token': access_token,
+            'transaction_route': '/payment/transaction',
+            'landing_route': '/my/wallet/topup/done',
+        })
+
+    @http.route('/my/wallet/topup/done', type='http', auth='user', website=True)
+    def portal_wallet_topup_done(self, **kw):
+        """Landing route after payment — credits wallet if transaction confirmed."""
+        from datetime import timedelta
+        from odoo import fields as odoo_fields
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        amount = request.session.pop('wink_topup_amount', None)
+        session_partner_id = request.session.pop('wink_topup_partner_id', None)
+        currency_id = request.session.pop('wink_topup_currency_id', None)
+
+        if not amount or session_partner_id != partner.id:
+            return request.redirect('/my/wallet')
+
+        # Find the most recent completed payment transaction for this amount/partner
+        tx = request.env['payment.transaction'].sudo().search([
+            ('partner_id', 'child_of', [partner.id]),
+            ('amount', '=', amount),
+            ('currency_id', '=', currency_id),
+            ('state', '=', 'done'),
+            ('create_date', '>=', odoo_fields.Datetime.now() - timedelta(minutes=30)),
+        ], order='create_date desc', limit=1)
+
+        if not tx:
+            return request.redirect('/my/wallet?topup_pending=1')
+
+        # Guard against double-crediting
+        existing = request.env['kuec.wallet.transaction'].sudo().search([
+            ('partner_id', '=', partner.id),
+            ('description', 'like', tx.reference),
+            ('transaction_type', '=', 'topup'),
+        ], limit=1)
+        if not existing:
+            request.env['kuec.wallet.transaction'].sudo().create({
+                'partner_id': partner.id,
+                'transaction_type': 'topup',
+                'amount': amount,
+                'description': f'eWallet Top-Up — {tx.reference}',
+                'currency_id': currency_id,
+            })
+        return request.redirect('/my/wallet?topup_success=1')
+
+    @http.route('/terms-and-conditions', type='http', auth='public', website=True)
+    def terms_and_conditions(self, **kwargs):
+        """Serve the WINK Terms & Conditions page. Content editable from Settings → Wink."""
+        company = request.env.company
+        terms_html = company.sudo().wink_terms_html or ''
+        return request.render('kuec_service_catalogue.wink_terms_and_conditions', {
+            'terms_html': terms_html,
+            'company': company,
         })

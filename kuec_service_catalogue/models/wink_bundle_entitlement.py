@@ -93,6 +93,14 @@ class WinkBundleEntitlement(models.Model):
         help='Internal flag to prevent concurrent activations. Reset after activation completes.',
     )
 
+    def action_coordinator_activate(self):
+        """Coordinator activates a sub-service from the backend list.
+        Uses wink_selected_employee_ids already set on the entitlement as the employee source.
+        """
+        self.ensure_one()
+        emp_ids = self.wink_selected_employee_ids.ids or []
+        return self.action_activate(employee_ids=emp_ids if emp_ids else None)
+
     def action_add_all_employees(self):
         """Add all employees from the order's company directory to this entitlement (bulk)."""
         self.ensure_one()
@@ -161,28 +169,20 @@ class WinkBundleEntitlement(models.Model):
                 "This bundle is no longer active. You cannot activate services from a cancelled or expired bundle."
             ))
 
+        if not order.wink_bundle_activated:
+            raise UserError(_(
+                "This bundle has not been activated yet. "
+                "The coordinator will activate it after the confirmation call."
+            ))
+
         # Phase 2: One-Time service activation guard (use locked value)
         if self.service_product_id.request_frequency == 'one_time' and current_qty_activated >= 1:
             raise UserError(_(
                 "The service '%s' is a One-Time service and has already been activated."
             ) % self.service_product_id.name)
 
-        # Determine activation number early — needed for doc check and line naming
+        # Determine activation number early — needed for line naming
         activation_num = current_qty_activated + 1
-
-        # WF-BND-002: Required documents per activated service.
-        # For reuse (activation_num > 1), check docs specifically for this activation number
-        # so the customer must upload fresh documents each time (not reuse the 1st activation's docs).
-        ok_docs, missing_docs = order._wink_required_docs_approved_for_product(
-            self.service_product_id,
-            activation_sequence=activation_num,
-        )
-        if not ok_docs:
-            raise UserError(_(
-                "You cannot activate this service yet because some required "
-                "documents are missing or not approved for activation #%s: %s. "
-                "Please upload new documents and get approval from the Documents section."
-            ) % (activation_num, ", ".join(missing_docs)))
 
         # WF-BND-001: Require employees when service needs selection
         if getattr(self.service_product_id, 'requires_employee_selection', False):

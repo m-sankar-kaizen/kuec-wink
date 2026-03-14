@@ -16,7 +16,6 @@ from . import kuec_employee_directory
 from . import kuec_service_request
 from . import kuec_project_stage
 from . import project_task
-from . import kuec_document_submission
 from . import wink_bundle
 from . import wink_bundle_entitlement
 from . import wink_bundle_change_log

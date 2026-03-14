@@ -118,11 +118,6 @@ class SaleOrderWink(models.Model):
         tracking=True,
         copy=False,
     )
-    document_submission_ids = fields.One2many(
-        'kuec.document.submission',
-        'order_id',
-        string='Document Submissions',
-    )
     wink_entitlement_ids = fields.One2many(
         'wink.bundle.entitlement',
         'order_id',
@@ -160,6 +155,30 @@ class SaleOrderWink(models.Model):
         help='Set True when the bundle was cancelled by the customer via portal self-service. '
              'Independent of order.state so it works even when action_cancel() cannot run '
              '(e.g. order already has posted invoices).',
+    )
+    wink_bundle_activated = fields.Boolean(
+        string='Bundle Activated',
+        default=False,
+        copy=False,
+        tracking=True,
+        help='Set True by the coordinator after the confirmation call. '
+             'Until this is True, the bundle is paid but not yet live — '
+             'individual services cannot be activated.',
+    )
+    wink_bundle_activation_date = fields.Date(
+        string='Bundle Activation Date',
+        copy=False,
+        readonly=True,
+        tracking=True,
+        help='Date the coordinator activated the bundle after the confirmation call.',
+    )
+    wink_bundle_activated_by = fields.Many2one(
+        'res.users',
+        string='Activated By',
+        copy=False,
+        readonly=True,
+        tracking=True,
+        help='Coordinator who activated this bundle after the confirmation call.',
     )
     # ISSUE-006: Idempotent cron — store which day-offsets already sent (e.g. "30,14,7").
     wink_expiry_reminder_sent_days = fields.Char(
@@ -248,104 +267,6 @@ class SaleOrderWink(models.Model):
         if min_days > 0 and remaining > 0 and remaining < min_days:
             return False, _('Plan changes require at least %s days before the end of the current period. You have %s days remaining.') % (min_days, remaining)
         return True, ''
-
-    def _wink_get_docs_status(self):
-        """Returns dict of requirement_id: submission for all submissions on this order."""
-        return {
-            s.requirement_id.id: s
-            for s in self.document_submission_ids
-        }
-
-    def _wink_document_requirements(self):
-        """Document requirements to show/collect for this order.
-        For bundles: union of all child services' (entitlements') document requirements.
-        For standalone: from wink_source_product_id."""
-        product = self.wink_source_product_id
-        if self.wink_entitlement_ids:
-            # Bundle: requirements from each child service (entitlement's service product)
-            req_ids = set()
-            for ent in self.wink_entitlement_ids:
-                if ent.service_product_id:
-                    req_ids.update(ent.service_product_id.kuec_document_ids.ids)
-            return self.env['kuec.service.document'].browse(sorted(req_ids))
-        if product:
-            return product.kuec_document_ids
-        return self.env['kuec.service.document'].browse()
-
-    # WF-BND-002 / WF-BND-003: required docs per service product only
-    def _wink_required_docs_approved_for_product(self, product_tmpl, activation_sequence=1):
-        """Return (ok, missing_names) for required docs of given product on this order.
-
-        activation_sequence: which activation number to check (default=1 for first activation).
-        On reuse (2nd+ activation), each activation must have its own fresh approved upload.
-
-        ok is True when all required documents for product_tmpl are approved for this order
-        and the given activation_sequence.
-        missing_names is a list of human-friendly document names that are missing or not approved.
-        """
-        self.ensure_one()
-        if not product_tmpl:
-            return True, []
-        # Only 'required' documents defined on the product template
-        required_docs = product_tmpl.kuec_document_ids.filtered(
-            lambda d: getattr(d, 'requirement', '') == 'required'
-        )
-        if not required_docs:
-            return True, []
-        required_ids = set(required_docs.ids)
-        # Build map requirement_id -> submission for this order AND this activation_sequence.
-        # Each reuse (activation_sequence > 1) requires a fresh upload — the previously
-        # approved doc for activation 1 does NOT satisfy activation 2.
-        sub_map = {
-            sub.requirement_id.id: sub
-            for sub in self.document_submission_ids
-            if (sub.requirement_id
-                and sub.requirement_id.id in required_ids
-                and (getattr(sub, 'activation_sequence', 1) or 1) == activation_sequence)
-        }
-        missing_names = []
-        for doc in required_docs:
-            sub = sub_map.get(doc.id)
-            if not sub or sub.state != 'approved':
-                missing_names.append(doc.name or _('Unknown'))
-        return (len(missing_names) == 0, missing_names)
-
-    def _wink_get_bundle_requirement_ids(self):
-        """For bundle orders: required document requirement ids from all child services (entitlements)."""
-        requirement_ids = set()
-        for ent in self.wink_entitlement_ids:
-            if ent.service_product_id:
-                for doc in ent.service_product_id.kuec_document_ids:
-                    if doc.requirement == 'required':
-                        requirement_ids.add(doc.id)
-        return requirement_ids
-
-    # ISSUE-003: Return type is always (bool, list of user-friendly document name strings).
-    def _wink_all_required_docs_approved(self):
-        """Returns (bool, list of pending doc names). True if all required docs are approved.
-        For bundles, required docs come from child services (entitlements); for standalone, from order product."""
-        if self.wink_entitlement_ids:
-            # Bundle: required = all required docs from all child services
-            requirement_ids = self._wink_get_bundle_requirement_ids()
-            if not requirement_ids:
-                return (True, [])
-            sub_map = {s.requirement_id.id: s for s in self.document_submission_ids}
-            pending_names = []
-            for rid in requirement_ids:
-                sub = sub_map.get(rid)
-                if not sub or sub.state != 'approved':
-                    req = self.env['kuec.service.document'].browse(rid)
-                    pending_names.append(req.name or _('Unknown'))
-            return (len(pending_names) == 0, pending_names)
-        # Standalone: return list of requirement names (never recordset)
-        required = self.document_submission_ids.filtered(
-            lambda d: d.is_required == 'required'
-        )
-        pending = required.filtered(
-            lambda d: d.state != 'approved'
-        )
-        names = [req.requirement_id.name or _('Unknown') for req in pending]
-        return (len(pending) == 0, names)
 
     def _wink_create_cancellation_credit_note(self, remaining_value):
         """Create credit note for retainer cancellation (refund/wallet policy).
@@ -841,6 +762,51 @@ class SaleOrderWink(models.Model):
                 message_type='comment', subtype_xmlid='mail.mt_note',
             )
         return credit_note
+
+    def action_wink_activate_bundle(self):
+        """Coordinator activates the bundle after the confirmation call.
+
+        Sets wink_bundle_activated=True, records the date and the activating user,
+        sets wink_bundle_start_date to today (if not already set), and posts a chatter note.
+        Only valid on a confirmed (sale) bundle order that has not already been activated.
+        """
+        for order in self:
+            if order.state not in ('sale', 'done'):
+                raise exceptions.UserError(_(
+                    'Bundle can only be activated on a confirmed (paid) order. '
+                    'Current state: %s'
+                ) % order.state)
+            if not order.wink_entitlement_ids:
+                raise exceptions.UserError(_('This order has no bundle entitlements.'))
+            if getattr(order, 'subscription_state', None) == '6_churn':
+                raise exceptions.UserError(_(
+                    'This subscription has been churned and cannot be activated.'
+                ))
+            if order.wink_bundle_cancelled:
+                raise exceptions.UserError(_('This bundle has been cancelled and cannot be activated.'))
+            if order.wink_bundle_activated:
+                raise exceptions.UserError(_(
+                    'This bundle is already activated (activated on %s by %s).'
+                ) % (order.wink_bundle_activation_date, order.wink_bundle_activated_by.name))
+
+            today = fields.Date.today()
+            order.write({
+                'wink_bundle_activated': True,
+                'wink_bundle_activation_date': today,
+                'wink_bundle_activated_by': self.env.user.id,
+                'wink_bundle_start_date': order.wink_bundle_start_date or today,
+            })
+            order.message_post(
+                body=_(
+                    'Bundle activated by <b>%(user)s</b> on %(date)s after confirmation call. '
+                    'Services are now live and can be requested by the customer.'
+                ) % {
+                    'user': self.env.user.name,
+                    'date': today,
+                },
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
 
     def _wink_bundle_do_cancel(self, reason=''):
         """Portal self-service cancellation.

@@ -5,6 +5,7 @@ from odoo import http, _
 from odoo.http import request
 from werkzeug.exceptions import NotFound
 from odoo.addons.sale.controllers.portal import CustomerPortal
+from odoo.tools import html2plaintext
 import werkzeug.urls
 
 
@@ -1163,12 +1164,12 @@ class WinkRequest(http.Controller):
         if customer_confirmation:
             customer_confirmation.sudo().send_mail(order.id, force_send=True)
 
-        # Always land on the Review page first so the customer can confirm the order summary.
-        # The "Proceed to Payment" button on the review page then goes to /pay.
-        # If required docs exist, also show the review page — it highlights the doc section.
         self._wizard_clear_draft()
         if has_required_docs:
             return request.redirect(f'/my/requests/{order.id}?submitted=1&needs_docs=1')
+        # Bundles: show order summary + T&C + Accept & Pay before going to payment
+        if wink_is_bundle and is_auto_confirm:
+            return request.redirect(f'/my/requests/{order.id}?bundle_review=1')
         return request.redirect(f'/my/requests/{order.id}?submitted=1')
 
     @http.route('/my/requests/<int:order_id>', type='http', auth='user', website=True)
@@ -1183,14 +1184,7 @@ class WinkRequest(http.Controller):
 
         product = order.wink_source_product_id or (order.order_line[0].product_id.product_tmpl_id if order.order_line else False)
 
-        # Document compliance: for bundle = child services' docs; for standalone = product's docs
-        requirements = order._wink_document_requirements()
-        submissions = request.env['kuec.document.submission'].sudo().search([
-            ('order_id', '=', order_id)
-        ])
-        sub_map = {s.requirement_id.id: s for s in submissions}
-
-        # Build per-entitlement prereqs for activation modal (docs + employees)
+        # Build per-entitlement prereqs for activation modal (docs info + employees)
         entitlement_prereqs = {}
         if order.wink_entitlement_ids:
             partner_emp = order.partner_id.commercial_partner_id
@@ -1198,38 +1192,21 @@ class WinkRequest(http.Controller):
                 ('partner_id', '=', partner_emp.id)
             ])
             for ent in order.wink_entitlement_ids:
-                # activation_sequence = next activation number for this entitlement
                 next_activation = (ent.qty_activated or 0) + 1
-                docs_ok, _missing = order._wink_required_docs_approved_for_product(
-                    ent.service_product_id,
-                    activation_sequence=next_activation,
-                )
                 doc_items = []
                 if ent.service_product_id:
-                    for req in ent.service_product_id.kuec_document_ids.filtered(
-                        lambda d: getattr(d, 'requirement', '') == 'required'
-                    ):
-                        # Look up submission for this specific activation sequence
-                        sub = request.env['kuec.document.submission'].sudo().search([
-                            ('order_id', '=', order_id),
-                            ('requirement_id', '=', req.id),
-                            ('activation_sequence', '=', next_activation),
-                        ], limit=1)
+                    for req in ent.service_product_id.kuec_document_ids:
                         doc_items.append({
                             'req_id': req.id,
                             'name': req.name or '',
-                            'state': sub.state if sub else 'draft',
-                            'filename': sub.filename if sub else '',
-                            'notes': (sub.coordinator_notes or '') if sub else '',
-                            'activation_sequence': next_activation,
                         })
                 requires_emps = bool(getattr(ent.service_product_id, 'requires_employee_selection', False))
                 entitlement_prereqs[ent.id] = {
-                    'docs_ok': docs_ok,
+                    'docs_ok': True,
                     'doc_items': doc_items,
                     'requires_employees': requires_emps,
                     'employees': modal_employees,
-                    'can_activate': docs_ok,
+                    'can_activate': True,
                     'next_activation': next_activation,
                 }
 
@@ -1410,23 +1387,27 @@ class WinkRequest(http.Controller):
         except Exception:
             pass
 
-        # UI-011: Delivery progress current step (1=Submitted..5=Completed)
-        delivery_stage = 1
-        if order.state in ('draft', 'sent'):
-            delivery_stage = 2  # Quote Review
-        elif order.state == 'sale' and not is_paid:
-            delivery_stage = 3  # Payment
-        elif order.state == 'sale' and is_paid:
-            delivery_stage = 4  # In Progress
-        elif order.state == 'done' or is_closed_or_cancelled:
-            delivery_stage = 5  # Completed
-
-        # Required documents status: bundles have no document restriction during checkout
+        # Bundle flag — used in template render context below
         wink_is_bundle = bool(product and getattr(product, 'wink_is_bundle', False))
-        if wink_is_bundle:
-            docs_all_approved, pending_doc_names = True, []
+
+        # Portal stage string — drives the 5-step stepper and action bar
+        if order.state == 'cancel' or is_closed_or_cancelled:
+            portal_stage = 'cancelled'
+        elif order.state == 'done':
+            portal_stage = 'completed'
+        elif order.state == 'sale':
+            if wink_is_bundle:
+                # Bundle: separate states for pre/post coordinator activation
+                if getattr(order, 'wink_bundle_activated', False):
+                    portal_stage = 'active'          # coordinator activated → fully live
+                else:
+                    portal_stage = 'pending_activation'  # paid but awaiting confirmation call
+            else:
+                portal_stage = 'confirmed'
+        elif order.wink_price_confirmed:
+            portal_stage = 'ready_for_payment'
         else:
-            docs_all_approved, pending_doc_names = order.sudo()._wink_all_required_docs_approved()
+            portal_stage = 'processing'
 
         # UI-012: Activity timeline (last 5 messages or synthetic entries)
         activity_items = []
@@ -1450,13 +1431,38 @@ class WinkRequest(http.Controller):
                 {'text': _('Awaiting coordinator price confirmation') if not order.wink_price_confirmed else _('Quote ready for approval'), 'date': order.write_date, 'icon': 'fa-cog', 'type': 'system'},
             ]
 
+        # Safe recurrence name — try multiple sources (subscription module may/may not be installed)
+        recurrence_name = ''
+        try:
+            # 1. Native recurrence_id (sale_subscription)
+            rec = getattr(order, 'recurrence_id', None)
+            if rec:
+                recurrence_name = rec.name or ''
+            # 2. Fallback: look up via wink_recurring_pricing_id (integer ID)
+            if not recurrence_name and order.wink_recurring_pricing_id:
+                for _model in ('product.pricing', 'sale.subscription.pricing'):
+                    try:
+                        pricing = request.env[_model].sudo().browse(order.wink_recurring_pricing_id)
+                        if pricing.exists():
+                            rec_ref = getattr(pricing, 'recurrence_id', None) or getattr(pricing, 'plan_id', None)
+                            recurrence_name = (rec_ref and rec_ref.name) or ''
+                            if recurrence_name:
+                                break
+                    except Exception:
+                        pass
+            # 3. Fallback: plan_id / recurring_plan_id on the order
+            if not recurrence_name:
+                plan = getattr(order, 'plan_id', None) or getattr(order, 'recurring_plan_id', None)
+                if plan:
+                    recurrence_name = getattr(plan, 'name', '') or ''
+        except Exception:
+            pass
+
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
             'product': product,
             'payment_pending': kwargs.get('payment') == 'pending',
             'bundle_requested': kwargs.get('bundle_requested') == '1',
-            'requirements': requirements,
-            'sub_map': sub_map,
             'is_retainer': is_retainer,
             'retainer_plan': retainer_plan,
             'retainer_plan_label': retainer_plan_label,
@@ -1477,19 +1483,24 @@ class WinkRequest(http.Controller):
             'cancellation_proration': cancellation_proration,
             'cancellation_credit_policy_label': cancellation_credit_policy_label,
             'is_paid': is_paid,
-            'delivery_stage': delivery_stage,  # UI-011
+            'portal_stage': portal_stage,
+            'wink_is_bundle': wink_is_bundle,
+            'recurrence_name': recurrence_name,
             'activity_items': activity_items,  # UI-012
             'submitted': kwargs.get('submitted') == '1',  # UI-013
+            # show bundle T&C + Accept & Pay: on first submission OR any time bundle is confirmed but unpaid
+            'bundle_review': (
+                kwargs.get('bundle_review') == '1'
+                or (wink_is_bundle and order.state == 'sale' and not is_paid)
+            ),
             'needs_docs': kwargs.get('needs_docs') == '1',  # UI-013: show doc upload CTA on review page
             # WF-BND-002: activation error message when activation blocked (docs/employees)
             'activation_error': kwargs.get('activation_error') or request.params.get('activation_error', '') or '',
+            'activation_pending': kwargs.get('activation_pending') == '1',
             # Activation modal state
             'entitlement_prereqs': entitlement_prereqs,
             'open_modal': kwargs.get('open_modal', ''),
             'doc_uploaded': kwargs.get('doc_uploaded') == '1',
-            # Required documents status for non-bundle orders
-            'docs_all_approved': docs_all_approved,
-            'pending_doc_names': pending_doc_names,
             # UI-BUG-004 (FB-004): partial payment display
             'amount_due_display': amount_due_display,
             'amount_paid_display': amount_paid_display,
@@ -1511,13 +1522,6 @@ class WinkRequest(http.Controller):
         if not order.wink_price_confirmed:
             return request.redirect(f'/my/requests/{order_id}?error=price_not_confirmed')
         # Block approval when required documents are not yet approved (bundles: no document restriction)
-        wink_is_bundle = bool(
-            order.wink_source_product_id and getattr(order.wink_source_product_id, 'wink_is_bundle', False)
-        )
-        if not wink_is_bundle:
-            docs_ok, missing = order.sudo()._wink_all_required_docs_approved()
-            if not docs_ok:
-                return request.redirect(f'/my/requests/{order_id}?error=docs_required')
         try:
             order.sudo().action_confirm()
             order.sudo().message_post(
@@ -1722,14 +1726,6 @@ class WinkRequest(http.Controller):
         source_product = order.wink_source_product_id
         if order.state != 'sale' or (not order.wink_price_confirmed and source_product and source_product.price_visibility == 'hidden'):
             return request.redirect(f'/my/requests/{order.id}?error=payment_not_available')
-        # Block payment when required documents are not yet approved (bundles: no document restriction)
-        wink_is_bundle = bool(
-            source_product and getattr(source_product, 'wink_is_bundle', False)
-        )
-        if not wink_is_bundle:
-            docs_ok, _missing = order.sudo()._wink_all_required_docs_approved()
-            if not docs_ok:
-                return request.redirect(f'/my/requests/{order.id}?error=docs_required')
 
         # Use native Odoo CustomerPortal controller to fetch payment providers/tokens
         portal_controller = CustomerPortal()
@@ -1764,134 +1760,146 @@ class WinkRequest(http.Controller):
             **payment_values
         }
 
+        # Wallet balance for the logged-in customer's commercial partner
+        wallet_balance = 0.0
+        try:
+            commercial = request.env.user.partner_id.commercial_partner_id
+            wallet_balance = commercial.sudo().wink_wallet_balance or 0.0
+        except Exception:
+            pass
+        render_values['wallet_balance'] = wallet_balance
+        render_values['wallet_sufficient'] = wallet_balance >= payment_values.get('amount', order.amount_total)
+
         return request.render('kuec_service_catalogue.wink_payment_page_v2', render_values)
+
+    @http.route('/my/requests/<int:order_id>/pay-wallet', type='http', auth='user', website=True, methods=['POST'])
+    def request_pay_wallet(self, order_id, **kwargs):
+        """Process eWallet payment: deduct balance, create invoice + payment, mark order paid."""
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        if order.state != 'sale':
+            return request.redirect(f'/my/requests/{order_id}?error=payment_not_available')
+
+        commercial = request.env.user.partner_id.commercial_partner_id
+        wallet_balance = commercial.sudo().wink_wallet_balance or 0.0
+        amount_due = order.amount_total
+
+        # Compute actual amount due (minus any partial payments)
+        try:
+            posted_invs = order.invoice_ids.filtered(lambda m: m.state == 'posted')
+            if posted_invs:
+                amount_due = sum(posted_invs.mapped('amount_residual'))
+        except Exception:
+            pass
+
+        if wallet_balance < amount_due:
+            return request.redirect(f'/my/requests/{order_id}/pay?error=insufficient_wallet')
+
+        # Find or create the eWallet journal
+        journal = request.env.ref('kuec_service_catalogue.kuec_ewallet_journal', raise_if_not_found=False)
+        if not journal:
+            journal = request.env['account.journal'].sudo().search([
+                ('code', '=', 'WEWL'), ('company_id', '=', request.env.company.id)
+            ], limit=1)
+        if not journal:
+            return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_journal_missing')
+
+        try:
+            # Create invoice if none exists
+            invoices = order.invoice_ids.filtered(lambda inv: inv.state != 'cancel')
+            if not invoices:
+                order.sudo()._create_invoices(final=True)
+                invoices = order.invoice_ids.filtered(lambda inv: inv.state != 'cancel')
+
+            invoice = invoices[0]
+            if invoice.state == 'draft':
+                invoice.sudo().action_post()
+
+            # Use Odoo 18 payment register wizard: handles posting + reconciliation atomically
+            payment_method_line = journal.inbound_payment_method_line_ids.filtered(
+                lambda l: l.code == 'manual'
+            )[:1]
+
+            wizard = request.env['account.payment.register'].sudo().with_context(
+                active_model='account.move',
+                active_ids=invoice.ids,
+            ).create({
+                'journal_id': journal.id,
+                'amount': amount_due,
+                'currency_id': order.currency_id.id,
+                'payment_method_line_id': payment_method_line.id if payment_method_line else False,
+                'communication': f'eWallet payment for {order.name}',
+            })
+            wizard.action_create_payments()
+
+        except Exception as e:
+            _logger = __import__('logging').getLogger(__name__)
+            _logger.error('eWallet payment failed for order %s: %s', order.name, e)
+            return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_payment_failed')
+
+        # Record wallet debit transaction
+        request.env['kuec.wallet.transaction'].sudo().create({
+            'partner_id': commercial.id,
+            'transaction_type': 'payment',
+            'amount': -amount_due,
+            'description': f'Payment for {order.name}',
+            'order_id': order.id,
+            'currency_id': order.currency_id.id,
+        })
+
+        order.sudo().message_post(
+            body=f'Payment of {order.currency_id.symbol}{amount_due:,.2f} processed via WINK eWallet.',
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+
+        return request.redirect(f'/my/requests/{order_id}?payment=success')
 
     @http.route('/my/requests/<int:order_id>/documents', type='http', auth='user', website=True)
     def request_documents(self, order_id, **kw):
-        """Portal page listing document requirements and upload forms."""
-        order = request.env['sale.order'].sudo().search([
-            ('id', '=', order_id),
-            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
-        ], limit=1)
-        if not order:
-            raise NotFound()
-
-        # Document requirements: for bundle = child services'; for standalone = product's
-        requirements = order._wink_document_requirements()
-        submissions = request.env['kuec.document.submission'].sudo().search([
-            ('order_id', '=', order_id)
-        ])
-        sub_map = {s.requirement_id.id: s for s in submissions}
-
-        return request.render('kuec_service_catalogue.wink_document_upload_page', {
-            'order': order,
-            'requirements': requirements,
-            'sub_map': sub_map,
-            'doc_uploaded': kw.get('doc_uploaded') == '1',
-            'doc_error': kw.get('doc_error', False),
-            'just_submitted': kw.get('just_submitted') == '1',
-        })
+        """Legacy document page — redirect to request detail (documents now go to chatter)."""
+        return request.redirect(f'/my/requests/{order_id}')
 
     @http.route('/my/requests/<int:order_id>/documents/upload', type='http', auth='user', website=True, methods=['POST'], csrf=True)
     def upload_document(self, order_id, **post):
-        """Handle document file upload from portal."""
+        """Legacy upload endpoint — post file directly to order chatter."""
         import base64
-        from odoo import fields as odoo_fields
 
         order = request.env['sale.order'].sudo().search([
             ('id', '=', order_id),
             ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
         ], limit=1)
         if not order:
-            raise NotFound()
-
-        try:
-            requirement_id = int(post.get('requirement_id', 0))
-        except (TypeError, ValueError):
-            requirement_id = 0
-        requirement = request.env['kuec.service.document'].sudo().browse(requirement_id)
-        if not requirement.exists():
-            raise NotFound()
-
-        # Ensure the requirement is one of this order's (product or bundle child services)
-        allowed_requirement_ids = order._wink_document_requirements().ids
-        if allowed_requirement_ids and requirement_id not in allowed_requirement_ids:
             raise NotFound()
 
         uploaded = request.httprequest.files.get('doc_file')
         if not uploaded or not uploaded.filename:
-            return request.redirect(
-                f'/my/requests/{order_id}/documents?doc_error=no_file'
-            )
-
-        allowed_mimetypes = {
-            'application/pdf',
-            'image/jpeg',
-            'image/png',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        }
-        if uploaded.mimetype not in allowed_mimetypes:
-            return request.redirect(
-                f'/my/requests/{order_id}/documents?doc_error=bad_type'
-            )
+            return request.redirect(f'/my/requests/{order_id}')
 
         file_data = base64.b64encode(uploaded.read())
-
         attachment = request.env['ir.attachment'].sudo().create({
             'name': uploaded.filename,
             'datas': file_data,
-            'res_model': 'kuec.document.submission',
-            'mimetype': uploaded.mimetype,
+            'res_model': 'sale.order',
+            'res_id': order_id,
+            'mimetype': uploaded.content_type or 'application/octet-stream',
             'type': 'binary',
         })
-
-        # activation_sequence: 1 for first activation, 2 for second (reuse), etc.
-        # Each activation requires its own document upload.
-        try:
-            activation_sequence = int(post.get('activation_sequence', 1) or 1)
-        except (TypeError, ValueError):
-            activation_sequence = 1
-        if activation_sequence < 1:
-            activation_sequence = 1
-
-        existing = request.env['kuec.document.submission'].sudo().search([
-            ('order_id', '=', order_id),
-            ('requirement_id', '=', requirement_id),
-            ('activation_sequence', '=', activation_sequence),
-        ], limit=1)
-
-        now = odoo_fields.Datetime.now()
-
-        if existing:
-            existing.sudo().write({
-                'attachment_id': attachment.id,
-                'filename': uploaded.filename,
-                'state': 'under_review',
-                'submitted_date': now,
-                'coordinator_notes': False,
-                'reviewed_date': False,
-                'reviewed_by': False,
-            })
-        else:
-            request.env['kuec.document.submission'].sudo().create({
-                'order_id': order_id,
-                'requirement_id': requirement_id,
-                'partner_id': request.env.user.partner_id.id,
-                'attachment_id': attachment.id,
-                'filename': uploaded.filename,
-                'state': 'under_review',
-                'submitted_date': now,
-                'activation_sequence': activation_sequence,
-            })
-
-        # Allow redirect back to activation modal when upload came from there
+        order.sudo().message_post(
+            body=_('Document uploaded: <b>%s</b>') % uploaded.filename,
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+            attachment_ids=[attachment.id],
+        )
         redirect_to = post.get('redirect_to', '')
         if redirect_to and redirect_to.startswith('/my/requests/'):
             return request.redirect(redirect_to)
-        return request.redirect(
-            f'/my/requests/{order_id}/documents?doc_uploaded=1'
-        )
+        return request.redirect(f'/my/requests/{order_id}')
 
     # ── Bundle Activation Route ──
     # WF-BND-001 / WF-BND-002 / WF-BND-005: bundle activation with per-activation employees & docs
@@ -1918,20 +1926,74 @@ class WinkRequest(http.Controller):
         ], limit=1)
         if not entitlement:
             raise NotFound()
-        # No limit on reactivation: customer can activate as many times as needed
-
-        # GET: redirect back to request detail — activation is now handled inline via modal
+        # GET: redirect back to detail page (activation happens via modal POST)
         if request.httprequest.method == 'GET':
-            return request.redirect(f'/my/requests/{order_id}?open_modal={entitlement_id}')
+            return request.redirect(f'/my/requests/{order_id}')
 
-        # POST: perform activation
+        # POST: perform sub-service activation
         employee_ids = []
         for val in request.httprequest.form.getlist('employee_ids'):
             if str(val).isdigit():
                 employee_ids.append(int(val))
 
+        # Create new employee from inline form if provided
+        new_emp_name = (post.get('new_emp_name') or '').strip()
+        if new_emp_name:
+            partner = request.env.user.partner_id.commercial_partner_id
+            new_emp = request.env['kuec.employee.directory'].sudo().create({
+                'name': new_emp_name,
+                'job_title': (post.get('new_emp_job') or '').strip() or False,
+                'email': (post.get('new_emp_email') or '').strip() or False,
+                'mobile': (post.get('new_emp_mobile') or '').strip() or False,
+                'partner_id': partner.id,
+            })
+            employee_ids.append(new_emp.id)
+
+        # Collect inline attachment uploads (bnd_attach_<req_id>_<ent_id>)
+        uploaded_attachments = []
+        for key, file_storage in request.httprequest.files.items():
+            if key.startswith('bnd_attach_') and file_storage and file_storage.filename:
+                parts = key.split('_')
+                req_id = int(parts[2]) if len(parts) >= 3 and parts[2].isdigit() else None
+                file_content = file_storage.read()
+                if file_content and req_id:
+                    uploaded_attachments.append({
+                        'req_id': req_id,
+                        'filename': file_storage.filename,
+                        'content': file_content,
+                        'mimetype': file_storage.content_type or 'application/octet-stream',
+                    })
+
         try:
             entitlement.action_activate(employee_ids=employee_ids)
+
+            # Post uploaded attachments to chatter — task chatter for bundles, order chatter otherwise
+            if uploaded_attachments:
+                import base64
+                # Resolve target record: prefer activated task, fall back to order
+                chatter_record = None
+                try:
+                    task = entitlement.activated_line_ids[:1].task_id if entitlement.activated_line_ids else False
+                    chatter_record = task if task and task.id else None
+                except Exception:
+                    pass
+                if not chatter_record:
+                    chatter_record = order
+
+                for att in uploaded_attachments:
+                    attachment = request.env['ir.attachment'].sudo().create({
+                        'name': att['filename'],
+                        'datas': base64.b64encode(att['content']),
+                        'mimetype': att['mimetype'],
+                        'res_model': chatter_record._name,
+                        'res_id': chatter_record.id,
+                    })
+                    chatter_record.sudo().message_post(
+                        body=_('Document uploaded: <b>%s</b>') % att['filename'],
+                        message_type='comment',
+                        subtype_xmlid='mail.mt_note',
+                        attachment_ids=[attachment.id],
+                    )
         except Exception as e:
             from odoo.exceptions import UserError
             msg = ''
