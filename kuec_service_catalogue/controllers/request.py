@@ -1947,6 +1947,12 @@ class WinkRequest(http.Controller):
         if not uploaded_files:
             return request.redirect(f'/my/requests/{order_id}')
 
+        # Find task(s) linked to this order — attachments should live on the task
+        tasks = request.env['project.task'].sudo().search([
+            ('sale_order_id', '=', order_id),
+        ])
+        target = tasks[0] if tasks else order
+
         attachment_ids = []
         file_names = []
         for uploaded in uploaded_files:
@@ -1956,8 +1962,8 @@ class WinkRequest(http.Controller):
             att = request.env['ir.attachment'].sudo().create({
                 'name': uploaded.filename,
                 'datas': file_data,
-                'res_model': 'sale.order',
-                'res_id': order_id,
+                'res_model': target._name,
+                'res_id': target.id,
                 'mimetype': uploaded.content_type or 'application/octet-stream',
                 'type': 'binary',
             })
@@ -1970,12 +1976,23 @@ class WinkRequest(http.Controller):
                 'req': label,
                 'files': ', '.join(file_names),
             }
-            order.sudo().message_post(
+            target.sudo().message_post(
                 body=body,
                 message_type='comment',
                 subtype_xmlid='mail.mt_note',
                 attachment_ids=attachment_ids,
             )
+            # Also notify on order chatter if attachments went to task
+            if target._name == 'project.task':
+                order.sudo().message_post(
+                    body=_('Document(s) uploaded for <b>%(req)s</b> and linked to task <b>%(task)s</b>: %(files)s') % {
+                        'req': label,
+                        'task': target.name,
+                        'files': ', '.join(file_names),
+                    },
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_note',
+                )
         return request.redirect(f'/my/requests/{order_id}?doc_uploaded=1')
 
     # ── Bundle Activation Route ──
@@ -2044,18 +2061,14 @@ class WinkRequest(http.Controller):
         try:
             entitlement.action_activate(employee_ids=employee_ids)
 
-            # Post uploaded attachments to chatter — task chatter for bundles, order chatter otherwise
+            # Post uploaded attachments — always target the task, fall back to order
             if uploaded_attachments:
                 import base64
-                # Resolve target record: prefer activated task, fall back to order
-                chatter_record = None
-                try:
-                    task = entitlement.activated_line_ids[:1].task_id if entitlement.activated_line_ids else False
-                    chatter_record = task if task and task.id else None
-                except Exception:
-                    pass
-                if not chatter_record:
-                    chatter_record = order
+                # Find task linked to this order (most reliable lookup)
+                task = request.env['project.task'].sudo().search([
+                    ('sale_order_id', '=', order.id),
+                ], limit=1)
+                chatter_record = task if task else order
 
                 for att in uploaded_attachments:
                     attachment = request.env['ir.attachment'].sudo().create({
