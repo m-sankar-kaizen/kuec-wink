@@ -34,7 +34,11 @@ class SaleOrder(models.Model):
                     order.name,
                 ))
         result = super().action_confirm()
+        # Use WINK custom template — hides vendor name from customer
         rating_template = self.env.ref(
+            'kuec_service_catalogue.mail_template_wink_rating_request',
+            raise_if_not_found=False,
+        ) or self.env.ref(
             'project.rating_project_request_email_template',
             raise_if_not_found=False,
         )

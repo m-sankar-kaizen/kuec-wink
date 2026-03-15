@@ -22,5 +22,75 @@
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
+
+        <!-- WINK Service Rating Request — sent to customer when task moves to Done stage.
+             Intentionally omits vendor name: the customer evaluates the SERVICE, not the vendor.
+             The rating is still recorded against the assigned vendor via _rating_get_operator(). -->
+        <record id="mail_template_wink_rating_request" model="mail.template">
+            <field name="name">WINK: Service Satisfaction Survey</field>
+            <field name="model_id" ref="project.model_project_task"/>
+            <field name="active" eval="True"/>
+            <field name="subject">{{ object.project_id.company_id.name or user.env.company.name }}: How did we do?</field>
+            <field name="email_from">{{ user.env.company.email_formatted or user.email_formatted }}</field>
+            <field name="partner_to">{{ object._rating_get_partner().id }}</field>
+            <field name="description">WINK service rating email. Sent when a task reaches the Done stage. Does not expose the vendor name to the customer.</field>
+            <field name="body_html" type="html">
+<div>
+    <t t-set="access_token" t-value="object._rating_get_access_token()"/>
+    <t t-set="partner" t-value="object._rating_get_partner()"/>
+    <table border="0" cellpadding="0" cellspacing="0" width="590" style="width:100%; margin:0px auto;">
+    <tbody>
+        <tr><td valign="top" style="font-size: 13px;">
+            <t t-if="partner.name">
+                Hello <t t-out="partner.name or ''">Customer</t>,<br/><br/>
+            </t>
+            <t t-else="">
+                Hello,<br/><br/>
+            </t>
+            Thank you for choosing our services. We would love to hear your feedback on
+            the <strong t-out="object.sale_order_id.wink_source_product_id.name or object.name or ''">service</strong> we delivered for you.<br/>
+        </td></tr>
+        <tr><td style="text-align: center;">
+            <table border="0" cellpadding="0" cellspacing="0" width="590" style="width:100%; margin: 32px 0px 32px 0px; display: inline-table;">
+                <tr><td style="font-size:13px;text-align:center;">
+                    <strong>Rate your experience</strong><br/>
+                    <span style="font-size:12px;color:#888;">(click the number that best reflects your experience)</span>
+                </td></tr>
+                <tr><td style="font-size:13px;">
+                    <table border="0" cellpadding="0" cellspacing="8" style="margin:16px auto 0 auto;">
+                        <tr>
+                            <td><a t-attf-href="/rate/{{ access_token }}/1" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#e74c3c;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">1</a></td>
+                            <td><a t-attf-href="/rate/{{ access_token }}/2" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#e67e22;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">2</a></td>
+                            <td><a t-attf-href="/rate/{{ access_token }}/3" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#f1c40f;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">3</a></td>
+                            <td><a t-attf-href="/rate/{{ access_token }}/4" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#2ecc71;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">4</a></td>
+                            <td><a t-attf-href="/rate/{{ access_token }}/5" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#27ae60;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">5</a></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Poor</td>
+                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Fair</td>
+                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Good</td>
+                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Very Good</td>
+                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Excellent</td>
+                        </tr>
+                    </table>
+                </td></tr>
+            </table>
+        </td></tr>
+        <tr><td valign="top" style="font-size: 13px;">
+            We appreciate your feedback. It helps us improve continuously.
+            <br/><span style="margin: 0; font-size: 12px; opacity: 0.5; color: #454748;">
+                This satisfaction survey has been sent because your service has been completed.
+            </span>
+        </td></tr>
+        <tr><td><br/>Best regards,</td></tr>
+        <tr><td>
+            <t t-out="object.project_id.company_id.name or ''">KUEC</t>
+        </td></tr>
+    </tbody>
+    </table>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
     </data>
 </odoo>
