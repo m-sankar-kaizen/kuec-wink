@@ -74,6 +74,13 @@ class ResPartner(models.Model):
             partner.wink_rating_count = len(scores)
             partner.wink_avg_rating = sum(scores) / len(scores) if scores else 0.0
 
+    wallet_transaction_ids = fields.One2many(
+        'kuec.wallet.transaction',
+        'partner_id',
+        string='Wallet Transactions',
+        help='All eWallet transactions for this customer.',
+    )
+
     wink_wallet_balance = fields.Float(
         string='Wallet Balance',
         compute='_compute_wink_wallet_balance',
