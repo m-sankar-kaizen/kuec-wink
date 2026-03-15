@@ -33,3 +33,11 @@ access_wink_assign_vendor_wizard_user,wink.assign.vendor.wizard.user,model_wink_
 access_wink_add_services_wizard_user,wink.add.services.wizard.user,model_wink_add_services_wizard,base.group_user,1,1,1,1
 access_wink_finalize_wizard_coordinator,wink.finalize.wizard.coordinator,model_wink_finalize_wizard,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
 access_wink_finalize_wizard_admin,wink.finalize.wizard.admin,model_wink_finalize_wizard,base.group_system,1,1,1,1
+access_kuec_wallet_transaction_user,kuec.wallet.transaction.user,model_kuec_wallet_transaction,base.group_user,1,0,0,0
+access_kuec_wallet_transaction_coordinator,kuec.wallet.transaction.coordinator,model_kuec_wallet_transaction,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
+access_kuec_wallet_transaction_admin,kuec.wallet.transaction.admin,model_kuec_wallet_transaction,base.group_system,1,1,1,1
+access_kuec_wallet_transaction_portal,kuec.wallet.transaction.portal,model_kuec_wallet_transaction,base.group_portal,1,0,0,0
+access_wink_wallet_topup_wizard_coordinator,wink.wallet.topup.wizard.coordinator,model_wink_wallet_topup_wizard,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
+access_wink_wallet_topup_wizard_admin,wink.wallet.topup.wizard.admin,model_wink_wallet_topup_wizard,base.group_system,1,1,1,1
+access_kuec_document_submission_user,kuec.document.submission.user,model_kuec_document_submission,base.group_user,1,1,1,1
+access_kuec_document_submission_portal,kuec.document.submission.portal,model_kuec_document_submission,base.group_portal,1,1,1,0
