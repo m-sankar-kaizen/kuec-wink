@@ -38,54 +38,83 @@
 <div>
     <t t-set="access_token" t-value="object._rating_get_access_token()"/>
     <t t-set="partner" t-value="object._rating_get_partner()"/>
-    <table border="0" cellpadding="0" cellspacing="0" width="590" style="width:100%; margin:0px auto;">
+    <t t-set="base_url" t-value="object.get_base_url()"/>
+    <table border="0" cellpadding="0" cellspacing="0" width="590" style="width:100%;max-width:590px;margin:0 auto;font-family:Arial,sans-serif;">
     <tbody>
-        <tr><td valign="top" style="font-size: 13px;">
-            <t t-if="partner.name">
-                Hello <t t-out="partner.name or ''">Customer</t>,<br/><br/>
-            </t>
-            <t t-else="">
-                Hello,<br/><br/>
-            </t>
+        <tr><td valign="top" style="font-size:13px;padding-bottom:16px;">
+            <t t-if="partner.name">Hello <t t-out="partner.name or ''">Customer</t>,<br/><br/></t>
+            <t t-else="">Hello,<br/><br/></t>
             Thank you for choosing our services. We would love to hear your feedback on
-            the <strong t-out="object.sale_order_id.wink_source_product_id.name or object.name or ''">service</strong> we delivered for you.<br/>
+            the <strong t-out="object.name or ''">service</strong> we delivered for you.
         </td></tr>
-        <tr><td style="text-align: center;">
-            <table border="0" cellpadding="0" cellspacing="0" width="590" style="width:100%; margin: 32px 0px 32px 0px; display: inline-table;">
-                <tr><td style="font-size:13px;text-align:center;">
-                    <strong>Rate your experience</strong><br/>
-                    <span style="font-size:12px;color:#888;">(click the number that best reflects your experience)</span>
-                </td></tr>
-                <tr><td style="font-size:13px;">
-                    <table border="0" cellpadding="0" cellspacing="8" style="margin:16px auto 0 auto;">
-                        <tr>
-                            <td><a t-attf-href="/rate/{{ access_token }}/1" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#e74c3c;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">1</a></td>
-                            <td><a t-attf-href="/rate/{{ access_token }}/2" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#e67e22;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">2</a></td>
-                            <td><a t-attf-href="/rate/{{ access_token }}/3" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#f1c40f;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">3</a></td>
-                            <td><a t-attf-href="/rate/{{ access_token }}/4" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#2ecc71;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">4</a></td>
-                            <td><a t-attf-href="/rate/{{ access_token }}/5" style="display:inline-block;width:50px;height:50px;line-height:50px;text-align:center;background-color:#27ae60;color:#ffffff;font-size:20px;font-weight:bold;text-decoration:none;border-radius:8px;">5</a></td>
-                        </tr>
-                        <tr>
-                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Poor</td>
-                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Fair</td>
-                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Good</td>
-                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Very Good</td>
-                            <td style="text-align:center;font-size:11px;color:#888;padding-top:6px;">Excellent</td>
-                        </tr>
-                    </table>
-                </td></tr>
+        <tr><td style="text-align:center;padding:24px 0 8px 0;">
+            <p style="font-size:15px;font-weight:bold;margin:0 0 6px 0;">Rate your experience</p>
+            <p style="font-size:12px;color:#888;margin:0 0 20px 0;">Click on the face that best reflects your experience</p>
+            <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/1" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_1.svg" width="65" height="65" alt="Very Bad" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Very Bad</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/2" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_2.svg" width="65" height="65" alt="Poor" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Poor</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/3" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_3.svg" width="65" height="65" alt="Medium" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Medium</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/4" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_4.svg" width="65" height="65" alt="Good" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Good</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/5" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_5.svg" width="65" height="65" alt="Excellent" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Excellent</div>
+                        </a>
+                    </td>
+                </tr>
             </table>
         </td></tr>
-        <tr><td valign="top" style="font-size: 13px;">
-            We appreciate your feedback. It helps us improve continuously.
-            <br/><span style="margin: 0; font-size: 12px; opacity: 0.5; color: #454748;">
-                This satisfaction survey has been sent because your service has been completed.
-            </span>
+        <tr><td valign="top" style="font-size:13px;padding-top:20px;color:#444;">
+            We appreciate your feedback. It helps us improve continuously.<br/>
+            <span style="font-size:11px;color:#aaa;">This survey was sent because your service request has been completed.</span>
         </td></tr>
-        <tr><td><br/>Best regards,</td></tr>
-        <tr><td>
-            <t t-out="object.project_id.company_id.name or ''">KUEC</t>
-        </td></tr>
+        <tr><td style="padding-top:16px;font-size:13px;">Best regards,<br/><strong><t t-out="object.project_id.company_id.name or ''">KUEC</t></strong></td></tr>
     </tbody>
     </table>
 </div>
