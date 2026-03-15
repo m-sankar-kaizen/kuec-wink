@@ -5,3 +5,4 @@ from . import portal
 from . import excel_upload
 from . import catalogue
 from . import request
+from . import rating

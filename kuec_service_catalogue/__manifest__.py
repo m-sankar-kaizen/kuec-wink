@@ -60,6 +60,7 @@
         'views/website_templates/wink_bundle_lifecycle_templates.xml',
         'views/website_templates/terms_templates.xml',
         'views/website_templates/kuec_terms_template.xml',
+        'views/website_templates/wink_rating_templates.xml',
         'views/wink_bundle_change_log_views.xml',
         'views/kuec_wallet_views.xml',
     ],
