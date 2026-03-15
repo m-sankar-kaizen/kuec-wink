@@ -41,9 +41,15 @@ class SaleOrder(models.Model):
         for order in self:
             if not order.wink_is_portal_request:
                 continue
-            projects = self.env['project.task'].search([
+            # Search project directly — tasks may not exist yet at confirmation time
+            projects = self.env['project.project'].sudo().search([
                 ('sale_order_id', '=', order.id),
-            ]).mapped('project_id').filtered(lambda p: p)
+            ])
+            # Fallback: find via tasks in case sale_order_id is on tasks only
+            if not projects:
+                projects = self.env['project.task'].sudo().search([
+                    ('sale_order_id', '=', order.id),
+                ]).mapped('project_id').filtered(lambda p: p)
             if not projects:
                 continue
             projects.filtered(lambda p: not p.rating_active).write({
