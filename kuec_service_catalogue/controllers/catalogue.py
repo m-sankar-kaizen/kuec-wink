@@ -119,29 +119,64 @@ class WinkCatalogue(http.Controller):
             ('available_on_wink', '=', True),
             ('sale_ok', '=', True)
         ], limit=1)
-        
+
         if not product:
             raise NotFound()
 
         user = request.env.user
         is_authenticated = not user._is_public()
 
-        # Subscription/retainer: show plan selector when recurring_invoice or delivery_model is retainer
+        _period_nice = {
+            'per month': 'Monthly', 'per year': 'Yearly',
+            'per quarter': 'Quarterly', 'per 6 months': '6-Monthly',
+        }
+
         is_subscription_service = bool(
             getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer'
         )
         subscription_plans = []
         selected_plan_id = None
-        display_plan = None  # FB-005: plan to show in main price (selected or first)
+        display_plan = None
+        unique_periods = []
+        active_period = None
+
         if is_subscription_service:
             subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
             if subscription_plans:
-                selected_plan_id = subscription_plans[0]['recurrence_id']
-                display_plan = subscription_plans[0]
+                # Handle ?plan= pre-selection (e.g. returning from wizard via "Change Plan")
+                plan_param = kwargs.get('plan') or kwargs.get('pricing_id')
+                selected_plan_id = None
+                if plan_param:
+                    try:
+                        plan_id = int(plan_param)
+                        for p in subscription_plans:
+                            if p['recurrence_id'] == plan_id or p.get('pricing_id') == plan_id:
+                                selected_plan_id = p['recurrence_id']
+                                break
+                    except (TypeError, ValueError):
+                        pass
+                if not selected_plan_id:
+                    selected_plan_id = subscription_plans[0]['recurrence_id']
+                display_plan = next(
+                    (p for p in subscription_plans if p['recurrence_id'] == selected_plan_id),
+                    subscription_plans[0]
+                )
+                # Compute unique periods server-side (preserves insertion order)
+                seen = set()
                 for p in subscription_plans:
-                    if p['recurrence_id'] == selected_plan_id:
-                        display_plan = p
-                        break
+                    label = p['period_label']
+                    if label not in seen:
+                        seen.add(label)
+                        unique_periods.append({
+                            'label': label,
+                            'nice': _period_nice.get(label, label.replace('per ', '').title()),
+                            'has_savings': any(
+                                pp.get('savings_pct', 0) > 0
+                                for pp in subscription_plans
+                                if pp['period_label'] == label
+                            ),
+                        })
+                active_period = display_plan['period_label']
 
         values = {
             'product': product,
@@ -151,5 +186,7 @@ class WinkCatalogue(http.Controller):
             'subscription_plans': subscription_plans,
             'selected_plan_id': selected_plan_id,
             'display_plan': display_plan,
+            'unique_periods': unique_periods,
+            'active_period': active_period,
         }
         return request.render('kuec_service_catalogue.wink_service_detail_page', values)

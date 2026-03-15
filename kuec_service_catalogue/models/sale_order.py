@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # ISSUE-006: Cron uses product → company → global reminder days; idempotent via wink_expiry_reminder_sent_days.
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 from datetime import date
 
 
@@ -19,7 +20,19 @@ class SaleOrder(models.Model):
         """EPIC-11: After confirming a WINK portal order, enable customer ratings
         on the auto-created project so evaluations are sent when tasks close.
         Also ensures all folded stages of the project have rating_template_id set
-        so Odoo actually dispatches the email."""
+        so Odoo actually dispatches the email.
+
+        Also blocks confirmation of portal requests that have not been finalized
+        (wink_price_confirmed=False) to prevent accidental confirmation before
+        the coordinator has set and unlocked the pricing for the customer.
+        """
+        for order in self:
+            if order.wink_is_portal_request and not order.wink_price_confirmed:
+                raise UserError(_(
+                    'Cannot confirm "%s": please click "Finalize & Unlock Payment" first '
+                    'to set the price and notify the customer before confirming.',
+                    order.name,
+                ))
         result = super().action_confirm()
         rating_template = self.env.ref(
             'project.rating_project_request_email_template',
@@ -48,9 +61,16 @@ class SaleOrder(models.Model):
         return result
 
     def action_kuec_finalize_price(self):
-        for order in self:
-            order.wink_price_confirmed = True
-            order.message_post(body="Service Coordinator unlocked this quote for payment on the portal.")
+        """Open the Finalize & Unlock Payment wizard."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Finalize & Unlock Payment',
+            'res_model': 'wink.finalize.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_order_id': self.id},
+        }
 
     @api.model
     def _cron_send_expiry_reminders(self):

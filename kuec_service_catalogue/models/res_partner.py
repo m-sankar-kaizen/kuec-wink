@@ -74,4 +74,19 @@ class ResPartner(models.Model):
             partner.wink_rating_count = len(scores)
             partner.wink_avg_rating = sum(scores) / len(scores) if scores else 0.0
 
-    # eWallet fields removed — wallet module (kuec_wallet.py) not yet committed
+    wink_wallet_balance = fields.Float(
+        string='Wallet Balance',
+        compute='_compute_wink_wallet_balance',
+        digits=(10, 2),
+        help='Current eWallet balance: sum of all done transactions (positive = credit, negative = debit).',
+    )
+
+    def _compute_wink_wallet_balance(self):
+        """Sum all done kuec.wallet.transaction amounts for each partner."""
+        txn_model = self.env['kuec.wallet.transaction']
+        for partner in self:
+            txns = txn_model.search([
+                ('partner_id', '=', partner.id),
+                ('state', '=', 'done'),
+            ])
+            partner.wink_wallet_balance = sum(txns.mapped('amount'))

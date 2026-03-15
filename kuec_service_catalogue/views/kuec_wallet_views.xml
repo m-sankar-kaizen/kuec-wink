@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- eWallet: Transaction list/form, partner balance field, top-up wizard view, coordinator menu -->
+<odoo>
+
+    <!-- ── Wallet Transaction: List View ─────────────────────────────────── -->
+    <record id="kuec_wallet_transaction_list_view" model="ir.ui.view">
+        <field name="name">kuec.wallet.transaction.list</field>
+        <field name="model">kuec.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <list string="eWallet Transactions" decoration-danger="state == 'cancelled'">
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="transaction_type"/>
+                <field name="description"/>
+                <field name="order_id" optional="show"/>
+                <field name="amount" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="state"/>
+                <field name="created_by" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Wallet Transaction: Form View ─────────────────────────────────── -->
+    <record id="kuec_wallet_transaction_form_view" model="ir.ui.view">
+        <field name="name">kuec.wallet.transaction.form</field>
+        <field name="model">kuec.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <form string="eWallet Transaction">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="done,cancelled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Transaction Details">
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="transaction_type"/>
+                            <field name="description"/>
+                            <field name="order_id"/>
+                        </group>
+                        <group string="Financials">
+                            <field name="amount"/>
+                            <field name="currency_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="created_by"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Wallet Transaction: Search View ───────────────────────────────── -->
+    <record id="kuec_wallet_transaction_search_view" model="ir.ui.view">
+        <field name="name">kuec.wallet.transaction.search</field>
+        <field name="model">kuec.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <search string="Search Transactions">
+                <field name="partner_id"/>
+                <field name="description"/>
+                <field name="order_id"/>
+                <filter string="Top-Ups" name="filter_topup"
+                        domain="[('transaction_type','=','topup')]"/>
+                <filter string="Payments" name="filter_payment"
+                        domain="[('transaction_type','=','payment')]"/>
+                <filter string="Refunds" name="filter_refund"
+                        domain="[('transaction_type','=','refund')]"/>
+                <filter string="Cancelled" name="filter_cancelled"
+                        domain="[('state','=','cancelled')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Customer" name="group_partner"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="Type" name="group_type"
+                            context="{'group_by': 'transaction_type'}"/>
+                    <filter string="Date" name="group_date"
+                            context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Wallet Transaction: Window Action ─────────────────────────────── -->
+    <record id="action_kuec_wallet_transactions" model="ir.actions.act_window">
+        <field name="name">eWallet Transactions</field>
+        <field name="res_model">kuec.wallet.transaction</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="kuec_wallet_transaction_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No wallet transactions yet.
+            </p>
+            <p>
+                Use the top-up wizard on a customer record to credit their eWallet.
+            </p>
+        </field>
+    </record>
+
+    <!-- ── Top-Up Wizard: Form View ──────────────────────────────────────── -->
+    <record id="wink_wallet_topup_wizard_form_view" model="ir.ui.view">
+        <field name="name">wink.wallet.topup.wizard.form</field>
+        <field name="model">wink.wallet.topup.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Top-Up eWallet">
+                <sheet>
+                    <group>
+                        <group string="Customer">
+                            <field name="partner_id"/>
+                            <field name="current_balance" readonly="1"/>
+                        </group>
+                        <group string="Top-Up Details">
+                            <field name="amount"/>
+                            <field name="currency_id"/>
+                            <field name="description"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_topup" string="Confirm Top-Up"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Top-Up Wizard: Window Action ──────────────────────────────────── -->
+    <record id="action_wink_wallet_topup_wizard" model="ir.actions.act_window">
+        <field name="name">Top-Up eWallet</field>
+        <field name="res_model">wink.wallet.topup.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="wink_wallet_topup_wizard_form_view"/>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ── res.partner: Inject eWallet tab ───────────────────────────────── -->
+    <record id="res_partner_form_kuec_ewallet" model="ir.ui.view">
+        <field name="name">res.partner.form.kuec.ewallet</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="eWallet" name="kuec_ewallet"
+                      groups="kuec_portal_foundation.group_kuec_coordinator,kuec_portal_foundation.group_kuec_admin">
+                    <group>
+                        <group string="Balance">
+                            <field name="wink_wallet_balance" readonly="1"/>
+                        </group>
+                        <group string="Actions">
+                            <button name="%(action_wink_wallet_topup_wizard)d"
+                                    string="Top-Up Wallet"
+                                    type="action"
+                                    class="btn-primary"
+                                    context="{'default_partner_id': id}"/>
+                        </group>
+                    </group>
+                    <field name="wallet_transaction_ids" readonly="1" nolabel="1">
+                        <list string="Transactions" decoration-danger="state == 'cancelled'">
+                            <field name="date"/>
+                            <field name="transaction_type"/>
+                            <field name="description"/>
+                            <field name="order_id" optional="show"/>
+                            <field name="amount" sum="Balance"/>
+                            <field name="currency_id" column_invisible="True"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Coordinator Menu: eWallet Transactions ────────────────────────── -->
+    <menuitem id="menu_wink_ewallet_transactions"
+              name="eWallet Transactions"
+              parent="menu_wink_operations_root"
+              action="action_kuec_wallet_transactions"
+              sequence="40"
+              groups="kuec_portal_foundation.group_kuec_coordinator,kuec_portal_foundation.group_kuec_admin"/>
+
+    <!-- ── Coordinator Menu: Top-Up eWallet ──────────────────────────────── -->
+    <menuitem id="menu_wink_ewallet_topup"
+              name="Top-Up eWallet"
+              parent="menu_wink_operations_root"
+              action="action_wink_wallet_topup_wizard"
+              sequence="41"
+              groups="kuec_portal_foundation.group_kuec_coordinator,kuec_portal_foundation.group_kuec_admin"/>
+
+</odoo>

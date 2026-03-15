@@ -30,6 +30,13 @@
                         groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
                         invisible="not wink_entitlement_ids or state not in ['sale','done'] or wink_bundle_activated or wink_bundle_cancelled or subscription_state == '6_churn'"
                         confirm="Have you completed the confirmation call with the customer? This will mark the bundle as live and start the service period."/>
+                <button name="action_wink_activate_service"
+                        string="Activate Service"
+                        type="object"
+                        class="btn-success"
+                        groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
+                        invisible="wink_entitlement_ids or not wink_is_portal_request or state not in ['sale','done'] or wink_bundle_activated"
+                        confirm="Have you completed the confirmation call with the customer? This will mark the service as live."/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="wink_is_portal_request" invisible="1"/>
@@ -157,7 +164,40 @@
         <field name="res_model">sale.order</field>
         <field name="view_mode">list,form</field>
         <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[('wink_is_portal_request','=',True),('state','=','sale'),('wink_source_product_id.delivery_model','=','retainer')]</field>
+    </record>
+
+    <!-- Confirmed requests (state=sale, all portal) -->
+    <record id="action_wink_coordinator_confirmed" model="ir.actions.act_window">
+        <field name="name">Confirmed</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
         <field name="domain">[('wink_is_portal_request','=',True),('state','=','sale')]</field>
+    </record>
+
+    <!-- Near to Expiry: retainer subs expiring within 30 days -->
+    <record id="action_wink_coordinator_near_expiry" model="ir.actions.act_window">
+        <field name="name">Near to Expiry</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('wink_coordinator_request_list')})]"/>
+        <field name="domain">[
+            ('wink_is_portal_request','=',True),
+            ('state','=','sale'),
+            ('wink_source_product_id.delivery_model','=','retainer'),
+            ('next_invoice_date','!=',False),
+            ('next_invoice_date','&lt;=', (datetime.date.today() + datetime.timedelta(days=30)).strftime('%Y-%m-%d'))
+        ]</field>
+    </record>
+
+    <!-- Wink Tickets: open helpdesk tickets for WINK portal customers -->
+    <!-- fold is a direct stored field on helpdesk.ticket (related to stage_id.fold) -->
+    <record id="action_wink_tickets" model="ir.actions.act_window">
+        <field name="name">Wink Tickets</field>
+        <field name="res_model">helpdesk.ticket</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="domain">[('fold', '=', False)]</field>
     </record>
 
     <!-- EPIC-8: Extend search view with coordinator filters -->

@@ -8,31 +8,64 @@
               web_icon="kuec_service_catalogue,static/description/icon.png"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
-    <!-- Sub-menu: Request Queue (all portal requests) -->
-    <menuitem id="menu_wink_coordinator_queue"
-              name="Request Queue"
+    <!-- ── Group 1: Requests ── -->
+    <menuitem id="menu_wink_group_requests"
+              name="Requests"
               parent="menu_wink_operations_root"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_queue"
+              name="All Requests"
+              parent="menu_wink_group_requests"
               action="action_wink_coordinator_queue"
               sequence="10"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
-    <!-- Sub-menu: Needs Pricing (draft/sent, price not confirmed) -->
-    <menuitem id="menu_wink_coordinator_needs_pricing"
-              name="Needs Pricing"
-              parent="menu_wink_operations_root"
-              action="action_wink_coordinator_needs_pricing"
+    <menuitem id="menu_wink_coordinator_confirmed"
+              name="Confirmed"
+              parent="menu_wink_group_requests"
+              action="action_wink_coordinator_confirmed"
               sequence="20"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
-    <!-- Sub-menu: Active Subscriptions (state=sale) -->
-    <menuitem id="menu_wink_coordinator_active_subs"
-              name="Active Subscriptions"
-              parent="menu_wink_operations_root"
-              action="action_wink_coordinator_active_subs"
+    <menuitem id="menu_wink_coordinator_needs_pricing"
+              name="Needs Pricing"
+              parent="menu_wink_group_requests"
+              action="action_wink_coordinator_needs_pricing"
               sequence="30"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
-    <!-- EPIC-11: Reports sub-menu group -->
+    <!-- ── Group 2: Subscriptions ── -->
+    <menuitem id="menu_wink_group_subscriptions"
+              name="Subscriptions"
+              parent="menu_wink_operations_root"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_active_subs"
+              name="Active Subscriptions"
+              parent="menu_wink_group_subscriptions"
+              action="action_wink_coordinator_active_subs"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_near_expiry"
+              name="Near to Expiry"
+              parent="menu_wink_group_subscriptions"
+              action="action_wink_coordinator_near_expiry"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 3: Tickets ── -->
+    <menuitem id="menu_wink_tickets"
+              name="Wink Tickets"
+              parent="menu_wink_operations_root"
+              action="action_wink_tickets"
+              sequence="30"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 4: Reports ── -->
     <menuitem id="menu_wink_reports_root"
               name="Reports"
               parent="menu_wink_operations_root"

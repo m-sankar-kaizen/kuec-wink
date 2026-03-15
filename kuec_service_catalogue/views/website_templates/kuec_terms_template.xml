@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="wink_terms_and_conditions" name="WINK Terms and Conditions">
+        <t t-call="website.layout">
+            <div class="container mt-5 mb-5">
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb bg-transparent p-0">
+                        <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Terms &amp; Conditions</li>
+                    </ol>
+                </nav>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-9">
+
+                        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                            <div class="card-header border-0 py-4 px-4" style="background:var(--wink-primary,#1F4E79);color:#fff;">
+                                <h2 class="mb-1 fw-bold"><i class="fa fa-file-text-o me-2 opacity-75"/>Terms &amp; Conditions</h2>
+                                <p class="mb-0 opacity-75 small"><t t-esc="company.name"/> — WINK Business Services Portal</p>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-3 p-4 p-lg-5">
+                            <t t-if="terms_html">
+                                <div class="wink-terms-body" t-out="terms_html"/>
+                            </t>
+                            <t t-else="">
+                                <div class="text-center py-5 text-muted">
+                                    <i class="fa fa-file-o fa-3x mb-3 d-block opacity-50"/>
+                                    <p>Terms &amp; Conditions have not been configured yet.</p>
+                                    <p class="small">Please contact your administrator to set up the portal terms.</p>
+                                </div>
+                            </t>
+                        </div>
+
+                        <p class="text-muted small text-center mt-4">
+                            <i class="fa fa-info-circle me-1"/>
+                            By subscribing to any WINK service, you confirm that you have read and accepted these Terms &amp; Conditions.
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

@@ -19,3 +19,5 @@ from . import project_task
 from . import wink_bundle
 from . import wink_bundle_entitlement
 from . import wink_bundle_change_log
+from . import kuec_wallet
+from . import kuec_document_submission

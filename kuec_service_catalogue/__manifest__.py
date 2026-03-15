@@ -22,6 +22,7 @@
         'sale_project',
         'purchase',
         'rating',
+        'helpdesk',
     ],
     'data': [
         'security/kuec_service_catalogue_security.xml',
@@ -52,11 +53,13 @@
         'views/sale_subscription_pricing_views.xml',
         'wizard/wink_assign_vendor_wizard_views.xml',
         'wizard/wink_add_services_wizard_views.xml',
+        'wizard/wink_finalize_wizard_views.xml',
         'views/project_task_views.xml',
         'views/website_templates/wink_catalogue_page.xml',
         'views/website_templates/project_portal_templates.xml',
         'views/website_templates/wink_bundle_lifecycle_templates.xml',
         # 'views/website_templates/terms_templates.xml',  # wallet module not yet committed
+        'views/website_templates/kuec_terms_template.xml',
         'views/wink_bundle_change_log_views.xml',
         # 'views/kuec_wallet_views.xml',  # wallet module not yet committed
     ],

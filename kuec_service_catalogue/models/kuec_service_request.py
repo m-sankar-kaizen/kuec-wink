@@ -763,6 +763,42 @@ class SaleOrderWink(models.Model):
             )
         return credit_note
 
+    def action_wink_activate_service(self):
+        """Coordinator activates a standalone retainer/flexible service after the confirmation call.
+
+        Works identically to action_wink_activate_bundle but targets non-bundle orders.
+        Sets wink_bundle_activated=True, records the date and the activating user,
+        and posts a chatter note.
+        """
+        for order in self:
+            if order.state not in ('sale', 'done'):
+                raise exceptions.UserError(_(
+                    'Service can only be activated on a confirmed (paid) order. '
+                    'Current state: %s'
+                ) % order.state)
+            if order.wink_bundle_activated:
+                raise exceptions.UserError(_(
+                    'This service is already activated (activated on %s by %s).'
+                ) % (order.wink_bundle_activation_date, order.wink_bundle_activated_by.name))
+
+            today = fields.Date.today()
+            order.write({
+                'wink_bundle_activated': True,
+                'wink_bundle_activation_date': today,
+                'wink_bundle_activated_by': self.env.user.id,
+            })
+            order.message_post(
+                body=_(
+                    'Service activated by <b>%(user)s</b> on %(date)s after confirmation call. '
+                    'The service is now live.'
+                ) % {
+                    'user': self.env.user.name,
+                    'date': today,
+                },
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
+
     def action_wink_activate_bundle(self):
         """Coordinator activates the bundle after the confirmation call.
 

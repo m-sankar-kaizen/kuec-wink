@@ -441,25 +441,35 @@
                                     <!-- Plan selector: multiple subscription plans -->
                                     <t t-if="is_subscription_service and len(subscription_plans) > 1 and not is_bundle">
                                         <div class="mb-3">
-                                            <!-- Period toggle: built by JS when multiple billing periods exist -->
-                                            <div id="wink-period-toggle-wrap"/>
+                                            <!-- Period toggle: server-side rendered when multiple billing periods exist -->
+                                            <t t-if="len(unique_periods) > 1">
+                                                <div class="wink-period-toggle mb-3" id="wink-period-toggle">
+                                                    <t t-foreach="unique_periods" t-as="up">
+                                                        <button type="button"
+                                                                t-attf-class="wink-period-btn #{'active' if up['label'] == active_period else ''}"
+                                                                t-att-data-period="up['label']">
+                                                            <t t-esc="up['nice']"/>
+                                                            <t t-if="up['has_savings']">
+                                                                <span class="wink-period-save-badge">Save</span>
+                                                            </t>
+                                                        </button>
+                                                    </t>
+                                                </div>
+                                            </t>
                                             <div id="wink-plan-cards" class="d-flex flex-column gap-2">
                                                 <t t-foreach="subscription_plans" t-as="plan">
                                                     <label t-attf-class="wink-plan-card #{'selected' if plan['recurrence_id'] == selected_plan_id else ''}"
                                                            t-att-data-price="'{:,.2f}'.format(plan['price'])"
                                                            t-att-data-period="plan['period_label']"
                                                            t-att-data-recurrence-id="plan['recurrence_id_str']"
-                                                           t-att-data-tier="plan['plan_name']"
                                                            t-att-data-savings="plan.get('savings_pct', 0)"
                                                            t-att-data-monthly-equiv="'{:,.2f}'.format(plan.get('monthly_equivalent') or plan['price'])"
-                                                           t-att-data-popular="'1' if plan.get('is_most_popular') else '0'">
+                                                           t-att-style="'' if plan['period_label'] == active_period else 'display:none'">
                                                         <input type="radio" name="selected_plan_recurrence_id"
                                                                class="d-none"
                                                                t-att-value="plan['recurrence_id_str']"
                                                                t-att-checked="'checked' if plan['recurrence_id'] == selected_plan_id else None"/>
-                                                        <!-- Tier name always first -->
                                                         <div class="wink-plan-name"><t t-esc="plan['plan_name']"/></div>
-                                                        <!-- Badges below tier name -->
                                                         <t t-if="plan.get('is_most_popular') or plan.get('show_savings')">
                                                             <div class="d-flex gap-1 mb-1 flex-wrap">
                                                                 <t t-if="plan.get('is_most_popular')">
@@ -560,89 +570,48 @@
                                 </div><!-- /.wink-pricing-body -->
                             </div><!-- /.wink-pricing-card -->
 
-                            <!-- Plan selection JS: period toggle + tier cards + URL routing -->
+                            <!-- Plan selection JS: period filter + card select + URL routing -->
                             <script>
                                 (function() {
                                     var cards = Array.prototype.slice.call(document.querySelectorAll('#wink-plan-cards .wink-plan-card'));
                                     var priceEl = document.getElementById('wink-detail-price-amount');
                                     var periodEl = document.getElementById('wink-detail-price-period');
                                     var btn = document.getElementById('wink-detail-request-btn');
-                                    var toggleWrap = document.getElementById('wink-period-toggle-wrap');
 
                                     if (!cards.length) return;
 
-                                    /* ── 1. Collect unique periods ── */
-                                    var periodOrder = [];
-                                    cards.forEach(function(c) {
-                                        var p = c.getAttribute('data-period');
-                                        if (periodOrder.indexOf(p) === -1) periodOrder.push(p);
-                                    });
-
-                                    /* ── 2. Human-readable period labels ── */
-                                    var periodLabel = {
-                                        'per month': 'Monthly', 'per year': 'Yearly',
-                                        'per quarter': 'Quarterly', 'per 6 months': '6-Monthly'
-                                    };
-                                    function nicePeriod(p) { return periodLabel[p] || p; }
-
-                                    /* ── 3. Build period toggle when multiple periods exist ── */
-                                    var activePeriod = periodOrder[0];
-                                    if (periodOrder.length > 1 &amp;&amp; toggleWrap) {
-                                        var toggleHtml = '<div class="wink-period-toggle mb-3">';
-                                        periodOrder.forEach(function(p) {
-                                            var label = nicePeriod(p);
-                                            /* Check if any plan in this period has savings */
-                                            var hasSavings = cards.some(function(c) {
-                                                return c.getAttribute('data-period') === p &amp;&amp; parseInt(c.getAttribute('data-savings') || '0') > 0;
-                                            });
-                                            toggleHtml += '<button type="button" class="wink-period-btn" data-period="' + p + '">'
-                                                + label
-                                                + (hasSavings ? ' <span class="wink-period-save-badge">Save</span>' : '')
-                                                + '</button>';
-                                        });
-                                        toggleHtml += '</div>';
-                                        toggleWrap.innerHTML = toggleHtml;
-
-                                        document.querySelectorAll('.wink-period-btn').forEach(function(pbtn) {
-                                            pbtn.addEventListener('click', function() {
-                                                activePeriod = pbtn.getAttribute('data-period');
-                                                document.querySelectorAll('.wink-period-btn').forEach(function(b) {
-                                                    b.classList.toggle('active', b.getAttribute('data-period') === activePeriod);
-                                                });
-                                                filterCards(activePeriod);
-                                            });
-                                        });
-                                        /* Activate first period */
-                                        var firstBtn = toggleWrap.querySelector('.wink-period-btn[data-period="' + activePeriod + '"]');
-                                        if (firstBtn) firstBtn.classList.add('active');
-                                        filterCards(activePeriod);
-                                    }
-
-                                    /* ── 4. Show/hide cards by period; auto-select first visible ── */
-                                    function filterCards(period) {
-                                        var first = null;
-                                        cards.forEach(function(card) {
-                                            var match = card.getAttribute('data-period') === period;
-                                            card.style.display = match ? '' : 'none';
-                                            if (match &amp;&amp; !first) first = card;
-                                        });
-                                        /* Deselect hidden, select first of new period */
-                                        cards.forEach(function(c) { c.classList.remove('selected'); });
-                                        if (first) {
-                                            first.classList.add('selected');
-                                            updatePrice(first);
-                                        }
-                                    }
-
-                                    /* ── 5. Update live price display ── */
+                                    /* ── 1. Update live price display ── */
                                     function updatePrice(card) {
                                         var price = card.getAttribute('data-price');
                                         var period = card.getAttribute('data-period');
-                                        if (price &amp;&amp; priceEl) priceEl.textContent = 'AED ' + price;
-                                        if (period &amp;&amp; periodEl) periodEl.textContent = period;
+                                        if (priceEl &amp;&amp; price) priceEl.textContent = 'AED ' + price;
+                                        if (periodEl &amp;&amp; period) periodEl.textContent = period;
                                     }
 
-                                    /* ── 6. Card click: select + update price ── */
+                                    /* ── 2. Show/hide cards by period; auto-select first visible ── */
+                                    function filterCards(period) {
+                                        var first = null;
+                                        cards.forEach(function(c) {
+                                            var match = c.getAttribute('data-period') === period;
+                                            c.style.display = match ? '' : 'none';
+                                            if (match &amp;&amp; !first) first = c;
+                                        });
+                                        cards.forEach(function(c) { c.classList.remove('selected'); });
+                                        if (first) { first.classList.add('selected'); updatePrice(first); }
+                                    }
+
+                                    /* ── 3. Period toggle buttons (server-rendered) ── */
+                                    document.querySelectorAll('#wink-period-toggle .wink-period-btn').forEach(function(pbtn) {
+                                        pbtn.addEventListener('click', function() {
+                                            var period = pbtn.getAttribute('data-period');
+                                            document.querySelectorAll('#wink-period-toggle .wink-period-btn').forEach(function(b) {
+                                                b.classList.toggle('active', b === pbtn);
+                                            });
+                                            filterCards(period);
+                                        });
+                                    });
+
+                                    /* ── 4. Card click: select + update price ── */
                                     cards.forEach(function(card) {
                                         card.addEventListener('click', function() {
                                             cards.forEach(function(c) { c.classList.remove('selected'); });
@@ -651,16 +620,20 @@
                                         });
                                     });
 
-                                    /* ── 7. Request button routing ── */
+                                    /* ── 5. Request button routing ── */
                                     if (btn) {
                                         btn.addEventListener('click', function(e) {
                                             e.preventDefault();
-                                            var selectedCard = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
-                                            var rid = selectedCard ? selectedCard.getAttribute('data-recurrence-id') : null;
+                                            var sel = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
+                                            var rid = sel ? sel.getAttribute('data-recurrence-id') : null;
                                             var sid = btn.getAttribute('data-service-id');
                                             if (sid) window.location.href = '/services/' + sid + '/request' + (rid ? '?plan=' + rid : '');
                                         });
                                     }
+
+                                    /* ── 6. Initialise price from currently selected card ── */
+                                    var initCard = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
+                                    if (initCard) updatePrice(initCard);
                                 })();
                             </script>
                         </div>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_wink_finalize_wizard_form" model="ir.ui.view">
+        <field name="name">wink.finalize.wizard.form</field>
+        <field name="model">wink.finalize.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Finalize &amp; Unlock Payment">
+                <div class="o_form_view">
+                    <!-- Info banner -->
+                    <div class="alert alert-info mb-3 d-flex align-items-start gap-2" role="alert">
+                        <i class="fa fa-info-circle mt-1 flex-shrink-0"/>
+                        <div>
+                            Once you finalize, the customer will be able to review the pricing
+                            and proceed to payment from their portal.
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <group string="Request Summary" col="2">
+                        <field name="order_id" readonly="1"/>
+                        <field name="service_name" readonly="1"/>
+                        <field name="customer_name" readonly="1"/>
+                        <field name="amount_total" readonly="1" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+
+                    <group string="Message">
+                        <field name="coordinator_note"
+                               placeholder="e.g. Pricing is confirmed — please review and proceed to payment."
+                               nolabel="1"
+                               colspan="2"/>
+                    </group>
+                </div>
+                <footer>
+                    <button name="action_finalize" type="object"
+                            string="Finalize &amp; Unlock Payment"
+                            class="btn-primary"
+                            data-hotkey="v"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
