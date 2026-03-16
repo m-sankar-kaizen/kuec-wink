@@ -459,60 +459,10 @@ class WinkBundleImportWizard(models.TransientModel):
     # ── Template Download ─────────────────────────────────────────────────────
 
     def action_download_template(self):
-        """Generate and return an .xlsx import template file."""
-        if not openpyxl:
-            raise UserError(_('openpyxl is not installed.'))
-
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = 'Bundle Import'
-
-        from openpyxl.styles import Font, PatternFill, Alignment
-        header_font = Font(bold=True, color='FFFFFF')
-        header_fill = PatternFill(fill_type='solid', fgColor='2563EB')
-        example_font = Font(italic=True, color='6B7280')
-
-        headers = [
-            'Bundle Name', 'Tier Name', 'Tier Seq',
-            'Service Name', 'Qty', 'Item Description', 'Item Seq',
-        ]
-        col_widths = [25, 20, 10, 35, 8, 30, 10]
-
-        for col_idx, (h, w) in enumerate(zip(headers, col_widths), start=1):
-            cell = ws.cell(row=1, column=col_idx, value=h)
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = Alignment(horizontal='center')
-            ws.column_dimensions[cell.column_letter].width = w
-
-        # Example row
-        example = [
-            'HR Starter Pack', 'Bronze', 10,
-            'Payroll Setup', 1, 'Optional notes', 10,
-        ]
-        for col_idx, val in enumerate(example, start=1):
-            cell = ws.cell(row=2, column=col_idx, value=val)
-            cell.font = example_font
-
-        # Notes row
-        notes = [
-            'Required', 'Required', 'Optional (auto)',
-            'Required — must match product name exactly', 'Optional (default 1)', 'Optional', 'Optional (auto)',
-        ]
-        note_font = Font(color='9CA3AF', size=8)
-        for col_idx, note in enumerate(notes, start=1):
-            cell = ws.cell(row=3, column=col_idx, value=note)
-            cell.font = note_font
-
-        output = io.BytesIO()
-        wb.save(output)
-        output.seek(0)
-        file_data = base64.b64encode(output.read()).decode()
-
-        self.write({'file_data': file_data, 'file_name': 'bundle_import_template.xlsx'})
+        """Open the dedicated template download route in a new tab."""
         return {
             'type': 'ir.actions.act_url',
-            'url': '/web/content?model=wink.bundle.import.wizard&id=%d&field=file_data&filename=bundle_import_template.xlsx&download=true' % self.id,
+            'url': '/wink/bundle-import/template',
             'target': 'new',
         }
 
