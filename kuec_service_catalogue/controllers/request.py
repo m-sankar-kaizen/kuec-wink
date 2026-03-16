@@ -1041,6 +1041,10 @@ class WinkRequest(http.Controller):
         # Employees: for standalone set on order; for bundle set per entitlement below
         if not wink_is_bundle and employee_ids:
             order.sudo().wink_selected_employee_ids = [(6, 0, employee_ids)]
+            # Sync to any tasks already created (auto-confirm creates tasks before employees are set)
+            linked_tasks = request.env['project.task'].sudo().search([('sale_order_id', '=', order.id)])
+            if linked_tasks:
+                linked_tasks.write({'wink_employee_ids': [(6, 0, employee_ids)]})
 
         # --- Set plan_id (sale.subscription.plan), recurrence_id, is_subscription, wink_recurring_pricing_id on order ---
         if use_recurring_prices or wink_is_bundle:
