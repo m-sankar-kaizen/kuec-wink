@@ -1902,7 +1902,7 @@ class WinkRequest(http.Controller):
                 'amount': invoice.amount_residual,
                 'journal_id': journal.id,
                 'currency_id': order.currency_id.id,
-                'ref': f'eWallet — {order.name}',
+                'memo': f'eWallet — {order.name}',
                 'payment_method_line_id': pm_line.id if pm_line else False,
             })
             payment.action_post()
