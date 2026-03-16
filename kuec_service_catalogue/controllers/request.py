@@ -1890,10 +1890,13 @@ class WinkRequest(http.Controller):
             if invoice.amount_residual <= 0:
                 return request.redirect(f'/my/requests/{order_id}?payment=success')
 
-            # Create payment directly — avoids account.payment.register wizard validation issues
+            # Ensure the payment method line has a payment_account_id so Odoo 18
+            # can compute outstanding_account_id and generate the journal entry.
             pm_line = journal.inbound_payment_method_line_ids.filtered(
                 lambda l: l.code == 'manual'
             )[:1]
+            if pm_line and not pm_line.payment_account_id and journal.default_account_id:
+                pm_line.sudo().write({'payment_account_id': journal.default_account_id.id})
 
             payment = request.env['account.payment'].sudo().create({
                 'payment_type': 'inbound',
@@ -1914,7 +1917,7 @@ class WinkRequest(http.Controller):
             )
             payment_receivable = payment.move_id.line_ids.filtered(
                 lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
-            )
+            ) if payment.move_id else request.env['account.move.line']
             if receivable_lines and payment_receivable:
                 (receivable_lines + payment_receivable).reconcile()
 
