@@ -71,6 +71,14 @@ class WinkRating(Rating):
                     pass
 
         lang = rating.partner_id.lang or get_lang(request.env).code
+        # I-5: Render WINK branded thank-you page instead of Odoo's generic one
+        if request.httprequest.method == 'POST' and rating.consumed:
+            return request.env['ir.ui.view'].with_context(lang=lang)._render_template(
+                'kuec_service_catalogue.wink_rating_thankyou', {
+                    'rating': rating,
+                    'record': record_sudo,
+                }
+            )
         return request.env['ir.ui.view'].with_context(lang=lang)._render_template(
             'rating.rating_external_page_view', {
                 'web_base_url': rating.get_base_url(),

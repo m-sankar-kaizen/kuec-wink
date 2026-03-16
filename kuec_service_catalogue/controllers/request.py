@@ -1523,6 +1523,20 @@ class WinkRequest(http.Controller):
             except Exception:
                 pass
 
+        # I-4: Rating token for "Rate this Service" button on completed standalone
+        rating_token = None
+        if portal_stage == 'completed' and pb_tasks:
+            try:
+                unconsumed = request.env['rating.rating'].sudo().search([
+                    ('res_model', '=', 'project.task'),
+                    ('res_id', 'in', pb_tasks.ids),
+                    ('consumed', '=', False),
+                ], limit=1)
+                if unconsumed:
+                    rating_token = unconsumed.access_token
+            except Exception:
+                pass
+
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
             'product': product,
@@ -1575,6 +1589,7 @@ class WinkRequest(http.Controller):
             'next_due_date': next_due_date,
             'pb_tasks': pb_tasks,
             'pb_project': pb_project,
+            'rating_token': rating_token,
         })
 
     @http.route('/my/requests/<int:order_id>/approve', type='http', auth='user', website=True, methods=['POST'], csrf=True)

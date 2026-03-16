@@ -2067,7 +2067,7 @@
                             </div>
                         </t>
 
-                        <!-- COMPLETED: Feedback only -->
+                        <!-- COMPLETED: Rate this service + Feedback -->
                         <t t-if="ps == 'completed'">
                             <div class="d-flex align-items-center gap-3 p-4 mb-4 rounded-3 shadow-sm"
                                  style="background:rgba(40,167,69,0.07);border-left:4px solid #28a745;">
@@ -2076,10 +2076,18 @@
                                     <h6 class="mb-1 fw-semibold text-success">Service completed</h6>
                                     <p class="mb-0 text-muted small">This request has been completed. Thank you for choosing KUEC.</p>
                                 </div>
-                                <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill flex-shrink-0"
-                                   onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
-                                    <i class="fa fa-comments me-1"/>Feedback
-                                </a>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <t t-if="rating_token">
+                                        <a t-attf-href="/rate/#{rating_token}/3"
+                                           class="btn btn-warning btn-sm rounded-pill fw-semibold">
+                                            <i class="fa fa-star me-1"/>Rate this Service
+                                        </a>
+                                    </t>
+                                    <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                       onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                        <i class="fa fa-comments me-1"/>Feedback
+                                    </a>
+                                </div>
                             </div>
                         </t>
 
@@ -3403,6 +3411,7 @@
                                     <t t-set="act_list" t-value="bd['ent_activation_map'].get(ent.id, [])"/>
                                     <t t-set="done_count" t-value="len([a for a in act_list if a.get('is_complete')])"/>
                                     <t t-set="inprog_count" t-value="len([a for a in act_list if not a.get('is_complete')])"/>
+                                    <t t-set="ent_ratings" t-value="bd.get('ent_rating_map', {}).get(ent.id, [])"/>
 
                                     <div class="wb-svc-row">
                                         <!-- Icon -->
@@ -3438,6 +3447,17 @@
 
                                         <!-- Action -->
                                         <div class="wb-svc-actions">
+                                            <!-- I-3: Rating badge (shown when task is done) -->
+                                            <t t-if="ent_ratings">
+                                                <t t-set="ent_r" t-value="ent_ratings[0]"/>
+                                                <t t-set="ent_score" t-value="int(ent_r.rating)"/>
+                                                <span t-attf-class="badge #{ent_score >= 4 and 'bg-success' or ent_score == 3 and 'bg-warning text-dark' or 'bg-danger'}"
+                                                      style="font-size:.7rem;"
+                                                      t-attf-title="You rated: #{ent_score}/5">
+                                                    <i class="fa fa-star me-1"/>
+                                                    <t t-esc="ent_score"/>/5
+                                                </span>
+                                            </t>
                                             <t t-if="bd_is_cancelled or ent.state == 'expired'">
                                                 <span class="badge bg-secondary" style="font-size:.7rem;">Expired</span>
                                             </t>
