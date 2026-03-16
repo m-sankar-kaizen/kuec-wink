@@ -60,8 +60,9 @@
                     </group>
 
                     <group string="Employees">
+                        <field name="wink_customer_partner_id" invisible="1"/>
                         <field name="wink_employee_ids" widget="many2many_tags" nolabel="1"
-                               domain="sale_order_id.partner_id and [('partner_id', '=', sale_order_id.partner_id.id)] or []"/>
+                               domain="[('partner_id', '=', wink_customer_partner_id)] if wink_customer_partner_id else []"/>
                     </group>
                 </page>
             </xpath>

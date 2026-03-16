@@ -17,6 +17,13 @@ class ProjectTaskWink(models.Model):
         string='Employees',
         help='Employees linked to this task (from WINK request or added in backend).',
     )
+    wink_customer_partner_id = fields.Many2one(
+        'res.partner',
+        related='sale_order_id.partner_id',
+        store=True,
+        string='Customer',
+        help='Customer partner derived from the linked sale order. Used as domain filter for employee selection.',
+    )
 
     # EPIC-11: SLA reporting — days the task has been open
     wink_days_open = fields.Integer(
