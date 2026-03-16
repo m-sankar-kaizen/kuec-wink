@@ -216,6 +216,31 @@ class WinkBundleEntitlement(models.Model):
             if linked_tasks:
                 linked_tasks.write({'wink_employee_ids': [(6, 0, list(map(int, employee_ids)))]})
 
+        # I-8: Ensure rating is active on any project created by this activation
+        try:
+            rating_template = self.env.ref(
+                'kuec_service_catalogue.mail_template_wink_rating_request',
+                raise_if_not_found=False,
+            )
+            new_projects = self.env['project.project'].sudo().search(
+                [('sale_order_id', '=', order.id)]
+            )
+            new_projects.filtered(lambda p: not p.rating_active).write({
+                'rating_active': True,
+                'rating_status': 'stage',
+            })
+            if rating_template:
+                folded_stages = new_projects.mapped('type_ids').filtered(
+                    lambda s: s.fold and not s.rating_template_id
+                )
+                if folded_stages:
+                    folded_stages.sudo().write({'rating_template_id': rating_template.id})
+        except Exception:
+            _logger.warning(
+                "Failed to enable ratings after bundle activation for entitlement %s",
+                self.id, exc_info=True,
+            )
+
         # T-3: Atomic update using SQL to avoid race condition
         self.env.cr.execute(
             "UPDATE wink_bundle_entitlement SET qty_activated = %s, write_date = NOW() AT TIME ZONE 'UTC' WHERE id = %s",

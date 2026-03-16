@@ -55,6 +55,20 @@ class WinkRating(Rating):
                 feedback=kwargs.get('feedback'),
                 subtype_xmlid=None,
             )
+            # I-6: Low-score escalation — post warning to task chatter for coordinator
+            if rate <= 2:
+                try:
+                    feedback_text = kwargs.get('feedback', '').strip() or 'None provided'
+                    record_sudo.message_post(
+                        body=(
+                            "⚠️ Low rating (%d/5) received for service <b>%s</b>.<br/>"
+                            "Customer feedback: %s"
+                        ) % (rate, record_sudo.name, feedback_text),
+                        message_type='comment',
+                        subtype_xmlid='mail.mt_note',
+                    )
+                except Exception:
+                    pass
 
         lang = rating.partner_id.lang or get_lang(request.env).code
         return request.env['ir.ui.view'].with_context(lang=lang)._render_template(

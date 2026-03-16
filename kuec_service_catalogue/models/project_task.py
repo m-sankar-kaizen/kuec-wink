@@ -104,6 +104,18 @@ class ProjectTaskWink(models.Model):
 
     # ── Rating: vendor is the rated operator ─────────────────────────────────
 
+    def _send_task_rating_mail(self, **kwargs):
+        """Only send rating email for WINK portal tasks that have a vendor assigned.
+
+        Skips silently if:
+        - Task has no linked WINK portal order (non-WINK tasks use default behaviour)
+        - Task has no wink_vendor_id (vendor not yet assigned — rating email would be meaningless)
+        """
+        if self.sale_order_id and self.sale_order_id.wink_is_portal_request:
+            if not self.wink_vendor_id:
+                return
+        return super()._send_task_rating_mail(**kwargs)
+
     def _rating_get_operator(self):
         """Return the assigned vendor as the rated operator so that customer
         ratings are linked to the vendor, not the internal user."""
