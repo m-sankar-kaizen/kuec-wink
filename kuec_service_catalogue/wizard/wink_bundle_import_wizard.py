@@ -4,7 +4,7 @@ import io
 import json
 import logging
 
-from odoo import models, fields, api, _
+from odoo import models, fields, _
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class WinkBundleImportWizard(models.TransientModel):
 
         # Map header columns
         header = [str(c).strip().lower() if c else '' for c in rows[0]]
-        col = {name: header.index(name) for name in _COL_BUNDLE, _COL_TIER, _COL_SERVICE
+        col = {name: header.index(name) for name in (_COL_BUNDLE, _COL_TIER, _COL_SERVICE)
                if name in header}
 
         missing = REQUIRED_COLS - set(col.keys())
