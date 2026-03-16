@@ -2334,54 +2334,37 @@
                                                         <i class="fa fa-users me-1"/>Select Employees
                                                     </div>
                                                     <t t-if="prereq.get('employees')">
-                                                        <div class="wink-emp-grid">
+                                                        <div class="border rounded-3 overflow-hidden mx-3 mb-2">
                                                             <t t-foreach="prereq['employees']" t-as="emp">
-                                                                <label class="wink-emp-card">
-                                                                    <input type="checkbox" class="wink-emp-checkbox d-none"
-                                                                           name="employee_ids"
-                                                                           t-att-value="emp.id"/>
-                                                                    <div class="wink-emp-body">
-                                                                        <i class="fa fa-user wink-emp-icon"/>
-                                                                        <span class="wink-emp-name"><t t-esc="emp.name"/></span>
-                                                                    </div>
+                                                                <t t-set="emp_ini" t-value="''.join([(n[0] or '').upper() for n in (emp.name or '').split()[:2]]) or '?'"/>
+                                                                <label class="d-flex align-items-center gap-3 px-3 py-2 mb-0 wink-emp-row"
+                                                                       style="cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.12s;">
+                                                                    <input type="checkbox" class="form-check-input flex-shrink-0 wink-emp-checkbox"
+                                                                           name="employee_ids" t-att-value="emp.id"
+                                                                           style="margin-top:0;width:16px;height:16px;cursor:pointer;"/>
+                                                                    <span class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
+                                                                          style="width:28px;height:28px;background:var(--wink-primary);font-size:0.65rem;">
+                                                                        <t t-esc="emp_ini"/>
+                                                                    </span>
+                                                                    <span class="small fw-semibold flex-grow-1"><t t-esc="emp.name"/></span>
                                                                 </label>
                                                             </t>
                                                         </div>
                                                     </t>
                                                     <t t-else="">
-                                                        <p class="text-muted small px-3 mb-1">
-                                                            <i class="fa fa-info-circle me-1"/>No employees in directory yet. Add one below.
+                                                        <p class="text-muted small px-3 mb-2">
+                                                            <i class="fa fa-info-circle me-1"/>No employees in your directory yet.
                                                         </p>
                                                     </t>
-                                                    <!-- Add new employee inline -->
-                                                    <div class="px-3 pb-3">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary wink-new-emp-toggle"
-                                                                t-attf-data-target="#wink-req-new-emp-#{ent_m.id}">
-                                                            <i class="fa fa-plus me-1"/>Add New Employee
+                                                    <div class="px-3 pb-3 d-flex align-items-center gap-2 flex-wrap">
+                                                        <a href="/my/employees" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="fa fa-plus me-1"/>Add Employee
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary wink-reload-modal"
+                                                                t-att-data-ent-id="ent_m.id">
+                                                            <i class="fa fa-refresh me-1"/>Refresh List
                                                         </button>
-                                                        <div class="d-none mt-2 p-3 border rounded-2 bg-light" t-attf-id="wink-req-new-emp-#{ent_m.id}">
-                                                            <div class="row g-2">
-                                                                <div class="col-12 col-sm-6">
-                                                                    <input type="text" name="new_emp_name" class="form-control form-control-sm"
-                                                                           placeholder="Full Name *"/>
-                                                                </div>
-                                                                <div class="col-12 col-sm-6">
-                                                                    <input type="text" name="new_emp_job" class="form-control form-control-sm"
-                                                                           placeholder="Job Title"/>
-                                                                </div>
-                                                                <div class="col-12 col-sm-6">
-                                                                    <input type="email" name="new_emp_email" class="form-control form-control-sm"
-                                                                           placeholder="Email"/>
-                                                                </div>
-                                                                <div class="col-12 col-sm-6">
-                                                                    <input type="text" name="new_emp_mobile" class="form-control form-control-sm"
-                                                                           placeholder="Mobile"/>
-                                                                </div>
-                                                            </div>
-                                                            <small class="text-muted d-block mt-1" style="font-size:.72rem;">
-                                                                Employee will be created and selected automatically.
-                                                            </small>
-                                                        </div>
+                                                        <span class="text-muted" style="font-size:0.72rem;">Add in new tab, then Refresh List</span>
                                                     </div>
                                                 </div>
                                             </t>
@@ -2449,20 +2432,11 @@
                                 });
                             });
 
-                            // ── Add New Employee toggle ───────────────────────────
-                            document.querySelectorAll('.wink-new-emp-toggle').forEach(function(btn) {
+                            // ── Refresh List: reload page with open_modal param to reopen after adding employees ──
+                            document.querySelectorAll('.wink-reload-modal').forEach(function(btn) {
                                 btn.addEventListener('click', function() {
-                                    var panel = document.querySelector(btn.getAttribute('data-target'));
-                                    if (!panel) return;
-                                    panel.classList.toggle('d-none');
-                                    var nameInput = panel.querySelector('input[name="new_emp_name"]');
-                                    if (nameInput &amp;&amp; !nameInput._winkListening) {
-                                        nameInput._winkListening = true;
-                                        nameInput.addEventListener('input', function() {
-                                            var modal = nameInput.closest('.modal');
-                                            if (modal) updateActivateBtn(modal);
-                                        });
-                                    }
+                                    var entId = btn.getAttribute('data-ent-id');
+                                    window.location.href = window.location.pathname + '?open_modal=' + entId;
                                 });
                             });
 
@@ -3572,54 +3546,37 @@
                                                             <i class="fa fa-users me-1"/>Select Employees
                                                         </div>
                                                         <t t-if="prereq.get('employees')">
-                                                            <div class="wink-emp-grid">
+                                                            <div class="border rounded-3 overflow-hidden mx-3 mb-2">
                                                                 <t t-foreach="prereq['employees']" t-as="emp">
-                                                                    <label class="wink-emp-card">
-                                                                        <input type="checkbox" class="wink-emp-checkbox d-none"
-                                                                               name="employee_ids"
-                                                                               t-att-value="emp.id"/>
-                                                                        <div class="wink-emp-body">
-                                                                            <i class="fa fa-user wink-emp-icon"/>
-                                                                            <span class="wink-emp-name"><t t-esc="emp.name"/></span>
-                                                                        </div>
+                                                                    <t t-set="emp_ini" t-value="''.join([(n[0] or '').upper() for n in (emp.name or '').split()[:2]]) or '?'"/>
+                                                                    <label class="d-flex align-items-center gap-3 px-3 py-2 mb-0 wink-emp-row"
+                                                                           style="cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.12s;">
+                                                                        <input type="checkbox" class="form-check-input flex-shrink-0 wink-emp-checkbox"
+                                                                               name="employee_ids" t-att-value="emp.id"
+                                                                               style="margin-top:0;width:16px;height:16px;cursor:pointer;"/>
+                                                                        <span class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
+                                                                              style="width:28px;height:28px;background:var(--wink-primary);font-size:0.65rem;">
+                                                                            <t t-esc="emp_ini"/>
+                                                                        </span>
+                                                                        <span class="small fw-semibold flex-grow-1"><t t-esc="emp.name"/></span>
                                                                     </label>
                                                                 </t>
                                                             </div>
                                                         </t>
                                                         <t t-else="">
-                                                            <p class="text-muted small px-3 mb-1">
-                                                                <i class="fa fa-info-circle me-1"/>No employees in directory yet. Add one below.
+                                                            <p class="text-muted small px-3 mb-2">
+                                                                <i class="fa fa-info-circle me-1"/>No employees in your directory yet.
                                                             </p>
                                                         </t>
-                                                        <!-- Add new employee inline -->
-                                                        <div class="px-3 pb-3">
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary wink-new-emp-toggle"
-                                                                    t-attf-data-target="#wink-new-emp-#{ent_m.id}">
-                                                                <i class="fa fa-plus me-1"/>Add New Employee
+                                                        <div class="px-3 pb-3 d-flex align-items-center gap-2 flex-wrap">
+                                                            <a href="/my/employees" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="fa fa-plus me-1"/>Add Employee
+                                                            </a>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary wink-reload-modal"
+                                                                    t-att-data-ent-id="ent_m.id">
+                                                                <i class="fa fa-refresh me-1"/>Refresh List
                                                             </button>
-                                                            <div class="d-none mt-2 p-3 border rounded-2 bg-light" t-attf-id="wink-new-emp-#{ent_m.id}">
-                                                                <div class="row g-2">
-                                                                    <div class="col-12 col-sm-6">
-                                                                        <input type="text" name="new_emp_name" class="form-control form-control-sm"
-                                                                               placeholder="Full Name *"/>
-                                                                    </div>
-                                                                    <div class="col-12 col-sm-6">
-                                                                        <input type="text" name="new_emp_job" class="form-control form-control-sm"
-                                                                               placeholder="Job Title"/>
-                                                                    </div>
-                                                                    <div class="col-12 col-sm-6">
-                                                                        <input type="email" name="new_emp_email" class="form-control form-control-sm"
-                                                                               placeholder="Email"/>
-                                                                    </div>
-                                                                    <div class="col-12 col-sm-6">
-                                                                        <input type="text" name="new_emp_mobile" class="form-control form-control-sm"
-                                                                               placeholder="Mobile"/>
-                                                                    </div>
-                                                                </div>
-                                                                <small class="text-muted d-block mt-1" style="font-size:.72rem;">
-                                                                    Employee will be created and selected automatically.
-                                                                </small>
-                                                            </div>
+                                                            <span class="text-muted" style="font-size:0.72rem;">Add in new tab, then Refresh List</span>
                                                         </div>
                                                     </div>
                                                 </t>
