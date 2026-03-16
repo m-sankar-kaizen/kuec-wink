@@ -32,7 +32,6 @@ class WinkBundleImportWizard(models.TransientModel):
 
     file_data = fields.Binary(
         string='Excel File (.xlsx)',
-        required=True,
         help='Upload an .xlsx file with columns: Bundle Name, Tier Name, Tier Seq, Service Name, Qty, Item Description, Item Seq.',
     )
     file_name = fields.Char(
