@@ -60,7 +60,8 @@
                     </group>
 
                     <group string="Employees">
-                        <field name="wink_employee_ids" widget="many2many_tags" nolabel="1"/>
+                        <field name="wink_employee_ids" widget="many2many_tags" nolabel="1"
+                               domain="[('partner_id', '=', sale_order_id.partner_id.commercial_partner_id)]"/>
                     </group>
                 </page>
             </xpath>
