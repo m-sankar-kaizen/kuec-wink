@@ -1110,10 +1110,10 @@
                         <!-- Hidden start_date for bundles (non-bundle date is inline in service card above) -->
                         <input t-if="wink_is_bundle" type="hidden" name="start_date" t-att-value="datetime.date.today().strftime('%Y-%m-%d')"/>
 
-                        <!-- Employee selection — clean card grid for standalone services -->
+                        <!-- Employee selection — list rows for standalone services -->
                         <t t-if="product.requires_employee_selection and not wink_is_bundle">
                             <div class="mt-4 pt-3 border-top">
-                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
                                     <h6 class="fw-semibold mb-0"><i class="fa fa-users me-2" style="color:var(--wink-primary);"/>Select Employees</h6>
                                     <div class="d-flex gap-3">
                                         <button type="button" class="btn btn-link btn-sm p-0 fw-semibold wink-select-all-employees" data-target="employee_ids"
@@ -1123,40 +1123,36 @@
                                     </div>
                                 </div>
                                 <t t-if="employees">
-                                    <div class="row g-2" id="employee_ids_container">
+                                    <div class="border rounded-3 overflow-hidden" id="employee_ids_container">
                                         <t t-foreach="employees" t-as="emp">
                                             <t t-set="initials_r" t-value="''.join([(n[0] or '').upper() for n in (emp.name or '').split()[:2]]) or '?'"/>
-                                            <div class="col-md-6">
-                                                <label class="d-block mb-0" t-attf-for="request_emp_#{emp.id}" style="cursor:pointer;">
-                                                    <div class="border rounded-3 p-3 d-flex align-items-center gap-3 emp-card-hover"
-                                                         style="transition:border-color 0.15s,background 0.15s;">
-                                                        <input type="checkbox" class="form-check-input flex-shrink-0 wink-emp-inline-cb"
-                                                               t-att-id="'request_emp_%s' % emp.id"
-                                                               name="employee_ids" t-att-value="emp.id"
-                                                               style="margin-top:0;width:18px;height:18px;cursor:pointer;"/>
-                                                        <span class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
-                                                              style="width:36px;height:36px;background:var(--wink-primary);font-size:0.75rem;">
-                                                            <t t-esc="initials_r"/>
-                                                        </span>
-                                                        <div class="flex-grow-1 min-width-0">
-                                                            <div class="fw-semibold small text-truncate"><t t-esc="emp.name"/></div>
-                                                            <div class="text-muted" style="font-size:0.72rem;">
-                                                                <t t-esc="emp.passport_number or 'No passport on file'"/>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                            </div>
+                                            <label class="d-flex align-items-center gap-3 px-3 py-2 wink-emp-row mb-0"
+                                                   t-attf-for="request_emp_#{emp.id}"
+                                                   style="cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.12s;">
+                                                <input type="checkbox" class="form-check-input flex-shrink-0 wink-emp-inline-cb"
+                                                       t-att-id="'request_emp_%s' % emp.id"
+                                                       name="employee_ids" t-att-value="emp.id"
+                                                       style="margin-top:0;width:16px;height:16px;cursor:pointer;"/>
+                                                <span class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 fw-bold text-white"
+                                                      style="width:30px;height:30px;background:var(--wink-primary);font-size:0.7rem;">
+                                                    <t t-esc="initials_r"/>
+                                                </span>
+                                                <div class="flex-grow-1 min-width-0">
+                                                    <span class="fw-semibold small"><t t-esc="emp.name"/></span>
+                                                    <span class="text-muted ms-2" style="font-size:0.72rem;"><t t-esc="emp.passport_number or 'No passport on file'"/></span>
+                                                </div>
+                                            </label>
                                         </t>
                                     </div>
-                                    <a href="/my/employees" class="small mt-2 d-inline-block" style="color:var(--wink-primary);">
+                                    <a href="/my/employees" target="_blank" class="small mt-2 d-inline-block" style="color:var(--wink-primary);">
                                         <i class="fa fa-plus me-1"/>Add employee
                                     </a>
+                                    <span class="text-muted small ms-1">(opens in new tab — come back here after saving)</span>
                                 </t>
                                 <t t-else="">
                                     <div class="alert alert-warning py-2 small">
                                         No employees in your directory.
-                                        <a href="/my/employees" class="fw-semibold">Add employees</a> before submitting.
+                                        <a href="/my/employees" target="_blank" class="fw-semibold">Add employees</a> (opens in new tab), then refresh this page.
                                     </div>
                                 </t>
                             </div>
