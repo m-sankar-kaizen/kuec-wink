@@ -467,6 +467,37 @@ class KuecCustomerPortal(CustomerPortal):
             if order.wink_source_product_id and order.wink_source_product_id.wink_bundle_id:
                 bundle_obj = order.wink_source_product_id.wink_bundle_id
 
+            # I-3: Build per-entitlement rating map {ent_id: rating_record or None}
+            ent_rating_map = {}
+            try:
+                all_ent_lines = entitlements.mapped('activated_line_ids')
+                if all_ent_lines:
+                    ent_tasks = request.env['project.task'].sudo().search([
+                        ('sale_line_id', 'in', all_ent_lines.ids),
+                    ])
+                    if ent_tasks:
+                        ratings = request.env['rating.rating'].sudo().search([
+                            ('res_model', '=', 'project.task'),
+                            ('res_id', 'in', ent_tasks.ids),
+                            ('consumed', '=', True),
+                        ])
+                        # Map task_id → rating
+                        rating_by_task = {r.res_id: r for r in ratings}
+                        # Map line_id → tasks
+                        tasks_by_line = {}
+                        for t in ent_tasks:
+                            tasks_by_line.setdefault(t.sale_line_id.id, []).append(t)
+                        for ent in entitlements:
+                            ent_ratings = []
+                            for line in ent.activated_line_ids:
+                                for t in tasks_by_line.get(line.id, []):
+                                    r = rating_by_task.get(t.id)
+                                    if r:
+                                        ent_ratings.append(r)
+                            ent_rating_map[ent.id] = ent_ratings
+            except Exception:
+                pass
+
             bundle_data.append({
                 'order': order,
                 'bundle': bundle_obj,
@@ -477,6 +508,7 @@ class KuecCustomerPortal(CustomerPortal):
                 'tier_name': tier_name,
                 'bundle_name': bundle_name or (order.wink_source_product_id.name if order.wink_source_product_id else order.name),
                 'ent_activation_map': ent_activation_map,
+                'ent_rating_map': ent_rating_map,
             })
 
         open_modal = kw.get('open_modal', '')

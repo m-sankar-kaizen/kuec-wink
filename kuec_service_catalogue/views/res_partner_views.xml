@@ -17,6 +17,23 @@
             <xpath expr="//field[@name='category_id']" position="after">
                 <field name="employee_directory_enabled" widget="boolean_toggle"/>
             </xpath>
+            <!-- I-7: Vendor ratings smart button in button_box -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_wink_ratings"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-star"
+                        invisible="wink_rating_count == 0"
+                        help="View all customer ratings received for services delivered by this vendor.">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="wink_rating_count"/>
+                        </span>
+                        <span class="o_stat_text">Ratings</span>
+                    </div>
+                </button>
+            </xpath>
+
             <!-- EPIC-11: Vendor performance rating (visible when vendor has ratings) -->
             <xpath expr="//page[@name='sales_purchases']/group[@name='container_row_2']" position="after">
                 <group string="WINK Vendor Performance" name="kuec_vendor_rating"

@@ -58,6 +58,20 @@ class ResPartner(models.Model):
         help='Total number of consumed customer ratings linked to this vendor.',
     )
 
+    def action_view_wink_ratings(self):
+        """Open the CX ratings list filtered to this vendor."""
+        self.ensure_one()
+        action = self.env['ir.actions.act_window']._for_xml_id(
+            'kuec_service_catalogue.action_wink_cx_report'
+        )
+        action['domain'] = [
+            ('rated_partner_id', 'child_of', self.id),
+            ('consumed', '=', True),
+            ('res_model', '=', 'project.task'),
+        ]
+        action['display_name'] = 'Ratings — %s' % self.name
+        return action
+
     def _compute_wink_avg_rating(self):
         """Aggregate rating.rating records where rated_partner_id = this vendor."""
         ratings = self.env['rating.rating'].search([
