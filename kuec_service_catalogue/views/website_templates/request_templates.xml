@@ -1686,29 +1686,29 @@
                                        t-att-style="'color:' + ('var(--wink-primary)' if s4_done or s4_active else '#adb5bd') + ';'">Ready for<br/>Payment</small>
                             </div>
                             <!-- Connector 4→5 -->
-                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps in ('confirmed', 'completed', 'active') else '#dee2e6') + ';'"/>
-                            <!-- Step 5: Confirmed -->
-                            <t t-set="s5_done" t-value="ps in ('completed', 'active')"/>
-                            <t t-set="s5_active" t-value="ps in ('confirmed', 'pending_activation')"/>
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps in ('confirmed', 'pending_activation', 'completed', 'active') else '#dee2e6') + ';'"/>
+                            <!-- Step 5: Confirmed — done once payment received (all service types) -->
+                            <t t-set="s5_done" t-value="ps in ('confirmed', 'pending_activation', 'completed', 'active')"/>
                             <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:66px;">
-                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if s5_done else ('wink-step-active' if s5_active else 'wink-step-future'))">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if s5_done else 'wink-step-future')">
                                     <i t-if="s5_done" class="fa fa-check"/>
                                     <span t-else="">5</span>
                                 </div>
                                 <small class="mt-1 fw-semibold text-center" style="font-size:0.62rem;white-space:nowrap;"
-                                       t-att-style="'color:' + ('var(--wink-primary)' if s5_done or s5_active else '#adb5bd') + ';'">Confirmed</small>
+                                       t-att-style="'color:' + ('var(--wink-primary)' if s5_done else '#adb5bd') + ';'">Confirmed</small>
                             </div>
                             <!-- Connector 5→6 -->
-                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps in ('completed', 'active') else '#dee2e6') + ';'"/>
-                            <!-- Step 6: Active / Completed -->
+                            <div t-att-style="'flex:1;height:3px;margin-top:16px;min-width:10px;background:' + ('var(--wink-primary)' if ps in ('confirmed', 'pending_activation', 'completed', 'active') else '#dee2e6') + ';'"/>
+                            <!-- Step 6: Active (bundle/retainer) or Completed (project/standalone) -->
                             <t t-set="s6_done" t-value="ps in ('completed', 'active')"/>
+                            <t t-set="s6_active" t-value="ps in ('confirmed', 'pending_activation')"/>
                             <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto;min-width:62px;">
-                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if s6_done else 'wink-step-future')">
+                                <div t-att-class="'wink-step-node ' + ('wink-step-done' if s6_done else ('wink-step-active' if s6_active else 'wink-step-future'))">
                                     <i t-if="s6_done" class="fa fa-check"/>
                                     <span t-else="">6</span>
                                 </div>
                                 <small class="mt-1 fw-semibold text-center" style="font-size:0.62rem;white-space:nowrap;"
-                                       t-att-style="'color:' + ('var(--wink-primary)' if s6_done else '#adb5bd') + ';'">
+                                       t-att-style="'color:' + ('var(--wink-primary)' if s6_done or s6_active else '#adb5bd') + ';'">
                                     <t t-if="wink_is_bundle or is_retainer">Active</t>
                                     <t t-else="">Completed</t>
                                 </small>
