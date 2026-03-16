@@ -211,6 +211,10 @@ class WinkBundleEntitlement(models.Model):
         # WF-BND-001: store employees per activated line
         if employee_ids:
             new_line.wink_selected_employee_ids = [(6, 0, list(map(int, employee_ids)))]
+            # Sync to tasks auto-created by sale_project before employee_ids was set
+            linked_tasks = self.env['project.task'].sudo().search([('sale_line_id', '=', new_line.id)])
+            if linked_tasks:
+                linked_tasks.write({'wink_employee_ids': [(6, 0, list(map(int, employee_ids)))]})
 
         # T-3: Atomic update using SQL to avoid race condition
         self.env.cr.execute(
