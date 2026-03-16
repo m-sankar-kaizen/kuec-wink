@@ -1504,6 +1504,21 @@ class WinkRequest(http.Controller):
         required_docs = product.kuec_document_ids.sorted('sequence') if product and not wink_is_bundle else request.env['kuec.service.document']
         has_required_docs = bool(required_docs.filtered(lambda d: d.requirement == 'required'))
 
+        # Project-based standalone: fetch tasks + project for the detail card
+        pb_tasks = request.env['project.task']
+        pb_project = None
+        if product and not wink_is_bundle and not is_retainer:
+            try:
+                pb_tasks = request.env['project.task'].sudo().search([
+                    ('sale_order_id', '=', order.id),
+                ])
+                if pb_tasks:
+                    pb_project = pb_tasks[0].project_id
+                elif order.sudo().project_ids:
+                    pb_project = order.sudo().project_ids[0]
+            except Exception:
+                pass
+
         return request.render('kuec_service_catalogue.wink_request_confirmation', {
             'order': order,
             'product': product,
@@ -1554,6 +1569,8 @@ class WinkRequest(http.Controller):
             'amount_paid_display': amount_paid_display,
             'has_partial_payment': has_partial_payment,
             'next_due_date': next_due_date,
+            'pb_tasks': pb_tasks,
+            'pb_project': pb_project,
         })
 
     @http.route('/my/requests/<int:order_id>/approve', type='http', auth='user', website=True, methods=['POST'], csrf=True)

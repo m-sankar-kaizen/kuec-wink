@@ -1831,31 +1831,121 @@
                             </div>
                         </t>
 
-                        <!-- CONFIRMED: View Service + optional Proceed to Payment + Feedback -->
+                        <!-- CONFIRMED: project-based service detail card -->
                         <t t-if="ps == 'confirmed'">
                             <div class="card border-0 shadow-sm rounded-3 mb-4">
-                                <div class="card-body p-4 d-flex flex-wrap align-items-center gap-3">
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-semibold mb-1 text-success">
-                                            <i class="fa fa-check-circle me-1"/>Request confirmed
+                                <div class="card-body p-4">
+                                    <!-- Header row -->
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                                        <h6 class="fw-semibold mb-0 text-success">
+                                            <i class="fa fa-check-circle me-1"/>Request Confirmed
                                         </h6>
-                                        <p class="mb-0 text-muted small">Your service is being delivered. Track progress in your tasks.</p>
-                                    </div>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <t t-if="not is_paid and order.amount_total > 0">
-                                            <a t-attf-href="/my/requests/#{order.id}/pay"
-                                               class="btn btn-success btn-lg px-4 rounded-pill fw-bold shadow-sm">
-                                                <i class="fa fa-credit-card me-2"/>Proceed to Payment
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <t t-if="not is_paid and order.amount_total > 0">
+                                                <a t-attf-href="/my/requests/#{order.id}/pay"
+                                                   class="btn btn-success btn-sm px-3 rounded-pill fw-bold">
+                                                    <i class="fa fa-credit-card me-1"/>Proceed to Payment
+                                                </a>
+                                            </t>
+                                            <t t-if="pb_tasks">
+                                                <a t-attf-href="/my/tasks?search_in=all&amp;search=#{order.name}"
+                                                   class="btn btn-outline-primary btn-sm rounded-pill">
+                                                    <i class="fa fa-eye me-1"/>View Tasks
+                                                </a>
+                                            </t>
+                                            <t t-else="">
+                                                <a href="/my/tasks" class="btn btn-outline-primary btn-sm rounded-pill">
+                                                    <i class="fa fa-eye me-1"/>View Service
+                                                </a>
+                                            </t>
+                                            <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                               onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                                <i class="fa fa-comments me-1"/>Feedback
                                             </a>
-                                        </t>
-                                        <a href="/my/tasks" class="btn btn-outline-primary btn-sm rounded-pill">
-                                            <i class="fa fa-eye me-1"/>View Service
-                                        </a>
-                                        <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
-                                           onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
-                                            <i class="fa fa-comments me-1"/>Feedback
-                                        </a>
+                                        </div>
                                     </div>
+
+                                    <!-- Info grid: service name, payment, dates -->
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-sm-6 col-md-3">
+                                            <div class="text-muted small mb-1">Service</div>
+                                            <div class="fw-semibold small"><t t-esc="product.name if product else order.name"/></div>
+                                        </div>
+                                        <div class="col-sm-6 col-md-3">
+                                            <div class="text-muted small mb-1">Payment Status</div>
+                                            <t t-if="is_paid">
+                                                <span class="badge bg-success"><i class="fa fa-check me-1"/>Paid</span>
+                                            </t>
+                                            <t t-elif="order.amount_total == 0">
+                                                <span class="badge bg-secondary">No Charge</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="badge bg-warning text-dark"><i class="fa fa-clock-o me-1"/>Pending</span>
+                                            </t>
+                                        </div>
+                                        <div class="col-sm-6 col-md-3">
+                                            <div class="text-muted small mb-1">Requested Date</div>
+                                            <div class="fw-semibold small">
+                                                <t t-esc="order.date_order" t-options="{'widget': 'date'}"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 col-md-3">
+                                            <div class="text-muted small mb-1">Expected Completion</div>
+                                            <t t-set="pb_deadline" t-value="(pb_project and pb_project.date) or (pb_tasks and pb_tasks[0].date_deadline) or None"/>
+                                            <div class="fw-semibold small">
+                                                <t t-if="pb_deadline">
+                                                    <t t-esc="pb_deadline" t-options="{'widget': 'date'}"/>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="text-muted">—</span>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Task progress -->
+                                    <t t-if="pb_tasks">
+                                        <div class="border-top pt-3">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <span class="fw-semibold small"><i class="fa fa-tasks me-1"/>Task Progress</span>
+                                                <t t-set="total_t" t-value="len(pb_tasks)"/>
+                                                <t t-set="done_t" t-value="len(pb_tasks.filtered(lambda t: t.stage_id and t.stage_id.fold))"/>
+                                                <span class="text-muted small"><t t-esc="done_t"/>/<t t-esc="total_t"/> completed</span>
+                                            </div>
+                                            <!-- Progress bar -->
+                                            <div class="progress mb-3" style="height:6px;border-radius:3px;">
+                                                <t t-set="pct" t-value="int(done_t * 100 / total_t) if total_t else 0"/>
+                                                <div class="progress-bar bg-success" role="progressbar"
+                                                     t-attf-style="width:#{pct}%;" t-att-aria-valuenow="pct"
+                                                     aria-valuemin="0" aria-valuemax="100"/>
+                                            </div>
+                                            <!-- Task list -->
+                                            <div class="border rounded-3 overflow-hidden">
+                                                <t t-foreach="pb_tasks" t-as="ptask">
+                                                    <div class="d-flex align-items-center gap-3 px-3 py-2"
+                                                         t-attf-style="border-bottom:#{'' if ptask_last else '1px solid #f0f0f0'};">
+                                                        <t t-if="ptask.stage_id and ptask.stage_id.fold">
+                                                            <i class="fa fa-check-circle text-success flex-shrink-0"/>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <i class="fa fa-circle-o text-muted flex-shrink-0"/>
+                                                        </t>
+                                                        <span class="flex-grow-1 small fw-semibold"><t t-esc="ptask.name"/></span>
+                                                        <span class="badge rounded-pill"
+                                                              t-attf-style="background:#e9ecef;color:#495057;font-size:0.68rem;">
+                                                            <t t-esc="ptask.stage_id.name if ptask.stage_id else 'No Stage'"/>
+                                                        </span>
+                                                        <t t-if="ptask.date_deadline">
+                                                            <span class="text-muted" style="font-size:0.7rem;">
+                                                                <i class="fa fa-calendar me-1"/>
+                                                                <t t-esc="ptask.date_deadline" t-options="{'widget': 'date'}"/>
+                                                            </span>
+                                                        </t>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
                                 </div>
                             </div>
                         </t>
