@@ -356,6 +356,30 @@ class WinkBundleTierItem(models.Model):
         help="Number of times this service is included in the bundle tier.",
     )
 
+    @api.onchange('service_product_id')
+    def _onchange_service_product_id_duplicate(self):
+        """Warn and clear immediately if the selected service is already in this tier.
+
+        Fires before save so the user gets instant feedback instead of a cryptic
+        DB constraint error after clicking Save.
+        """
+        if not self.service_product_id or not self.tier_id:
+            return
+        already_used = self.tier_id.item_ids.filtered(
+            lambda x: x.service_product_id == self.service_product_id and x != self._origin
+        )
+        if already_used:
+            self.service_product_id = False
+            return {
+                'warning': {
+                    'title': _('Duplicate Service'),
+                    'message': _(
+                        '"%s" is already included in tier "%s". '
+                        'Each service can only appear once per tier.'
+                    ) % (already_used[0].service_product_id.name, self.tier_id.name),
+                }
+            }
+
     @api.constrains('tier_id', 'service_product_id')
     def _check_unique_service_per_tier(self):
         for rec in self:
