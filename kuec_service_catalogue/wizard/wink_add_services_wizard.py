@@ -54,7 +54,6 @@ class WinkAddServicesWizard(models.TransientModel):
             self.env['wink.bundle.tier.item'].create({
                 'tier_id': self.tier_id.id,
                 'service_product_id': product.id,
-                'name': product.name,
                 'qty': 1,
                 'sequence': next_seq,
             })
