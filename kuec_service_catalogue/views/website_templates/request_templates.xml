@@ -2404,9 +2404,7 @@
                                 if (!btn) return;
                                 var reqEmp = btn.getAttribute('data-req-emp') === '1';
                                 var empSelected = modal.querySelectorAll('.wink-emp-checkbox:checked').length > 0;
-                                var newEmpInput = modal.querySelector('input[name="new_emp_name"]');
-                                var hasNewEmp = newEmpInput &amp;&amp; newEmpInput.value.trim().length > 0;
-                                if (reqEmp &amp;&amp; !empSelected &amp;&amp; !hasNewEmp) {
+                                if (reqEmp &amp;&amp; !empSelected) {
                                     btn.disabled = true;
                                     if (hint) hint.classList.remove('d-none');
                                 } else {
@@ -2420,14 +2418,10 @@
                                 updateActivateBtn(m);
                             });
 
-                            // ── Employee card toggle ──────────────────────────────
-                            document.querySelectorAll('.wink-emp-card').forEach(function(card) {
-                                var cb = card.querySelector('.wink-emp-checkbox');
-                                if (!cb) return;
-                                card.addEventListener('click', function() {
-                                    cb.checked = !cb.checked;
-                                    card.classList.toggle('selected', cb.checked);
-                                    var modal = card.closest('.modal');
+                            // ── Employee checkbox change → update activate button ─
+                            document.querySelectorAll('.wink-emp-checkbox').forEach(function(cb) {
+                                cb.addEventListener('change', function() {
+                                    var modal = cb.closest('.modal');
                                     if (modal) updateActivateBtn(modal);
                                 });
                             });
@@ -3616,9 +3610,7 @@
                                 if (!btn) return;
                                 var reqEmp = btn.getAttribute('data-req-emp') === '1';
                                 var empSelected = modal.querySelectorAll('.wink-emp-checkbox:checked').length > 0;
-                                var newEmpInput = modal.querySelector('input[name="new_emp_name"]');
-                                var hasNewEmp = newEmpInput &amp;&amp; newEmpInput.value.trim().length > 0;
-                                if (reqEmp &amp;&amp; !empSelected &amp;&amp; !hasNewEmp) {
+                                if (reqEmp &amp;&amp; !empSelected) {
                                     btn.disabled = true;
                                     if (hint) hint.classList.remove('d-none');
                                 } else {
@@ -3632,13 +3624,9 @@
                                 updateActivateBtn(m);
                             });
 
-                            document.querySelectorAll('.wink-emp-card').forEach(function(card) {
-                                var cb = card.querySelector('.wink-emp-checkbox');
-                                if (!cb) return;
-                                card.addEventListener('click', function() {
-                                    cb.checked = !cb.checked;
-                                    card.classList.toggle('selected', cb.checked);
-                                    var modal = card.closest('.modal');
+                            document.querySelectorAll('.wink-emp-checkbox').forEach(function(cb) {
+                                cb.addEventListener('change', function() {
+                                    var modal = cb.closest('.modal');
                                     if (modal) {
                                         syncEmployeesToForm(modal);
                                         updateActivateBtn(modal);
@@ -3660,20 +3648,11 @@
                                 });
                             }
 
-                            // Toggle "Add New Employee" panel
-                            document.querySelectorAll('.wink-new-emp-toggle').forEach(function(btn) {
+                            // ── Refresh List: reload page with open_modal param ───
+                            document.querySelectorAll('.wink-reload-modal').forEach(function(btn) {
                                 btn.addEventListener('click', function() {
-                                    var panel = document.querySelector(btn.getAttribute('data-target'));
-                                    if (!panel) return;
-                                    panel.classList.toggle('d-none');
-                                    var nameInput = panel.querySelector('input[name="new_emp_name"]');
-                                    if (nameInput &amp;&amp; !nameInput._winkListening) {
-                                        nameInput._winkListening = true;
-                                        nameInput.addEventListener('input', function() {
-                                            var modal = nameInput.closest('.modal');
-                                            if (modal) updateActivateBtn(modal);
-                                        });
-                                    }
+                                    var entId = btn.getAttribute('data-ent-id');
+                                    window.location.href = window.location.pathname + '?open_modal=' + entId;
                                 });
                             });
 
