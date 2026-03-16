@@ -22,7 +22,7 @@ class ResConfigSettings(models.TransientModel):
     )
     wink_terms_html = fields.Html(
         related='company_id.wink_terms_html',
-        string='Terms & Conditions',
+        string='WINK Terms & Conditions',
         readonly=False,
         sanitize=False,
         help='HTML content shown at /terms-and-conditions on the customer portal.'

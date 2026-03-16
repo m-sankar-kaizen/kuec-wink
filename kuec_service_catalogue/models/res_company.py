@@ -13,7 +13,7 @@ class ResCompany(models.Model):
              'Used when product has no override. Empty = use global default.'
     )
     wink_terms_html = fields.Html(
-        string='Terms & Conditions',
+        string='WINK Terms & Conditions',
         sanitize=False,
         help='HTML content shown at /terms-and-conditions on the customer portal. '
              'Editable here or via Settings → Wink → Terms & Conditions.'

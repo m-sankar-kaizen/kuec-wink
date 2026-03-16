@@ -21,7 +21,7 @@ class ProjectTaskWink(models.Model):
         'res.partner',
         related='sale_order_id.partner_id',
         store=True,
-        string='Customer',
+        string='WINK Customer',
         help='Customer partner derived from the linked sale order. Used as domain filter for employee selection.',
     )
 

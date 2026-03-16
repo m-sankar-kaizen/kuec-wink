@@ -8,7 +8,7 @@
                 <div class="o_form_view">
                     <!-- Info banner -->
                     <div class="alert alert-info mb-3 d-flex align-items-start gap-2" role="alert">
-                        <i class="fa fa-info-circle mt-1 flex-shrink-0"/>
+                        <i class="fa fa-info-circle mt-1 flex-shrink-0" title="Information"/>
                         <div>
                             Once you finalize, the customer will be able to review the pricing
                             and proceed to payment from their portal.
