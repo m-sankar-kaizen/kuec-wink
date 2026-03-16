@@ -1908,10 +1908,11 @@ class WinkRequest(http.Controller):
             payment.action_post()
 
             # Reconcile payment with invoice receivable lines
+            # In Odoo 18, payment journal entries are on payment.move_id.line_ids
             receivable_lines = invoice.line_ids.filtered(
                 lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
             )
-            payment_receivable = payment.line_ids.filtered(
+            payment_receivable = payment.move_id.line_ids.filtered(
                 lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
             )
             if receivable_lines and payment_receivable:
