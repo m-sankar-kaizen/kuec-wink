@@ -1862,9 +1862,13 @@ class WinkRequest(http.Controller):
             # Invoice already fully paid — skip payment, just record wallet debit if needed
             return request.redirect(f'/my/requests/{order_id}?payment=success')
 
-        # Find or create the eWallet journal
-        journal = request.env.ref('kuec_service_catalogue.kuec_ewallet_journal', raise_if_not_found=False)
-        if not journal:
+        # Find or create the eWallet journal — always sudo to avoid portal ACL errors
+        journal = request.env.ref(
+            'kuec_service_catalogue.kuec_ewallet_journal', raise_if_not_found=False
+        )
+        if journal:
+            journal = journal.sudo()
+        else:
             journal = request.env['account.journal'].sudo().search([
                 ('code', '=', 'WEWL'), ('company_id', '=', order.company_id.id)
             ], limit=1)
@@ -1872,15 +1876,15 @@ class WinkRequest(http.Controller):
             return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_journal_missing')
 
         try:
-            # Create invoice if none exists
-            invoices = order.invoice_ids.filtered(lambda inv: inv.state != 'cancel')
+            # Create invoice if none exists — all ops via sudo (portal user has no accounting access)
+            invoices = order.sudo().invoice_ids.filtered(lambda inv: inv.state != 'cancel')
             if not invoices:
                 order.sudo()._create_invoices(final=True)
-                invoices = order.invoice_ids.filtered(lambda inv: inv.state != 'cancel')
+                invoices = order.sudo().invoice_ids.filtered(lambda inv: inv.state != 'cancel')
 
-            invoice = invoices[0]
+            invoice = invoices[0].sudo()
             if invoice.state == 'draft':
-                invoice.sudo().action_post()
+                invoice.action_post()
 
             # Verify there is still an outstanding balance on this invoice
             if invoice.amount_residual <= 0:
@@ -1901,7 +1905,7 @@ class WinkRequest(http.Controller):
                 'ref': f'eWallet — {order.name}',
                 'payment_method_line_id': pm_line.id if pm_line else False,
             })
-            payment.sudo().action_post()
+            payment.action_post()
 
             # Reconcile payment with invoice receivable lines
             receivable_lines = invoice.line_ids.filtered(
@@ -1911,7 +1915,7 @@ class WinkRequest(http.Controller):
                 lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
             )
             if receivable_lines and payment_receivable:
-                (receivable_lines + payment_receivable).sudo().reconcile()
+                (receivable_lines + payment_receivable).reconcile()
 
         except Exception as e:
             _logger = __import__('logging').getLogger(__name__)
