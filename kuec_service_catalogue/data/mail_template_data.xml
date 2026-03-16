@@ -30,7 +30,7 @@
             <field name="name">WINK: Service Satisfaction Survey</field>
             <field name="model_id" ref="project.model_project_task"/>
             <field name="active" eval="True"/>
-            <field name="subject">{{ object.project_id.company_id.name or user.env.company.name }}: How did we do?</field>
+            <field name="subject">{{ object.project_id.company_id.name or user.env.company.name }}: How did we do on "{{ object.name }}"?</field>
             <field name="email_from">{{ user.env.company.email_formatted or user.email_formatted }}</field>
             <field name="partner_to">{{ object._rating_get_partner().id }}</field>
             <field name="description">WINK service rating email. Sent when a task reaches the Done stage. Does not expose the vendor name to the customer.</field>

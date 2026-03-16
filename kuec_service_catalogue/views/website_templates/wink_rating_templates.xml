@@ -1,5 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ── Vendor Portal Home: My Ratings entry ──────────────────────────── -->
+    <template id="portal_my_home_wink_vendor_ratings" inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-if="vendor_rating_count">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">My Service Ratings</t>
+                    <t t-set="url">/my/vendor-ratings</t>
+                    <t t-set="count" t-value="vendor_rating_count"/>
+                    <t t-set="placeholder_count">ratings</t>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- ── Vendor Portal: My Service Ratings page ────────────────────────── -->
+    <template id="wink_vendor_ratings_page" name="WINK: My Service Ratings">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">My Service Ratings</t>
+            </t>
+
+            <t t-if="not rating_rows">
+                <div class="alert alert-info mt-3">
+                    No ratings received yet. Ratings appear here once a customer submits feedback on a completed service.
+                </div>
+            </t>
+
+            <t t-if="rating_rows">
+                <!-- Summary bar -->
+                <div class="d-flex align-items-center gap-4 mb-4 p-3 bg-light rounded-3 border">
+                    <div>
+                        <div class="fw-bold fs-5">
+                            <t t-esc="'%.1f' % avg_rating"/> / 5
+                        </div>
+                        <div class="text-muted small">Average Score</div>
+                    </div>
+                    <div class="vr"/>
+                    <div>
+                        <div class="fw-bold fs-5"><t t-esc="total"/></div>
+                        <div class="text-muted small">Total Ratings</div>
+                    </div>
+                    <!-- Star bar -->
+                    <div class="ms-auto">
+                        <t t-set="full_stars" t-value="int(avg_rating)"/>
+                        <t t-set="half_star" t-value="(avg_rating - full_stars) >= 0.5"/>
+                        <t t-foreach="range(1, 6)" t-as="s">
+                            <i t-attf-class="fa #{s &lt;= full_stars and 'fa-star text-warning' or (s == full_stars + 1 and half_star and 'fa-star-half-o text-warning') or 'fa-star-o text-muted'} fa-lg"/>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Ratings table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Service</th>
+                                <th>PO Reference</th>
+                                <th>Score</th>
+                                <th>Feedback</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="rating_rows" t-as="row">
+                                <tr>
+                                    <!-- Service name -->
+                                    <td class="fw-semibold">
+                                        <t t-esc="row['task'].name if row['task'] else row['rating'].res_name or '—'"/>
+                                    </td>
+                                    <!-- PO reference -->
+                                    <td>
+                                        <t t-if="row['po_name']">
+                                            <a t-attf-href="/my/purchase/#{row['po_id']}" class="text-decoration-none">
+                                                <t t-esc="row['po_name']"/>
+                                            </a>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="text-muted">—</span>
+                                        </t>
+                                    </td>
+                                    <!-- Score: face image + label -->
+                                    <td>
+                                        <t t-set="score" t-value="int(row['rating'].rating)"/>
+                                        <img t-attf-src="/kuec_service_catalogue/static/src/img/wink_face_#{score}.svg"
+                                             width="32" height="32"
+                                             t-attf-alt="#{row['rating'].rating_text}"/>
+                                        <span t-attf-class="ms-2 badge #{score >= 4 and 'bg-success' or score == 3 and 'bg-warning text-dark' or 'bg-danger'}">
+                                            <t t-esc="score"/> / 5
+                                        </span>
+                                    </td>
+                                    <!-- Feedback -->
+                                    <td class="text-muted small" style="max-width:280px;">
+                                        <t t-if="row['rating'].feedback">
+                                            <span t-esc="row['rating'].feedback"/>
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </td>
+                                    <!-- Date -->
+                                    <td class="text-nowrap text-muted small">
+                                        <t t-esc="row['rating'].write_date.strftime('%b %d, %Y')"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+
+                <t t-if="pager['page_count'] > 1">
+                    <t t-call="portal.pager"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
     <!-- WINK 5-face rating submission page — overrides rating.rating_external_page_submit -->
     <template id="wink_rating_page_submit" name="WINK: Rate our Services">
         <t t-call="web.frontend_layout">

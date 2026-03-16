@@ -48,6 +48,16 @@ class KuecCustomerPortal(CustomerPortal):
             request_count = request.env['sale.order'].sudo().search_count(request_domain)
             values['request_count'] = request_count
 
+        # V-1: Vendor Ratings Counter — shown only when user is a vendor (has received POs)
+        if not counters or 'vendor_rating_count' in counters:
+            vendor_partner = request.env.user.partner_id.commercial_partner_id
+            vendor_rating_count = request.env['rating.rating'].sudo().search_count([
+                ('rated_partner_id', 'child_of', vendor_partner.id),
+                ('consumed', '=', True),
+                ('res_model', '=', 'project.task'),
+            ])
+            values['vendor_rating_count'] = vendor_rating_count
+
         # U-3: My Bundles Counter (confirmed + self-service-cancelled orders with entitlements)
         if not counters or 'bundle_count' in counters:
             bundle_domain = [
@@ -1108,4 +1118,65 @@ class KuecCustomerPortal(CustomerPortal):
         return request.render('kuec_service_catalogue.wink_terms_and_conditions', {
             'terms_html': terms_html,
             'company': company,
+        })
+
+    # ── V-1: Vendor Portal Ratings ────────────────────────────────────────────
+
+    @http.route(['/my/vendor-ratings', '/my/vendor-ratings/page/<int:page>'],
+                type='http', auth='user', website=True)
+    def vendor_ratings(self, page=1, **kwargs):
+        """Vendor portal page showing all customer ratings received for their delivered services.
+
+        Ratings are linked to tasks via rated_partner_id = vendor's partner.
+        Each row shows the service name (task), PO reference, score, feedback, and date.
+        Only consumed (submitted) ratings are shown.
+        """
+        vendor_partner = request.env.user.partner_id.commercial_partner_id
+
+        domain = [
+            ('rated_partner_id', 'child_of', vendor_partner.id),
+            ('consumed', '=', True),
+            ('res_model', '=', 'project.task'),
+        ]
+
+        Rating = request.env['rating.rating'].sudo()
+        total = Rating.search_count(domain)
+
+        pager = portal_pager(
+            url='/my/vendor-ratings',
+            total=total,
+            page=page,
+            step=20,
+        )
+
+        ratings = Rating.search(domain, order='write_date desc', limit=20, offset=pager['offset'])
+
+        # Build enriched rows: fetch task + PO ref for each rating
+        rating_rows = []
+        for r in ratings:
+            task = None
+            po_name = None
+            po_id = None
+            try:
+                task = request.env['project.task'].sudo().browse(r.res_id)
+                if task.exists() and task.wink_purchase_order_id:
+                    po_name = task.wink_purchase_order_id.name
+                    po_id = task.wink_purchase_order_id.id
+            except Exception:
+                pass
+            rating_rows.append({
+                'rating': r,
+                'task': task,
+                'po_name': po_name,
+                'po_id': po_id,
+            })
+
+        avg_rating = sum(r.rating for r in ratings) / len(ratings) if ratings else 0.0
+
+        return request.render('kuec_service_catalogue.wink_vendor_ratings_page', {
+            'rating_rows': rating_rows,
+            'avg_rating': avg_rating,
+            'total': total,
+            'pager': pager,
+            'page_name': 'vendor_ratings',
         })
