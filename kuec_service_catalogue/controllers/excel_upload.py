@@ -16,6 +16,79 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 _logger = logging.getLogger(__name__)
 
 
+class KuecBundleImportTemplate(http.Controller):
+    """Serve the Bundle Import Excel template as a direct HTTP download.
+
+    Using a dedicated route avoids the transient-model garbage-collection
+    problem that affects /web/content when the wizard record is short-lived.
+    """
+
+    @http.route('/wink/bundle-import/template', type='http', auth='user')
+    def bundle_import_template(self, **kwargs):
+        """Generate and stream the bundle import .xlsx template."""
+        if not openpyxl:
+            return request.make_response(
+                'openpyxl is not installed.',
+                headers=[('Content-Type', 'text/plain')],
+            )
+
+        try:
+            from openpyxl.styles import Font, PatternFill, Alignment
+        except ImportError:
+            Font = PatternFill = Alignment = None
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = 'Bundle Import'
+
+        headers = [
+            'Bundle Name', 'Tier Name', 'Tier Seq',
+            'Service Name', 'Qty', 'Item Description', 'Item Seq',
+        ]
+        col_widths = [25, 20, 10, 35, 8, 30, 10]
+
+        for col_idx, (h, w) in enumerate(zip(headers, col_widths), start=1):
+            cell = ws.cell(row=1, column=col_idx, value=h)
+            if Font and PatternFill and Alignment:
+                cell.font = Font(bold=True, color='FFFFFF')
+                cell.fill = PatternFill(fill_type='solid', fgColor='2563EB')
+                cell.alignment = Alignment(horizontal='center')
+            ws.column_dimensions[cell.column_letter].width = w
+
+        # Example row
+        example = [
+            'HR Starter Pack', 'Bronze', 10,
+            'Payroll Setup', 1, 'Optional notes', 10,
+        ]
+        for col_idx, val in enumerate(example, start=1):
+            cell = ws.cell(row=2, column=col_idx, value=val)
+            if Font:
+                cell.font = Font(italic=True, color='6B7280')
+
+        # Notes row
+        notes = [
+            'Required', 'Required', 'Optional (auto)',
+            'Required — must match product name exactly',
+            'Optional (default 1)', 'Optional', 'Optional (auto)',
+        ]
+        for col_idx, note in enumerate(notes, start=1):
+            cell = ws.cell(row=3, column=col_idx, value=note)
+            if Font:
+                cell.font = Font(color='9CA3AF', size=8)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return request.make_response(
+            output.read(),
+            headers=[
+                ('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+                ('Content-Disposition', 'attachment; filename="bundle_import_template.xlsx"'),
+            ],
+        )
+
+
 class KuecEmployeeExcel(http.Controller):
 
     @http.route('/my/employees/template', type='http', auth='user', website=True)
@@ -220,3 +293,4 @@ class KuecEmployeeExcel(http.Controller):
             "success_count": len(parsed_data),
             "errors": []
         }), headers=[('Content-Type', 'application/json')])
+
