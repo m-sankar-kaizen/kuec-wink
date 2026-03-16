@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Add Employees column to task list view -->
+    <record id="project_task_list_wink" model="ir.ui.view">
+        <field name="name">project.task.list.wink</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <field name="wink_employee_ids" widget="many2many_tags" optional="show" string="Employees"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="project_task_form_wink" model="ir.ui.view">
         <field name="name">project.task.form.wink</field>
         <field name="model">project.task</field>
