@@ -1858,11 +1858,15 @@ class WinkRequest(http.Controller):
         if wallet_balance < amount_due:
             return request.redirect(f'/my/requests/{order_id}/pay?error=insufficient_wallet')
 
+        if amount_due <= 0:
+            # Invoice already fully paid — skip payment, just record wallet debit if needed
+            return request.redirect(f'/my/requests/{order_id}?payment=success')
+
         # Find or create the eWallet journal
         journal = request.env.ref('kuec_service_catalogue.kuec_ewallet_journal', raise_if_not_found=False)
         if not journal:
             journal = request.env['account.journal'].sudo().search([
-                ('code', '=', 'WEWL'), ('company_id', '=', request.env.company.id)
+                ('code', '=', 'WEWL'), ('company_id', '=', order.company_id.id)
             ], limit=1)
         if not journal:
             return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_journal_missing')
@@ -1878,26 +1882,40 @@ class WinkRequest(http.Controller):
             if invoice.state == 'draft':
                 invoice.sudo().action_post()
 
-            # Use Odoo 18 payment register wizard: handles posting + reconciliation atomically
-            payment_method_line = journal.inbound_payment_method_line_ids.filtered(
+            # Verify there is still an outstanding balance on this invoice
+            if invoice.amount_residual <= 0:
+                return request.redirect(f'/my/requests/{order_id}?payment=success')
+
+            # Create payment directly — avoids account.payment.register wizard validation issues
+            pm_line = journal.inbound_payment_method_line_ids.filtered(
                 lambda l: l.code == 'manual'
             )[:1]
 
-            wizard = request.env['account.payment.register'].sudo().with_context(
-                active_model='account.move',
-                active_ids=invoice.ids,
-            ).create({
+            payment = request.env['account.payment'].sudo().create({
+                'payment_type': 'inbound',
+                'partner_type': 'customer',
+                'partner_id': order.partner_id.id,
+                'amount': invoice.amount_residual,
                 'journal_id': journal.id,
-                'amount': amount_due,
                 'currency_id': order.currency_id.id,
-                'payment_method_line_id': payment_method_line.id if payment_method_line else False,
-                'communication': f'eWallet payment for {order.name}',
+                'ref': f'eWallet — {order.name}',
+                'payment_method_line_id': pm_line.id if pm_line else False,
             })
-            wizard.action_create_payments()
+            payment.sudo().action_post()
+
+            # Reconcile payment with invoice receivable lines
+            receivable_lines = invoice.line_ids.filtered(
+                lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
+            )
+            payment_receivable = payment.line_ids.filtered(
+                lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
+            )
+            if receivable_lines and payment_receivable:
+                (receivable_lines + payment_receivable).sudo().reconcile()
 
         except Exception as e:
             _logger = __import__('logging').getLogger(__name__)
-            _logger.error('eWallet payment failed for order %s: %s', order.name, e)
+            _logger.error('eWallet payment failed for order %s: %s', order.name, e, exc_info=True)
             return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_payment_failed')
 
         # Record wallet debit transaction
