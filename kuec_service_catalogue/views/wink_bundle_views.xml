@@ -200,6 +200,25 @@
         </field>
     </record>
 
+    <!-- Import button on bundle list via server action -->
+    <record id="action_wink_bundle_import_server" model="ir.actions.server">
+        <field name="name">Import Bundles from Excel</field>
+        <field name="model_id" ref="kuec_service_catalogue.model_wink_bundle"/>
+        <field name="binding_model_id" ref="kuec_service_catalogue.model_wink_bundle"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+wizard = env['wink.bundle.import.wizard'].create({})
+action = {
+    'type': 'ir.actions.act_window',
+    'res_model': 'wink.bundle.import.wizard',
+    'res_id': wizard.id,
+    'view_mode': 'form',
+    'target': 'new',
+}
+        </field>
+    </record>
+
     <!-- Menu item under Wink Configuration -->
     <menuitem id="menu_wink_bundle"
               name="Bundle Packages"
