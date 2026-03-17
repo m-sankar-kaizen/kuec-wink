@@ -106,7 +106,14 @@
             <div id="wrap" class="oe_structure oe_empty">
                 <div class="wink-catalogue-container">
                     <!-- CAT-1, CAT-2 Hero: gradient, optional pattern overlay -->
-                    <div class="wink-catalogue-hero kuec-gradient rounded-2xl wink-hero-pattern">
+                    <div class="wink-catalogue-hero kuec-gradient rounded-2xl wink-hero-pattern position-relative">
+                        <!-- Quick link: My Dashboard (visible to logged-in users only) -->
+                        <t t-if="not request.env.user._is_public()">
+                            <a href="/my" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm"
+                               style="position:absolute;top:1rem;right:1rem;z-index:10;">
+                                <i class="fa fa-th-large me-1"/>My Dashboard
+                            </a>
+                        </t>
                         <h1 class="page-header text-white mb-2">Service Catalogue</h1>
                         <p class="page-subtitle text-white opacity-90 mb-4">Browse and request professional services tailored for your business needs.</p>
                         <form method="get" action="/services" class="d-flex w-100 flex-column flex-md-row gap-2" style="max-width: 520px;">
