@@ -406,62 +406,50 @@ class KuecCustomerPortal(CustomerPortal):
             total_services += total
             total_activated += activated_count
 
-            # Per-entitlement prereqs + task map
+            # Per-entitlement task map (use savepoint so a SQL error doesn't
+            # abort the outer transaction and cascade into subsequent queries)
             ent_activation_map = {}
             try:
-                all_lines = entitlements.mapped('activated_line_ids')
-                line_completion = {}
-                if all_lines:
-                    tasks = request.env['project.task'].sudo().search([
-                        ('sale_line_id', 'in', all_lines.ids),
-                    ])
-                    tasks_by_line = {}
-                    for t in tasks:
-                        tasks_by_line.setdefault(t.sale_line_id.id, []).append(t)
-                    for line in all_lines:
-                        line_tasks = tasks_by_line.get(line.id, [])
-                        if not line_tasks:
-                            complete = False
-                        else:
-                            def _task_done(task):
-                                stage = getattr(task, 'stage_id', None)
-                                if not stage:
-                                    return False
-                                if getattr(stage, 'fold', False):
-                                    return True
-                                name = (stage.name or '').lower()
-                                return any(x in name for x in ('done', 'cancelled', 'closed', 'complete'))
-                            complete = all(_task_done(t) for t in line_tasks)
-                        line_completion[line.id] = complete
-                for ent in entitlements:
-                    ent_activation_map[ent.id] = [
-                        {
-                            'name': line.name or '',
-                            'is_complete': line_completion.get(line.id, False),
-                            'index': idx + 1,
-                        }
-                        for idx, line in enumerate(ent.activated_line_ids)
-                    ]
+                with request.env.cr.savepoint():
+                    all_lines = entitlements.mapped('activated_line_ids')
+                    line_completion = {}
+                    if all_lines:
+                        tasks = request.env['project.task'].sudo().search([
+                            ('sale_line_id', 'in', all_lines.ids),
+                        ])
+                        tasks_by_line = {}
+                        for t in tasks:
+                            tasks_by_line.setdefault(t.sale_line_id.id, []).append(t)
+                        for line in all_lines:
+                            line_tasks = tasks_by_line.get(line.id, [])
+                            if not line_tasks:
+                                complete = False
+                            else:
+                                def _task_done(task):
+                                    stage = getattr(task, 'stage_id', None)
+                                    if not stage:
+                                        return False
+                                    if getattr(stage, 'fold', False):
+                                        return True
+                                    name = (stage.name or '').lower()
+                                    return any(x in name for x in ('done', 'cancelled', 'closed', 'complete'))
+                                complete = all(_task_done(t) for t in line_tasks)
+                            line_completion[line.id] = complete
+                    for ent in entitlements:
+                        ent_activation_map[ent.id] = [
+                            {
+                                'name': line.name or '',
+                                'is_complete': line_completion.get(line.id, False),
+                                'index': idx + 1,
+                            }
+                            for idx, line in enumerate(ent.activated_line_ids)
+                        ]
             except Exception:
                 ent_activation_map = {}
 
-            # Per-entitlement docs + employee prereqs
+            # Activation modals removed from template — skip prereq computation
             for ent in entitlements:
-                doc_items = []
-                if ent.service_product_id:
-                    for req in ent.service_product_id.kuec_document_ids:
-                        doc_items.append({
-                            'req_id': req.id,
-                            'name': req.name,
-                        })
-                requires_emps = bool(getattr(ent.service_product_id, 'requires_employee_selection', False))
-                entitlement_prereqs[ent.id] = {
-                    'docs_ok': True,
-                    'doc_items': doc_items,
-                    'requires_employees': requires_emps,
-                    'employees': modal_employees,
-                    'order_id': order.id,
-                }
+                entitlement_prereqs[ent.id] = {'order_id': order.id}
 
             bundle_obj = None
             if order.wink_source_product_id and order.wink_source_product_id.wink_bundle_id:
