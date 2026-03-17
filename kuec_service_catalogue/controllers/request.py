@@ -1359,6 +1359,37 @@ class WinkRequest(http.Controller):
         except Exception:
             bundle_activation_map = {}
 
+        # Per-entitlement rating map {ent_id: rating_record} — shown on the service row
+        bundle_rating_map = {}
+        try:
+            entitlements = order.wink_entitlement_ids
+            if entitlements:
+                all_lines = entitlements.mapped('activated_line_ids')
+                if all_lines:
+                    ent_tasks = request.env['project.task'].sudo().search([
+                        ('sale_line_id', 'in', all_lines.ids),
+                    ])
+                    if ent_tasks:
+                        ratings = request.env['rating.rating'].sudo().search([
+                            ('res_model', '=', 'project.task'),
+                            ('res_id', 'in', ent_tasks.ids),
+                            ('consumed', '=', True),
+                        ])
+                        rating_by_task = {r.res_id: r for r in ratings}
+                        tasks_by_line = {}
+                        for t in ent_tasks:
+                            tasks_by_line.setdefault(t.sale_line_id.id, []).append(t)
+                        for ent in entitlements:
+                            for line in ent.activated_line_ids:
+                                for task in tasks_by_line.get(line.id, []):
+                                    if task.id in rating_by_task:
+                                        bundle_rating_map[ent.id] = rating_by_task[task.id]
+                                        break
+                                if ent.id in bundle_rating_map:
+                                    break
+        except Exception:
+            bundle_rating_map = {}
+
         # Portal must reflect when coordinator has closed/cancelled the order or subscription.
         # sale.order.state can stay 'sale' when subscription is churned (subscription_state = '6_churn').
         is_order_cancelled = order.state == 'cancel'
@@ -1553,6 +1584,7 @@ class WinkRequest(http.Controller):
             'bundle_tier_label': bundle_tier_label,
             'bundle_bundle_name': bundle_bundle_name,
             'bundle_activation_map': bundle_activation_map,
+            'bundle_rating_map': bundle_rating_map,
             'retainer_cancelled': kwargs.get('retainer_cancelled') == '1',
             'quote_rejected': kwargs.get('rejected') == '1',
             'quote_error': kwargs.get('error'),

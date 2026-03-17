@@ -2242,7 +2242,16 @@
                                             </div>
                                         </t>
                                     </div>
-                                    <div class="d-flex gap-2 align-items-center">
+                                    <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
+                                        <!-- Rating badge per entitlement -->
+                                        <t t-set="ent_rating" t-value="bundle_rating_map.get(ent.id) if bundle_rating_map else None"/>
+                                        <t t-if="ent_rating">
+                                            <t t-set="ent_score" t-value="int(ent_rating.rating)"/>
+                                            <span t-attf-class="badge #{ent_score >= 4 and 'bg-success' or ent_score == 3 and 'bg-warning text-dark' or 'bg-danger'}"
+                                                  t-attf-title="Customer rating: #{ent_score}/5">
+                                                <i class="fa fa-star me-1"/><t t-esc="ent_score"/>/5
+                                            </span>
+                                        </t>
                                         <t t-if="ent.qty_activated > 0">
                                             <span class="badge bg-success">✓ Activated</span>
                                         </t>
@@ -3350,7 +3359,7 @@
                                                         <t t-if="bd['order'].wink_bundle_tier_id and bd['order'].wink_bundle_tier_id.upgrade_to_ids">
                                                             <li>
                                                                 <a t-attf-href="/my/bundles/{{ bd['order'].id }}/upgrade" class="dropdown-item small">
-                                                                    <i class="fa fa-arrow-circle-up me-2" style="color:#0055b7;"/>Upgrade Tier
+                                                                    <i class="fa fa-arrow-circle-up me-2" style="color:#0055b7;"/>Upgrade
                                                                 </a>
                                                             </li>
                                                         </t>
@@ -3359,7 +3368,7 @@
                                                         <t t-if="bd['order'].wink_bundle_tier_id and bd['order'].wink_bundle_tier_id.downgrade_to_ids">
                                                             <li>
                                                                 <a t-attf-href="/my/bundles/{{ bd['order'].id }}/downgrade" class="dropdown-item small">
-                                                                    <i class="fa fa-arrow-circle-down me-2 text-secondary"/>Downgrade Tier
+                                                                    <i class="fa fa-arrow-circle-down me-2 text-secondary"/>Downgrade
                                                                 </a>
                                                             </li>
                                                         </t>
