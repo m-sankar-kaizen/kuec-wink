@@ -107,12 +107,16 @@
                 <div class="wink-catalogue-container">
                     <!-- CAT-1, CAT-2 Hero: gradient, optional pattern overlay -->
                     <div class="wink-catalogue-hero kuec-gradient rounded-2xl wink-hero-pattern position-relative">
-                        <!-- Quick link: My Dashboard (visible to logged-in users only) -->
+                        <!-- Quick links: My Dashboard + My Ratings (logged-in users only) -->
                         <t t-if="not request.env.user._is_public()">
-                            <a href="/my" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm"
-                               style="position:absolute;top:1rem;right:1rem;z-index:10;">
-                                <i class="fa fa-th-large me-1"/>My Dashboard
-                            </a>
+                            <div class="d-flex gap-2" style="position:absolute;top:1rem;right:1rem;z-index:10;">
+                                <a href="/my/vendor-ratings" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
+                                    <i class="fa fa-star me-1"/>My Ratings
+                                </a>
+                                <a href="/my" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
+                                    <i class="fa fa-th-large me-1"/>My Dashboard
+                                </a>
+                            </div>
                         </t>
                         <h1 class="page-header text-white mb-2">Service Catalogue</h1>
                         <p class="page-subtitle text-white opacity-90 mb-4">Browse and request professional services tailored for your business needs.</p>
