@@ -2242,7 +2242,16 @@
                                             </div>
                                         </t>
                                     </div>
-                                    <div class="d-flex gap-2 align-items-center">
+                                    <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
+                                        <!-- Rating badge per entitlement -->
+                                        <t t-set="ent_rating" t-value="bundle_rating_map.get(ent.id) if bundle_rating_map else None"/>
+                                        <t t-if="ent_rating">
+                                            <t t-set="ent_score" t-value="int(ent_rating.rating)"/>
+                                            <span t-attf-class="badge #{ent_score >= 4 and 'bg-success' or ent_score == 3 and 'bg-warning text-dark' or 'bg-danger'}"
+                                                  t-attf-title="Customer rating: #{ent_score}/5">
+                                                <i class="fa fa-star me-1"/><t t-esc="ent_score"/>/5
+                                            </span>
+                                        </t>
                                         <t t-if="ent.qty_activated > 0">
                                             <span class="badge bg-success">✓ Activated</span>
                                         </t>
@@ -3346,16 +3355,11 @@
                                                     <i class="fa fa-cog me-1"/>Manage
                                                 </button>
                                                 <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width:175px;border-radius:10px;">
-                                                    <li>
-                                                        <a t-attf-href="/my/requests/#{bd['order'].id}" class="dropdown-item small">
-                                                            <i class="fa fa-file-text-o me-2 text-muted"/>View Request
-                                                        </a>
-                                                    </li>
                                                     <t t-if="not bnd_obj or bnd_obj.allow_self_service_upgrade">
                                                         <t t-if="bd['order'].wink_bundle_tier_id and bd['order'].wink_bundle_tier_id.upgrade_to_ids">
                                                             <li>
                                                                 <a t-attf-href="/my/bundles/{{ bd['order'].id }}/upgrade" class="dropdown-item small">
-                                                                    <i class="fa fa-arrow-circle-up me-2" style="color:#0055b7;"/>Upgrade Tier
+                                                                    <i class="fa fa-arrow-circle-up me-2" style="color:#0055b7;"/>Upgrade
                                                                 </a>
                                                             </li>
                                                         </t>
@@ -3364,7 +3368,7 @@
                                                         <t t-if="bd['order'].wink_bundle_tier_id and bd['order'].wink_bundle_tier_id.downgrade_to_ids">
                                                             <li>
                                                                 <a t-attf-href="/my/bundles/{{ bd['order'].id }}/downgrade" class="dropdown-item small">
-                                                                    <i class="fa fa-arrow-circle-down me-2 text-secondary"/>Downgrade Tier
+                                                                    <i class="fa fa-arrow-circle-down me-2 text-secondary"/>Downgrade
                                                                 </a>
                                                             </li>
                                                         </t>
@@ -3461,29 +3465,8 @@
                                             <t t-if="bd_is_cancelled or ent.state == 'expired'">
                                                 <span class="badge bg-secondary" style="font-size:.7rem;">Expired</span>
                                             </t>
-                                            <t t-elif="bd_is_pending">
-                                                <!-- No button — waiting for coordinator -->
-                                            </t>
                                             <t t-elif="ent.state == 'fully_activated'">
-                                                <t t-set="is_one_time_bnd" t-value="ent.service_product_id.request_frequency == 'one_time'"/>
-                                                <t t-if="not is_one_time_bnd">
-                                                    <button type="button" class="btn btn-sm btn-outline-success"
-                                                            t-attf-data-bs-target="#wink-bnd-modal-#{ent.id}"
-                                                            data-bs-toggle="modal" style="font-size:.78rem;">
-                                                        <i class="fa fa-refresh me-1"/>Again
-                                                    </button>
-                                                </t>
-                                                <t t-else="">
-                                                    <span class="badge" style="background:#e8f5e9;color:#198754;font-size:.72rem;"><i class="fa fa-check me-1"/>Done</span>
-                                                </t>
-                                            </t>
-                                            <t t-else="">
-                                                <button type="button" class="btn btn-sm"
-                                                        t-attf-data-bs-target="#wink-bnd-modal-#{ent.id}"
-                                                        data-bs-toggle="modal"
-                                                        style="background:var(--wink-primary);color:#fff;font-size:.78rem;border:none;border-radius:8px;padding:4px 12px;">
-                                                    <i class="fa fa-play me-1"/>Activate
-                                                </button>
+                                                <span class="badge" style="background:#e8f5e9;color:#198754;font-size:.72rem;"><i class="fa fa-check me-1"/>Done</span>
                                             </t>
                                         </div>
                                     </div>
@@ -3508,8 +3491,9 @@
                         </div>
                     </t>
 
-                    <!-- ── Per-entitlement activation modals (same pattern as request detail) ── -->
-                    <t t-foreach="bundle_data" t-as="bd_m">
+                    <!-- Activation modals removed — users activate from the request detail page -->
+                    <t t-if="False">
+                        <t t-foreach="bundle_data" t-as="bd_m">
                         <t t-foreach="bd_m['entitlements']" t-as="ent_m">
                             <t t-set="prereq" t-value="entitlement_prereqs.get(ent_m.id, {})"/>
                             <div class="modal fade" t-attf-id="wink-bnd-modal-#{ent_m.id}"
@@ -3620,9 +3604,10 @@
                             </div>
                         </t>
                     </t>
+                    </t><!-- end t-if="False" -->
 
-                    <!-- Activation modal JS (same logic as request detail) -->
-                    <script>
+                    <!-- Activation modal JS removed — no longer needed on My Bundles -->
+                    <script t-if="False">
                         (function() {
                             function updateActivateBtn(modal) {
                                 var btn  = modal.querySelector('.wink-activate-submit');
