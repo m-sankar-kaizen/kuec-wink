@@ -1062,18 +1062,28 @@ class KuecCustomerPortal(CustomerPortal):
 
         currency = request.env['res.currency'].sudo().browse(currency_id)
 
-        # Build payment form context manually — avoids /payment/pay landing_route conflict
+        # Build payment form context — mirrors account_payment/controllers/portal.py
         from odoo.addons.payment import utils as payment_utils
+        from odoo.addons.payment.controllers.portal import PaymentPortal
         access_token = payment_utils.generate_access_token(partner.id, amount, currency.id)
 
-        providers_sudo = request.env['payment.provider'].sudo().search([
-            ('state', 'in', ['enabled', 'test']),
-            ('company_id', '=', request.env.company.id),
-        ])
-        tokens_sudo = request.env['payment.token'].sudo().search([
-            ('provider_id', 'in', providers_sudo.ids),
-            ('partner_id', 'child_of', [partner.id]),
-        ])
+        providers_sudo = request.env['payment.provider'].sudo()._get_compatible_providers(
+            request.env.company.id,
+            partner.id,
+            amount,
+            currency_id=currency.id,
+        )
+        payment_methods_sudo = request.env['payment.method'].sudo()._get_compatible_payment_methods(
+            providers_sudo.ids,
+            partner.id,
+            currency_id=currency.id,
+        )
+        tokens_sudo = request.env['payment.token'].sudo()._get_available_tokens(
+            providers_sudo.ids, partner.id
+        )
+        show_tokenize_input_mapping = PaymentPortal._compute_show_tokenize_input_mapping(
+            providers_sudo
+        )
 
         return request.render('kuec_service_catalogue.wink_wallet_pay_page', {
             'amount': amount,
@@ -1081,7 +1091,9 @@ class KuecCustomerPortal(CustomerPortal):
             'partner_id': partner.id,
             'partner': partner,
             'providers_sudo': providers_sudo,
+            'payment_methods_sudo': payment_methods_sudo,
             'tokens_sudo': tokens_sudo,
+            'show_tokenize_input_mapping': show_tokenize_input_mapping,
             'default_payment_provider_id': providers_sudo[:1].id if providers_sudo else False,
             'access_token': access_token,
             'transaction_route': '/payment/transaction',

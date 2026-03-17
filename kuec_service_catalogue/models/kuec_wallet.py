@@ -74,3 +74,10 @@ class KuecWalletTransaction(models.Model):
         readonly=True,
         help='User who created this transaction record.',
     )
+    move_id = fields.Many2one(
+        'account.move',
+        string='Journal Entry',
+        readonly=True,
+        ondelete='set null',
+        help='Accounting journal entry generated for this wallet transaction.',
+    )

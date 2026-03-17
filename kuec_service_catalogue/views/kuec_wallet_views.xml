@@ -38,6 +38,7 @@
                             <field name="transaction_type"/>
                             <field name="description"/>
                             <field name="order_id"/>
+                            <field name="move_id" readonly="1"/>
                         </group>
                         <group string="Financials">
                             <field name="amount"/>
@@ -110,11 +111,20 @@
                             <field name="current_balance" readonly="1"/>
                         </group>
                         <group string="Top-Up Details">
+                            <field name="journal_id"
+                                   domain="[('type','in',['bank','cash'])]"
+                                   options="{'no_create': True}"
+                                   help="Select the bank, cash, or payment gateway journal from which funds are received."/>
                             <field name="amount"/>
                             <field name="currency_id"/>
                             <field name="description"/>
                         </group>
                     </group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Journal Entry that will be posted:</strong><br/>
+                        DR  Selected Payment Journal (Bank / Gateway)<br/>
+                        &#160;&#160;&#160;CR  WINK eWallet Liability (WEWL)
+                    </div>
                 </sheet>
                 <footer>
                     <button name="action_topup" string="Confirm Top-Up"
@@ -186,5 +196,26 @@
               action="action_wink_wallet_topup_wizard"
               sequence="41"
               groups="kuec_portal_foundation.group_kuec_coordinator,kuec_portal_foundation.group_kuec_admin"/>
+
+    <!-- ── Accounting > Customers: Wallet Payments ────────────────────────── -->
+    <record id="action_kuec_wallet_payments" model="ir.actions.act_window">
+        <field name="name">Wallet Payments</field>
+        <field name="res_model">kuec.wallet.transaction</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('transaction_type','=','payment')]</field>
+        <field name="context">{'default_transaction_type': 'payment'}</field>
+        <field name="search_view_id" ref="kuec_wallet_transaction_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No wallet payments yet.</p>
+            <p>Wallet payments appear here when a customer's eWallet balance is used to settle an invoice.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_account_wallet_payments"
+              name="Wallet Payments"
+              parent="account.menu_finance_receivables"
+              action="action_kuec_wallet_payments"
+              sequence="99"
+              groups="account.group_account_user"/>
 
 </odoo>
