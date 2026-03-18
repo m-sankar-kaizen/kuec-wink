@@ -29,6 +29,7 @@ class ProjectTaskWink(models.Model):
     wink_days_open = fields.Integer(
         compute='_compute_wink_days_open',
         string='Days Open',
+        group_operator='avg',
         help='Number of calendar days since this task was created. Used in the Delivery SLA report.',
     )
 
