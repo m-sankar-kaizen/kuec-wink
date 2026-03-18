@@ -535,13 +535,6 @@
                                     <span class="text-muted small">Auto-set to today</span>
                                 </div>
                             </t>
-                            <!-- One-time service notice -->
-                            <t t-if="product.request_frequency == 'one_time' and product.delivery_model != 'retainer'">
-                                <div class="d-flex align-items-start gap-2 mt-3 p-2 rounded-2" style="background:#eff6ff;border:1px solid #bfdbfe;">
-                                    <i class="fa fa-exclamation-circle mt-1" style="color:#3b82f6;"/>
-                                    <span class="small">This is a <strong>one-time service</strong>. Once submitted, it cannot be re-requested for the same company.</span>
-                                </div>
-                            </t>
                         </div>
                     </div>
 
@@ -1228,14 +1221,16 @@
                                     and confirm I am authorised to submit this request.
                                 </label>
                             </div>
-                            <div class="d-flex gap-3 mb-4">
-                                <a t-attf-href="/services/#{product.id}" class="btn btn-outline-secondary rounded-pill px-4">
-                                    <i class="fa fa-arrow-left me-1"/>Back
+                            <div class="d-flex gap-3 mb-4 mt-2">
+                                <a t-attf-href="/services/#{product.id}"
+                                   class="btn btn-lg rounded-pill px-4 fw-semibold"
+                                   style="border:2px solid #6c757d;color:#6c757d;background:#fff;min-width:120px;">
+                                    <i class="fa fa-arrow-left me-2"/>Back
                                 </a>
                                 <button type="submit" id="wink-request-submit-btn"
-                                        class="btn btn-lg fw-bold rounded-pill px-5 shadow-sm"
+                                        class="btn btn-lg fw-bold rounded-pill px-5 shadow flex-grow-1"
                                         disabled="disabled"
-                                        style="background:var(--wink-primary);border:0;color:#fff;opacity:0.5;pointer-events:none;">
+                                        style="background:var(--wink-primary);border:0;color:#fff;opacity:0.45;pointer-events:none;letter-spacing:.3px;">
                                     <i class="fa fa-paper-plane me-2"/>Submit Request
                                 </button>
                             </div>
