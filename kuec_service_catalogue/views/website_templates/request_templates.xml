@@ -1585,10 +1585,10 @@
                                     </div>
                                     <div class="d-flex flex-wrap gap-3">
                                         <a t-attf-href="/my/requests/#{order.id}/pay" id="bundle-accept-btn"
-                                           class="btn btn-lg fw-bold px-5 py-3 rounded-pill shadow-sm pe-none opacity-50"
+                                           class="btn btn-sm fw-semibold px-4 rounded-pill pe-none opacity-50"
                                            style="background:#28a745; border:0; color:#fff; pointer-events:none;"
                                            aria-disabled="true">
-                                            <i class="fa fa-lock me-2"/> Accept &amp; Pay
+                                            <i class="fa fa-lock me-1"/> Accept &amp; Pay
                                         </a>
                                     </div>
                                     <script>
@@ -1960,16 +1960,15 @@
                                     <form method="post" t-attf-action="/my/requests/#{order.id}/approve" class="d-inline m-0">
                                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                         <button type="submit" id="wink-confirm-pay-btn"
-                                                class="btn btn-lg fw-bold px-5 py-3 rounded-pill shadow"
-                                                style="background:linear-gradient(135deg,#1a9e5c 0%,#27ae60 100%);border:0;color:#fff;font-size:1rem;letter-spacing:0.3px;">
-                                            <i class="fa fa-lock me-2"/>Confirm &amp; Pay
+                                                class="btn btn-sm fw-semibold px-4 rounded-pill"
+                                                style="background:linear-gradient(135deg,#1a9e5c 0%,#27ae60 100%);border:0;color:#fff;">
+                                            <i class="fa fa-lock me-1"/>Confirm &amp; Pay
                                         </button>
                                     </form>
                                     <button type="button"
-                                            class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill fw-semibold"
-                                            style="font-size:0.95rem;"
+                                            class="btn btn-outline-danger btn-sm px-4 rounded-pill fw-semibold"
                                             data-bs-toggle="modal" data-bs-target="#winkRejectModal">
-                                        <i class="fa fa-times me-2"/>Decline
+                                        <i class="fa fa-times me-1"/>Decline
                                     </button>
                                     <a href="#wink-portal-chatter"
                                        class="btn btn-outline-secondary btn-sm rounded-pill ms-auto px-3"
@@ -2625,6 +2624,7 @@
                             <t t-set="object" t-value="order"/>
                             <t t-set="chatter_mode" t-value="'view'"/>
                             <t t-set="allow_composer" t-value="True"/>
+                            <t t-set="allow_upload" t-value="True"/>
                             <t t-set="display_rating" t-value="False"/>
                             <t t-set="token" t-value="order.access_token"/>
                         </t>
