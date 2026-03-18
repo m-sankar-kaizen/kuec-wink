@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api, _
+from odoo import models, fields, api, Command, _
 from odoo.exceptions import UserError
 
 
@@ -17,8 +17,8 @@ class WinkWalletTopupWizard(models.TransientModel):
         'account.journal',
         string='Payment Journal',
         required=True,
-        domain=[('type', 'in', ['bank', 'cash'])],
-        help='Journal representing the payment source (Bank, Cash, Payment Gateway, etc.).',
+        domain=[('type', 'in', ['bank', 'cash']), ('is_ewallet_journal', '=', False)],
+        help='Journal representing the payment source (Bank, Cash, Payment Gateway, etc.). The eWallet journal is excluded.',
     )
     amount = fields.Monetary(
         string='Top-Up Amount',
@@ -56,12 +56,18 @@ class WinkWalletTopupWizard(models.TransientModel):
 
         Workflow:
             1. Validate the amount is positive.
-            2. Locate the WINK eWallet journal (WEWL) as the destination.
-            3. Create an inbound account.payment:
-               DR  Selected payment journal (Bank/Gateway)
-               CR  WINK eWallet journal (Customer Wallet Liability)
-            4. Post the payment to generate the journal entry.
+            2. Locate the WINK eWallet journal (WEWL).
+            3. Resolve the source account (bank/cash journal liquidity account) and the
+               WEWL liability account (WEWL journal default account).
+            4. Post a direct account.move on the WEWL journal:
+               DR  Bank/Cash liquidity account  (money received)
+               CR  WEWL liability account       (wallet balance increases)
             5. Create a kuec.wallet.transaction linked to the journal entry.
+
+        Note:
+            In Odoo 18, account.payment no longer carries destination_journal_id for
+            internal transfers.  A direct account.move gives us full control over
+            which accounts are debited/credited without involving AR/AP.
 
         Returns:
             dict: Action to close the wizard dialog.
@@ -71,39 +77,67 @@ class WinkWalletTopupWizard(models.TransientModel):
             raise UserError(_('Top-up amount must be positive.'))
 
         wallet_journal = self.env['account.journal'].search(
-            [('code', '=', 'WEWL'), ('company_id', '=', self.env.company.id)], limit=1
+            [('is_ewallet_journal', '=', True), ('company_id', '=', self.env.company.id)], limit=1
         )
         if not wallet_journal:
             raise UserError(_(
-                'WINK eWallet journal (code: WEWL) not found. '
-                'Please check your accounting configuration.'
+                'No eWallet journal is configured. '
+                'Please go to Accounting → Configuration → Journals, '
+                'open the eWallet journal and enable "eWallet Journal".'
             ))
 
         if self.journal_id.id == wallet_journal.id:
             raise UserError(_('Payment journal and eWallet journal cannot be the same.'))
 
-        # Create inbound payment: Bank/Gateway → WEWL (internal transfer)
-        payment = self.env['account.payment'].create({
-            'payment_type': 'inbound',
-            'partner_type': 'customer',
-            'partner_id': self.partner_id.id,
-            'amount': self.amount,
-            'currency_id': self.currency_id.id,
-            'journal_id': self.journal_id.id,
-            'destination_journal_id': wallet_journal.id,
-            'ref': self.description or 'Wallet Top-Up',
-            'company_id': self.env.company.id,
-        })
-        payment.action_post()
+        # Source: bank/cash journal liquidity account
+        source_account = self.journal_id.default_account_id
+        if not source_account:
+            raise UserError(_(
+                'The selected journal "%s" has no default account configured.'
+            ) % self.journal_id.name)
 
-        # Create wallet transaction record linked to the generated journal entry
-        move = payment.move_id
+        # Destination: eWallet journal liability account
+        wewl_account = wallet_journal.default_account_id
+        if not wewl_account:
+            raise UserError(_(
+                'The eWallet journal has no default account configured. '
+                'Please set it in Accounting > Configuration > Journals.'
+            ))
+
+        memo = self.description or 'Wallet Top-Up'
+
+        # Post direct journal entry: DR bank account / CR WEWL liability
+        move = self.env['account.move'].create({
+            'journal_id': wallet_journal.id,
+            'ref': memo,
+            'line_ids': [
+                Command.create({
+                    'account_id': source_account.id,
+                    'partner_id': self.partner_id.id,
+                    'debit': self.amount,
+                    'credit': 0.0,
+                    'name': memo,
+                    'currency_id': self.currency_id.id,
+                }),
+                Command.create({
+                    'account_id': wewl_account.id,
+                    'partner_id': self.partner_id.id,
+                    'debit': 0.0,
+                    'credit': self.amount,
+                    'name': memo,
+                    'currency_id': self.currency_id.id,
+                }),
+            ],
+        })
+        move.action_post()
+
+        # Create wallet transaction record linked to the journal entry
         self.env['kuec.wallet.transaction'].create({
             'partner_id': self.partner_id.id,
             'transaction_type': 'topup',
             'amount': self.amount,
-            'description': self.description or 'Wallet Top-Up',
+            'description': memo,
             'currency_id': self.currency_id.id,
-            'move_id': move.id if move else False,
+            'move_id': move.id,
         })
         return {'type': 'ir.actions.act_window_close'}

@@ -1894,7 +1894,9 @@ class WinkRequest(http.Controller):
         except Exception:
             pass
         render_values['wallet_balance'] = wallet_balance
-        render_values['wallet_sufficient'] = wallet_balance >= payment_values.get('amount', order.amount_total)
+        wallet_amount_due = payment_values.get('amount', order.amount_total)
+        render_values['wallet_sufficient'] = wallet_balance >= wallet_amount_due
+        render_values['wallet_amount_due'] = wallet_amount_due
 
         return request.render('kuec_service_catalogue.wink_payment_page_v2', render_values)
 
@@ -1938,7 +1940,7 @@ class WinkRequest(http.Controller):
             journal = journal.sudo()
         else:
             journal = request.env['account.journal'].sudo().search([
-                ('code', '=', 'WEWL'), ('company_id', '=', order.company_id.id)
+                ('is_ewallet_journal', '=', True), ('company_id', '=', order.company_id.id)
             ], limit=1)
         if not journal:
             return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_journal_missing')
@@ -1958,6 +1960,9 @@ class WinkRequest(http.Controller):
             if invoice.amount_residual <= 0:
                 return request.redirect(f'/my/requests/{order_id}?payment=success')
 
+            # Snapshot the amount before posting so wallet debit matches payment exactly
+            payment_amount = invoice.amount_residual
+
             # Ensure the payment method line has a payment_account_id so Odoo 18
             # can compute outstanding_account_id and generate the journal entry.
             pm_line = journal.inbound_payment_method_line_ids.filtered(
@@ -1970,7 +1975,7 @@ class WinkRequest(http.Controller):
                 'payment_type': 'inbound',
                 'partner_type': 'customer',
                 'partner_id': order.partner_id.id,
-                'amount': invoice.amount_residual,
+                'amount': payment_amount,
                 'journal_id': journal.id,
                 'currency_id': order.currency_id.id,
                 'memo': f'eWallet — {order.name}',
@@ -1979,7 +1984,6 @@ class WinkRequest(http.Controller):
             payment.action_post()
 
             # Reconcile payment with invoice receivable lines
-            # In Odoo 18, payment journal entries are on payment.move_id.line_ids
             receivable_lines = invoice.line_ids.filtered(
                 lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
             )
@@ -1989,20 +1993,23 @@ class WinkRequest(http.Controller):
             if receivable_lines and payment_receivable:
                 (receivable_lines + payment_receivable).reconcile()
 
+            # Record wallet debit inside the try block so it only persists if the
+            # payment posted and reconciled successfully. move_id links the GL entry
+            # for full audit traceability.
+            request.env['kuec.wallet.transaction'].sudo().create({
+                'partner_id': commercial.id,
+                'transaction_type': 'payment',
+                'amount': -payment_amount,
+                'description': f'eWallet — {order.name}',
+                'order_id': order.id,
+                'currency_id': order.currency_id.id,
+                'move_id': payment.move_id.id if payment.move_id else False,
+            })
+
         except Exception as e:
             _logger = __import__('logging').getLogger(__name__)
             _logger.error('eWallet payment failed for order %s: %s', order.name, e, exc_info=True)
             return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_payment_failed')
-
-        # Record wallet debit transaction
-        request.env['kuec.wallet.transaction'].sudo().create({
-            'partner_id': commercial.id,
-            'transaction_type': 'payment',
-            'amount': -amount_due,
-            'description': f'Payment for {order.name}',
-            'order_id': order.id,
-            'currency_id': order.currency_id.id,
-        })
 
         order.sudo().message_post(
             body=f'Payment of {order.currency_id.symbol}{amount_due:,.2f} processed via WINK eWallet.',

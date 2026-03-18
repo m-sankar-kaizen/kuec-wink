@@ -95,19 +95,37 @@ class ResPartner(models.Model):
         help='All eWallet transactions for this customer.',
     )
 
-    wink_wallet_balance = fields.Float(
+    wallet_currency_id = fields.Many2one(
+        'res.currency',
+        string='Wallet Currency',
+        compute='_compute_wallet_currency_id',
+        help='Currency used for the eWallet balance (always the company currency).',
+    )
+
+    wink_wallet_balance = fields.Monetary(
         string='Wallet Balance',
         compute='_compute_wink_wallet_balance',
-        digits=(10, 2),
+        currency_field='wallet_currency_id',
         help='Current eWallet balance: sum of all done transactions (positive = credit, negative = debit).',
     )
 
-    def _compute_wink_wallet_balance(self):
-        """Sum all done kuec.wallet.transaction amounts for each partner."""
-        txn_model = self.env['kuec.wallet.transaction']
+    @api.depends_context('company')
+    def _compute_wallet_currency_id(self):
+        """Return the current company currency as the wallet display currency."""
+        currency = self.env.company.currency_id
         for partner in self:
-            txns = txn_model.search([
-                ('partner_id', '=', partner.id),
-                ('state', '=', 'done'),
-            ])
-            partner.wink_wallet_balance = sum(txns.mapped('amount'))
+            partner.wallet_currency_id = currency
+
+    @api.depends('wallet_transaction_ids.amount', 'wallet_transaction_ids.state')
+    def _compute_wink_wallet_balance(self):
+        """Sum all done wallet transaction amounts using a single aggregated query."""
+        if not self.ids:
+            return
+        result = self.env['kuec.wallet.transaction'].read_group(
+            domain=[('partner_id', 'in', self.ids), ('state', '=', 'done')],
+            fields=['partner_id', 'amount:sum'],
+            groupby=['partner_id'],
+        )
+        balance_map = {row['partner_id'][0]: row['amount'] for row in result}
+        for partner in self:
+            partner.wink_wallet_balance = balance_map.get(partner.id, 0.0)

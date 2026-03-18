@@ -104,12 +104,13 @@ class WinkWalletPaymentWizard(models.TransientModel):
             ) % {'due': self.invoice_id.amount_residual})
 
         wallet_journal = self.env['account.journal'].search(
-            [('code', '=', 'WEWL'), ('company_id', '=', self.env.company.id)], limit=1
+            [('is_ewallet_journal', '=', True), ('company_id', '=', self.env.company.id)], limit=1
         )
         if not wallet_journal:
             raise UserError(_(
-                'WINK eWallet journal (code: WEWL) not found. '
-                'Please check your accounting configuration.'
+                'No eWallet journal is configured. '
+                'Please go to Accounting → Configuration → Journals, '
+                'open the eWallet journal and enable "eWallet Journal".'
             ))
 
         memo = self.description or ('Wallet payment — %s' % self.invoice_id.name)
@@ -123,18 +124,16 @@ class WinkWalletPaymentWizard(models.TransientModel):
             'journal_id': wallet_journal.id,
             'amount': self.amount,
             'currency_id': self.currency_id.id,
-            'ref': memo,
+            'communication': memo,
             'payment_date': fields.Date.today(),
         })
-        action = payment_register.action_create_payments()
+        payment_register.action_create_payments()
 
-        # Find the created payment to link its journal entry
-        payment = self.env['account.payment'].search([
-            ('partner_id', '=', self.partner_id.id),
-            ('journal_id', '=', wallet_journal.id),
-            ('amount', '=', self.amount),
-            ('state', '=', 'posted'),
-        ], order='id desc', limit=1)
+        # Retrieve the created payment via the invoice's reconciled payments —
+        # this is reliable regardless of amount rounding or timing.
+        payment = self.invoice_id.reconciled_payment_ids.filtered(
+            lambda p: p.journal_id == wallet_journal
+        ).sorted('id', reverse=True)[:1]
 
         move_id = payment.move_id.id if payment and payment.move_id else False
 
