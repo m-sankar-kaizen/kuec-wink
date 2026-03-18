@@ -1809,49 +1809,6 @@
                                             <div class="text-muted" style="font-size:0.8rem;">Our team is assessing requirements and preparing a price proposal.</div>
                                         </div>
                                     </div>
-                                    <!-- 📋 Required documents (dynamic status) -->
-                                    <t t-set="req_doc_submitted" t-value="doc_submissions.filtered(lambda d: d.state in ('under_review', 'approved') and d.requirement_id.requirement == 'required')"/>
-                                    <t t-set="req_doc_rejected" t-value="doc_submissions.filtered(lambda d: d.state in ('rejected', 'change_required') and d.requirement_id.requirement == 'required')"/>
-                                    <div class="d-flex align-items-start gap-3 mb-3">
-                                        <t t-if="req_doc_submitted and not req_doc_rejected">
-                                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
-                                                 style="width:28px;height:28px;min-width:28px;background:#17a2b8;">
-                                                <i class="fa fa-clock-o text-white" style="font-size:0.7rem;" title="Under review"/>
-                                            </div>
-                                            <div>
-                                                <div class="fw-semibold" style="font-size:0.88rem;color:#117a8b;">Documents uploaded — awaiting coordinator review</div>
-                                                <div class="text-muted" style="font-size:0.8rem;">Your coordinator is reviewing the submitted documents.</div>
-                                            </div>
-                                        </t>
-                                        <t t-elif="req_doc_rejected">
-                                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
-                                                 style="width:28px;height:28px;min-width:28px;background:#dc3545;">
-                                                <i class="fa fa-exclamation text-white" style="font-size:0.7rem;" title="Action required"/>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <div class="fw-semibold text-danger" style="font-size:0.88rem;">Action required — document update needed</div>
-                                                <div class="text-muted" style="font-size:0.8rem;">Your coordinator has requested changes to one or more documents.</div>
-                                                <a t-attf-href="/my/requests/#{order.id}/documents"
-                                                   class="btn btn-danger btn-sm rounded-pill mt-2 fw-semibold px-3">
-                                                    <i class="fa fa-refresh me-1"/>Update Documents
-                                                </a>
-                                            </div>
-                                        </t>
-                                        <t t-else="">
-                                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
-                                                 style="width:28px;height:28px;min-width:28px;background:#f0ad4e;">
-                                                <i class="fa fa-upload text-white" style="font-size:0.7rem;" title="Upload required"/>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <div class="fw-semibold" style="font-size:0.88rem;color:#856404;">Documents required</div>
-                                                <div class="text-muted" style="font-size:0.8rem;">Please upload the required documents so your coordinator can proceed.</div>
-                                                <a t-attf-href="/my/requests/#{order.id}/documents"
-                                                   class="btn btn-warning btn-sm rounded-pill mt-2 fw-semibold px-3">
-                                                    <i class="fa fa-upload me-1"/>Upload Documents
-                                                </a>
-                                            </div>
-                                        </t>
-                                    </div>
                                     <!-- ⬜ Proposal & Payment (pending) -->
                                     <div class="d-flex align-items-start gap-3 mb-1" style="opacity:0.4;">
                                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
@@ -2243,6 +2200,21 @@
                     </t>
                     <!-- /Standalone Action Bar -->
 
+                    <!-- Portal Chatter: shown directly below the action bar for all non-bundle stages -->
+                    <t t-if="not wink_is_bundle">
+                        <div id="wink-portal-chatter" class="mt-4">
+                            <h5 class="border-bottom pb-2"><i class="fa fa-comments me-2"/>Communication History</h5>
+                            <t t-call="portal.message_thread">
+                                <t t-set="object" t-value="order"/>
+                                <t t-set="chatter_mode" t-value="'view'"/>
+                                <t t-set="allow_composer" t-value="True"/>
+                                <t t-set="allow_upload" t-value="True"/>
+                                <t t-set="display_rating" t-value="False"/>
+                                <t t-set="token" t-value="order.access_token"/>
+                            </t>
+                        </div>
+                    </t>
+
                     <!-- Submission success banner — bundles only (retainer + standalone use action bar) -->
                     <div t-if="submitted and wink_is_bundle" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
                         <i class="fa fa-check-circle fa-2x flex-shrink-0"/>
@@ -2615,20 +2587,6 @@
                             }
                         })();
                     </script>
-
-
-                    <!-- Portal Chatter: communication history between customer and coordinator -->
-                    <div id="wink-portal-chatter" class="mt-4">
-                        <h5 class="border-bottom pb-2"><i class="fa fa-comments me-2"/>Communication History</h5>
-                        <t t-call="portal.message_thread">
-                            <t t-set="object" t-value="order"/>
-                            <t t-set="chatter_mode" t-value="'view'"/>
-                            <t t-set="allow_composer" t-value="True"/>
-                            <t t-set="allow_upload" t-value="True"/>
-                            <t t-set="display_rating" t-value="False"/>
-                            <t t-set="token" t-value="order.access_token"/>
-                        </t>
-                    </div>
 
 
                     <!-- Retainer: manage plan + cancellation — only when active, paid, not closed -->
