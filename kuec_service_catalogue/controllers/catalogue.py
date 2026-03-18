@@ -69,10 +69,14 @@ class WinkCatalogue(http.Controller):
             ('wink_is_bundle', '=', True),
             ('commercial_structure', '!=', 'bundled'),
         ]
-        dept_counts = {}
-        for dept in departments:
-            dept_domain = base_domain + [('department_ids', 'in', [dept.id])]
-            dept_counts[dept.id] = Product.search_count(dept_domain)
+        # Build dept_counts in a single query: fetch all matching products once,
+        # then count per department in Python — avoids 1 search_count per department.
+        all_products = Product.search(base_domain, order='id asc')
+        dept_counts = {dept.id: 0 for dept in departments}
+        for p in all_products:
+            for dept in p.department_ids:
+                if dept.id in dept_counts:
+                    dept_counts[dept.id] += 1
         natures = request.env['kuec.service.nature'].sudo().search([('active', '=', True)])
         delivery_models = Product._fields['delivery_model'].selection
 
