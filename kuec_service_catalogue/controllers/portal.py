@@ -757,12 +757,15 @@ class KuecCustomerPortal(CustomerPortal):
         ]
 
         # ── KPI Row 1: Requests ─────────────────────────────────────────────
-        kpi_orders = SaleOrder.search_count(base_domain + [
-            ('state', 'in', ['draft', 'sent', 'sale']),
-        ])
-        kpi_quotes = SaleOrder.search_count(base_domain + [
-            ('state', '=', 'sent'),
-        ])
+        # Single read_group to get state counts — replaces 7 individual search_count calls.
+        state_groups = SaleOrder.read_group(base_domain, fields=['state'], groupby=['state'])
+        state_map = {g['state']: g['state_count'] for g in state_groups}
+
+        kpi_orders = state_map.get('draft', 0) + state_map.get('sent', 0) + state_map.get('sale', 0)
+        kpi_quotes = state_map.get('sent', 0)
+        kpi_completed = state_map.get('done', 0)
+
+        # These require extra filter conditions — individual counts unavoidable
         kpi_subscriptions = SaleOrder.search_count(base_domain + [
             ('state', '=', 'sale'),
             '|',
@@ -774,9 +777,6 @@ class KuecCustomerPortal(CustomerPortal):
             ('is_subscription', '=', False),
             ('wink_entitlement_ids', '=', False),
         ])
-        kpi_completed = SaleOrder.search_count(base_domain + [
-            ('state', '=', 'done'),
-        ])
         kpi_renewals = SaleOrder.search_count(base_domain + [
             ('state', '=', 'sale'),
             '|',
@@ -784,12 +784,12 @@ class KuecCustomerPortal(CustomerPortal):
             '&', ('next_invoice_date', '>=', today), ('next_invoice_date', '<=', in_30),
         ])
 
-        # Request breakdown by status (for mini-chart)
+        # Request breakdown by status (for mini-chart) — derived from state_map above
         status_breakdown = {
-            'quotation': SaleOrder.search_count(base_domain + [('state', 'in', ['draft', 'sent'])]),
-            'active':    SaleOrder.search_count(base_domain + [('state', '=', 'sale')]),
-            'done':      SaleOrder.search_count(base_domain + [('state', '=', 'done')]),
-            'cancelled': SaleOrder.search_count(base_domain + [('state', '=', 'cancel')]),
+            'quotation': state_map.get('draft', 0) + state_map.get('sent', 0),
+            'active':    state_map.get('sale', 0),
+            'done':      state_map.get('done', 0),
+            'cancelled': state_map.get('cancel', 0),
         }
         status_total = sum(status_breakdown.values()) or 1
 

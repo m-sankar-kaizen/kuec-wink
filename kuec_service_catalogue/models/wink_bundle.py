@@ -97,6 +97,7 @@ class WinkBundle(models.Model):
             rec.tier_count = len(rec.tier_ids)
 
     # F-2: Compute order count for smart button
+    @api.depends('tier_ids', 'tier_ids.item_ids')
     def _compute_order_count(self):
         for rec in self:
             # Find product templates that use this bundle
@@ -113,6 +114,7 @@ class WinkBundle(models.Model):
             rec.order_count = count
 
     # F-2: Compute total unique services
+    @api.depends('tier_ids', 'tier_ids.item_ids', 'tier_ids.item_ids.service_product_id')
     def _compute_total_services(self):
         for rec in self:
             service_ids = set()
@@ -122,6 +124,7 @@ class WinkBundle(models.Model):
             rec.total_services = len(service_ids)
 
     # F-2: Compute active subscriptions
+    @api.depends('tier_ids')
     def _compute_active_subscription_count(self):
         for rec in self:
             products = self.env['product.template'].search([

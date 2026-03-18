@@ -69,16 +69,16 @@
                         </h2>
                         <!-- Amount badge — green for credit, red for debit -->
                         <h2 class="mb-0">
+                            <field name="currency_id" invisible="1"/>
                             <span invisible="amount &lt;= 0"
                                   class="badge rounded-pill"
                                   style="background:#e8f5e9;color:#198754;font-size:1.1rem;padding:.4rem .9rem;">
-                                + <field name="amount" readonly="1"
-                                         options="{'no_symbol': False}"/> <field name="currency_id" readonly="1"/>
+                                + <field name="amount" readonly="1"/>
                             </span>
                             <span invisible="amount &gt;= 0"
                                   class="badge rounded-pill"
                                   style="background:#fdecea;color:#dc3545;font-size:1.1rem;padding:.4rem .9rem;">
-                                <field name="amount" readonly="1"/> <field name="currency_id" readonly="1"/>
+                                <field name="amount" readonly="1"/>
                             </span>
                         </h2>
                     </div>

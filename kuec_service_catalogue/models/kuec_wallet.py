@@ -7,6 +7,7 @@ class KuecWalletTransaction(models.Model):
     _name = 'kuec.wallet.transaction'
     _description = 'WINK eWallet Transaction'
     _order = 'date desc, id desc'
+    _rec_name = 'description'
 
     partner_id = fields.Many2one(
         'res.partner',
