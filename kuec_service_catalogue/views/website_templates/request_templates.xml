@@ -1221,16 +1221,16 @@
                                     and confirm I am authorised to submit this request.
                                 </label>
                             </div>
-                            <div class="d-flex gap-3 mb-4 mt-2">
+                            <div class="d-flex justify-content-end gap-2 mb-4 mt-3">
                                 <a t-attf-href="/services/#{product.id}"
-                                   class="btn btn-lg rounded-pill px-4 fw-semibold"
-                                   style="border:2px solid #6c757d;color:#6c757d;background:#fff;min-width:120px;">
-                                    <i class="fa fa-arrow-left me-2"/>Back
+                                   class="btn btn-sm rounded-pill px-4 fw-semibold"
+                                   style="border:1.5px solid #6c757d;color:#6c757d;background:#fff;">
+                                    <i class="fa fa-arrow-left me-1"/>Back
                                 </a>
                                 <button type="submit" id="wink-request-submit-btn"
-                                        class="btn btn-lg fw-bold rounded-pill px-5 shadow flex-grow-1"
+                                        class="btn btn-sm fw-semibold rounded-pill px-4"
                                         disabled="disabled"
-                                        style="background:var(--wink-primary);border:0;color:#fff;opacity:0.45;pointer-events:none;letter-spacing:.3px;">
+                                        style="background:var(--wink-primary);border:0;color:#fff;opacity:0.45;pointer-events:none;">
                                     <i class="fa fa-paper-plane me-2"/>Submit Request
                                 </button>
                             </div>
