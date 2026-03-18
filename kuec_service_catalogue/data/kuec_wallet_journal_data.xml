@@ -5,6 +5,7 @@
             <field name="name">WINK eWallet</field>
             <field name="type">bank</field>
             <field name="code">WEWL</field>
+            <field name="is_ewallet_journal" eval="True"/>
         </record>
     </data>
 </odoo>

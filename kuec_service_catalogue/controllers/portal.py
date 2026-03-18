@@ -1,4 +1,4 @@
-from odoo import http
+from odoo import http, Command
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
 try:
@@ -1062,18 +1062,28 @@ class KuecCustomerPortal(CustomerPortal):
 
         currency = request.env['res.currency'].sudo().browse(currency_id)
 
-        # Build payment form context manually — avoids /payment/pay landing_route conflict
+        # Build payment form context — mirrors account_payment/controllers/portal.py
         from odoo.addons.payment import utils as payment_utils
+        from odoo.addons.payment.controllers.portal import PaymentPortal
         access_token = payment_utils.generate_access_token(partner.id, amount, currency.id)
 
-        providers_sudo = request.env['payment.provider'].sudo().search([
-            ('state', 'in', ['enabled', 'test']),
-            ('company_id', '=', request.env.company.id),
-        ])
-        tokens_sudo = request.env['payment.token'].sudo().search([
-            ('provider_id', 'in', providers_sudo.ids),
-            ('partner_id', 'child_of', [partner.id]),
-        ])
+        providers_sudo = request.env['payment.provider'].sudo()._get_compatible_providers(
+            request.env.company.id,
+            partner.id,
+            amount,
+            currency_id=currency.id,
+        )
+        payment_methods_sudo = request.env['payment.method'].sudo()._get_compatible_payment_methods(
+            providers_sudo.ids,
+            partner.id,
+            currency_id=currency.id,
+        )
+        tokens_sudo = request.env['payment.token'].sudo()._get_available_tokens(
+            providers_sudo.ids, partner.id
+        )
+        show_tokenize_input_mapping = PaymentPortal._compute_show_tokenize_input_mapping(
+            providers_sudo
+        )
 
         return request.render('kuec_service_catalogue.wink_wallet_pay_page', {
             'amount': amount,
@@ -1081,7 +1091,9 @@ class KuecCustomerPortal(CustomerPortal):
             'partner_id': partner.id,
             'partner': partner,
             'providers_sudo': providers_sudo,
+            'payment_methods_sudo': payment_methods_sudo,
             'tokens_sudo': tokens_sudo,
+            'show_tokenize_input_mapping': show_tokenize_input_mapping,
             'default_payment_provider_id': providers_sudo[:1].id if providers_sudo else False,
             'access_token': access_token,
             'transaction_route': '/payment/transaction',
@@ -1114,21 +1126,149 @@ class KuecCustomerPortal(CustomerPortal):
         if not tx:
             return request.redirect('/my/wallet?topup_pending=1')
 
-        # Guard against double-crediting
+        # Guard against double-crediting — use exact memo match (not LIKE) to prevent
+        # false positives when tx.reference appears in a longer description.
+        memo = f'eWallet Top-Up — {tx.reference}'
         existing = request.env['kuec.wallet.transaction'].sudo().search([
             ('partner_id', '=', partner.id),
-            ('description', 'like', tx.reference),
+            ('description', '=', memo),
             ('transaction_type', '=', 'topup'),
         ], limit=1)
         if not existing:
+            # Post the correction JV first so we can link move_id immediately.
+            # Wallet balance is credited regardless of JV outcome (money already left
+            # the customer's card); GL failures are logged for manual correction.
+            correction_move = self._wink_post_topup_correction_jv(
+                partner, tx, amount, currency_id, memo
+            )
             request.env['kuec.wallet.transaction'].sudo().create({
                 'partner_id': partner.id,
                 'transaction_type': 'topup',
                 'amount': amount,
-                'description': f'eWallet Top-Up — {tx.reference}',
+                'description': memo,
                 'currency_id': currency_id,
+                'move_id': correction_move.id if correction_move else False,
             })
+
         return request.redirect('/my/wallet?topup_success=1')
+
+    def _wink_post_topup_correction_jv(self, partner, tx, amount, currency_id, memo):
+        """Post a correcting journal entry to reclassify the payment provider AR credit
+        to the WEWL wallet liability account, then reconcile the AR lines.
+
+        The payment provider always posts:
+            DR  Bank / Gateway Clearing
+            CR  Accounts Receivable
+
+        This method posts the correction:
+            DR  Accounts Receivable   (offsets the provider's AR credit)
+            CR  WEWL Wallet Liability (books the actual wallet obligation)
+
+        Both AR lines are then reconciled so AR nets to zero.
+
+        Net GL result:
+            DR  Bank / Gateway Clearing
+            CR  WEWL Wallet Liability  ✓
+
+        Args:
+            partner: res.partner record of the customer.
+            tx: confirmed payment.transaction record.
+            amount: top-up amount (float).
+            currency_id: currency ID (int).
+            memo: journal entry label string.
+
+        Returns:
+            account.move: the posted correction move, or None if posting failed.
+        """
+        import logging as _logging
+        _log = _logging.getLogger(__name__)
+        try:
+            env = request.env
+
+            wallet_journal = env['account.journal'].sudo().search(
+                [('is_ewallet_journal', '=', True), ('company_id', '=', env.company.id)], limit=1
+            )
+            if not wallet_journal or not wallet_journal.default_account_id:
+                _log.error(
+                    'eWallet top-up correction JV skipped for tx %s: '
+                    'eWallet journal or its default account is not configured.',
+                    tx.reference,
+                )
+                return None
+
+            # Find the AR credit line from the payment transaction's journal entry
+            ar_line = env['account.move.line'].sudo()
+            payment_move = tx.payment_id.move_id if tx.payment_id else False
+            if payment_move:
+                ar_line = payment_move.line_ids.filtered(
+                    lambda l: l.account_id.account_type == 'asset_receivable'
+                    and not l.reconciled
+                )
+
+            # Fall back to partner's default AR account if payment line not found
+            if ar_line:
+                ar_account = ar_line[0].account_id
+            else:
+                ar_account = partner.sudo().property_account_receivable_id
+
+            if not ar_account:
+                _log.error(
+                    'eWallet top-up correction JV skipped for tx %s: '
+                    'could not resolve AR account for partner %s.',
+                    tx.reference, partner.name,
+                )
+                return None
+
+            wewl_account = wallet_journal.default_account_id
+
+            correction_move = env['account.move'].sudo().create({
+                'journal_id': wallet_journal.id,
+                'ref': memo,
+                'line_ids': [
+                    Command.create({
+                        'account_id': ar_account.id,
+                        'partner_id': partner.id,
+                        'debit': amount,
+                        'credit': 0.0,
+                        'name': memo,
+                        'currency_id': currency_id,
+                    }),
+                    Command.create({
+                        'account_id': wewl_account.id,
+                        'partner_id': partner.id,
+                        'debit': 0.0,
+                        'credit': amount,
+                        'name': memo,
+                        'currency_id': currency_id,
+                    }),
+                ],
+            })
+            correction_move.action_post()
+
+            # Reconcile the AR credit (from payment provider) with the AR debit
+            # (from correction) so AR nets to zero.
+            if ar_line:
+                correction_ar_line = correction_move.line_ids.filtered(
+                    lambda l: l.account_id == ar_account and l.debit > 0
+                )
+                if correction_ar_line:
+                    try:
+                        (ar_line[0] + correction_ar_line[0]).reconcile()
+                    except Exception as rec_err:
+                        _log.warning(
+                            'eWallet top-up: AR reconciliation failed for tx %s: %s '
+                            '(correction JV %s is still posted — manual reconciliation required).',
+                            tx.reference, rec_err, correction_move.name,
+                        )
+
+            return correction_move
+
+        except Exception as exc:
+            _log.error(
+                'eWallet top-up correction JV failed for tx %s: %s',
+                tx.reference, exc, exc_info=True,
+            )
+            return None
 
     @http.route('/terms-and-conditions', type='http', auth='public', website=True)
     def terms_and_conditions(self, **kwargs):

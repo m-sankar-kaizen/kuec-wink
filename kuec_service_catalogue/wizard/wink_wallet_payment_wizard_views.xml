@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Wallet Payment Wizard: Form View ──────────────────────────────── -->
+    <record id="wink_wallet_payment_wizard_form_view" model="ir.ui.view">
+        <field name="name">wink.wallet.payment.wizard.form</field>
+        <field name="model">wink.wallet.payment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Pay Using eWallet">
+                <sheet>
+                    <group>
+                        <group string="Customer">
+                            <field name="partner_id" options="{'no_create': True}"/>
+                            <field name="wallet_balance" readonly="1"/>
+                        </group>
+                        <group string="Invoice">
+                            <field name="invoice_id"
+                                   domain="[('move_type','=','out_invoice'),('state','=','posted'),('payment_state','in',['not_paid','partial']),('partner_id','=',partner_id)]"
+                                   options="{'no_create': True}"/>
+                            <field name="amount_residual" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Payment">
+                            <field name="amount"/>
+                            <field name="currency_id"/>
+                            <field name="description"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Journal Entries that will be posted:</strong><br/>
+                        <u>Clearing entry (WEWL journal):</u><br/>
+                        DR  Customer Wallet Liability (WEWL)<br/>
+                        &#160;&#160;&#160;CR  Accounts Receivable (partner)<br/>
+                        <br/>
+                        <u>Auto-reconciled with invoice:</u><br/>
+                        DR  Accounts Receivable<br/>
+                        &#160;&#160;&#160;CR  Sales Revenue<br/>
+                        <br/>
+                        <u>Net effect:</u><br/>
+                        DR  Customer Wallet Liability<br/>
+                        &#160;&#160;&#160;CR  Sales Revenue
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_pay"
+                            string="Confirm Payment"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Wallet Payment Wizard: Window Action ───────────────────────────── -->
+    <record id="action_wink_wallet_payment_wizard" model="ir.actions.act_window">
+        <field name="name">Pay Using eWallet</field>
+        <field name="res_model">wink.wallet.payment.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="wink_wallet_payment_wizard_form_view"/>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ── Access: model access for the new wizard ───────────────────────── -->
+    <!-- Added via ir.model.access.csv — see security file -->
+
+</odoo>

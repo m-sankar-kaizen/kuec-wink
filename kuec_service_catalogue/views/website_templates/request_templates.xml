@@ -2674,7 +2674,7 @@
                                         <form t-attf-action="/my/requests/#{order.id}/pay-wallet" method="post">
                                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                             <button type="submit" class="btn btn-success w-100 py-3 fw-bold">
-                                                <i class="fa fa-check-circle me-2"/>Pay <t t-esc="order.amount_total" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/> with eWallet
+                                                <i class="fa fa-check-circle me-2"/>Pay <t t-esc="wallet_amount_due" t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/> with eWallet
                                             </button>
                                         </form>
                                     </t>

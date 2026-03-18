@@ -39,6 +39,9 @@ access_kuec_wallet_transaction_admin,kuec.wallet.transaction.admin,model_kuec_wa
 access_kuec_wallet_transaction_portal,kuec.wallet.transaction.portal,model_kuec_wallet_transaction,base.group_portal,1,0,0,0
 access_wink_wallet_topup_wizard_coordinator,wink.wallet.topup.wizard.coordinator,model_wink_wallet_topup_wizard,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
 access_wink_wallet_topup_wizard_admin,wink.wallet.topup.wizard.admin,model_wink_wallet_topup_wizard,base.group_system,1,1,1,1
+access_wink_wallet_payment_wizard_coordinator,wink.wallet.payment.wizard.coordinator,model_wink_wallet_payment_wizard,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
+access_wink_wallet_payment_wizard_admin,wink.wallet.payment.wizard.admin,model_wink_wallet_payment_wizard,base.group_system,1,1,1,1
+access_wink_wallet_payment_wizard_account,wink.wallet.payment.wizard.account,model_wink_wallet_payment_wizard,account.group_account_user,1,1,1,1
 access_kuec_document_submission_user,kuec.document.submission.user,model_kuec_document_submission,base.group_user,1,1,1,1
 access_kuec_document_submission_portal,kuec.document.submission.portal,model_kuec_document_submission,base.group_portal,1,1,1,0
 access_wink_bundle_import_wizard_coordinator,wink.bundle.import.wizard.coordinator,model_wink_bundle_import_wizard,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1

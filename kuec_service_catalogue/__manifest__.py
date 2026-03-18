@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'KUEC Service Catalogue',
-    'version': '18.0.2.17.8',
+    'version': '18.0.2.19.2',
     'category': 'Sales',
     'summary': 'Service Catalogue & Business Configurability',
     'description': """
@@ -55,6 +55,7 @@
         'wizard/wink_add_services_wizard_views.xml',
         'wizard/wink_finalize_wizard_views.xml',
         'wizard/wink_bundle_import_wizard_views.xml',
+        'wizard/wink_wallet_payment_wizard_views.xml',
         'views/project_task_views.xml',
         'views/website_templates/wink_catalogue_page.xml',
         'views/website_templates/project_portal_templates.xml',
