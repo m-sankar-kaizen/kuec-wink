@@ -57,14 +57,14 @@
                         <h2 class="mb-0">
                             <span invisible="transaction_type != 'topup'"
                                   style="color:#198754;">
-                                <i class="fa fa-arrow-up me-1"/> Top-Up
+                                <i class="fa fa-arrow-up me-1" title="Top-Up"/> Top-Up
                             </span>
                             <span invisible="transaction_type != 'payment'"
                                   style="color:#dc3545;">
-                                <i class="fa fa-arrow-down me-1"/> Wallet Payment
+                                <i class="fa fa-arrow-down me-1" title="Payment"/> Wallet Payment
                             </span>
                             <span invisible="transaction_type not in ['refund','adjustment']">
-                                <i class="fa fa-refresh me-1"/> <field name="transaction_type" readonly="1"/>
+                                <i class="fa fa-refresh me-1" title="Refund / Adjustment"/> <field name="transaction_type" readonly="1"/>
                             </span>
                         </h2>
                         <!-- Amount badge — green for credit, red for debit -->
@@ -104,7 +104,7 @@
                     <!-- ── Status alert for cancelled records ── -->
                     <div class="alert alert-danger mt-3" role="alert"
                          invisible="state != 'cancelled'">
-                        <i class="fa fa-ban me-2"/>
+                        <i class="fa fa-ban me-2" title="Cancelled"/>
                         This transaction has been <strong>cancelled</strong>.
                         The journal entry (if any) must be reversed manually.
                     </div>
