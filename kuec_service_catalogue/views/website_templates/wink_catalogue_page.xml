@@ -109,12 +109,15 @@
                     <div class="wink-catalogue-hero kuec-gradient rounded-2xl wink-hero-pattern position-relative">
                         <!-- Quick links: My Dashboard + My Ratings (logged-in users only) -->
                         <t t-if="not request.env.user._is_public()">
+                            <t t-set="has_po" t-value="request.env['purchase.order'].sudo().search_count([('partner_id', 'child_of', request.env.user.partner_id.id), ('state', '!=', 'cancel')]) > 0"/>
                             <div class="d-flex gap-2" style="position:absolute;top:1rem;right:1rem;z-index:10;">
-                                <a href="/my/vendor-ratings" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
-                                    <i class="fa fa-star me-1"/>My Ratings
-                                </a>
-                                <a href="/my" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
-                                    <i class="fa fa-th-large me-1"/>My Dashboard
+                                <t t-if="has_po">
+                                    <a href="/my" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
+                                        <i class="fa fa-star me-1" title="My Ratings"/>My Ratings
+                                    </a>
+                                </t>
+                                <a href="/my/dashboard" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
+                                    <i class="fa fa-th-large me-1" title="My Dashboard"/>My Dashboard
                                 </a>
                             </div>
                         </t>
