@@ -1703,22 +1703,177 @@
                     <!-- Action Bar — shown for non-bundle services (retainer + standalone/project) -->
                     <t t-if="not wink_is_bundle and ps != 'cancelled'">
 
-                        <!-- SUBMITTED: awaiting coordinator review -->
+                        <!-- SUBMITTED: awaiting coordinator review (no required docs) -->
                         <t t-if="ps == 'submitted'">
-                            <div class="d-flex align-items-center gap-3 p-4 mb-4 rounded-3 shadow-sm"
-                                 style="background:rgba(0,85,183,0.06);border-left:4px solid var(--wink-primary);">
-                                <i class="fa fa-info-circle fa-2x flex-shrink-0" style="color:var(--wink-primary);"/>
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-1 fw-semibold" style="color:var(--wink-primary);">Request received</h6>
-                                    <p class="mb-0 text-muted small">Our team is reviewing your request and will notify you once pricing is confirmed.</p>
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                                <div class="d-flex align-items-center gap-3 px-4 py-3"
+                                     style="background:linear-gradient(135deg,#0f4c81 0%,#1a73c7 100%);color:#fff;">
+                                    <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                         style="width:40px;height:40px;min-width:40px;background:rgba(255,255,255,0.15);">
+                                        <i class="fa fa-cog fa-spin" style="font-size:1.2rem;" title="Processing"/>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold" style="font-size:1rem;">Your request is under review</div>
+                                        <div class="opacity-75" style="font-size:0.8rem;">Our team is preparing a price proposal for your request.</div>
+                                    </div>
+                                    <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                          style="background:rgba(255,255,255,0.18);font-size:0.75rem;">
+                                        <t t-esc="order.name"/>
+                                    </span>
                                 </div>
-                                <a href="#discussion" class="btn btn-outline-primary btn-sm rounded-pill flex-shrink-0"
-                                   onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
-                                    <i class="fa fa-comments me-1"/>Feedback
-                                </a>
+                                <div class="px-4 pt-4 pb-3">
+                                    <div class="text-muted fw-semibold mb-3"
+                                         style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.6px;">What&#x27;s happening</div>
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:28px;height:28px;min-width:28px;background:#28a745;">
+                                            <i class="fa fa-check text-white" style="font-size:0.7rem;" title="Done"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark" style="font-size:0.88rem;">Request submitted</div>
+                                            <div class="text-muted" style="font-size:0.8rem;">Received on <t t-esc="order.create_date" t-options="{'widget':'date'}"/>.</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:28px;height:28px;min-width:28px;background:#1a73c7;">
+                                            <i class="fa fa-cog fa-spin text-white" style="font-size:0.7rem;" title="In progress"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold" style="font-size:0.88rem;color:#1a73c7;">Coordinator is reviewing your request</div>
+                                            <div class="text-muted" style="font-size:0.8rem;">Our team is assessing your requirements and preparing a price proposal.</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-start gap-3 mb-1" style="opacity:0.4;">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:28px;height:28px;min-width:28px;background:#dee2e6;">
+                                            <i class="fa fa-credit-card" style="font-size:0.7rem;color:#6c757d;" title="Pending"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-muted" style="font-size:0.88rem;">Proposal &amp; Payment</div>
+                                            <div class="text-muted" style="font-size:0.8rem;">You&#x27;ll be notified once your proposal is ready to review.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-3 d-flex justify-content-end"
+                                     style="background:#f8f9fa;border-top:1px solid #e9ecef;">
+                                    <a href="#wink-portal-chatter"
+                                       class="btn btn-outline-secondary btn-sm rounded-pill px-3"
+                                       onclick="(function(e){e.preventDefault();var el=document.getElementById('wink-portal-chatter');if(el){el.scrollIntoView({behavior:'smooth'});}})(event)">
+                                        <i class="fa fa-comments me-1"/>Have a question? Message us
+                                    </a>
+                                </div>
                             </div>
                         </t>
 
+                        <!-- PROCESSING: coordinator reviewing + required documents pending -->
+                        <t t-if="ps == 'processing'">
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                                <div class="d-flex align-items-center gap-3 px-4 py-3"
+                                     style="background:linear-gradient(135deg,#0f4c81 0%,#1a73c7 100%);color:#fff;">
+                                    <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                         style="width:40px;height:40px;min-width:40px;background:rgba(255,255,255,0.15);">
+                                        <i class="fa fa-cog fa-spin" style="font-size:1.2rem;" title="Processing"/>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold" style="font-size:1rem;">Your request is being processed</div>
+                                        <div class="opacity-75" style="font-size:0.8rem;">Our team is reviewing your request and preparing a proposal.</div>
+                                    </div>
+                                    <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                          style="background:rgba(255,255,255,0.18);font-size:0.75rem;">
+                                        <t t-esc="order.name"/>
+                                    </span>
+                                </div>
+                                <div class="px-4 pt-4 pb-3">
+                                    <div class="text-muted fw-semibold mb-3"
+                                         style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.6px;">What&#x27;s happening</div>
+                                    <!-- ✅ Submitted -->
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:28px;height:28px;min-width:28px;background:#28a745;">
+                                            <i class="fa fa-check text-white" style="font-size:0.7rem;" title="Done"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark" style="font-size:0.88rem;">Request submitted</div>
+                                            <div class="text-muted" style="font-size:0.8rem;">Received on <t t-esc="order.create_date" t-options="{'widget':'date'}"/>.</div>
+                                        </div>
+                                    </div>
+                                    <!-- 🔄 Coordinator reviewing -->
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:28px;height:28px;min-width:28px;background:#1a73c7;">
+                                            <i class="fa fa-cog fa-spin text-white" style="font-size:0.7rem;" title="In progress"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold" style="font-size:0.88rem;color:#1a73c7;">Coordinator is reviewing your request</div>
+                                            <div class="text-muted" style="font-size:0.8rem;">Our team is assessing requirements and preparing a price proposal.</div>
+                                        </div>
+                                    </div>
+                                    <!-- 📋 Required documents (dynamic status) -->
+                                    <t t-set="req_doc_submitted" t-value="doc_submissions.filtered(lambda d: d.state in ('under_review', 'approved') and d.requirement_id.requirement == 'required')"/>
+                                    <t t-set="req_doc_rejected" t-value="doc_submissions.filtered(lambda d: d.state in ('rejected', 'change_required') and d.requirement_id.requirement == 'required')"/>
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <t t-if="req_doc_submitted and not req_doc_rejected">
+                                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                                 style="width:28px;height:28px;min-width:28px;background:#17a2b8;">
+                                                <i class="fa fa-clock-o text-white" style="font-size:0.7rem;" title="Under review"/>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold" style="font-size:0.88rem;color:#117a8b;">Documents uploaded — awaiting coordinator review</div>
+                                                <div class="text-muted" style="font-size:0.8rem;">Your coordinator is reviewing the submitted documents.</div>
+                                            </div>
+                                        </t>
+                                        <t t-elif="req_doc_rejected">
+                                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                                 style="width:28px;height:28px;min-width:28px;background:#dc3545;">
+                                                <i class="fa fa-exclamation text-white" style="font-size:0.7rem;" title="Action required"/>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold text-danger" style="font-size:0.88rem;">Action required — document update needed</div>
+                                                <div class="text-muted" style="font-size:0.8rem;">Your coordinator has requested changes to one or more documents.</div>
+                                                <a t-attf-href="/my/requests/#{order.id}/documents"
+                                                   class="btn btn-danger btn-sm rounded-pill mt-2 fw-semibold px-3">
+                                                    <i class="fa fa-refresh me-1"/>Update Documents
+                                                </a>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                                 style="width:28px;height:28px;min-width:28px;background:#f0ad4e;">
+                                                <i class="fa fa-upload text-white" style="font-size:0.7rem;" title="Upload required"/>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold" style="font-size:0.88rem;color:#856404;">Documents required</div>
+                                                <div class="text-muted" style="font-size:0.8rem;">Please upload the required documents so your coordinator can proceed.</div>
+                                                <a t-attf-href="/my/requests/#{order.id}/documents"
+                                                   class="btn btn-warning btn-sm rounded-pill mt-2 fw-semibold px-3">
+                                                    <i class="fa fa-upload me-1"/>Upload Documents
+                                                </a>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <!-- ⬜ Proposal & Payment (pending) -->
+                                    <div class="d-flex align-items-start gap-3 mb-1" style="opacity:0.4;">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:28px;height:28px;min-width:28px;background:#dee2e6;">
+                                            <i class="fa fa-credit-card" style="font-size:0.7rem;color:#6c757d;" title="Pending"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-muted" style="font-size:0.88rem;">Proposal &amp; Payment</div>
+                                            <div class="text-muted" style="font-size:0.8rem;">You&#x27;ll be notified once your proposal is ready to review.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-3 d-flex justify-content-end"
+                                     style="background:#f8f9fa;border-top:1px solid #e9ecef;">
+                                    <a href="#wink-portal-chatter"
+                                       class="btn btn-outline-secondary btn-sm rounded-pill px-3"
+                                       onclick="(function(e){e.preventDefault();var el=document.getElementById('wink-portal-chatter');if(el){el.scrollIntoView({behavior:'smooth'});}})(event)">
+                                        <i class="fa fa-comments me-1"/>Have a question? Message us
+                                    </a>
+                                </div>
+                            </div>
+                        </t>
 
                         <!-- READY FOR PAYMENT: Proposal Summary + Confirm & Pay -->
                         <t t-if="ps == 'ready_for_payment'">

@@ -1539,6 +1539,13 @@ class WinkRequest(http.Controller):
         required_docs = product.kuec_document_ids.sorted('sequence') if product and not wink_is_bundle else request.env['kuec.service.document']
         has_required_docs = bool(required_docs.filtered(lambda d: d.requirement == 'required'))
 
+        # UI-PROC-001: Fetch document submissions for the processing stage status card
+        doc_submissions = request.env['kuec.document.submission']
+        if portal_stage == 'processing':
+            doc_submissions = request.env['kuec.document.submission'].sudo().search([
+                ('order_id', '=', order.id),
+            ])
+
         # Project-based standalone: fetch tasks + project for the detail card
         pb_tasks = request.env['project.task']
         pb_project = None
@@ -1598,6 +1605,7 @@ class WinkRequest(http.Controller):
             'wink_is_bundle': wink_is_bundle,
             'required_docs': required_docs,
             'has_required_docs': has_required_docs,
+            'doc_submissions': doc_submissions,
             'recurrence_name': recurrence_name,
             'activity_items': activity_items,  # UI-012
             'submitted': kwargs.get('submitted') == '1',  # UI-013
