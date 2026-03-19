@@ -143,16 +143,21 @@ class PaymentTransaction(models.Model):
         if provider_code != 'ngenius' or len(tx) == 1:
             return tx
 
-        reference = notification_data.get('ref')
-        if not reference:
+        ref = notification_data.get('ref')
+        if not ref:
             raise ValidationError(
                 'N-Genius: ' + _('Received notification data with missing order reference.')
             )
 
-        tx = self.search([('reference', '=', reference), ('provider_code', '=', 'ngenius')])
+        # N-Genius returns its own order UUID as 'ref' on the redirect back.
+        # We stored that UUID in provider_reference during order creation — search by it first.
+        tx = self.search([('provider_reference', '=', ref), ('provider_code', '=', 'ngenius')])
+        if not tx:
+            # Fallback: try matching by Odoo transaction reference (e.g. for webhooks).
+            tx = self.search([('reference', '=', ref), ('provider_code', '=', 'ngenius')])
         if not tx:
             raise ValidationError(
-                'N-Genius: ' + _('No transaction found matching reference %s.', reference)
+                'N-Genius: ' + _('No transaction found matching reference %s.', ref)
             )
         return tx
 
