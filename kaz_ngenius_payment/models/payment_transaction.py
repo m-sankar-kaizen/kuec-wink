@@ -3,7 +3,7 @@ import logging
 import math
 import pprint
 
-from werkzeug import urls
+from werkzeug import urls as werkzeug_urls
 
 from odoo import _, models
 from odoo.exceptions import ValidationError
@@ -69,7 +69,17 @@ class PaymentTransaction(models.Model):
                 'N-Genius: ' + _('No payment URL was returned by the gateway. Please try again.')
             )
 
-        return {'api_url': payment_href}
+        # Parse the URL and extract query params as separate dict so the redirect
+        # form template can inject them as hidden inputs. A plain GET form submission
+        # drops the query string from the action URL — hidden inputs preserve them.
+        parsed = werkzeug_urls.url_parse(payment_href)
+        url_params = werkzeug_urls.url_decode(parsed.query)
+        base_url = werkzeug_urls.url_unparse((parsed.scheme, parsed.netloc, parsed.path, '', ''))
+
+        return {
+            'api_url': base_url,
+            'url_params': url_params,
+        }
 
     def _ngenius_prepare_order_payload(self):
         """Build the JSON payload for the N-Genius order creation API call.
@@ -82,7 +92,7 @@ class PaymentTransaction(models.Model):
             dict: The order creation request body.
         """
         base_url = self.provider_id.get_base_url()
-        return_url = urls.url_join(base_url, NGeniusController._return_url)
+        return_url = werkzeug_urls.url_join(base_url, NGeniusController._return_url)
 
         currency_name = self.currency_id.name
         minor_unit_places = const.CURRENCY_MINOR_UNIT.get(currency_name, 2)

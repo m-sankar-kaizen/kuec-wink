@@ -4,14 +4,15 @@
     <!--
         Redirect form for N-Genius Hosted Payment Page.
 
-        The payment.transaction._get_specific_rendering_values() method returns
-        a single 'api_url' key containing the full N-Genius HPP URL.
-        We perform a simple GET redirect to that URL — no hidden fields needed
-        because all payment parameters are already encoded server-side by N-Genius.
+        N-Genius returns a URL like: https://paypage.sandbox.ngenius-payments.com/?code=<token>
+        A plain GET form drops the query string, so we split the URL into base + params
+        and inject each param as a hidden input to preserve the `code` on submission.
     -->
     <template id="redirect_form">
         <form t-att-action="api_url" method="get">
-            <!-- No additional hidden inputs required; the HPP URL is self-contained. -->
+            <t t-foreach="url_params" t-as="param">
+                <input type="hidden" t-att-name="param" t-att-value="url_params[param]"/>
+            </t>
         </form>
     </template>
 
