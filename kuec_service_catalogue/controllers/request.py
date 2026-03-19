@@ -1213,6 +1213,24 @@ class WinkRequest(http.Controller):
 
         product = order.wink_source_product_id or (order.order_line[0].product_id.product_tmpl_id if order.order_line else False)
 
+        # GOV-001: Lazy activation heal — fire for any entitlement whose gov charge invoice
+        # is paid but wink_gov_charge_invoice_id is still set (activation hook missed or
+        # concurrent race rolled back). Covers payment gateway returns, backend payments,
+        # and Request Again flows. No qty check — action_gov_charge_paid clears the link
+        # as its first step so this is idempotent across concurrent page loads.
+        # IMPORTANT: use cr.savepoint() so a DB-level error (e.g. SerializationFailure)
+        # rolls back only this operation — not the whole transaction — allowing the page
+        # to continue rendering normally.
+        if order.wink_entitlement_ids:
+            for _ent in order.wink_entitlement_ids.sudo():
+                inv = _ent.wink_gov_charge_invoice_id
+                if inv and inv.payment_state in ('paid', 'in_payment'):
+                    try:
+                        with request.env.cr.savepoint():
+                            _ent.sudo().action_gov_charge_paid()
+                    except Exception:
+                        pass
+
         # Build per-entitlement prereqs for activation modal (docs info + employees)
         entitlement_prereqs = {}
         if order.wink_entitlement_ids:
@@ -1230,6 +1248,9 @@ class WinkRequest(http.Controller):
                             'name': req.name or '',
                         })
                 requires_emps = bool(getattr(ent.service_product_id, 'requires_employee_selection', False))
+                svc = ent.service_product_id
+                has_gov = bool(getattr(svc, 'wink_has_gov_charge', False))
+                gov_charge_per_emp = float(getattr(svc, 'wink_default_gov_charge', 0.0) or 0.0)
                 entitlement_prereqs[ent.id] = {
                     'docs_ok': True,
                     'doc_items': doc_items,
@@ -1237,6 +1258,8 @@ class WinkRequest(http.Controller):
                     'employees': modal_employees,
                     'can_activate': True,
                     'next_activation': next_activation,
+                    'has_gov_charge': has_gov,
+                    'gov_charge_per_employee': gov_charge_per_emp,
                 }
 
         is_retainer = product and product.delivery_model == 'retainer'
@@ -1618,6 +1641,13 @@ class WinkRequest(http.Controller):
             # WF-BND-002: activation error message when activation blocked (docs/employees)
             'activation_error': kwargs.get('activation_error') or request.params.get('activation_error', '') or '',
             'activation_pending': kwargs.get('activation_pending') == '1',
+            # GOV-001: gov charge payment status messages
+            'gov_charge_pending': kwargs.get('gov_charge_pending') == '1',
+            'gov_wallet_paid': kwargs.get('gov_wallet_paid') == '1',
+            'gov_paid': kwargs.get('gov_paid') == '1',
+            'gov_charge_error': kwargs.get('gov_charge_error') or '',
+            'gov_charge_error_balance': kwargs.get('balance') or '',
+            'gov_charge_error_required': kwargs.get('required') or '',
             # Activation modal state
             'entitlement_prereqs': entitlement_prereqs,
             'open_modal': kwargs.get('open_modal', ''),
@@ -2167,6 +2197,72 @@ class WinkRequest(http.Controller):
                         'mimetype': file_storage.content_type or 'application/octet-stream',
                     })
 
+        # GOV-001: If a gov charge invoice already exists, handle before creating a new one.
+        # IMPORTANT: Do NOT call action_gov_charge_paid() here — the _reconcile_after_done()
+        # hook may be running concurrently, and two simultaneous calls cause a PostgreSQL
+        # SerializationFailure on the M2M delete. Let the lazy heal on page load handle it.
+        existing_inv = entitlement.wink_gov_charge_invoice_id
+        if existing_inv:
+            if existing_inv.payment_state in ('paid', 'in_payment'):
+                # Invoice already paid — redirect back; lazy heal on page load will activate.
+                return request.redirect(f'/my/requests/{order_id}?bundle_requested=1')
+            else:
+                # Invoice pending payment — tell customer to pay it first.
+                return request.redirect(f'/my/requests/{order_id}?gov_charge_pending=1')
+
+        # GOV-001: If service requires government charges, create invoice instead of activating directly
+        svc_product = entitlement.service_product_id
+        if getattr(svc_product, 'wink_has_gov_charge', False):
+            gov_charge_per_emp = float(getattr(svc_product, 'wink_default_gov_charge', 0.0) or 0.0)
+            num_employees = max(len(employee_ids), 1)
+            total_gov_charge = gov_charge_per_emp * num_employees
+            variant = svc_product.product_variant_ids[:1]
+            inv_line = {
+                'name': 'Government Charges: %s' % entitlement.name,
+                'quantity': 1,
+                'price_unit': total_gov_charge,
+                'tax_ids': [(5, 0, 0)],
+            }
+            if variant:
+                inv_line['product_id'] = variant.id
+            # Link invoice line to first SO line so invoice appears in SO's invoice smart button
+            if order.order_line:
+                inv_line['sale_line_ids'] = [(4, order.order_line[:1].id)]
+            gov_invoice = request.env['account.move'].sudo().create({
+                'move_type': 'out_invoice',
+                'partner_id': order.partner_id.id,
+                'invoice_date': date.today(),
+                'invoice_origin': order.name,
+                'ref': 'Gov Charge - %s - %s' % (entitlement.name, order.name),
+                'invoice_line_ids': [(0, 0, inv_line)],
+            })
+            try:
+                gov_invoice.sudo().action_post()
+            except Exception:
+                import logging as _logging
+                _logging.getLogger(__name__).warning(
+                    "GOV-001: Failed to post gov charge invoice for entitlement %s",
+                    entitlement.id, exc_info=True,
+                )
+            entitlement.sudo().write({
+                'wink_gov_charge_invoice_id': gov_invoice.id,
+                'wink_gov_charge_per_employee': gov_charge_per_emp,
+                'wink_pending_employee_ids': [(6, 0, employee_ids)] if employee_ids else [(5, 0, 0)],
+            })
+            order.sudo().message_post(
+                body=_(
+                    'Government charge invoice <b>%(inv)s</b> created for <b>%(svc)s</b>. '
+                    'Amount: %(total)s AED. Activation is pending payment.'
+                ) % {
+                    'inv': gov_invoice.name or '',
+                    'svc': entitlement.name or '',
+                    'total': '%.2f' % total_gov_charge,
+                },
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
+            return request.redirect(f'/my/requests/{order_id}?gov_charge_pending=1')
+
         try:
             entitlement.action_activate(employee_ids=employee_ids)
 
@@ -2215,3 +2311,114 @@ class WinkRequest(http.Controller):
             f'/my/requests/{order_id}'
             f'?bundle_requested=1'
         )
+
+    # ── GOV-001: eWallet payment for government charge invoice ──
+    @http.route(
+        '/my/requests/<int:order_id>/gov-charge/<int:entitlement_id>/wallet-pay',
+        type='http', auth='user', website=True,
+        methods=['POST'], csrf=True)
+    def gov_charge_wallet_pay(self, order_id, entitlement_id, **post):
+        """Pay the pending government charge invoice using the customer's eWallet balance.
+
+        Workflow:
+            1. Validate access and locate the gov charge invoice.
+            2. Check wallet balance is sufficient to cover the invoice amount.
+            3. Register an account.payment via the eWallet journal (WEWL).
+            4. Record a kuec.wallet.transaction debit linked to the payment JV.
+            5. Redirect to the request detail page.
+        """
+        import logging as _log
+        _logger = _log.getLogger(__name__)
+
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of',
+             request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        entitlement = request.env['wink.bundle.entitlement'].sudo().search([
+            ('id', '=', entitlement_id),
+            ('order_id', '=', order_id),
+        ], limit=1)
+        if not entitlement:
+            raise NotFound()
+
+        invoice = entitlement.wink_gov_charge_invoice_id
+        if not invoice or not invoice.exists():
+            return request.redirect(f'/my/requests/{order_id}?gov_charge_error=no_invoice')
+
+        if invoice.payment_state in ('paid', 'in_payment'):
+            return request.redirect(f'/my/requests/{order_id}?gov_charge_error=already_paid')
+
+        partner = order.partner_id
+        wallet_balance = getattr(partner, 'wink_wallet_balance', 0.0) or 0.0
+        amount_due = invoice.amount_residual or 0.0
+
+        if amount_due <= 0:
+            return request.redirect(f'/my/requests/{order_id}?gov_charge_error=already_paid')
+
+        if wallet_balance < amount_due:
+            return request.redirect(
+                f'/my/requests/{order_id}'
+                f'?gov_charge_error=insufficient_balance'
+                f'&balance={werkzeug.urls.url_quote("%.2f" % wallet_balance)}'
+                f'&required={werkzeug.urls.url_quote("%.2f" % amount_due)}'
+            )
+
+        wallet_journal = request.env['account.journal'].sudo().search(
+            [('is_ewallet_journal', '=', True),
+             ('company_id', '=', request.env.company.id)],
+            limit=1,
+        )
+        if not wallet_journal:
+            return request.redirect(f'/my/requests/{order_id}?gov_charge_error=no_wallet_journal')
+
+        try:
+            memo = 'Gov Charge (eWallet) - %s - %s' % (entitlement.name, order.name)
+            payment_register = request.env['account.payment.register'].sudo().with_context(
+                active_model='account.move',
+                active_ids=invoice.ids,
+            ).create({
+                'journal_id': wallet_journal.id,
+                'amount': amount_due,
+                'currency_id': invoice.currency_id.id,
+                'communication': memo,
+                'payment_date': date.today(),
+            })
+            payment_register.action_create_payments()
+
+            payment = invoice.reconciled_payment_ids.filtered(
+                lambda p: p.journal_id == wallet_journal
+            ).sorted('id', reverse=True)[:1]
+            move_id = payment.move_id.id if payment and payment.move_id else False
+
+            request.env['kuec.wallet.transaction'].sudo().create({
+                'partner_id': partner.id,
+                'transaction_type': 'payment',
+                'amount': -amount_due,
+                'description': memo,
+                'currency_id': invoice.currency_id.id,
+                'order_id': order.id,
+                'move_id': move_id,
+            })
+
+            # GOV-001: Explicitly trigger activation here — do NOT rely on write() hook alone.
+            # Reason: Odoo 18 flushes stored computed fields (payment_state) via _write(),
+            # bypassing our write() override. entitlement.state also re-computes to 'available'
+            # immediately after payment, so checking state is unreliable.
+            # Instead: check wink_gov_charge_invoice_id directly — if still set, not yet activated.
+            entitlement.invalidate_recordset(['wink_gov_charge_invoice_id'])
+            if entitlement.wink_gov_charge_invoice_id:
+                entitlement.sudo().action_gov_charge_paid()
+
+        except Exception:
+            _logger.warning(
+                "GOV-001: eWallet payment failed for gov charge invoice %s (entitlement %s)",
+                invoice.id, entitlement_id, exc_info=True,
+            )
+            return request.redirect(f'/my/requests/{order_id}?gov_charge_error=payment_failed')
+
+        return request.redirect(f'/my/requests/{order_id}?gov_wallet_paid=1')
+

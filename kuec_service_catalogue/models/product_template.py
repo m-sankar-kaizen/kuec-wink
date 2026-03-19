@@ -461,6 +461,21 @@ class ProductTemplate(models.Model):
         help="When enabled, the customer must select one or more employees from their directory when submitting a service request for this service."
     )
 
+    # GOV-001: Government charges per activation
+    wink_has_gov_charge = fields.Boolean(
+        string='Requires Government Charges',
+        default=False,
+        help='Enable when this service involves government fees (e.g. visa, license, trade license). '
+             'If enabled, the customer will see the gov charge amount and a per-employee invoice '
+             'will be generated upon activation request. Activation is blocked until payment is received.',
+    )
+    wink_default_gov_charge = fields.Monetary(
+        string='Default Gov Charge per Employee',
+        currency_field='currency_id',
+        help='Default government charge per employee. The coordinator can override this at activation time. '
+             'Total = this amount × number of selected employees.',
+    )
+
     # EPIC-11: Catalogue report — live count of active subscriptions for this service
     wink_active_order_count = fields.Integer(
         compute='_compute_wink_active_order_count',

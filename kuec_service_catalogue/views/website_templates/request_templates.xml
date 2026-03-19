@@ -2328,6 +2328,50 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                             </div>
 
+                            <!-- GOV-001: gov charge pending banner -->
+                            <div t-if="gov_charge_pending" class="alert alert-warning alert-dismissible fade show mx-3 mt-3">
+                                <i class="fa fa-university me-2"/>
+                                <strong>Government charge invoice created.</strong>
+                                Pay the invoice below to activate your service — activation will proceed automatically once paid.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+
+                            <!-- GOV-001: payment gateway success banner -->
+                            <div t-if="gov_paid" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                                <i class="fa fa-check-circle me-2"/>
+                                <strong>Payment successful!</strong>
+                                Your government charge has been paid and your service has been activated.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+
+                            <!-- GOV-001: eWallet payment success banner -->
+                            <div t-if="gov_wallet_paid" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                                <i class="fa fa-check-circle me-2"/>
+                                <strong>eWallet payment successful!</strong>
+                                Your service is being activated.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+
+                            <!-- GOV-001: gov charge error banners -->
+                            <div t-if="gov_charge_error == 'insufficient_balance'" class="alert alert-danger alert-dismissible fade show mx-3 mt-3">
+                                <i class="fa fa-exclamation-triangle me-2"/>
+                                <strong>Insufficient eWallet balance.</strong>
+                                <t t-if="gov_charge_error_balance and gov_charge_error_required">
+                                    Available: <strong><t t-esc="gov_charge_error_balance"/> AED</strong>,
+                                    required: <strong><t t-esc="gov_charge_error_required"/> AED</strong>.
+                                </t>
+                                Please top up your wallet or use the Pay Gov Charge button to pay by card.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+                            <div t-if="gov_charge_error and gov_charge_error != 'insufficient_balance'" class="alert alert-danger alert-dismissible fade show mx-3 mt-3">
+                                <i class="fa fa-exclamation-triangle me-2"/>
+                                <strong>Payment error:</strong>
+                                <t t-if="gov_charge_error == 'no_wallet_journal'">eWallet journal is not configured. Please contact support.</t>
+                                <t t-elif="gov_charge_error == 'already_paid'">This invoice is already paid.</t>
+                                <t t-else="">An error occurred during payment. Please try again or contact support.</t>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+
                             <div t-if="activation_error" class="alert alert-warning alert-dismissible fade show mx-3 mt-3">
                                 <!-- WF-BND-002 -->
                                 <t t-esc="activation_error"/>
@@ -2373,7 +2417,21 @@
                                                 <i class="fa fa-star me-1"/><t t-esc="ent_score"/>/5
                                             </span>
                                         </t>
-                                        <t t-if="ent.qty_activated > 0">
+                                        <!-- GOV-001: check invoice link directly — state is unreliable
+                                             when qty_activated >= qty_entitled (fully_activated takes priority) -->
+                                        <t t-set="gov_inv" t-value="ent.wink_gov_charge_invoice_id"/>
+                                        <t t-set="gov_charge_pending" t-value="gov_inv and gov_inv.payment_state not in ('paid', 'in_payment')"/>
+                                        <!-- GOV-001: pending_gov_payment badge -->
+                                        <t t-if="gov_charge_pending">
+                                            <!-- Show prior activation badge if already activated at least once -->
+                                            <t t-if="ent.qty_activated > 0">
+                                                <span class="badge bg-success">✓ Activated (<t t-esc="ent.qty_activated"/>x)</span>
+                                            </t>
+                                            <span class="badge text-dark" style="background:#ffc107;">
+                                                <i class="fa fa-university me-1"/>Gov Charge Pending
+                                            </span>
+                                        </t>
+                                        <t t-elif="ent.qty_activated > 0">
                                             <span class="badge bg-success">✓ Activated</span>
                                         </t>
                                         <t t-else="">
@@ -2384,6 +2442,22 @@
                                             <small class="text-warning fst-italic">
                                                 <i class="fa fa-clock-o me-1"/>Pending coordinator activation
                                             </small>
+                                        </t>
+                                        <!-- GOV-001: Pay Gov Charge buttons when pending -->
+                                        <t t-elif="gov_charge_pending">
+                                            <!-- Pay via normal invoice page -->
+                                            <a t-attf-href="/my/invoices/#{ent.wink_gov_charge_invoice_id.id}"
+                                               class="btn btn-sm btn-warning fw-semibold">
+                                                <i class="fa fa-credit-card me-1"/>Pay Gov Charge
+                                            </a>
+                                            <!-- Pay via eWallet -->
+                                            <form method="post" style="display:inline-block;"
+                                                  t-attf-action="/my/requests/#{order.id}/gov-charge/#{ent.id}/wallet-pay">
+                                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                                <button type="submit" class="btn btn-sm btn-outline-primary fw-semibold">
+                                                    <i class="fa fa-money me-1"/>Pay with eWallet
+                                                </button>
+                                            </form>
                                         </t>
                                         <t t-elif="portal_stage in ('active', 'completed') and order.state in ('sale', 'done')">
                                             <t t-set="is_one_time" t-value="ent.service_product_id.request_frequency == 'one_time'"/>
@@ -2507,6 +2581,35 @@
                                                 </div>
                                             </t>
 
+                                            <!-- GOV-001: Government charge warning section -->
+                                            <t t-if="prereq.get('has_gov_charge')">
+                                                <div class="wink-activate-section border-top">
+                                                    <div class="wink-activate-section-title" style="color:#856404;">
+                                                        <i class="fa fa-university me-1"/>Government Charges Apply
+                                                    </div>
+                                                    <div class="px-3 pb-3">
+                                                        <div class="alert alert-warning py-2 px-3 mb-3" style="font-size:0.82rem;">
+                                                            <i class="fa fa-info-circle me-1"/>
+                                                            This service requires government fees before activation.
+                                                            Submitting will generate a charge invoice — activation proceeds automatically once paid.
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <span class="small text-muted">Charge per employee:</span>
+                                                            <span class="small fw-semibold wink-gov-per-emp"
+                                                                  t-attf-data-amount="#{prereq.get('gov_charge_per_employee') or 0}">
+                                                                <t t-esc="'%.2f' % (prereq.get('gov_charge_per_employee') or 0)"/> AED
+                                                            </span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="small text-muted">Estimated total:</span>
+                                                            <span class="fw-bold wink-gov-total" style="color:#856404;font-size:0.9rem;">
+                                                                <t t-esc="'%.2f' % (prereq.get('gov_charge_per_employee') or 0)"/> AED
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+
                                         </div>
                                         <!-- Modal footer inside form -->
                                         <div class="modal-footer border-top flex-column align-items-stretch gap-2">
@@ -2519,10 +2622,16 @@
                                                 <button type="button" class="btn btn-outline-secondary btn-sm"
                                                         data-bs-dismiss="modal">Cancel</button>
                                                 <button type="submit"
-                                                        t-attf-class="btn btn-primary btn-sm wink-activate-submit"
+                                                        t-attf-class="btn #{'btn-warning' if prereq.get('has_gov_charge') else 'btn-primary'} btn-sm wink-activate-submit"
                                                         t-att-data-req-emp="'1' if prereq.get('requires_employees') else '0'"
+                                                        t-att-data-has-gov="'1' if prereq.get('has_gov_charge') else '0'"
                                                         t-att-disabled="'disabled' if prereq.get('requires_employees') else None">
-                                                    <i class="fa fa-play me-1"/>Activate Service
+                                                    <t t-if="prereq.get('has_gov_charge')">
+                                                        <i class="fa fa-university me-1"/>Request &amp; Pay Gov Charge
+                                                    </t>
+                                                    <t t-else="">
+                                                        <i class="fa fa-play me-1"/>Activate Service
+                                                    </t>
                                                 </button>
                                             </div>
                                         </div>
@@ -2552,15 +2661,33 @@
                             }
 
                             document.querySelectorAll('.modal[id^="wink-activate-modal-"]').forEach(function(m) {
-                                m.addEventListener('shown.bs.modal', function() { updateActivateBtn(m); });
+                                m.addEventListener('shown.bs.modal', function() {
+                                    updateActivateBtn(m);
+                                    updateGovTotal(m);
+                                });
                                 updateActivateBtn(m);
+                                updateGovTotal(m);
                             });
 
-                            // ── Employee checkbox change → update activate button ─
+                            // ── GOV-001: Update gov charge running total on employee selection ──
+                            function updateGovTotal(modal) {
+                                var perEmpEl = modal.querySelector('.wink-gov-per-emp');
+                                var totalEl  = modal.querySelector('.wink-gov-total');
+                                if (!perEmpEl || !totalEl) return;
+                                var perEmp = parseFloat(perEmpEl.getAttribute('data-amount') || '0') || 0;
+                                var checked = modal.querySelectorAll('.wink-emp-checkbox:checked').length;
+                                var count = Math.max(checked, 1);
+                                totalEl.textContent = (perEmp * count).toFixed(2) + ' AED';
+                            }
+
+                            // ── Employee checkbox change → update activate button + gov total ─
                             document.querySelectorAll('.wink-emp-checkbox').forEach(function(cb) {
                                 cb.addEventListener('change', function() {
                                     var modal = cb.closest('.modal');
-                                    if (modal) updateActivateBtn(modal);
+                                    if (modal) {
+                                        updateActivateBtn(modal);
+                                        updateGovTotal(modal);
+                                    }
                                 });
                             });
 

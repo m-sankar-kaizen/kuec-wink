@@ -64,6 +64,7 @@ class WinkBundleEntitlement(models.Model):
     state = fields.Selection(
         [
             ('available', 'Available'),
+            ('pending_gov_payment', 'Pending Gov Payment'),
             ('fully_activated', 'Fully Activated'),
             ('expired', 'Expired'),
         ],
@@ -87,11 +88,62 @@ class WinkBundleEntitlement(models.Model):
         string='Selected Employees',
         help='Employees selected for this child service (bundle).',
     )
+
+    # GOV-001: Government charge fields
+    wink_gov_charge_invoice_id = fields.Many2one(
+        'account.move',
+        string='Gov Charge Invoice',
+        ondelete='set null',
+        copy=False,
+        help='Pending government charge invoice. Activation is blocked until this invoice is paid.',
+    )
+    wink_gov_charge_currency_id = fields.Many2one(
+        'res.currency',
+        related='order_id.currency_id',
+        string='Currency',
+        readonly=True,
+    )
+    wink_gov_charge_per_employee = fields.Monetary(
+        string='Gov Charge per Employee',
+        currency_field='wink_gov_charge_currency_id',
+        copy=False,
+        help='Actual government charge per employee used for the pending activation invoice.',
+    )
+    wink_pending_employee_ids = fields.Many2many(
+        'kuec.employee.directory',
+        'wink_entitlement_pending_emp_rel',
+        'entitlement_id',
+        'employee_id',
+        string='Pending Employees',
+        copy=False,
+        help='Employees waiting for gov charge payment before activation can proceed.',
+    )
+
     # T-3: Idempotency lock field — prevents concurrent double-activation
     _activation_lock = fields.Boolean(
         default=False,
         help='Internal flag to prevent concurrent activations. Reset after activation completes.',
     )
+
+    def action_gov_charge_paid(self):
+        """Called automatically when the gov charge invoice is reconciled/paid.
+        Clears the pending invoice, activates using the stored pending employees,
+        and cleans up pending fields.
+        """
+        self.ensure_one()
+        employee_ids = self.wink_pending_employee_ids.ids or []
+        # Clear pending fields before activating so the guard in action_activate() passes
+        self.sudo().write({
+            'wink_gov_charge_invoice_id': False,
+            'wink_pending_employee_ids': [(5, 0, 0)],
+        })
+        try:
+            self.action_activate(employee_ids=employee_ids if employee_ids else None)
+        except Exception:
+            _logger.warning(
+                "GOV-001: Auto-activation after gov charge payment failed for entitlement %s",
+                self.id, exc_info=True,
+            )
 
     def action_coordinator_activate(self):
         """Coordinator activates a sub-service from the backend list.
@@ -113,11 +165,20 @@ class WinkBundleEntitlement(models.Model):
         if employees:
             self.wink_selected_employee_ids = [(6, 0, employees.ids)]
 
-    @api.depends('qty_entitled', 'qty_activated', 'order_id.state', 'order_id.wink_bundle_cancelled')
+    @api.depends(
+        'qty_entitled', 'qty_activated',
+        'order_id.state', 'order_id.wink_bundle_cancelled',
+        'wink_gov_charge_invoice_id', 'wink_gov_charge_invoice_id.payment_state',
+    )
     def _compute_state(self):
         for rec in self:
             if rec.order_id and (rec.order_id.state == 'cancel' or rec.order_id.wink_bundle_cancelled):
                 rec.state = 'expired'
+            # GOV-001: pending_gov_payment takes priority over fully_activated — a pending
+            # gov charge invoice (for any activation, including re-activations) must be paid
+            # before the state resolves. This keeps the Pay button visible in the portal.
+            elif rec.wink_gov_charge_invoice_id and rec.wink_gov_charge_invoice_id.payment_state not in ('paid', 'in_payment'):
+                rec.state = 'pending_gov_payment'
             elif rec.qty_activated >= rec.qty_entitled:
                 rec.state = 'fully_activated'
             else:
@@ -137,6 +198,13 @@ class WinkBundleEntitlement(models.Model):
         """
         self.ensure_one()
         order = self.order_id
+
+        # GOV-001: Block activation if a gov charge invoice is pending payment
+        if self.wink_gov_charge_invoice_id and self.wink_gov_charge_invoice_id.payment_state not in ('paid', 'in_payment'):
+            raise UserError(_(
+                "This service has a pending government charge invoice (#%s). "
+                "Activation will proceed automatically once the invoice is paid."
+            ) % self.wink_gov_charge_invoice_id.name)
 
         # T-3: Acquire row-level lock to prevent concurrent activation
         try:

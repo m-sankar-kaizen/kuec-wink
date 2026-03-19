@@ -44,6 +44,11 @@
                         <field name="wink_payment_term_id" invisible="delivery_model == 'retainer'"/>
                         <separator string="Portal Configuration"/>
                         <field name="requires_employee_selection" invisible="wink_is_bundle"/>
+                        <field name="wink_has_gov_charge" invisible="wink_is_bundle"
+                               help="Enable when this service requires government fees (visa, license, etc.). A per-employee invoice will be generated before activation."/>
+                        <field name="wink_default_gov_charge"
+                               invisible="not wink_has_gov_charge or wink_is_bundle"
+                               help="Default government charge per employee. The coordinator can override at activation time. Total = this amount × number of employees selected."/>
                         <field name="reminder_days_before"/>
                         <separator string="Tags &amp; Ribbon (Portal)"/>
                         <field name="product_tag_ids" widget="many2many_tags" placeholder="Tags shown on portal cards and detail"/>

@@ -214,6 +214,49 @@ class AccountMoveWallet(models.Model):
             original_txn.write({'state': 'cancelled'})
         return res
 
+    # GOV-001: Auto-activate entitlement when gov charge invoice is fully paid.
+    # Use _write() not write(): in Odoo 18, stored computed fields (payment_state) are
+    # flushed via _write() directly, bypassing the ORM write() override. _write() is
+    # called both by the ORM write() path and by the computed field flush path.
+    def _write(self, vals):
+        res = super()._write(vals)
+        if 'payment_state' in vals and vals.get('payment_state') in ('paid', 'in_payment'):
+            for move in self:
+                entitlement = self.env['wink.bundle.entitlement'].sudo().search([
+                    ('wink_gov_charge_invoice_id', '=', move.id),
+                ], limit=1)
+                if not entitlement:
+                    continue
+                # Check via raw SQL: if wink_gov_charge_invoice_id is still set, activation
+                # has not yet happened (action_gov_charge_paid clears it as its first step).
+                self.env.cr.execute(
+                    "SELECT wink_gov_charge_invoice_id FROM wink_bundle_entitlement WHERE id = %s",
+                    (entitlement.id,)
+                )
+                row = self.env.cr.fetchone()
+                if not row or not row[0]:
+                    continue  # Already activated — invoice link already cleared
+                try:
+                    entitlement.sudo().action_gov_charge_paid()
+                except Exception:
+                    logging.getLogger(__name__).warning(
+                        "GOV-001: Failed to auto-activate entitlement %s after gov charge payment on invoice %s",
+                        entitlement.id, move.id, exc_info=True,
+                    )
+                    try:
+                        if entitlement.order_id:
+                            entitlement.order_id.sudo().message_post(
+                                body=(
+                                    'GOV-001 Warning: Auto-activation of <b>%s</b> failed after '
+                                    'gov charge payment. Please check server logs and manually activate.'
+                                ) % (entitlement.name or ''),
+                                message_type='comment',
+                                subtype_xmlid='mail.mt_note',
+                            )
+                    except Exception:
+                        pass
+        return res
+
     def action_open_wallet_payment(self):
         """Open the eWallet payment wizard pre-filled with this invoice and its customer.
 
@@ -235,3 +278,67 @@ class AccountMoveWallet(models.Model):
                 'default_currency_id': self.currency_id.id,
             },
         }
+
+
+class PaymentTransactionGovCharge(models.Model):
+    """GOV-001: Hook into payment gateway reconciliation to auto-activate bundle services.
+
+    _reconcile_after_done() is called by Odoo immediately after a payment.transaction
+    is confirmed and its invoices are reconciled. This is the most reliable hook for
+    online payment gateway flows (Stripe, PayTabs, etc.) and covers the case where
+    _write() on account.move does not fire synchronously.
+    """
+
+    _inherit = 'payment.transaction'
+
+    def _reconcile_after_done(self):
+        """Trigger GOV-001 auto-activation after payment gateway reconciles gov charge invoice.
+
+        Workflow:
+            1. Call super() — payment is created and reconciled with invoice.
+            2. For each reconciled invoice, check if it is a gov charge invoice
+               linked to a bundle entitlement that has not yet been activated.
+            3. Call action_gov_charge_paid() to clear the invoice link and activate.
+        """
+        res = super()._reconcile_after_done()
+        import logging as _log
+        _logger = _log.getLogger(__name__)
+        for tx in self:
+            for invoice in tx.invoice_ids:
+                if invoice.payment_state not in ('paid', 'in_payment'):
+                    continue
+                entitlement = self.env['wink.bundle.entitlement'].sudo().search([
+                    ('wink_gov_charge_invoice_id', '=', invoice.id),
+                ], limit=1)
+                if not entitlement or not entitlement.wink_gov_charge_invoice_id:
+                    continue
+                try:
+                    entitlement.sudo().action_gov_charge_paid()
+                    _logger.info(
+                        "GOV-001: Auto-activated entitlement %s (%s) after payment gateway payment.",
+                        entitlement.id, entitlement.name,
+                    )
+                except Exception:
+                    _logger.warning(
+                        "GOV-001: Auto-activation failed for entitlement %s after gateway payment on invoice %s.",
+                        entitlement.id, invoice.id, exc_info=True,
+                    )
+        return res
+
+    def _get_landing_route(self):
+        """Redirect to the bundle request page after paying a gov charge invoice.
+
+        If this transaction is linked to a gov charge invoice, return the
+        request detail URL so the customer lands back on their request page
+        (with the service already activated) instead of the generic /payment/status page.
+
+        Returns:
+            str: URL to redirect to after payment completes.
+        """
+        for invoice in self.invoice_ids:
+            entitlement = self.env['wink.bundle.entitlement'].sudo().search([
+                ('wink_gov_charge_invoice_id', '=', invoice.id),
+            ], limit=1)
+            if entitlement and entitlement.order_id:
+                return '/my/requests/%d?gov_paid=1' % entitlement.order_id.id
+        return super()._get_landing_route()
