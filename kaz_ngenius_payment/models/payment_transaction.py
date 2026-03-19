@@ -99,13 +99,18 @@ class PaymentTransaction(models.Model):
         multiplier = 10 ** minor_unit_places
         amount_in_minor = math.floor(self.amount * multiplier)
 
+        # N-Genius only allows [a-zA-Z0-9\-]{1,37} for merchantOrderReference.
+        # Odoo references like "INV/2026/00036" contain slashes — replace with hyphens.
+        import re
+        safe_reference = re.sub(r'[^a-zA-Z0-9\-]', '-', self.reference)[:37]
+
         payload = {
             'action': 'SALE',
             'amount': {
                 'currencyCode': currency_name,
                 'value': amount_in_minor,
             },
-            'merchantOrderReference': self.reference,
+            'merchantOrderReference': safe_reference,
             'merchantAttributes': {
                 'redirectUrl': return_url,
                 'cancelUrl': return_url,
