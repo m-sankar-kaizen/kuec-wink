@@ -3448,7 +3448,7 @@
                                             </t>
                                         </div>
                                     </div>
-                                    <!-- Progress ring + Manage -->
+                                    <!-- Progress ring + View Request + Manage -->
                                     <div class="d-flex align-items-center gap-2 flex-shrink-0">
                                         <t t-if="bd_is_live">
                                             <div class="text-center" style="min-width:52px;">
@@ -3456,6 +3456,12 @@
                                                 <div style="font-size:.65rem;opacity:.75;text-transform:uppercase;letter-spacing:.04em;">used</div>
                                             </div>
                                         </t>
+                                        <!-- View Request button — always visible in hero -->
+                                        <a t-attf-href="/my/requests/{{ bd['order'].id }}"
+                                           class="wb-manage-btn"
+                                           style="text-decoration:none;">
+                                            <i class="fa fa-file-text-o me-1"/>View Request
+                                        </a>
                                         <t t-if="bd['order'].state in ('sale','done') and not bd_is_cancelled">
                                             <div class="dropdown">
                                                 <button class="wb-manage-btn dropdown-toggle" type="button"
