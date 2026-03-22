@@ -113,6 +113,18 @@ class KuecCustomerPortal(CustomerPortal):
             domain.append(('is_subscription', '=', True))
         elif type_filter == 'onetime' and hasattr(SaleOrder, 'is_subscription'):
             domain.append(('is_subscription', '=', False))
+        elif type_filter == 'renewal':
+            # Renewals due within the next 30 days
+            from datetime import timedelta as _td
+            from odoo import fields as _f
+            _today = _f.Date.today()
+            _in30 = _today + _td(days=30)
+            domain += [
+                ('state', '=', 'sale'),
+                '|',
+                '&', ('next_invoice_date', '>=', _today), ('next_invoice_date', '<=', _in30),
+                '&', ('wink_bundle_end_date', '>=', _today), ('wink_bundle_end_date', '<=', _in30),
+            ]
         payment_filter = kw.get('payment', '').strip()
 
         searchbar_sortings = {
@@ -784,14 +796,6 @@ class KuecCustomerPortal(CustomerPortal):
             '&', ('next_invoice_date', '>=', today), ('next_invoice_date', '<=', in_30),
         ])
 
-        # Request breakdown by status (for mini-chart) — derived from state_map above
-        status_breakdown = {
-            'quotation': state_map.get('draft', 0) + state_map.get('sent', 0),
-            'active':    state_map.get('sale', 0),
-            'done':      state_map.get('done', 0),
-            'cancelled': state_map.get('cancel', 0),
-        }
-        status_total = sum(status_breakdown.values()) or 1
 
         # ── KPI Row 2: Finance ───────────────────────────────────────────────
         kpi_dr = 0.0
@@ -831,13 +835,12 @@ class KuecCustomerPortal(CustomerPortal):
             if not invoices and credit_notes:
                 currency = credit_notes[0].currency_id or currency
 
-            # Recent payments (inbound, posted)
-            Payment = request.env['account.payment'].sudo()
-            recent_payments = Payment.search([
-                ('partner_id', 'child_of', [partner.id]),
-                ('payment_type', '=', 'inbound'),
-                ('state', '=', 'posted'),
-            ], order='date desc', limit=5)
+            # Recent payments — use paid invoices so portal payments via
+            # payment.transaction are included (they don't always create account.payment)
+            recent_payments = AccountMove.search(inv_base + [
+                ('move_type', '=', 'out_invoice'),
+                ('payment_state', 'in', ['paid', 'in_payment']),
+            ], order='invoice_date desc', limit=5)
         except Exception:
             pass
 
@@ -847,9 +850,9 @@ class KuecCustomerPortal(CustomerPortal):
         kpi_tasks_done = 0
         task_progress_pct = 0
         try:
-            Project = request.env['project.project'].sudo()
-            kpi_projects = Project.search_count([
-                ('partner_id', 'child_of', [partner.id]),
+            # Use the portal user's own env (no sudo) so Odoo's project visibility
+            # rules apply — matches exactly what /my/projects shows the customer.
+            kpi_projects = request.env['project.project'].search_count([
                 ('last_update_status', '!=', 'done'),
             ])
         except Exception:
@@ -864,10 +867,6 @@ class KuecCustomerPortal(CustomerPortal):
                 task_progress_pct = round(kpi_tasks_done * 100 / total_tasks)
         except Exception:
             pass
-
-        # Pending documents removed — attachments go directly to chatter
-        pending_docs = []
-        kpi_pending_docs = 0
 
         # ── Quotes awaiting approval ─────────────────────────────────────────
         quotes_to_approve = SaleOrder.search(base_domain + [('state', '=', 'sent')], limit=5)
@@ -916,17 +915,18 @@ class KuecCustomerPortal(CustomerPortal):
         except Exception:
             pass
 
-        # ── eWallet balance ───────────────────────────────────────────────────
+        # ── eWallet balance — use computed field, last txn for display only ────
         wallet_balance = 0.0
         last_wallet_txn = None
         try:
-            WalletTxn = request.env['kuec.wallet.transaction'].sudo()
-            txns = WalletTxn.search([
+            wallet_balance = float(partner.sudo().wink_wallet_balance or 0.0)
+        except Exception:
+            pass
+        try:
+            last_txn = request.env['kuec.wallet.transaction'].sudo().search([
                 ('partner_id', '=', partner.id),
                 ('state', '=', 'done'),
-            ], order='create_date desc')
-            wallet_balance = sum(txns.mapped('amount'))
-            last_txn = txns[:1] if txns else None
+            ], order='create_date desc', limit=1)
             if last_txn:
                 last_wallet_txn = {
                     'type': last_txn.transaction_type,
@@ -965,7 +965,7 @@ class KuecCustomerPortal(CustomerPortal):
             pass
 
         # ── Attention items (consolidated) ────────────────────────────────────
-        attention_count = kpi_pending_docs + len(quotes_to_approve) + len(overdue_invoices)
+        attention_count = len(quotes_to_approve) + len(overdue_invoices)
 
         # ── Recent 5 requests ─────────────────────────────────────────────────
         recent_orders = SaleOrder.search(base_domain + [
@@ -996,15 +996,11 @@ class KuecCustomerPortal(CustomerPortal):
             # Lists / panels
             'recent_orders': recent_orders,
             'recent_payments': recent_payments,
-            'pending_docs': pending_docs,
-            'kpi_pending_docs': kpi_pending_docs,
             'quotes_to_approve': quotes_to_approve,
             'overdue_invoices': overdue_invoices,
             'bundle_entitlements': bundle_entitlements,
             'upcoming_subs': upcoming_subs,
             'attention_count': attention_count,
-            'status_breakdown': status_breakdown,
-            'status_total': status_total,
             'partner': partner,
             'wallet_balance': wallet_balance,
             'last_wallet_txn': last_wallet_txn,
