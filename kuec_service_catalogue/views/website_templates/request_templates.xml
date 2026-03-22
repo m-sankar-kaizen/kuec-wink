@@ -2869,6 +2869,7 @@
                             <option value="" t-att-selected="not filter_type">All Types</option>
                             <option value="retainer" t-att-selected="filter_type == 'retainer'">Retainer</option>
                             <option value="onetime" t-att-selected="filter_type == 'onetime'">One-time</option>
+                            <option value="renewal" t-att-selected="filter_type == 'renewal'">Renewals (30 days)</option>
                         </select>
                         <select name="payment" class="form-select form-select-sm" style="width: auto;">
                             <option value="" t-att-selected="not filter_payment">All Payment</option>
@@ -3884,22 +3885,6 @@
                                                style="background:#dc3545;color:#fff;border:0;font-size:.72rem;">Review</a>
                                         </div>
                                     </t>
-                                    <!-- Pending documents -->
-                                    <t t-foreach="pending_docs" t-as="pd">
-                                        <div class="d-flex align-items-center gap-3 rounded-2 p-2" style="background:#fff;border:1px solid #fde68a;">
-                                            <i class="fa fa-paperclip flex-shrink-0" style="color:#d97706;"/>
-                                            <div class="flex-grow-1 min-width-0">
-                                                <div class="small fw-semibold text-truncate">
-                                                    <t t-if="pd['state'] == 'change_required'">Change requested:</t>
-                                                    <t t-else="">Document needed:</t>
-                                                    <t t-esc="pd['doc_name']"/>
-                                                </div>
-                                                <div class="text-muted" style="font-size:.72rem;"><t t-esc="pd['order_name']"/></div>
-                                            </div>
-                                            <a t-attf-href="/my/requests/{{ pd['order_id'] }}/documents" class="btn btn-sm fw-semibold flex-shrink-0"
-                                               style="background:#f59e0b;color:#fff;border:0;font-size:.72rem;">Upload</a>
-                                        </div>
-                                    </t>
                                     <!-- Overdue invoices -->
                                     <t t-foreach="overdue_invoices" t-as="oi">
                                         <div class="d-flex align-items-center gap-3 rounded-2 p-2" style="background:#fff;border:1px solid #fecaca;">
@@ -3911,7 +3896,7 @@
                                                     — <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % oi.amount_residual"/>
                                                 </div>
                                             </div>
-                                            <a href="/my/invoices" class="btn btn-sm fw-semibold flex-shrink-0"
+                                            <a t-attf-href="/my/invoices/{{ oi.id }}" class="btn btn-sm fw-semibold flex-shrink-0"
                                                style="background:#dc3545;color:#fff;border:0;font-size:.72rem;">Pay</a>
                                         </div>
                                     </t>
@@ -3925,10 +3910,10 @@
                         <div style="width:3px;height:18px;background:#0055b7;border-radius:2px;flex-shrink:0;"/>
                         <span class="fw-bold text-uppercase small" style="letter-spacing:.08em;color:#1e293b;">Service Requests</span>
                     </div>
-                    <div class="row g-3 mb-4">
+                    <div class="row g-3 mb-4 align-items-stretch">
 
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/requests" class="text-decoration-none">
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/requests" class="text-decoration-none h-100 d-block">
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      style="border-left:4px solid #0055b7 !important;background:#fff;">
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -3938,13 +3923,13 @@
                                         </div>
                                         <div class="fw-bold lh-1" style="font-size:1.8rem;color:#0055b7;"><t t-esc="kpi_orders"/></div>
                                     </div>
-                                    <div class="text-muted small fw-semibold">Active Requests</div>
+                                    <div class="text-muted small fw-semibold">All Requests</div>
                                 </div>
                             </a>
                         </div>
 
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/bundles" class="text-decoration-none">
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/requests?type=retainer" class="text-decoration-none">
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      style="border-left:4px solid #198754 !important;background:#fff;">
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -3959,8 +3944,8 @@
                             </a>
                         </div>
 
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/requests" class="text-decoration-none">
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/requests?type=onetime" class="text-decoration-none">
                                 <t t-set="pb_c" t-value="'#0891b2' if kpi_project_based > 0 else '#94a3b8'"/>
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      t-attf-style="border-left:4px solid {{ pb_c }} !important;background:#fff;">
@@ -3976,8 +3961,8 @@
                             </a>
                         </div>
 
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/requests" class="text-decoration-none">
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/requests?status=done" class="text-decoration-none">
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      style="border-left:4px solid #94a3b8 !important;background:#fff;">
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -3992,8 +3977,8 @@
                             </a>
                         </div>
 
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/bundles" class="text-decoration-none">
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/requests?type=renewal" class="text-decoration-none">
                                 <t t-set="ren_c" t-value="'#f59e0b' if kpi_renewals > 0 else '#94a3b8'"/>
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      t-attf-style="border-left:4px solid {{ ren_c }} !important;background:#fff;">
@@ -4013,51 +3998,65 @@
 
                     <!-- ══ FINANCE ══════════════════════════════════════════ -->
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <div style="width:3px;height:18px;background:#059669;border-radius:2px;flex-shrink:0;"/>
+                        <div style="width:3px;height:18px;background:#0055b7;border-radius:2px;flex-shrink:0;"/>
                         <span class="fw-bold text-uppercase small" style="letter-spacing:.08em;color:#1e293b;">Finance</span>
                     </div>
-                    <!-- Finance Cards -->
-                    <div class="row g-3 mb-4">
+                    <!-- Finance: single flat row — all cards equal height -->
+                    <div class="row g-3 mb-4 align-items-stretch">
 
-                        <!-- eWallet: gradient featured card -->
-                        <div class="col-12 col-sm-6 col-lg-5">
-                            <div class="border-0 shadow rounded-3 h-100 overflow-hidden"
-                                 style="background:#059669 !important;background-image:linear-gradient(135deg,#059669 0%,#10b981 100%) !important;">
-                                <div class="p-4 text-white d-flex flex-column gap-2">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="fa fa-credit-card fa-lg"/>
-                                            <span class="fw-semibold small" style="opacity:.9;">eWallet Balance</span>
+                        <!-- eWallet -->
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/wallet" class="text-decoration-none h-100 d-block">
+                                <div class="rounded-3 shadow h-100 p-3 d-flex flex-column"
+                                     style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);color:#fff;">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                             style="width:36px;height:36px;background:rgba(255,255,255,.2);">
+                                            <i class="fa fa-credit-card" style="font-size:.8rem;"/>
                                         </div>
-                                        <a href="/my/wallet" class="btn btn-sm fw-semibold"
-                                           style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.4);font-size:.75rem;">
-                                            <i class="fa fa-plus me-1"/>Top-Up
-                                        </a>
+                                        <div class="fw-bold lh-1" style="font-size:1.4rem;">
+                                            <t t-esc="wallet_balance" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                        </div>
                                     </div>
-                                    <div class="fw-bold mt-1" style="font-size:2rem;line-height:1.1;">
-                                        <t t-esc="wallet_balance" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
-                                    </div>
+                                    <div class="small fw-semibold" style="opacity:.9;">eWallet Balance</div>
                                     <t t-if="last_wallet_txn">
-                                        <div class="small" style="opacity:.75;">
-                                            Last:
-                                            <t t-if="last_wallet_txn['amount'] >= 0">+</t><t t-esc="last_wallet_txn['amount']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
-                                            &#160;·&#160;<t t-esc="last_wallet_txn['date']" t-options='{"widget":"date"}'/>
+                                        <div class="small mt-1" style="opacity:.7;">
+                                            Last: <t t-if="last_wallet_txn['amount'] >= 0">+</t><t t-esc="last_wallet_txn['amount']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
                                         </div>
                                     </t>
-                                    <div class="mt-auto pt-1">
-                                        <a href="/my/wallet" class="small text-white text-decoration-none" style="opacity:.8;">
-                                            View history <i class="fa fa-arrow-right ms-1"/>
-                                        </a>
-                                    </div>
+                                    <div class="mt-auto pt-2 small" style="opacity:.8;">Top-Up / History <i class="fa fa-arrow-right ms-1"/></div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
 
-                        <!-- Overdue Amount -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <a href="/my/invoices" class="text-decoration-none">
-                                <t t-set="ov_c" t-value="'#b91c1c' if kpi_overdue > 0 else '#94a3b8'"/>
-                                <div class="card border-0 shadow-sm rounded-3 h-100 p-4"
+                        <!-- Total Due -->
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/invoices" class="text-decoration-none h-100 d-block">
+                                <t t-set="dr_c" t-value="'#b91c1c' if kpi_dr > 0 else '#94a3b8'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
+                                     t-attf-style="border-left:4px solid {{ dr_c }} !important;background:#fff;">
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                             t-attf-style="width:36px;height:36px;background:{{ dr_c }};">
+                                            <i class="fa fa-arrow-down text-white" style="font-size:.8rem;"/>
+                                        </div>
+                                        <div class="fw-bold lh-1" style="font-size:1.4rem;" t-attf-style="color:{{ dr_c }};">
+                                            <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.0f' % kpi_dr"/>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted small fw-semibold">Total Due</div>
+                                    <t t-if="kpi_dr > 0">
+                                        <div class="mt-auto pt-2 small fw-semibold" t-attf-style="color:{{ dr_c }};">View invoices →</div>
+                                    </t>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Overdue -->
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/invoices" class="text-decoration-none h-100 d-block">
+                                <t t-set="ov_c" t-value="'#dc2626' if kpi_overdue > 0 else '#94a3b8'"/>
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      t-attf-style="border-left:4px solid {{ ov_c }} !important;background:#fff;">
                                     <div class="d-flex align-items-center gap-3 mb-2">
                                         <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
@@ -4065,18 +4064,13 @@
                                             <i class="fa fa-clock-o text-white" style="font-size:.8rem;"/>
                                         </div>
                                         <div class="fw-bold lh-1" style="font-size:1.4rem;" t-attf-style="color:{{ ov_c }};">
-                                            <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % kpi_overdue"/>
+                                            <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.0f' % kpi_overdue"/>
                                         </div>
                                     </div>
-                                    <div class="text-muted small fw-semibold">Overdue Amount</div>
-                                    <t t-if="next_payment_date">
-                                        <div class="mt-2 small text-muted">
-                                            <i class="fa fa-calendar me-1"/>Due: <t t-esc="next_payment_date" t-options='{"widget":"date"}'/>
-                                        </div>
-                                    </t>
+                                    <div class="text-muted small fw-semibold">Overdue</div>
                                     <t t-if="kpi_overdue > 0">
-                                        <div class="mt-3">
-                                            <span class="badge fw-semibold px-3 py-2 rounded-pill" style="background:#b91c1c;color:#fff;">Pay Now →</span>
+                                        <div class="mt-auto pt-2">
+                                            <span class="badge fw-semibold px-2 py-1 rounded-pill" style="background:#dc2626;color:#fff;font-size:.7rem;">Pay Now →</span>
                                         </div>
                                     </t>
                                 </div>
@@ -4084,8 +4078,8 @@
                         </div>
 
                         <!-- Open Invoices -->
-                        <div class="col-12 col-sm-6 col-lg-4">
-                            <a href="/my/invoices" class="text-decoration-none">
+                        <div class="col-6 col-md-4 col-xl">
+                            <a href="/my/invoices" class="text-decoration-none h-100 d-block">
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      style="border-left:4px solid #0055b7 !important;background:#fff;">
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -4096,10 +4090,31 @@
                                         <div class="fw-bold lh-1" style="font-size:1.8rem;color:#0055b7;"><t t-esc="kpi_open_invoices"/></div>
                                     </div>
                                     <div class="text-muted small fw-semibold">Open Invoices</div>
-                                    <div class="mt-2 small fw-semibold text-decoration-none" style="color:#0055b7;">View all →</div>
+                                    <div class="mt-auto pt-2 small fw-semibold" style="color:#0055b7;">View all →</div>
                                 </div>
                             </a>
                         </div>
+
+                        <!-- Credit Notes — only when > 0 -->
+                        <t t-if="kpi_cr > 0">
+                            <div class="col-6 col-md-4 col-xl">
+                                <a href="/my/invoices" class="text-decoration-none h-100 d-block">
+                                    <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
+                                         style="border-left:4px solid #059669 !important;background:#fff;">
+                                        <div class="d-flex align-items-center gap-3 mb-2">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                                 style="width:36px;height:36px;background:#059669;">
+                                                <i class="fa fa-arrow-up text-white" style="font-size:.8rem;"/>
+                                            </div>
+                                            <div class="fw-bold lh-1" style="font-size:1.4rem;color:#059669;">
+                                                <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.0f' % kpi_cr"/>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small fw-semibold">Credit Notes</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </t>
 
                     </div>
 
@@ -4108,11 +4123,11 @@
                         <div style="width:3px;height:18px;background:#0055b7;border-radius:2px;flex-shrink:0;"/>
                         <span class="fw-bold text-uppercase small" style="letter-spacing:.08em;color:#1e293b;">People &amp; Work</span>
                     </div>
-                    <div class="row g-3 mb-4">
+                    <div class="row g-3 mb-4 align-items-stretch">
 
                         <!-- Open Projects -->
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/projects" class="text-decoration-none">
+                        <div class="col-6 col-md-3">
+                            <a href="/my/projects" class="text-decoration-none h-100 d-block">
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      style="border-left:4px solid #0055b7 !important;background:#fff;">
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -4128,8 +4143,8 @@
                         </div>
 
                         <!-- Open Tasks -->
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/tasks" class="text-decoration-none">
+                        <div class="col-6 col-md-3">
+                            <a href="/my/tasks" class="text-decoration-none h-100 d-block">
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      style="border-left:4px solid #003d8a !important;background:#fff;">
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -4156,23 +4171,25 @@
                         </div>
 
                         <!-- Employees -->
-                        <div class="col-6 col-sm-4 col-lg">
-                            <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
-                                 style="border-left:4px solid #64748b !important;background:#fff;">
-                                <div class="d-flex align-items-center gap-3 mb-2">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                         style="width:36px;height:36px;background:#64748b;">
-                                        <i class="fa fa-users text-white" style="font-size:.8rem;"/>
+                        <div class="col-6 col-md-3">
+                            <a href="/my/employees" class="text-decoration-none h-100 d-block">
+                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
+                                     style="border-left:4px solid #64748b !important;background:#fff;">
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                             style="width:36px;height:36px;background:#64748b;">
+                                            <i class="fa fa-users text-white" style="font-size:.8rem;"/>
+                                        </div>
+                                        <div class="fw-bold lh-1" style="font-size:1.8rem;color:#64748b;"><t t-esc="kpi_employees"/></div>
                                     </div>
-                                    <div class="fw-bold lh-1" style="font-size:1.8rem;color:#64748b;"><t t-esc="kpi_employees"/></div>
+                                    <div class="text-muted small fw-semibold">Employees</div>
                                 </div>
-                                <div class="text-muted small fw-semibold">Employees</div>
-                            </div>
+                            </a>
                         </div>
 
                         <!-- Open Tickets -->
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/tickets" class="text-decoration-none">
+                        <div class="col-6 col-md-3">
+                            <a href="/my/tickets" class="text-decoration-none h-100 d-block">
                                 <t t-set="tk_c" t-value="'#dc2626' if kpi_tickets > 0 else '#94a3b8'"/>
                                 <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
                                      t-attf-style="border-left:4px solid {{ tk_c }} !important;background:#fff;">
@@ -4184,23 +4201,7 @@
                                         <div class="fw-bold lh-1" style="font-size:1.8rem;" t-attf-style="color:{{ tk_c }};"><t t-esc="kpi_tickets"/></div>
                                     </div>
                                     <div class="text-muted small fw-semibold">Open Tickets</div>
-                                </div>
-                            </a>
-                        </div>
-
-                        <!-- New Ticket -->
-                        <div class="col-6 col-sm-4 col-lg">
-                            <a href="/my/ticket/submit" class="text-decoration-none">
-                                <div class="card border-0 shadow-sm rounded-3 h-100 p-3"
-                                     style="border-left:4px solid #0055b7 !important;background:#fff;">
-                                    <div class="d-flex align-items-center gap-3 mb-2">
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                             style="width:36px;height:36px;background:#0055b7;">
-                                            <i class="fa fa-plus text-white" style="font-size:.8rem;"/>
-                                        </div>
-                                        <div class="fw-semibold lh-1" style="font-size:.95rem;color:#0055b7;">New Ticket</div>
-                                    </div>
-                                    <div class="text-muted small fw-semibold">Submit Support</div>
+                                    <div class="mt-2 small fw-semibold" t-att-style="'color:' + tk_c + ';'">View tickets →</div>
                                 </div>
                             </a>
                         </div>
@@ -4263,45 +4264,53 @@
                             </div>
 
                             <!-- Recent Payments -->
-                            <t t-if="recent_payments">
-                                <div class="card border-0 shadow-sm rounded-3">
-                                    <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3">
-                                        <h6 class="mb-0 fw-semibold"><i class="fa fa-money me-2 text-muted"/>Recent Payments</h6>
-                                        <a href="/my/invoices" class="small fw-semibold text-decoration-none" style="color:#0055b7;">View invoices →</a>
-                                    </div>
-                                    <div class="card-body p-0">
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-3">
+                                    <h6 class="mb-0 fw-semibold"><i class="fa fa-money me-2 text-muted"/>Recent Payments</h6>
+                                    <a href="/my/invoices" class="small fw-semibold text-decoration-none" style="color:#0055b7;">View invoices →</a>
+                                </div>
+                                <div class="card-body p-0">
+                                    <t t-if="recent_payments">
                                         <div class="list-group list-group-flush">
                                             <t t-foreach="recent_payments" t-as="pay">
-                                                <div class="list-group-item px-4 py-3 d-flex align-items-center gap-3">
+                                                <a t-attf-href="/my/invoices/{{ pay.id }}" class="list-group-item list-group-item-action px-4 py-3 d-flex align-items-center gap-3">
                                                     <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                                                          style="width:32px;height:32px;background:#dcfce7;">
                                                         <i class="fa fa-check" style="color:#198754;font-size:.7rem;"/>
                                                     </div>
                                                     <div class="flex-grow-1 min-width-0">
                                                         <div class="small fw-semibold text-truncate">
-                                                            <t t-esc="pay.payment_reference or pay.name"/>
+                                                            <t t-esc="pay.name"/>
                                                         </div>
                                                         <div class="text-muted" style="font-size:.75rem;">
-                                                            <t t-esc="pay.date" t-options='{"widget":"date"}'/>
+                                                            <t t-esc="pay.invoice_date" t-options='{"widget":"date"}'/>
+                                                            &#160;·&#160;
+                                                            <span class="badge rounded-pill" style="background:#dcfce7;color:#14532d;font-size:.65rem;">Paid</span>
                                                         </div>
                                                     </div>
                                                     <div class="fw-semibold small" style="color:#198754;">
-                                                        <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % pay.amount"/>
+                                                        <t t-esc="currency.symbol or currency.name"/>&#160;<t t-esc="'%.2f' % pay.amount_total"/>
                                                     </div>
-                                                </div>
+                                                </a>
                                             </t>
                                         </div>
-                                    </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa fa-money fa-lg mb-2 d-block opacity-50"/>
+                                            <p class="small mb-0">No paid invoices yet.</p>
+                                        </div>
+                                    </t>
                                 </div>
-                            </t>
+                            </div>
 
                             <!-- Upcoming Subscription Invoices -->
-                            <t t-if="upcoming_subs">
-                                <div class="card border-0 shadow-sm rounded-3">
-                                    <div class="card-header bg-white border-bottom py-3">
-                                        <h6 class="mb-0 fw-semibold"><i class="fa fa-calendar me-2 text-muted"/>Upcoming Invoice Dates (30 days)</h6>
-                                    </div>
-                                    <div class="card-body p-0">
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h6 class="mb-0 fw-semibold"><i class="fa fa-calendar me-2 text-muted"/>Upcoming Invoice Dates (30 days)</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <t t-if="upcoming_subs">
                                         <div class="list-group list-group-flush">
                                             <t t-foreach="upcoming_subs" t-as="us">
                                                 <a t-attf-href="/my/requests/{{ us['order_id'] }}" class="list-group-item list-group-item-action px-4 py-3 d-flex align-items-center gap-3">
@@ -4318,9 +4327,15 @@
                                                 </a>
                                             </t>
                                         </div>
-                                    </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa fa-calendar-check-o fa-lg mb-2 d-block opacity-50"/>
+                                            <p class="small mb-0">No renewals due in the next 30 days.</p>
+                                        </div>
+                                    </t>
                                 </div>
-                            </t>
+                            </div>
 
                         </div>
 
@@ -4365,6 +4380,10 @@
                                        style="background:#fef2f2;color:#dc3545;border:0;">
                                         <i class="fa fa-ticket me-2"/>Support Tickets
                                     </a>
+                                    <a href="/my/ticket/submit" class="btn btn-sm w-100 text-start fw-semibold rounded-2"
+                                       style="background:#fef2f2;color:#dc3545;border:0;">
+                                        <i class="fa fa-plus me-2"/>Submit New Ticket
+                                    </a>
                                 </div>
                             </div>
 
@@ -4378,8 +4397,8 @@
                                             <p class="small mb-2" style="color:#78350f;">
                                                 <strong t-esc="kpi_renewals"/> subscription(s) renew within 30 days.
                                             </p>
-                                            <a href="/my/bundles" class="btn btn-sm fw-semibold"
-                                               style="background:#f59e0b;color:#fff;border:0;">Review Bundles</a>
+                                            <a href="/my/requests?type=renewal" class="btn btn-sm fw-semibold"
+                                               style="background:#f59e0b;color:#fff;border:0;">Review Renewals</a>
                                         </div>
                                     </div>
                                 </div>
