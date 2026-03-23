@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Payment Provider: N-Genius',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.0.1',
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': 'N-Genius Online Hosted Payment Page integration for the GCC/MENA region.',
