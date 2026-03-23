@@ -46,5 +46,26 @@
             <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
             <field name="groups" eval="[(4, ref('base.group_user'))]"/>
         </record>
+
+        <record id="rule_company_wink_bundle" model="ir.rule">
+            <field name="name">Bundle Package: Multi-Company</field>
+            <field name="model_id" ref="model_wink_bundle"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="rule_company_wink_bundle_tier" model="ir.rule">
+            <field name="name">Bundle Tier: Multi-Company</field>
+            <field name="model_id" ref="model_wink_bundle_tier"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="rule_company_wink_bundle_tier_item" model="ir.rule">
+            <field name="name">Bundle Tier Item: Multi-Company</field>
+            <field name="model_id" ref="model_wink_bundle_tier_item"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
     </data>
 </odoo>

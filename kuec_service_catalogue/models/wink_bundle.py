@@ -24,6 +24,14 @@ class WinkBundle(models.Model):
         default=True,
         help='Archived bundles are hidden from portal and new requests.',
     )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        required=True,
+        default=lambda self: self.env.company,
+        index=True,
+        help='Company this bundle package belongs to. Controls multi-company visibility.',
+    )
     tier_ids = fields.One2many(
         'wink.bundle.tier',
         'bundle_id',
@@ -205,6 +213,15 @@ class WinkBundleTier(models.Model):
         index=True,
         help='Parent bundle package this tier belongs to.',
     )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='bundle_id.company_id',
+        store=True,
+        index=True,
+        readonly=True,
+        help='Company this tier belongs to, derived from the parent bundle.',
+    )
     product_variant_id = fields.Many2one(
         'product.product',
         string='Mapped Product Variant',
@@ -320,6 +337,15 @@ class WinkBundleTierItem(models.Model):
         ondelete='cascade',
         index=True,
         help='Parent tier this service item belongs to.',
+    )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='tier_id.company_id',
+        store=True,
+        index=True,
+        readonly=True,
+        help='Company this tier item belongs to, derived from the parent tier.',
     )
     # B-4: Related field for grouping in comparison matrix
     bundle_id = fields.Many2one(
