@@ -25,6 +25,15 @@ class WinkBundleEntitlement(models.Model):
         index=True,
         help='Parent sale order this entitlement belongs to.',
     )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='order_id.company_id',
+        store=True,
+        index=True,
+        readonly=True,
+        help='Company this entitlement belongs to, derived from the parent sale order.',
+    )
     tier_id = fields.Many2one(
         'wink.bundle.tier',
         string='Bundle Tier',
@@ -275,6 +284,34 @@ class WinkBundleEntitlement(models.Model):
             'wink_entitlement_id': self.id,
         }
         new_line = self.env['sale.order.line'].sudo().create(line_vals)
+
+        # Gov charges: create a SEPARATE order line so the service activation
+        # line keeps its clean name and zero price.
+        # Known mode:   price computed immediately → line is invoiceable at once.
+        # Unknown mode: price_unit=0 → coordinator sets amount later.
+        # The gov charge line shares wink_entitlement_id with the service line
+        # so it appears in activated_line_ids but is filtered out of the portal
+        # activation display (filtered by is_gov_charge_pending).
+        if getattr(self.service_product_id, 'requires_government_charges', False):
+            gov_known = getattr(self.service_product_id, 'gov_charge_is_known', False)
+            gov_amount = getattr(self.service_product_id, 'gov_charge_amount', 0.0)
+            gov_per_emp = getattr(self.service_product_id, 'gov_charge_per_employee', 0.0)
+            gov_price = 0.0
+            if gov_known:
+                num_employees = len(employee_ids) if employee_ids else 0
+                total_gov = gov_amount + (num_employees * gov_per_emp)
+                if total_gov > 0:
+                    gov_price = total_gov
+            self.env['sale.order.line'].sudo().create({
+                'order_id': order.id,
+                'product_id': variant.id,
+                'product_uom_qty': 1,
+                'price_unit': gov_price,
+                'name': _('Government Charges — %s') % line_name,
+                'is_gov_charge_pending': True,
+                'wink_entitlement_id': self.id,
+                'wink_service_line_id': new_line.id,
+            })
 
         # WF-BND-001: store employees per activated line
         if employee_ids:

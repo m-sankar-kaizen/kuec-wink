@@ -14,21 +14,21 @@
 
                 <!-- Banners -->
                 <t t-if="topup_success">
-                    <div class="alert alert-success alert-dismissible fade show mb-4">
+                    <div role="status" class="alert alert-success alert-dismissible fade show mb-4">
                         <i class="fa fa-check-circle me-2"/>
                         Top-up successful! Your eWallet balance has been credited.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
                 </t>
                 <t t-if="topup_pending">
-                    <div class="alert alert-warning alert-dismissible fade show mb-4">
+                    <div role="alert" class="alert alert-warning alert-dismissible fade show mb-4">
                         <i class="fa fa-clock-o me-2"/>
                         Payment is being processed. Your balance will update shortly.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
                 </t>
                 <t t-if="request.params.get('error') == 'invalid_amount'">
-                    <div class="alert alert-danger alert-dismissible fade show mb-4">
+                    <div role="alert" class="alert alert-danger alert-dismissible fade show mb-4">
                         <i class="fa fa-exclamation-circle me-2"/>
                         Please enter a valid amount greater than zero.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>

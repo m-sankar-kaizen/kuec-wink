@@ -154,7 +154,7 @@
         <template id="wink_registration_form" name="Request a Service — Create Your Account">
             <t t-call="website.layout">
                 <!-- Product Context Banner -->
-                <div class="wink-request-context alert alert-info m-4">
+                <div role="status" class="wink-request-context alert alert-info m-4">
                     <strong>You are requesting:</strong>
                     <t t-esc="product.name"/>
                 </div>
@@ -172,7 +172,7 @@
                                     <input type="hidden" name="product_id" t-att-value="product.id"/>
 
                                     <!-- Error summary if errors exist -->
-                                    <div t-if="errors" class="alert alert-danger mb-3">
+                                    <div role="alert" t-if="errors" class="alert alert-danger mb-3">
                                         <t t-foreach="errors" t-as="field_name">
                                             <div>
                                                 <t t-esc="errors[field_name]"/>
@@ -414,7 +414,7 @@
                         <!-- Info alert: differs based on whether price is set -->
                         <t t-if="product.price_visibility != 'hidden' and review_display.get('price_str')">
                             <!-- Priced: direct checkout -->
-                            <div class="alert d-flex align-items-start gap-2 mb-3" style="background:#f0f6ff; border:1px solid #c7daf5; color:var(--wink-primary); border-radius:10px;">
+                            <div role="status" class="alert d-flex align-items-start gap-2 mb-3" style="background:#f0f6ff; border:1px solid #c7daf5; color:var(--wink-primary); border-radius:10px;">
                                 <i class="fa fa-credit-card mt-1"/>
                                 <div>
                                     <strong>Ready to checkout.</strong> Submitting will create your order and take you directly to payment.
@@ -423,7 +423,7 @@
                         </t>
                         <t t-else="">
                             <!-- Hidden price / quote flow -->
-                            <div class="alert alert-info d-flex align-items-start gap-2 mb-3" style="border-radius:10px;">
+                            <div role="status" class="alert alert-info d-flex align-items-start gap-2 mb-3" style="border-radius:10px;">
                                 <i class="fa fa-info-circle mt-1"/>
                                 <div>A coordinator will review your request and confirm pricing. You will be notified once it is ready for your approval.</div>
                             </div>
@@ -555,7 +555,7 @@
 
                             <!-- Proration credit (Story 1.12) -->
                             <t t-if="change_proration">
-                                <div class="alert alert-success py-2 mb-2">
+                                <div role="status" class="alert alert-success py-2 mb-2">
                                     <i class="fa fa-calculator me-1"/>
                                     <strong>Estimated Remaining Credit:</strong>
                                     AED <t t-esc="'{:,.2f}'.format(change_proration.get('remaining_value', 0))"/>
@@ -646,7 +646,7 @@
                                 </div>
                             </t>
                             <t t-else="">
-                                <div class="alert alert-warning">No employees in your directory. <a href="/my/employees">Add employees</a> first.</div>
+                                <div role="alert" class="alert alert-warning">No employees in your directory. <a href="/my/employees">Add employees</a> first.</div>
                             </t>
                             <div class="d-flex gap-2">
                                 <a t-attf-href="/my/requests/new?product_id=#{product.id}&amp;step=1" class="btn btn-outline-secondary rounded-xl">Back</a>
@@ -1051,7 +1051,7 @@
                             </t>
                         </div>
                         <!-- When no plans loaded: remind admin to set Recurring Prices on the product -->
-                        <div t-if="product.delivery_model == 'retainer' and not subscription_plans" class="alert alert-info py-2 mb-3">
+                        <div role="status" t-if="product.delivery_model == 'retainer' and not subscription_plans" class="alert alert-info py-2 mb-3">
                             <small>Plan options (Monthly / Yearly) come from this product's <strong>Recurring Prices</strong> tab. Add at least one price line there and save the product — then the plan selector will appear here.</small>
                         </div>
 
@@ -1143,7 +1143,7 @@
                                     <span class="text-muted small ms-1">(opens in new tab — come back here after saving)</span>
                                 </t>
                                 <t t-else="">
-                                    <div class="alert alert-warning py-2 small">
+                                    <div role="alert" class="alert alert-warning py-2 small">
                                         No employees in your directory.
                                         <a href="/my/employees" target="_blank" class="fw-semibold">Add employees</a> (opens in new tab), then refresh this page.
                                     </div>
@@ -1399,7 +1399,7 @@
                         <!-- Min days notice -->
                         <t t-if="min_days_notice and min_days_notice > 0 and (allow_upgrade or allow_downgrade or allow_cancel)">
                             <div class="px-4 pt-3">
-                                <div class="alert alert-info small mb-0 py-2">
+                                <div role="status" class="alert alert-info small mb-0 py-2">
                                     <i class="fa fa-info-circle me-1"/>
                                     Plan changes require at least <strong><t t-esc="min_days_notice"/> days</strong> notice before the period end.
                                 </div>
@@ -1409,7 +1409,7 @@
                         <!-- Policy blocked notice -->
                         <t t-if="not allow_upgrade and not allow_downgrade and not allow_cancel">
                             <div class="px-4 pt-3">
-                                <div class="alert alert-warning small mb-0">
+                                <div role="alert" class="alert alert-warning small mb-0">
                                     <i class="fa fa-lock me-1"/>
                                     <t t-if="change_disallowed_message">
                                         <t t-esc="change_disallowed_message"/>
@@ -2216,7 +2216,7 @@
                     </t>
 
                     <!-- Submission success banner — bundles only (retainer + standalone use action bar) -->
-                    <div t-if="submitted and wink_is_bundle" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
+                    <div role="status" t-if="submitted and wink_is_bundle" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
                         <i class="fa fa-check-circle fa-2x flex-shrink-0"/>
                         <div class="flex-grow-1">
                             <h5 class="mb-1 fw-bold">Request submitted successfully!</h5>
@@ -2252,7 +2252,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
                     <!-- Modern Action Banners -->
-                    <div t-if="order.state in ['draft', 'sent'] and not quote_rejected" class="alert shadow-sm border-0 d-flex align-items-center gap-3 p-4 mb-4 rounded-3"
+                    <div role="status" t-if="order.state in ['draft', 'sent'] and not quote_rejected" class="alert shadow-sm border-0 d-flex align-items-center gap-3 p-4 mb-4 rounded-3"
                          t-att-style="'background:rgba(0,85,183,0.05); color:var(--wink-primary); border-left: 5px solid var(--wink-primary) !important;'">
                         <div class="flex-shrink-0">
                             <i class="fa fa-info-circle fa-2x"/>
@@ -2268,15 +2268,25 @@
                             </t>
                         </div>
                     </div>
-                    <div t-if="submitted and not is_closed_or_cancelled and order.state in ['draft', 'sent']" class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background: #28a745;">
+                    <div role="status" t-if="submitted and not is_closed_or_cancelled and order.state in ['draft', 'sent']" class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background: #28a745;">
                         <i class="fa fa-check-circle fa-2x"/>
                         <div>
                             <h5 class="mb-0 fw-bold">Request successfully submitted!</h5>
                         </div>
                     </div>
+                    <!-- Gov charges submission notice -->
+                    <div role="status" t-if="submitted and product and product.requires_government_charges and not product.gov_charge_is_known and not is_closed_or_cancelled"
+                         class="alert border-0 shadow-sm d-flex align-items-start gap-3 p-4 mb-4 rounded-3"
+                         style="background:#fff3cd;border-left:4px solid #ffc107 !important;">
+                        <i class="fa fa-info-circle fa-lg mt-1 flex-shrink-0" style="color:#856404;"/>
+                        <div>
+                            <div class="fw-bold mb-1" style="color:#856404;font-size:0.92rem;">Government charges apply to this service</div>
+                            <div style="font-size:0.85rem;color:#856404;">The exact amount is being confirmed by our coordinator. You will be notified once it is confirmed and ready for payment.</div>
+                        </div>
+                    </div>
                     </t>
 
-                    <div t-if="quote_rejected" class="alert alert-secondary border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3">
+                    <div role="status" t-if="quote_rejected" class="alert alert-secondary border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3">
                         <i class="fa fa-times-circle fa-2x"/>
                         <div>
                             <h5 class="mb-1 fw-bold">Request Declined</h5>
@@ -2306,6 +2316,36 @@
                     </div>
 
 
+                    <!-- Gov charges status card — visible whenever gov charges exist on this order -->
+                    <div t-if="gov_charge_state != 'none' and not is_closed_or_cancelled" class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                        <div class="d-flex align-items-center gap-3 px-4 py-3"
+                             t-attf-style="background:{{ '#fff3cd' if gov_charge_state == 'pending' else ('#d1ecf1' if gov_charge_state == 'confirmed' else '#d4edda') }};border-bottom:1px solid {{ '#ffc107' if gov_charge_state == 'pending' else ('#bee5eb' if gov_charge_state == 'confirmed' else '#c3e6cb') }};">
+                            <i t-attf-class="fa fa-lg {{ 'fa-clock-o' if gov_charge_state == 'pending' else ('fa-check-circle' if gov_charge_state == 'paid' else 'fa-file-text-o') }}"
+                               t-attf-style="color:{{ '#856404' if gov_charge_state == 'pending' else ('#155724' if gov_charge_state == 'paid' else '#0c5460') }};"/>
+                            <div class="flex-grow-1">
+                                <t t-if="gov_charge_state == 'pending'">
+                                    <div class="fw-bold" style="color:#856404;font-size:0.92rem;">Government Charges — Pending Confirmation</div>
+                                    <div style="color:#856404;font-size:0.8rem;">Our coordinator is confirming the government charge amount. You will be notified once it is ready for payment.</div>
+                                </t>
+                                <t t-elif="gov_charge_state == 'confirmed'">
+                                    <div class="fw-bold" style="color:#0c5460;font-size:0.92rem;">Government Charges Confirmed</div>
+                                    <div style="color:#0c5460;font-size:0.8rem;">Amount due: <strong><t t-esc="'%.2f' % gov_charge_total"/> <t t-esc="gov_charge_currency"/></strong> — please pay to proceed.</div>
+                                </t>
+                                <t t-elif="gov_charge_state == 'paid'">
+                                    <div class="fw-bold" style="color:#155724;font-size:0.92rem;">Government Charges Paid</div>
+                                    <div style="color:#155724;font-size:0.8rem;">Government charges have been received. No further action required.</div>
+                                </t>
+                            </div>
+                            <t t-if="gov_charge_state == 'confirmed'">
+                                <a t-attf-href="/my/requests/{{ order.id }}/pay-gov-charges"
+                                   class="btn btn-sm fw-semibold"
+                                   style="background:#0c5460;color:#fff;font-size:0.8rem;">
+                                    <i class="fa fa-credit-card me-1"/>Pay Gov. Charges
+                                </a>
+                            </t>
+                        </div>
+                    </div>
+
                     <!-- WF-BND-004: Bundle Entitlements (Package) — directly after Order Summary; hide when request is closed/cancelled -->
                     <div t-if="order.wink_entitlement_ids and not is_closed_or_cancelled and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
                         <div class="card-header fw-bold d-flex justify-content-between align-items-center">
@@ -2323,13 +2363,18 @@
                             <small t-else="" class="text-muted fw-normal">Services in your package</small>
                         </div>
                         <div class="card-body p-0">
-                            <div t-if="bundle_requested" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                            <div role="status" t-if="bundle_requested" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
                                 Service activated successfully. A project has been created for delivery.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                            </div>
+                            <div role="status" t-if="request.params.get('gov_paid')" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                                <i class="fa fa-check-circle me-1"/>
+                                Government charges paid successfully from your eWallet.
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                             </div>
 
                             <!-- GOV-001: gov charge pending banner -->
-                            <div t-if="gov_charge_pending" class="alert alert-warning alert-dismissible fade show mx-3 mt-3">
+                            <div role="alert" t-if="gov_charge_pending" class="alert alert-warning alert-dismissible fade show mx-3 mt-3">
                                 <i class="fa fa-university me-2"/>
                                 <strong>Government charge invoice created.</strong>
                                 Pay the invoice below to activate your service — activation will proceed automatically once paid.
@@ -2337,7 +2382,7 @@
                             </div>
 
                             <!-- GOV-001: payment gateway success banner -->
-                            <div t-if="gov_paid" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                            <div role="status" t-if="gov_paid" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
                                 <i class="fa fa-check-circle me-2"/>
                                 <strong>Payment successful!</strong>
                                 Your government charge has been paid and your service has been activated.
@@ -2345,7 +2390,7 @@
                             </div>
 
                             <!-- GOV-001: eWallet payment success banner -->
-                            <div t-if="gov_wallet_paid" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
+                            <div role="status" t-if="gov_wallet_paid" class="alert alert-success alert-dismissible fade show mx-3 mt-3">
                                 <i class="fa fa-check-circle me-2"/>
                                 <strong>eWallet payment successful!</strong>
                                 Your service is being activated.
@@ -2353,7 +2398,7 @@
                             </div>
 
                             <!-- GOV-001: gov charge error banners -->
-                            <div t-if="gov_charge_error == 'insufficient_balance'" class="alert alert-danger alert-dismissible fade show mx-3 mt-3">
+                            <div role="alert" t-if="gov_charge_error == 'insufficient_balance'" class="alert alert-danger alert-dismissible fade show mx-3 mt-3">
                                 <i class="fa fa-exclamation-triangle me-2"/>
                                 <strong>Insufficient eWallet balance.</strong>
                                 <t t-if="gov_charge_error_balance and gov_charge_error_required">
@@ -2363,7 +2408,7 @@
                                 Please top up your wallet or use the Pay Gov Charge button to pay by card.
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                             </div>
-                            <div t-if="gov_charge_error and gov_charge_error != 'insufficient_balance'" class="alert alert-danger alert-dismissible fade show mx-3 mt-3">
+                            <div role="alert" t-if="gov_charge_error and gov_charge_error != 'insufficient_balance'" class="alert alert-danger alert-dismissible fade show mx-3 mt-3">
                                 <i class="fa fa-exclamation-triangle me-2"/>
                                 <strong>Payment error:</strong>
                                 <t t-if="gov_charge_error == 'no_wallet_journal'">eWallet journal is not configured. Please contact support.</t>
@@ -2372,7 +2417,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                             </div>
 
-                            <div t-if="activation_error" class="alert alert-warning alert-dismissible fade show mx-3 mt-3">
+                            <div role="alert" t-if="activation_error" class="alert alert-warning alert-dismissible fade show mx-3 mt-3">
                                 <!-- WF-BND-002 -->
                                 <t t-esc="activation_error"/>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"/>
@@ -2402,6 +2447,34 @@
                                                         </span>
                                                         <span t-if="act.get('is_complete')" class="badge bg-success">Complete</span>
                                                         <span t-else="" class="badge bg-warning text-dark">In progress</span>
+                                                        <!-- Per-activation gov charge status -->
+                                                        <t t-if="act.get('gov_state') == 'pending'">
+                                                            <span class="badge"
+                                                                  style="background:#fff3cd;color:#856404;font-size:.7rem;border:1px solid #ffc107;"
+                                                                  title="Government charges are being confirmed by your coordinator.">
+                                                                <i class="fa fa-clock-o me-1"/>Gov. Charges Pending
+                                                            </span>
+                                                        </t>
+                                                        <t t-elif="act.get('gov_state') == 'confirmed'">
+                                                            <span class="badge"
+                                                                  style="background:#fff3cd;color:#856404;font-size:.7rem;border:1px solid #ffc107;"
+                                                                  t-att-title="'Government charges confirmed: %.2f %s' % (act.get('gov_amount', 0.0), act.get('gov_currency', ''))">
+                                                                <i class="fa fa-exclamation-circle me-1"/>
+                                                                Gov. Charges: <t t-esc="'%.2f' % act.get('gov_amount', 0.0)"/> <t t-esc="act.get('gov_currency', '')"/>
+                                                            </span>
+                                                            <a t-attf-href="/my/requests/#{order.id}/pay-gov-charges"
+                                                               class="badge text-decoration-none"
+                                                               style="background:#198754;color:#fff;font-size:.7rem;border:1px solid #146c43;">
+                                                                <i class="fa fa-credit-card me-1"/>Pay Now
+                                                            </a>
+                                                        </t>
+                                                        <t t-elif="act.get('gov_state') == 'paid'">
+                                                            <span class="badge"
+                                                                  style="background:#d4edda;color:#155724;font-size:.7rem;border:1px solid #c3e6cb;"
+                                                                  title="Government charges have been paid.">
+                                                                <i class="fa fa-university me-1"/>Gov. Charges Paid
+                                                            </span>
+                                                        </t>
                                                     </div>
                                                 </t>
                                             </div>
@@ -2581,32 +2654,55 @@
                                                 </div>
                                             </t>
 
-                                            <!-- GOV-001: Government charge warning section -->
-                                            <t t-if="prereq.get('has_gov_charge')">
+                                            <!-- Gov Charges Notice -->
+                                            <t t-if="ent_m.service_product_id.requires_government_charges">
                                                 <div class="wink-activate-section border-top">
-                                                    <div class="wink-activate-section-title" style="color:#856404;">
-                                                        <i class="fa fa-university me-1"/>Government Charges Apply
+                                                    <div class="wink-activate-section-title">
+                                                        <i class="fa fa-university me-1"/>Government Charges
                                                     </div>
-                                                    <div class="px-3 pb-3">
-                                                        <div class="alert alert-warning py-2 px-3 mb-3" style="font-size:0.82rem;">
-                                                            <i class="fa fa-info-circle me-1"/>
-                                                            This service requires government fees before activation.
-                                                            Submitting will generate a charge invoice — activation proceeds automatically once paid.
+                                                    <t t-if="ent_m.service_product_id.gov_charge_is_known">
+                                                        <!-- Known mode: show amounts + pay-now notice -->
+                                                        <div role="status" class="alert alert-info mx-3 mb-3 py-2 px-3" style="font-size:0.85rem;">
+                                                            <div class="fw-semibold mb-1">
+                                                                <i class="fa fa-info-circle me-1"/>Government charges apply to this service
+                                                            </div>
+                                                            <div class="d-flex flex-column gap-1 mt-1">
+                                                                <t t-if="ent_m.service_product_id.gov_charge_amount">
+                                                                    <span>
+                                                                        <span class="text-muted">Base charge:</span>
+                                                                        <strong class="ms-1">
+                                                                            <t t-esc="'%.2f' % ent_m.service_product_id.gov_charge_amount"/>
+                                                                            <t t-esc="' ' + order.currency_id.name"/>
+                                                                        </strong>
+                                                                    </span>
+                                                                </t>
+                                                                <t t-if="ent_m.service_product_id.requires_employee_selection and ent_m.service_product_id.gov_charge_per_employee">
+                                                                    <span>
+                                                                        <span class="text-muted">Per employee:</span>
+                                                                        <strong class="ms-1">
+                                                                            <t t-esc="'%.2f' % ent_m.service_product_id.gov_charge_per_employee"/>
+                                                                            <t t-esc="' ' + order.currency_id.name"/>
+                                                                        </strong>
+                                                                        <span class="text-muted ms-1">(× selected employees)</span>
+                                                                    </span>
+                                                                </t>
+                                                            </div>
+                                                            <div class="mt-2 border-top pt-2">
+                                                                <i class="fa fa-credit-card me-1 text-success"/>
+                                                                An invoice for the government charges will be generated automatically after activation.
+                                                                You can pay it directly from your portal.
+                                                            </div>
                                                         </div>
-                                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                                            <span class="small text-muted">Charge per employee:</span>
-                                                            <span class="small fw-semibold wink-gov-per-emp"
-                                                                  t-attf-data-amount="#{prereq.get('gov_charge_per_employee') or 0}">
-                                                                <t t-esc="'%.2f' % (prereq.get('gov_charge_per_employee') or 0)"/> AED
-                                                            </span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <!-- Unknown mode: coordinator will confirm -->
+                                                        <div role="alert" class="alert alert-warning mx-3 mb-3 py-2 px-3" style="font-size:0.85rem;">
+                                                            <i class="fa fa-clock-o me-1"/>
+                                                            <strong>Government charges apply</strong> — the coordinator will confirm
+                                                            the exact amount after activation. You will be notified when the amount
+                                                            is confirmed and ready to pay.
                                                         </div>
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <span class="small text-muted">Estimated total:</span>
-                                                            <span class="fw-bold wink-gov-total" style="color:#856404;font-size:0.9rem;">
-                                                                <t t-esc="'%.2f' % (prereq.get('gov_charge_per_employee') or 0)"/> AED
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                    </t>
                                                 </div>
                                             </t>
 
@@ -2856,13 +2952,13 @@
                 <div class="container mt-5 mb-5">
                     <h2 class="mb-4">Complete Payment for <t t-esc="order.name"/></h2>
                     <t t-if="request.params.get('error') == 'wallet_payment_failed'">
-                        <div class="alert alert-danger mb-4">
+                        <div role="alert" class="alert alert-danger mb-4">
                             <i class="fa fa-exclamation-circle me-2"/>
                             eWallet payment could not be processed. Please try again or use another payment method.
                         </div>
                     </t>
                     <t t-if="request.params.get('error') == 'insufficient_wallet'">
-                        <div class="alert alert-warning mb-4">
+                        <div role="alert" class="alert alert-warning mb-4">
                             <i class="fa fa-exclamation-triangle me-2"/>
                             Your eWallet balance is insufficient for this payment.
                         </div>
@@ -2914,7 +3010,7 @@
                                         </form>
                                     </t>
                                     <t t-else="">
-                                        <div class="alert alert-warning mb-0">
+                                        <div role="alert" class="alert alert-warning mb-0">
                                             <i class="fa fa-exclamation-triangle me-2"/>
                                             Insufficient eWallet balance. Please top up or use another payment method below.
                                         </div>
@@ -3325,7 +3421,7 @@
                                 <t t-esc="entitlement.qty_activated"/>/<t t-esc="entitlement.qty_entitled"/> used
                             </p>
                             <t t-if="not docs_ok">
-                                <div class="alert alert-warning mb-3">
+                                <div role="alert" class="alert alert-warning mb-3">
                                     <strong>Required documents missing or not approved:</strong>
                                     <ul class="mb-0 mt-1">
                                         <t t-foreach="pending_docs" t-as="doc_name">
@@ -3373,13 +3469,13 @@
                     <p class="page-subtitle">Submit a request and our team will get back to you.</p>
 
                     <t t-if="request.httprequest.args.get('error') == 'required'">
-                        <div class="alert alert-warning mb-4">Subject and Description are required.</div>
+                        <div role="alert" class="alert alert-warning mb-4">Subject and Description are required.</div>
                     </t>
                     <t t-if="request.httprequest.args.get('error') == 'file_type'">
-                        <div class="alert alert-warning mb-4">Invalid file type. Allowed: PDF, JPG, PNG, DOC, DOCX (max 10 MB).</div>
+                        <div role="alert" class="alert alert-warning mb-4">Invalid file type. Allowed: PDF, JPG, PNG, DOC, DOCX (max 10 MB).</div>
                     </t>
                     <t t-if="request.httprequest.args.get('error') == 'create'">
-                        <div class="alert alert-danger mb-4">Could not create ticket. Please try again.</div>
+                        <div role="alert" class="alert alert-danger mb-4">Could not create ticket. Please try again.</div>
                     </t>
 
                     <div class="card card-premium rounded-2xl overflow-hidden shadow-sm">
@@ -3658,6 +3754,7 @@
                                     <t t-set="done_count" t-value="len([a for a in act_list if a.get('is_complete')])"/>
                                     <t t-set="inprog_count" t-value="len([a for a in act_list if not a.get('is_complete')])"/>
                                     <t t-set="ent_ratings" t-value="bd.get('ent_rating_map', {}).get(ent.id, [])"/>
+                                    <t t-set="gov_info" t-value="bd.get('gov_charge_map', {}).get(ent.id, {'state': 'none'})"/>
 
                                     <div class="wb-svc-row">
                                         <!-- Icon -->
@@ -3693,6 +3790,28 @@
 
                                         <!-- Action -->
                                         <div class="wb-svc-actions">
+                                            <!-- Gov charge status badge -->
+                                            <t t-if="gov_info['state'] == 'pending'">
+                                                <span class="badge"
+                                                      style="background:#fff3cd;color:#856404;font-size:.7rem;border:1px solid #ffc107;"
+                                                      title="The government charge for this service is being confirmed by your coordinator.">
+                                                    <i class="fa fa-clock-o me-1"/>Gov. Charges Pending
+                                                </span>
+                                            </t>
+                                            <t t-elif="gov_info['state'] == 'set'">
+                                                <span class="badge"
+                                                      style="background:#d1ecf1;color:#0c5460;font-size:.7rem;border:1px solid #bee5eb;"
+                                                      t-attf-title="Government charge confirmed: #{gov_info['amount']} #{gov_info['currency']}. Invoice will follow.">
+                                                    <i class="fa fa-check-circle me-1"/>Gov. Charges: <t t-esc="gov_info['amount']"/> <t t-esc="gov_info['currency']"/>
+                                                </span>
+                                            </t>
+                                            <t t-elif="gov_info['state'] == 'paid'">
+                                                <span class="badge"
+                                                      style="background:#d4edda;color:#155724;font-size:.7rem;border:1px solid #c3e6cb;"
+                                                      title="Government charges have been paid.">
+                                                    <i class="fa fa-university me-1"/>Gov. Charges Paid
+                                                </span>
+                                            </t>
                                             <!-- I-3: Rating badge (shown when task is done) -->
                                             <t t-if="ent_ratings">
                                                 <t t-set="ent_r" t-value="ent_ratings[0]"/>
@@ -4535,6 +4654,127 @@
                     </div>
 
                 </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- ══════════════════════════════════════════════════════════════════
+             Gov Charges Payment Choice Page
+             Route: GET /my/requests/<order_id>/gov-charges-payment
+             Shows: invoice amount, eWallet balance, pay-with-wallet vs card
+        ═══════════════════════════════════════════════════════════════════ -->
+        <template id="wink_gov_charges_payment_page" name="WINK Gov Charges Payment">
+            <t t-call="website.layout">
+                <div class="container py-5" style="max-width:560px;">
+
+                    <!-- Header -->
+                    <div class="mb-4">
+                        <a t-attf-href="/my/requests/#{order.id}" class="text-muted small">
+                            <i class="fa fa-arrow-left me-1"/>Back to request
+                        </a>
+                        <h4 class="mt-2 fw-bold">Pay Government Charges</h4>
+                        <p class="text-muted small mb-0">
+                            Reference: <strong><t t-esc="invoice.name"/></strong>
+                        </p>
+                    </div>
+
+                    <!-- Amount card -->
+                    <div class="card border-0 shadow-sm mb-4" style="background:#f8f9fc;">
+                        <div class="card-body d-flex justify-content-between align-items-center py-3 px-4">
+                            <div>
+                                <div class="text-muted small">Amount Due</div>
+                                <div class="fs-4 fw-bold" style="color:var(--wink-primary,#2d2d7c);">
+                                    <t t-esc="'%.2f' % invoice.amount_residual"/>
+                                    <span class="fs-6 fw-normal ms-1"><t t-esc="wallet_currency"/></span>
+                                </div>
+                            </div>
+                            <i class="fa fa-university fa-2x text-muted opacity-50"/>
+                        </div>
+                    </div>
+
+                    <!-- Error / success banners -->
+                    <t t-if="error == 'insufficient_balance'">
+                        <div role="alert" class="alert alert-warning mb-3">
+                            <i class="fa fa-exclamation-triangle me-1"/>
+                            Insufficient eWallet balance. Please top up your wallet or pay by card.
+                        </div>
+                    </t>
+                    <t t-elif="error == 'no_wallet_journal'">
+                        <div role="alert" class="alert alert-danger mb-3">
+                            <i class="fa fa-times-circle me-1"/>
+                            eWallet is not configured. Please pay by card or contact support.
+                        </div>
+                    </t>
+                    <t t-elif="error == 'payment_failed'">
+                        <div role="alert" class="alert alert-danger mb-3">
+                            <i class="fa fa-times-circle me-1"/>
+                            Payment failed. Please try again or use a different method.
+                        </div>
+                    </t>
+                    <t t-elif="success == 'already_paid'">
+                        <div role="status" class="alert alert-success mb-3">
+                            <i class="fa fa-check-circle me-1"/>
+                            This invoice has already been paid.
+                        </div>
+                    </t>
+
+                    <!-- Payment options -->
+                    <div class="d-flex flex-column gap-3">
+
+                        <!-- eWallet option -->
+                        <t t-if="ewallet_available">
+                            <div class="card border shadow-sm">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="fw-semibold">
+                                            <i class="fa fa-wallet me-2" style="color:var(--wink-primary,#2d2d7c);"/>
+                                            Pay with eWallet
+                                        </div>
+                                        <span class="badge rounded-pill"
+                                              style="background:#e8eaf6;color:#2d2d7c;font-size:.78rem;">
+                                            Balance: <t t-esc="'%.2f' % wallet_balance"/> <t t-esc="wallet_currency"/>
+                                        </span>
+                                    </div>
+                                    <t t-if="wallet_balance >= invoice.amount_residual">
+                                        <form method="post"
+                                              t-attf-action="/my/requests/#{order.id}/gov-charges-payment/wallet">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <input type="hidden" name="invoice_id" t-att-value="invoice.id"/>
+                                            <button type="submit" class="btn btn-primary w-100"
+                                                    style="background:var(--wink-primary,#2d2d7c);border-color:var(--wink-primary,#2d2d7c);">
+                                                <i class="fa fa-check me-2"/>
+                                                Pay <t t-esc="'%.2f' % invoice.amount_residual"/> <t t-esc="wallet_currency"/> from eWallet
+                                            </button>
+                                        </form>
+                                    </t>
+                                    <t t-else="">
+                                        <div role="alert" class="alert alert-warning py-2 mb-0" style="font-size:.85rem;">
+                                            <i class="fa fa-exclamation-triangle me-1"/>
+                                            Your eWallet balance (<t t-esc="'%.2f' % wallet_balance"/> <t t-esc="wallet_currency"/>)
+                                            is less than the amount due. Please top up or pay by card.
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Card / online payment option -->
+                        <div class="card border shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="fw-semibold mb-3">
+                                    <i class="fa fa-credit-card me-2 text-secondary"/>
+                                    Pay by Card / Online
+                                </div>
+                                <a t-attf-href="/my/invoices/#{invoice.id}"
+                                   class="btn btn-outline-primary w-100">
+                                    <i class="fa fa-external-link me-2"/>
+                                    Continue to Secure Payment
+                                </a>
+                            </div>
+                        </div>
+
+                    </div><!-- /payment options -->
+
                 </div>
             </t>
         </template>

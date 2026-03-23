@@ -32,6 +32,14 @@ class PaymentProvider(models.Model):
         groups='base.group_system',
         help='The unique outlet reference ID assigned to your merchant account in the N-Genius portal.',
     )
+    ngenius_webhook_secret = fields.Char(
+        string='Webhook Signing Secret',
+        groups='base.group_system',
+        help='Shared secret used to validate incoming webhook notifications via HMAC-SHA256. '
+             'Set this to the value configured in the N-Genius merchant portal under '
+             'Webhooks → Signing Secret. Leave empty to skip signature validation '
+             '(not recommended in production).',
+    )
 
     # === HELPERS === #
 

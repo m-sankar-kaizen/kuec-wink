@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields
+from odoo import models, fields, api
 from odoo.exceptions import ValidationError
 from odoo.tools.translate import _
 
@@ -27,6 +27,68 @@ class SaleOrderLineBundle(models.Model):
         help='Links this activated line back to its bundle '
              'entitlement record.',
     )
+    is_gov_charge_pending = fields.Boolean(
+        string='Gov. Charges Pending',
+        default=False,
+        help='Flags this activation line as carrying government charges. '
+             'Update the unit price to the confirmed government amount to make it invoiceable.',
+    )
+    wink_service_line_id = fields.Many2one(
+        'sale.order.line',
+        string='Service Activation Line',
+        ondelete='set null',
+        help='For gov charge lines: points to the sibling service activation '
+             'line created in the same action_activate() call. Used to show '
+             'per-activation gov charge status in the portal.',
+    )
+
+    def write(self, vals):
+        """Notify the customer when coordinator confirms the gov charge amount.
+
+        Workflow:
+            1. Identify lines that are gov charge pending with price_unit currently 0.
+            2. Run super().write(vals).
+            3. For any such line that now has price_unit > 0, post a chatter
+               message on the parent order so the customer is informed the
+               amount has been confirmed and an invoice will follow.
+        """
+        pending_zero = {
+            line.id
+            for line in self
+            if line.is_gov_charge_pending and line.price_unit == 0
+        } if 'price_unit' in vals else set()
+
+        result = super().write(vals)
+
+        if pending_zero and vals.get('price_unit', 0) > 0:
+            notified_orders = set()
+            for line in self:
+                if line.id in pending_zero and line.order_id.id not in notified_orders:
+                    line.order_id.message_post(
+                        body=_(
+                            'Government charges confirmed: %(amount)s %(currency)s.\n'
+                            'An invoice will be issued shortly.',
+                            amount=line.price_unit,
+                            currency=line.order_id.currency_id.name,
+                        )
+                    )
+                    notified_orders.add(line.order_id.id)
+        return result
+
+    @api.depends('is_gov_charge_pending', 'price_unit')
+    def _compute_qty_to_invoice(self):
+        """Treat gov charge lines as order-policy once a price is set.
+
+        Workflow:
+            1. Run the standard qty_to_invoice computation via super().
+            2. For any line flagged as gov charge pending with price > 0,
+               override qty_to_invoice to product_uom_qty - qty_invoiced,
+               making it immediately invoiceable regardless of delivery state.
+        """
+        super()._compute_qty_to_invoice()
+        for line in self:
+            if line.is_gov_charge_pending and line.price_unit > 0:
+                line.qty_to_invoice = line.product_uom_qty - line.qty_invoiced
 
 
 class SaleOrderConfirm(models.Model):

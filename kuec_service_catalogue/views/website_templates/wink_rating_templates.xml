@@ -24,7 +24,7 @@
             </t>
 
             <t t-if="not rating_rows">
-                <div class="alert alert-info mt-3">
+                <div role="status" class="alert alert-info mt-3">
                     No ratings received yet. Ratings appear here once a customer submits feedback on a completed service.
                 </div>
             </t>

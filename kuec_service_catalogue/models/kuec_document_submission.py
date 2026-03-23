@@ -17,6 +17,15 @@ class KuecDocumentSubmission(models.Model):
         ondelete='cascade',
         index=True,
     )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='order_id.company_id',
+        store=True,
+        index=True,
+        readonly=True,
+        help='Company this document submission belongs to, derived from the parent service request.',
+    )
     task_id = fields.Many2one(
         'project.task',
         string='Task',
@@ -138,12 +147,9 @@ class KuecDocumentSubmission(models.Model):
             'rejected': 'Rejected',
         }
         label = state_labels.get(decision, decision)
-        body = (
-            f"Document <strong>{self.requirement_name}</strong> "
-            f"marked as: <strong>{label}</strong>"
-        )
+        body = _('Document %(name)s marked as: %(label)s', name=self.requirement_name, label=label)
         if self.coordinator_notes:
-            body += f"<br/>Notes: {self.coordinator_notes}"
+            body += _('\nNotes: %(notes)s', notes=self.coordinator_notes)
 
         self.order_id.message_post(
             body=body,
