@@ -448,13 +448,18 @@ class KuecCustomerPortal(CustomerPortal):
                                 complete = all(_task_done(t) for t in line_tasks)
                             line_completion[line.id] = complete
                     for ent in entitlements:
+                        # Exclude gov charge lines from the activation display —
+                        # they are separate records but not service activations.
+                        service_lines = ent.activated_line_ids.filtered(
+                            lambda l: not l.is_gov_charge_pending
+                        )
                         ent_activation_map[ent.id] = [
                             {
                                 'name': line.name or '',
                                 'is_complete': line_completion.get(line.id, False),
                                 'index': idx + 1,
                             }
-                            for idx, line in enumerate(ent.activated_line_ids)
+                            for idx, line in enumerate(service_lines)
                         ]
             except Exception:
                 ent_activation_map = {}

@@ -208,26 +208,32 @@ class WinkBundleEntitlement(models.Model):
         }
         new_line = self.env['sale.order.line'].sudo().create(line_vals)
 
-        # Gov charges: flag the activation line when the service requires it.
-        # Known charges: price is pre-configured — compute the total immediately
-        # so the line is invoiceable without coordinator input.
-        #   total = gov_charge_amount + (num_employees × gov_charge_per_employee)
-        # Unknown charges: price is TBD — set price_unit=0 and flag as pending
-        # so the coordinator is alerted to confirm and set the amount.
+        # Gov charges: create a SEPARATE order line so the service activation
+        # line keeps its clean name and zero price.
+        # Known mode:   price computed immediately → line is invoiceable at once.
+        # Unknown mode: price_unit=0 → coordinator sets amount later.
+        # The gov charge line shares wink_entitlement_id with the service line
+        # so it appears in activated_line_ids but is filtered out of the portal
+        # activation display (filtered by is_gov_charge_pending).
         if getattr(self.service_product_id, 'requires_government_charges', False):
             gov_known = getattr(self.service_product_id, 'gov_charge_is_known', False)
             gov_amount = getattr(self.service_product_id, 'gov_charge_amount', 0.0)
             gov_per_emp = getattr(self.service_product_id, 'gov_charge_per_employee', 0.0)
-            gov_write_vals = {
-                'is_gov_charge_pending': True,
-                'name': _('Government Charges — %s') % line_name,
-            }
+            gov_price = 0.0
             if gov_known:
                 num_employees = len(employee_ids) if employee_ids else 0
                 total_gov = gov_amount + (num_employees * gov_per_emp)
                 if total_gov > 0:
-                    gov_write_vals['price_unit'] = total_gov
-            new_line.sudo().write(gov_write_vals)
+                    gov_price = total_gov
+            self.env['sale.order.line'].sudo().create({
+                'order_id': order.id,
+                'product_id': variant.id,
+                'product_uom_qty': 1,
+                'price_unit': gov_price,
+                'name': _('Government Charges — %s') % line_name,
+                'is_gov_charge_pending': True,
+                'wink_entitlement_id': self.id,
+            })
 
         # WF-BND-001: store employees per activated line
         if employee_ids:

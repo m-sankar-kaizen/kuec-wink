@@ -1367,7 +1367,9 @@ class WinkRequest(http.Controller):
                         complete = all(_task_done(t) for t in line_tasks)
                     line_completion[line.id] = complete
             for ent in entitlements:
-                lines = ent.activated_line_ids
+                # Exclude gov charge lines — they are separate records linked via
+                # wink_entitlement_id but should not appear as service activations.
+                lines = ent.activated_line_ids.filtered(lambda l: not l.is_gov_charge_pending)
                 bundle_activation_map[ent.id] = [
                     {
                         'line_id': line.id,
@@ -2327,6 +2329,13 @@ class WinkRequest(http.Controller):
                 f'/my/requests/{order_id}'
                 f'?activation_error={werkzeug.urls.url_quote(msg or "")}'
             )
+
+        # Known gov charges: redirect straight to payment so the customer
+        # can pay the government charge invoice immediately after activation.
+        product = entitlement.service_product_id
+        if (getattr(product, 'requires_government_charges', False) and
+                getattr(product, 'gov_charge_is_known', False)):
+            return request.redirect(f'/my/requests/{order_id}/pay-gov-charges')
 
         return request.redirect(
             f'/my/requests/{order_id}'
