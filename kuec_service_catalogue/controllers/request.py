@@ -1009,6 +1009,27 @@ class WinkRequest(http.Controller):
 
         order = request.env['sale.order'].sudo().create(order_vals)
 
+        # Gov charges — Standalone known mode:
+        # Add the gov charge line immediately so the full amount is visible upfront
+        # and the customer can pay everything in one shot without coordinator input.
+        # Bundle mode skips this — charges are added per-entitlement during activation.
+        # Unknown mode skips this — coordinator confirms the amount later.
+        if not wink_is_bundle and getattr(product, 'requires_government_charges', False):
+            if getattr(product, 'gov_charge_is_known', False):
+                gov_base = getattr(product, 'gov_charge_amount', 0.0)
+                gov_per_emp = getattr(product, 'gov_charge_per_employee', 0.0)
+                num_emp = len(employee_ids) if employee_ids else 0
+                total_gov = gov_base + (num_emp * gov_per_emp)
+                if total_gov > 0:
+                    request.env['sale.order.line'].sudo().create({
+                        'order_id': order.id,
+                        'product_id': variant.id,
+                        'product_uom_qty': 1,
+                        'price_unit': total_gov,
+                        'name': _('Government Charges — %s') % product.name,
+                        'is_gov_charge_pending': True,
+                    })
+
         # Upgrade/downgrade: link new order → old order and post chatter note on both
         if change_from_order:
             order.sudo().write({'wink_change_from_order_id': change_from_order.id})
@@ -1447,6 +1468,37 @@ class WinkRequest(http.Controller):
         except Exception:
             pass
 
+        # Gov charges: compute display state for portal
+        # 'none'      — no gov charge lines on this order
+        # 'pending'   — charge flagged but coordinator has not yet set the amount
+        # 'confirmed' — amount set, customer can pay
+        # 'paid'      — gov charge invoice paid
+        gov_charge_state = 'none'
+        gov_charge_total = 0.0
+        gov_charge_currency = order.currency_id.name if order.currency_id else ''
+        try:
+            gov_lines = order.order_line.filtered(lambda l: l.is_gov_charge_pending)
+            if gov_lines:
+                unpriced = gov_lines.filtered(lambda l: l.price_unit == 0)
+                priced = gov_lines.filtered(lambda l: l.price_unit > 0)
+                if unpriced:
+                    gov_charge_state = 'pending'
+                elif priced:
+                    gov_charge_total = sum(priced.mapped('price_unit'))
+                    # Check if gov charge lines already have an invoice posted and paid
+                    gov_invs = order.invoice_ids.filtered(
+                        lambda inv: inv.state == 'posted' and any(
+                            bool(il.sale_line_ids & priced)
+                            for il in inv.invoice_line_ids
+                        )
+                    )
+                    if gov_invs.filtered(lambda inv: inv.payment_state in ('in_payment', 'paid')):
+                        gov_charge_state = 'paid'
+                    else:
+                        gov_charge_state = 'confirmed'
+        except Exception:
+            pass
+
         # Bundle flag — used in template render context below
         wink_is_bundle = bool(product and getattr(product, 'wink_is_bundle', False))
 
@@ -1630,7 +1682,74 @@ class WinkRequest(http.Controller):
             'pb_tasks': pb_tasks,
             'pb_project': pb_project,
             'rating_token': rating_token,
+            'gov_charge_state': gov_charge_state,
+            'gov_charge_total': gov_charge_total,
+            'gov_charge_currency': gov_charge_currency,
         })
+
+    @http.route('/my/requests/<int:order_id>/pay-gov-charges', type='http', auth='user', website=True, methods=['GET'])
+    def request_pay_gov_charges(self, order_id, **kwargs):
+        """Create (or find) an invoice for confirmed gov charge lines and redirect to payment.
+
+        Workflow:
+            1. Validate the order belongs to the current portal user.
+            2. Find gov charge lines with a confirmed price (price_unit > 0).
+            3. If an unpaid invoice already exists for those lines, use it.
+            4. Otherwise create and post a new invoice for the gov charge lines only.
+            5. Redirect the customer to the standard Odoo invoice portal page.
+        """
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        # Use qty_to_invoice > 0 — our _compute_qty_to_invoice override already
+        # sets this correctly: gov lines with price>0 get qty_to_invoice = qty - qty_invoiced.
+        # This naturally excludes lines already fully invoiced and lines with no price yet.
+        priced_gov_lines = order.order_line.filtered(
+            lambda l: l.is_gov_charge_pending and l.qty_to_invoice > 0
+        )
+        if not priced_gov_lines:
+            return request.redirect(f'/my/requests/{order_id}?error=gov_charge_not_ready')
+
+        # Reuse an existing invoice ONLY if every one of its lines
+        # maps exclusively to gov charge lines — never reuse a full-order invoice.
+        gov_line_ids = set(priced_gov_lines.ids)
+        existing_inv = None
+        for inv in order.invoice_ids.filtered(lambda i: i.state != 'cancel'):
+            product_lines = inv.invoice_line_ids.filtered(
+                lambda il: il.display_type not in ('line_section', 'line_note')
+            )
+            if not product_lines:
+                continue
+            all_gov = all(
+                il.sale_line_ids and all(sl.id in gov_line_ids for sl in il.sale_line_ids)
+                for il in product_lines
+            )
+            if all_gov:
+                existing_inv = inv
+                break
+
+        if existing_inv:
+            invoice = existing_inv.sudo()
+        else:
+            # Build a targeted invoice for ONLY the confirmed gov charge lines.
+            # Using _prepare_invoice() + _prepare_invoice_line() ensures correct
+            # accounts, taxes, journal, and partner are set via standard Odoo logic
+            # without pulling in any other invoiceable lines from the order.
+            inv_vals = order.sudo()._prepare_invoice()
+            inv_vals['invoice_line_ids'] = [
+                (0, 0, line.sudo()._prepare_invoice_line())
+                for line in priced_gov_lines
+            ]
+            invoice = request.env['account.move'].sudo().create(inv_vals)
+
+        if invoice.state == 'draft':
+            invoice.sudo().action_post()
+
+        return request.redirect(f'/my/invoices/{invoice.id}')
 
     @http.route('/my/requests/<int:order_id>/approve', type='http', auth='user', website=True, methods=['POST'], csrf=True)
     def request_approve_quote(self, order_id, **post):

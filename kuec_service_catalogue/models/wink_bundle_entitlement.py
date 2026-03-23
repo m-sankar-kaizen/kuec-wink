@@ -208,6 +208,27 @@ class WinkBundleEntitlement(models.Model):
         }
         new_line = self.env['sale.order.line'].sudo().create(line_vals)
 
+        # Gov charges: flag the activation line when the service requires it.
+        # Known charges: price is pre-configured — compute the total immediately
+        # so the line is invoiceable without coordinator input.
+        #   total = gov_charge_amount + (num_employees × gov_charge_per_employee)
+        # Unknown charges: price is TBD — set price_unit=0 and flag as pending
+        # so the coordinator is alerted to confirm and set the amount.
+        if getattr(self.service_product_id, 'requires_government_charges', False):
+            gov_known = getattr(self.service_product_id, 'gov_charge_is_known', False)
+            gov_amount = getattr(self.service_product_id, 'gov_charge_amount', 0.0)
+            gov_per_emp = getattr(self.service_product_id, 'gov_charge_per_employee', 0.0)
+            gov_write_vals = {
+                'is_gov_charge_pending': True,
+                'name': _('Government Charges — %s') % line_name,
+            }
+            if gov_known:
+                num_employees = len(employee_ids) if employee_ids else 0
+                total_gov = gov_amount + (num_employees * gov_per_emp)
+                if total_gov > 0:
+                    gov_write_vals['price_unit'] = total_gov
+            new_line.sudo().write(gov_write_vals)
+
         # WF-BND-001: store employees per activated line
         if employee_ids:
             new_line.wink_selected_employee_ids = [(6, 0, list(map(int, employee_ids)))]

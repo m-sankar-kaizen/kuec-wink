@@ -498,6 +498,24 @@ class KuecCustomerPortal(CustomerPortal):
             except Exception:
                 pass
 
+            # Build per-entitlement government charge state map.
+            # For each entitlement, inspect its activated lines:
+            #   'none'    — no gov charges on this entitlement
+            #   'pending' — gov charge line exists but price not yet set (awaiting coordinator)
+            #   'set'     — gov charge line exists and amount has been confirmed
+            gov_charge_map = {}
+            for ent in entitlements:
+                gov_line = next(
+                    (l for l in ent.activated_line_ids if l.is_gov_charge_pending),
+                    None,
+                )
+                if not gov_line:
+                    gov_charge_map[ent.id] = {'state': 'none', 'amount': 0.0, 'currency': ''}
+                elif gov_line.price_unit == 0:
+                    gov_charge_map[ent.id] = {'state': 'pending', 'amount': 0.0, 'currency': order.currency_id.name}
+                else:
+                    gov_charge_map[ent.id] = {'state': 'set', 'amount': gov_line.price_unit, 'currency': order.currency_id.name}
+
             bundle_data.append({
                 'order': order,
                 'bundle': bundle_obj,
@@ -509,6 +527,7 @@ class KuecCustomerPortal(CustomerPortal):
                 'bundle_name': bundle_name or (order.wink_source_product_id.name if order.wink_source_product_id else order.name),
                 'ent_activation_map': ent_activation_map,
                 'ent_rating_map': ent_rating_map,
+                'gov_charge_map': gov_charge_map,
             })
 
         open_modal = kw.get('open_modal', '')
@@ -764,37 +783,57 @@ class KuecCustomerPortal(CustomerPortal):
         in_30 = today + timedelta(days=30)
 
         base_domain = [
-            ('message_partner_ids', 'child_of', [partner.id]),
+            ('partner_id', 'child_of', [partner.id]),
             ('wink_is_portal_request', '=', True),
         ]
 
         # ── KPI Row 1: Requests ─────────────────────────────────────────────
         # Single read_group to get state counts — replaces 7 individual search_count calls.
-        state_groups = SaleOrder.read_group(base_domain, fields=['state'], groupby=['state'])
-        state_map = {g['state']: g['state_count'] for g in state_groups}
+        state_map = {}
+        try:
+            with request.env.cr.savepoint():
+                state_groups = SaleOrder.read_group(base_domain, fields=['state'], groupby=['state'])
+                state_map = {g['state']: g['state_count'] for g in state_groups}
+        except Exception:
+            pass
 
         kpi_orders = state_map.get('draft', 0) + state_map.get('sent', 0) + state_map.get('sale', 0)
         kpi_quotes = state_map.get('sent', 0)
         kpi_completed = state_map.get('done', 0)
 
         # These require extra filter conditions — individual counts unavoidable
-        kpi_subscriptions = SaleOrder.search_count(base_domain + [
-            ('state', '=', 'sale'),
-            '|',
-            ('wink_entitlement_ids', '!=', False),
-            ('is_subscription', '=', True),
-        ])
-        kpi_project_based = SaleOrder.search_count(base_domain + [
-            ('state', 'in', ['draft', 'sent', 'sale']),
-            ('is_subscription', '=', False),
-            ('wink_entitlement_ids', '=', False),
-        ])
-        kpi_renewals = SaleOrder.search_count(base_domain + [
-            ('state', '=', 'sale'),
-            '|',
-            '&', ('wink_bundle_end_date', '>=', today), ('wink_bundle_end_date', '<=', in_30),
-            '&', ('next_invoice_date', '>=', today), ('next_invoice_date', '<=', in_30),
-        ])
+        kpi_subscriptions = 0
+        try:
+            with request.env.cr.savepoint():
+                kpi_subscriptions = SaleOrder.search_count(base_domain + [
+                    ('state', '=', 'sale'),
+                    '|',
+                    ('wink_entitlement_ids', '!=', False),
+                    ('is_subscription', '=', True),
+                ])
+        except Exception:
+            pass
+        kpi_project_based = 0
+        try:
+            with request.env.cr.savepoint():
+                kpi_project_based = SaleOrder.search_count(base_domain + [
+                    ('state', 'in', ['draft', 'sent', 'sale']),
+                    ('is_subscription', '=', False),
+                    ('wink_entitlement_ids', '=', False),
+                ])
+        except Exception:
+            pass
+        kpi_renewals = 0
+        try:
+            with request.env.cr.savepoint():
+                kpi_renewals = SaleOrder.search_count(base_domain + [
+                    ('state', '=', 'sale'),
+                    '|',
+                    '&', ('wink_bundle_end_date', '>=', today), ('wink_bundle_end_date', '<=', in_30),
+                    '&', ('next_invoice_date', '>=', today), ('next_invoice_date', '<=', in_30),
+                ])
+        except Exception:
+            pass
 
 
         # ── KPI Row 2: Finance ───────────────────────────────────────────────
@@ -806,41 +845,42 @@ class KuecCustomerPortal(CustomerPortal):
         recent_payments = []
         currency = request.env.company.currency_id
         try:
-            AccountMove = request.env['account.move'].sudo()
-            inv_base = [('partner_id', 'child_of', [partner.id]), ('state', '=', 'posted')]
+            with request.env.cr.savepoint():
+                AccountMove = request.env['account.move'].sudo()
+                inv_base = [('partner_id', 'child_of', [partner.id]), ('state', '=', 'posted')]
 
-            invoices = AccountMove.search(inv_base + [
-                ('move_type', '=', 'out_invoice'),
-                ('payment_state', 'in', ['not_paid', 'partial']),
-            ])
-            kpi_dr = sum(inv.amount_residual for inv in invoices)
-            kpi_open_invoices = len(invoices)
-            if invoices:
-                currency = invoices[0].currency_id or currency
-                # Next payment due date
-                due_dates = [inv.invoice_date_due for inv in invoices if inv.invoice_date_due]
-                if due_dates:
-                    next_payment_date = min(due_dates)
-                # Overdue: past due today
-                kpi_overdue = sum(
-                    inv.amount_residual for inv in invoices
-                    if inv.invoice_date_due and inv.invoice_date_due < today
-                )
+                invoices = AccountMove.search(inv_base + [
+                    ('move_type', '=', 'out_invoice'),
+                    ('payment_state', 'in', ['not_paid', 'partial']),
+                ])
+                kpi_dr = sum(inv.amount_residual for inv in invoices)
+                kpi_open_invoices = len(invoices)
+                if invoices:
+                    currency = invoices[0].currency_id or currency
+                    # Next payment due date
+                    due_dates = [inv.invoice_date_due for inv in invoices if inv.invoice_date_due]
+                    if due_dates:
+                        next_payment_date = min(due_dates)
+                    # Overdue: past due today
+                    kpi_overdue = sum(
+                        inv.amount_residual for inv in invoices
+                        if inv.invoice_date_due and inv.invoice_date_due < today
+                    )
 
-            credit_notes = AccountMove.search(inv_base + [
-                ('move_type', '=', 'out_refund'),
-                ('payment_state', 'in', ['not_paid', 'partial']),
-            ])
-            kpi_cr = sum(cn.amount_residual for cn in credit_notes)
-            if not invoices and credit_notes:
-                currency = credit_notes[0].currency_id or currency
+                credit_notes = AccountMove.search(inv_base + [
+                    ('move_type', '=', 'out_refund'),
+                    ('payment_state', 'in', ['not_paid', 'partial']),
+                ])
+                kpi_cr = sum(cn.amount_residual for cn in credit_notes)
+                if not invoices and credit_notes:
+                    currency = credit_notes[0].currency_id or currency
 
-            # Recent payments — use paid invoices so portal payments via
-            # payment.transaction are included (they don't always create account.payment)
-            recent_payments = AccountMove.search(inv_base + [
-                ('move_type', '=', 'out_invoice'),
-                ('payment_state', 'in', ['paid', 'in_payment']),
-            ], order='invoice_date desc', limit=5)
+                # Recent payments — use paid invoices so portal payments via
+                # payment.transaction are included (they don't always create account.payment)
+                recent_payments = AccountMove.search(inv_base + [
+                    ('move_type', '=', 'out_invoice'),
+                    ('payment_state', 'in', ['paid', 'in_payment']),
+                ], order='invoice_date desc', limit=5)
         except Exception:
             pass
 
@@ -850,68 +890,78 @@ class KuecCustomerPortal(CustomerPortal):
         kpi_tasks_done = 0
         task_progress_pct = 0
         try:
-            # Use the portal user's own env (no sudo) so Odoo's project visibility
-            # rules apply — matches exactly what /my/projects shows the customer.
-            kpi_projects = request.env['project.project'].search_count([
-                ('last_update_status', '!=', 'done'),
-            ])
+            with request.env.cr.savepoint():
+                # Use the portal user's own env (no sudo) so Odoo's project visibility
+                # rules apply — matches exactly what /my/projects shows the customer.
+                kpi_projects = request.env['project.project'].search_count([
+                    ('last_update_status', '!=', 'done'),
+                ])
         except Exception:
             pass
         try:
-            Task = request.env['project.task'].sudo()
-            task_domain = [('partner_id', 'child_of', [partner.id])]
-            total_tasks = Task.search_count(task_domain)
-            kpi_tasks_done = Task.search_count(task_domain + [('stage_id.fold', '=', True)])
-            kpi_tasks = total_tasks - kpi_tasks_done
-            if total_tasks:
-                task_progress_pct = round(kpi_tasks_done * 100 / total_tasks)
+            with request.env.cr.savepoint():
+                Task = request.env['project.task'].sudo()
+                task_domain = [('partner_id', 'child_of', [partner.id])]
+                total_tasks = Task.search_count(task_domain)
+                kpi_tasks_done = Task.search_count(task_domain + [('stage_id.fold', '=', True)])
+                kpi_tasks = total_tasks - kpi_tasks_done
+                if total_tasks:
+                    task_progress_pct = round(kpi_tasks_done * 100 / total_tasks)
         except Exception:
             pass
 
         # ── Quotes awaiting approval ─────────────────────────────────────────
-        quotes_to_approve = SaleOrder.search(base_domain + [('state', '=', 'sent')], limit=5)
+        quotes_to_approve = SaleOrder.browse()
+        try:
+            with request.env.cr.savepoint():
+                quotes_to_approve = SaleOrder.search(base_domain + [('state', '=', 'sent')], limit=5)
+        except Exception:
+            pass
 
         # ── Overdue invoices list ─────────────────────────────────────────────
         overdue_invoices = []
         try:
-            overdue_invoices = request.env['account.move'].sudo().search([
-                ('partner_id', 'child_of', [partner.id]),
-                ('move_type', '=', 'out_invoice'),
-                ('state', '=', 'posted'),
-                ('payment_state', 'in', ['not_paid', 'partial']),
-                ('invoice_date_due', '<', today),
-            ], order='invoice_date_due asc', limit=5)
+            with request.env.cr.savepoint():
+                overdue_invoices = request.env['account.move'].sudo().search([
+                    ('partner_id', 'child_of', [partner.id]),
+                    ('move_type', '=', 'out_invoice'),
+                    ('state', '=', 'posted'),
+                    ('payment_state', 'in', ['not_paid', 'partial']),
+                    ('invoice_date_due', '<', today),
+                ], order='invoice_date_due asc', limit=5)
         except Exception:
             pass
 
         # ── Bundle entitlement usage ─────────────────────────────────────────
         bundle_entitlements = []
         try:
-            Entitlement = request.env['wink.bundle.entitlement'].sudo()
-            active_ents = Entitlement.search([
-                ('order_id', 'in', SaleOrder.search(base_domain + [('state', '=', 'sale')]).ids),
-                ('state', 'in', ['available', 'fully_activated']),
-                ('qty_entitled', '>', 0),
-            ], limit=8)
-            for ent in active_ents:
-                pct = round(ent.qty_activated * 100 / ent.qty_entitled) if ent.qty_entitled else 0
-                bundle_entitlements.append({
-                    'name': ent.service_product_id.name,
-                    'activated': ent.qty_activated,
-                    'entitled': ent.qty_entitled,
-                    'pct': pct,
-                    'order_id': ent.order_id.id,
-                })
+            with request.env.cr.savepoint():
+                Entitlement = request.env['wink.bundle.entitlement'].sudo()
+                active_ents = Entitlement.search([
+                    ('order_id', 'in', SaleOrder.search(base_domain + [('state', '=', 'sale')]).ids),
+                    ('state', 'in', ['available', 'fully_activated']),
+                    ('qty_entitled', '>', 0),
+                ], limit=8)
+                for ent in active_ents:
+                    pct = round(ent.qty_activated * 100 / ent.qty_entitled) if ent.qty_entitled else 0
+                    bundle_entitlements.append({
+                        'name': ent.service_product_id.name,
+                        'activated': ent.qty_activated,
+                        'entitled': ent.qty_entitled,
+                        'pct': pct,
+                        'order_id': ent.order_id.id,
+                    })
         except Exception:
             pass
 
         # ── Employee directory count ──────────────────────────────────────────
         kpi_employees = 0
         try:
-            kpi_employees = request.env['kuec.employee.directory'].sudo().search_count([
-                ('partner_id', '=', partner.id),
-                ('active', '=', True),
-            ])
+            with request.env.cr.savepoint():
+                kpi_employees = request.env['kuec.employee.directory'].sudo().search_count([
+                    ('partner_id', '=', partner.id),
+                    ('active', '=', True),
+                ])
         except Exception:
             pass
 
@@ -919,48 +969,52 @@ class KuecCustomerPortal(CustomerPortal):
         wallet_balance = 0.0
         last_wallet_txn = None
         try:
-            wallet_balance = float(partner.sudo().wink_wallet_balance or 0.0)
+            with request.env.cr.savepoint():
+                wallet_balance = float(partner.sudo().wink_wallet_balance or 0.0)
         except Exception:
             pass
         try:
-            last_txn = request.env['kuec.wallet.transaction'].sudo().search([
-                ('partner_id', '=', partner.id),
-                ('state', '=', 'done'),
-            ], order='create_date desc', limit=1)
-            if last_txn:
-                last_wallet_txn = {
-                    'type': last_txn.transaction_type,
-                    'amount': last_txn.amount,
-                    'date': last_txn.date,
-                }
+            with request.env.cr.savepoint():
+                last_txn = request.env['kuec.wallet.transaction'].sudo().search([
+                    ('partner_id', '=', partner.id),
+                    ('state', '=', 'done'),
+                ], order='create_date desc', limit=1)
+                if last_txn:
+                    last_wallet_txn = {
+                        'type': last_txn.transaction_type,
+                        'amount': last_txn.amount,
+                        'date': last_txn.date,
+                    }
         except Exception:
             pass
 
         # ── Helpdesk tickets ──────────────────────────────────────────────────
         kpi_tickets = 0
         try:
-            kpi_tickets = request.env['helpdesk.ticket'].sudo().search_count([
-                ('partner_id', 'child_of', [partner.id]),
-                ('stage_id.is_close', '=', False),
-            ])
+            with request.env.cr.savepoint():
+                kpi_tickets = request.env['helpdesk.ticket'].sudo().search_count([
+                    ('partner_id', 'child_of', [partner.id]),
+                    ('stage_id.is_close', '=', False),
+                ])
         except Exception:
             pass
 
         # ── Upcoming subscription invoice dates ───────────────────────────────
         upcoming_subs = []
         try:
-            subs = SaleOrder.search(base_domain + [
-                ('state', '=', 'sale'),
-                ('next_invoice_date', '>=', today),
-                ('next_invoice_date', '<=', in_30),
-            ], order='next_invoice_date asc', limit=5)
-            for s in subs:
-                upcoming_subs.append({
-                    'order_id': s.id,
-                    'name': s.wink_source_product_id.name or s.name,
-                    'date': s.next_invoice_date,
-                    'amount': s.recurring_total or s.amount_total,
-                })
+            with request.env.cr.savepoint():
+                subs = SaleOrder.search(base_domain + [
+                    ('state', '=', 'sale'),
+                    ('next_invoice_date', '>=', today),
+                    ('next_invoice_date', '<=', in_30),
+                ], order='next_invoice_date asc', limit=5)
+                for s in subs:
+                    upcoming_subs.append({
+                        'order_id': s.id,
+                        'name': s.wink_source_product_id.name or s.name,
+                        'date': s.next_invoice_date,
+                        'amount': s.recurring_total or s.amount_total,
+                    })
         except Exception:
             pass
 
@@ -968,9 +1022,14 @@ class KuecCustomerPortal(CustomerPortal):
         attention_count = len(quotes_to_approve) + len(overdue_invoices)
 
         # ── Recent 5 requests ─────────────────────────────────────────────────
-        recent_orders = SaleOrder.search(base_domain + [
-            ('state', 'in', ['draft', 'sent', 'sale', 'done']),
-        ], order='write_date desc', limit=5)
+        recent_orders = SaleOrder.browse()
+        try:
+            with request.env.cr.savepoint():
+                recent_orders = SaleOrder.search(base_domain + [
+                    ('state', 'in', ['draft', 'sent', 'sale', 'done']),
+                ], order='write_date desc', limit=5)
+        except Exception:
+            pass
 
         return request.render('kuec_service_catalogue.wink_customer_dashboard', {
             # KPI Row 1

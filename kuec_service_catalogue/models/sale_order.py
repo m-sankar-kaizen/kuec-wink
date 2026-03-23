@@ -16,6 +16,20 @@ def _parse_days_csv(value):
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
+    has_pending_gov_charges = fields.Boolean(
+        compute='_compute_has_pending_gov_charges',
+        string='Has Pending Gov Charges',
+        help='True when at least one order line has government charges pending (price = 0).',
+    )
+
+    @api.depends('order_line.is_gov_charge_pending', 'order_line.price_unit')
+    def _compute_has_pending_gov_charges(self):
+        for order in self:
+            order.has_pending_gov_charges = any(
+                line.is_gov_charge_pending and line.price_unit == 0
+                for line in order.order_line
+            )
+
     def action_confirm(self):
         """EPIC-11: After confirming a WINK portal order, enable customer ratings
         on the auto-created project so evaluations are sent when tasks close.

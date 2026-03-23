@@ -460,6 +460,35 @@ class ProductTemplate(models.Model):
         default=False,
         help="When enabled, the customer must select one or more employees from their directory when submitting a service request for this service."
     )
+    requires_government_charges = fields.Boolean(
+        string='Requires Government Charges',
+        default=False,
+        help="When enabled, activating this service inside a bundle will flag the activation line "
+             "for government charges. The coordinator must update the unit price on that line once "
+             "the charges are confirmed with the government, then create the invoice."
+    )
+    gov_charge_is_known = fields.Boolean(
+        string='Charge Amount is Fixed',
+        default=False,
+        help="When enabled, the government charge amount is pre-configured and known. "
+             "On activation the line will be created with the fixed amount immediately, "
+             "making it invoiceable without waiting for coordinator input."
+    )
+    gov_charge_amount = fields.Float(
+        string='Fixed Gov. Charge Amount',
+        digits='Product Price',
+        default=0.0,
+        help="The fixed government charge amount applied automatically on bundle activation. "
+             "Only used when 'Charge Amount is Fixed' is enabled."
+    )
+    gov_charge_per_employee = fields.Float(
+        string='Gov. Charge per Employee',
+        digits='Product Price',
+        default=0.0,
+        help="Additional government charge applied per selected employee on activation. "
+             "Total = Fixed Gov. Charge Amount + (number of selected employees × this value). "
+             "Only used when 'Charge Amount is Fixed' and 'Requires Employee Selection' are both enabled."
+    )
 
     # EPIC-11: Catalogue report — live count of active subscriptions for this service
     wink_active_order_count = fields.Integer(

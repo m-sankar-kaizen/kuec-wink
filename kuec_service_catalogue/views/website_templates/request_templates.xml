@@ -2274,6 +2274,16 @@
                             <h5 class="mb-0 fw-bold">Request successfully submitted!</h5>
                         </div>
                     </div>
+                    <!-- Gov charges submission notice -->
+                    <div t-if="submitted and product and product.requires_government_charges and not product.gov_charge_is_known and not is_closed_or_cancelled"
+                         class="alert border-0 shadow-sm d-flex align-items-start gap-3 p-4 mb-4 rounded-3"
+                         style="background:#fff3cd;border-left:4px solid #ffc107 !important;">
+                        <i class="fa fa-info-circle fa-lg mt-1 flex-shrink-0" style="color:#856404;"/>
+                        <div>
+                            <div class="fw-bold mb-1" style="color:#856404;font-size:0.92rem;">Government charges apply to this service</div>
+                            <div style="font-size:0.85rem;color:#856404;">The exact amount is being confirmed by our coordinator. You will be notified once it is confirmed and ready for payment.</div>
+                        </div>
+                    </div>
                     </t>
 
                     <div t-if="quote_rejected" class="alert alert-secondary border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3">
@@ -2305,6 +2315,36 @@
                         <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"/>
                     </div>
 
+
+                    <!-- Gov charges status card — visible whenever gov charges exist on this order -->
+                    <div t-if="gov_charge_state != 'none' and not is_closed_or_cancelled" class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                        <div class="d-flex align-items-center gap-3 px-4 py-3"
+                             t-attf-style="background:{{ '#fff3cd' if gov_charge_state == 'pending' else ('#d1ecf1' if gov_charge_state == 'confirmed' else '#d4edda') }};border-bottom:1px solid {{ '#ffc107' if gov_charge_state == 'pending' else ('#bee5eb' if gov_charge_state == 'confirmed' else '#c3e6cb') }};">
+                            <i t-attf-class="fa fa-lg {{ 'fa-clock-o' if gov_charge_state == 'pending' else ('fa-check-circle' if gov_charge_state == 'paid' else 'fa-file-text-o') }}"
+                               t-attf-style="color:{{ '#856404' if gov_charge_state == 'pending' else ('#155724' if gov_charge_state == 'paid' else '#0c5460') }};"/>
+                            <div class="flex-grow-1">
+                                <t t-if="gov_charge_state == 'pending'">
+                                    <div class="fw-bold" style="color:#856404;font-size:0.92rem;">Government Charges — Pending Confirmation</div>
+                                    <div style="color:#856404;font-size:0.8rem;">Our coordinator is confirming the government charge amount. You will be notified once it is ready for payment.</div>
+                                </t>
+                                <t t-elif="gov_charge_state == 'confirmed'">
+                                    <div class="fw-bold" style="color:#0c5460;font-size:0.92rem;">Government Charges Confirmed</div>
+                                    <div style="color:#0c5460;font-size:0.8rem;">Amount due: <strong><t t-esc="'%.2f' % gov_charge_total"/> <t t-esc="gov_charge_currency"/></strong> — please pay to proceed.</div>
+                                </t>
+                                <t t-elif="gov_charge_state == 'paid'">
+                                    <div class="fw-bold" style="color:#155724;font-size:0.92rem;">Government Charges Paid</div>
+                                    <div style="color:#155724;font-size:0.8rem;">Government charges have been received. No further action required.</div>
+                                </t>
+                            </div>
+                            <t t-if="gov_charge_state == 'confirmed'">
+                                <a t-attf-href="/my/requests/{{ order.id }}/pay-gov-charges"
+                                   class="btn btn-sm fw-semibold"
+                                   style="background:#0c5460;color:#fff;font-size:0.8rem;">
+                                    <i class="fa fa-credit-card me-1"/>Pay Gov. Charges
+                                </a>
+                            </t>
+                        </div>
+                    </div>
 
                     <!-- WF-BND-004: Bundle Entitlements (Package) — directly after Order Summary; hide when request is closed/cancelled -->
                     <div t-if="order.wink_entitlement_ids and not is_closed_or_cancelled and order.state in ('sale', 'done')" class="card mt-3 shadow-sm">
@@ -2504,6 +2544,58 @@
                                                         </button>
                                                         <span class="text-muted" style="font-size:0.72rem;">Add in new tab, then Refresh List</span>
                                                     </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- Gov Charges Notice -->
+                                            <t t-if="ent_m.service_product_id.requires_government_charges">
+                                                <div class="wink-activate-section border-top">
+                                                    <div class="wink-activate-section-title">
+                                                        <i class="fa fa-university me-1"/>Government Charges
+                                                    </div>
+                                                    <t t-if="ent_m.service_product_id.gov_charge_is_known">
+                                                        <!-- Known mode: show amounts + pay-now notice -->
+                                                        <div class="alert alert-info mx-3 mb-3 py-2 px-3" style="font-size:0.85rem;">
+                                                            <div class="fw-semibold mb-1">
+                                                                <i class="fa fa-info-circle me-1"/>Government charges apply to this service
+                                                            </div>
+                                                            <div class="d-flex flex-column gap-1 mt-1">
+                                                                <t t-if="ent_m.service_product_id.gov_charge_amount">
+                                                                    <span>
+                                                                        <span class="text-muted">Base charge:</span>
+                                                                        <strong class="ms-1">
+                                                                            <t t-esc="'%.2f' % ent_m.service_product_id.gov_charge_amount"/>
+                                                                            <t t-esc="' ' + order.currency_id.name"/>
+                                                                        </strong>
+                                                                    </span>
+                                                                </t>
+                                                                <t t-if="ent_m.service_product_id.requires_employee_selection and ent_m.service_product_id.gov_charge_per_employee">
+                                                                    <span>
+                                                                        <span class="text-muted">Per employee:</span>
+                                                                        <strong class="ms-1">
+                                                                            <t t-esc="'%.2f' % ent_m.service_product_id.gov_charge_per_employee"/>
+                                                                            <t t-esc="' ' + order.currency_id.name"/>
+                                                                        </strong>
+                                                                        <span class="text-muted ms-1">(× selected employees)</span>
+                                                                    </span>
+                                                                </t>
+                                                            </div>
+                                                            <div class="mt-2 border-top pt-2">
+                                                                <i class="fa fa-credit-card me-1 text-success"/>
+                                                                An invoice for the government charges will be generated automatically after activation.
+                                                                You can pay it directly from your portal.
+                                                            </div>
+                                                        </div>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <!-- Unknown mode: coordinator will confirm -->
+                                                        <div class="alert alert-warning mx-3 mb-3 py-2 px-3" style="font-size:0.85rem;">
+                                                            <i class="fa fa-clock-o me-1"/>
+                                                            <strong>Government charges apply</strong> — the coordinator will confirm
+                                                            the exact amount after activation. You will be notified when the amount
+                                                            is confirmed and ready to pay.
+                                                        </div>
+                                                    </t>
                                                 </div>
                                             </t>
 
@@ -3531,6 +3623,7 @@
                                     <t t-set="done_count" t-value="len([a for a in act_list if a.get('is_complete')])"/>
                                     <t t-set="inprog_count" t-value="len([a for a in act_list if not a.get('is_complete')])"/>
                                     <t t-set="ent_ratings" t-value="bd.get('ent_rating_map', {}).get(ent.id, [])"/>
+                                    <t t-set="gov_info" t-value="bd.get('gov_charge_map', {}).get(ent.id, {'state': 'none'})"/>
 
                                     <div class="wb-svc-row">
                                         <!-- Icon -->
@@ -3566,6 +3659,21 @@
 
                                         <!-- Action -->
                                         <div class="wb-svc-actions">
+                                            <!-- Gov charge status badge -->
+                                            <t t-if="gov_info['state'] == 'pending'">
+                                                <span class="badge"
+                                                      style="background:#fff3cd;color:#856404;font-size:.7rem;border:1px solid #ffc107;"
+                                                      title="The government charge for this service is being confirmed by your coordinator.">
+                                                    <i class="fa fa-clock-o me-1"/>Gov. Charges Pending
+                                                </span>
+                                            </t>
+                                            <t t-elif="gov_info['state'] == 'set'">
+                                                <span class="badge"
+                                                      style="background:#d1ecf1;color:#0c5460;font-size:.7rem;border:1px solid #bee5eb;"
+                                                      t-attf-title="Government charge confirmed: #{gov_info['amount']} #{gov_info['currency']}. Invoice will follow.">
+                                                    <i class="fa fa-check-circle me-1"/>Gov. Charges: <t t-esc="gov_info['amount']"/> <t t-esc="gov_info['currency']"/>
+                                                </span>
+                                            </t>
                                             <!-- I-3: Rating badge (shown when task is done) -->
                                             <t t-if="ent_ratings">
                                                 <t t-set="ent_r" t-value="ent_ratings[0]"/>
