@@ -25,6 +25,15 @@ class WinkBundleEntitlement(models.Model):
         index=True,
         help='Parent sale order this entitlement belongs to.',
     )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='order_id.company_id',
+        store=True,
+        index=True,
+        readonly=True,
+        help='Company this entitlement belongs to, derived from the parent sale order.',
+    )
     tier_id = fields.Many2one(
         'wink.bundle.tier',
         string='Bundle Tier',

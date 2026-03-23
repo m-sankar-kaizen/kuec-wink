@@ -60,10 +60,13 @@ class WinkRating(Rating):
                 try:
                     feedback_text = kwargs.get('feedback', '').strip() or 'None provided'
                     record_sudo.message_post(
-                        body=(
-                            "⚠️ Low rating (%d/5) received for service <b>%s</b>.<br/>"
-                            "Customer feedback: %s"
-                        ) % (rate, record_sudo.name, feedback_text),
+                        body=_(
+                            'Low rating (%(rate)d/5) received for service: %(name)s.\n'
+                            'Customer feedback: %(feedback)s',
+                            rate=rate,
+                            name=record_sudo.name,
+                            feedback=feedback_text,
+                        ),
                         message_type='comment',
                         subtype_xmlid='mail.mt_note',
                     )

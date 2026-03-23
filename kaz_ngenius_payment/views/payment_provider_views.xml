@@ -19,6 +19,11 @@
                         string="Outlet Reference ID"
                         required="code == 'ngenius' and state != 'disabled'"
                     />
+                    <field
+                        name="ngenius_webhook_secret"
+                        string="Webhook Signing Secret"
+                        password="True"
+                    />
                 </group>
             </group>
         </field>

@@ -17,6 +17,15 @@ class WinkBundleChangeLog(models.Model):
         index=True,
         help='The bundle sale order this change belongs to.',
     )
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        related='order_id.company_id',
+        store=True,
+        index=True,
+        readonly=True,
+        help='Company this change log entry belongs to, derived from the parent sale order.',
+    )
     change_type = fields.Selection(
         [('upgrade', 'Upgrade'), ('downgrade', 'Downgrade'), ('cancel', 'Cancellation')],
         string='Change Type',

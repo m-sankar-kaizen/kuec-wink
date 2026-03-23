@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import hashlib
+import hmac
 import logging
 import pprint
 
@@ -53,18 +55,49 @@ class NGeniusController(http.Controller):
         corresponding transaction. The transaction reference is embedded in the URL.
 
         Workflow:
-            1. Parse the JSON notification body.
-            2. Extract the order reference from the URL path parameter.
-            3. Call _handle_notification_data using the embedded reference.
-            4. Return an empty 200 response to acknowledge receipt.
+            1. Validate the HMAC-SHA256 signature when a webhook secret is configured.
+            2. Parse the JSON notification body.
+            3. Extract the order reference from the URL path parameter.
+            4. Call _handle_notification_data using the embedded reference.
+            5. Return an empty 200 response to acknowledge receipt.
 
         Args:
             reference (str): The Odoo transaction reference embedded in the URL.
             **_kwargs: Unused extra query parameters.
 
         Returns:
-            str: Empty string to acknowledge the notification.
+            str: Empty string to acknowledge receipt (200 OK).
+                 Returns 'Forbidden' (403) when signature validation fails.
         """
+        # Signature validation: protect against forged payment status notifications.
+        # N-Genius signs each webhook request with HMAC-SHA256 using the shared
+        # secret configured in the merchant portal. If no secret is stored we skip
+        # validation and log a warning — this mode should NOT be used in production.
+        provider = request.env['payment.provider'].sudo().search(
+            [('code', '=', 'ngenius'), ('state', '!=', 'disabled')], limit=1
+        )
+        webhook_secret = provider.ngenius_webhook_secret if provider else None
+
+        if webhook_secret:
+            raw_body = request.httprequest.get_data()
+            received_sig = request.httprequest.headers.get('X-Ngenius-Hmac-Sha256', '')
+            expected_sig = hmac.new(
+                webhook_secret.encode('utf-8'),
+                raw_body,
+                hashlib.sha256,
+            ).hexdigest()
+            if not hmac.compare_digest(expected_sig, received_sig):
+                _logger.warning(
+                    "N-Genius: Webhook signature mismatch for reference %s — request rejected.",
+                    reference,
+                )
+                return request.make_response('Forbidden', status=403)
+        else:
+            _logger.warning(
+                "N-Genius: No webhook secret configured — signature validation skipped. "
+                "Set ngenius_webhook_secret on the payment provider for production use."
+            )
+
         data = request.get_json_data()
         _logger.info(
             "N-Genius: Received webhook notification for reference %s:\n%s",
