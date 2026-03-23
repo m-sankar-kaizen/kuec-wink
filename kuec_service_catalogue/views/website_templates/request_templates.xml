@@ -3674,6 +3674,13 @@
                                                     <i class="fa fa-check-circle me-1"/>Gov. Charges: <t t-esc="gov_info['amount']"/> <t t-esc="gov_info['currency']"/>
                                                 </span>
                                             </t>
+                                            <t t-elif="gov_info['state'] == 'paid'">
+                                                <span class="badge"
+                                                      style="background:#d4edda;color:#155724;font-size:.7rem;border:1px solid #c3e6cb;"
+                                                      title="Government charges have been paid.">
+                                                    <i class="fa fa-university me-1"/>Gov. Charges Paid
+                                                </span>
+                                            </t>
                                             <!-- I-3: Rating badge (shown when task is done) -->
                                             <t t-if="ent_ratings">
                                                 <t t-set="ent_r" t-value="ent_ratings[0]"/>

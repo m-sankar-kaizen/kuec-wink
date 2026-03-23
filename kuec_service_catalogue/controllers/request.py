@@ -1479,22 +1479,20 @@ class WinkRequest(http.Controller):
         try:
             gov_lines = order.order_line.filtered(lambda l: l.is_gov_charge_pending)
             if gov_lines:
-                unpriced = gov_lines.filtered(lambda l: l.price_unit == 0)
-                priced = gov_lines.filtered(lambda l: l.price_unit > 0)
-                if unpriced:
-                    gov_charge_state = 'pending'
-                elif priced:
-                    gov_charge_total = sum(priced.mapped('price_unit'))
-                    # Check if gov charge lines already have an invoice posted and paid
-                    gov_invs = order.invoice_ids.filtered(
-                        lambda inv: inv.state == 'posted' and any(
-                            bool(il.sale_line_ids & priced)
-                            for il in inv.invoice_line_ids
-                        )
-                    )
-                    if gov_invs.filtered(lambda inv: inv.payment_state in ('in_payment', 'paid')):
-                        gov_charge_state = 'paid'
-                    else:
+                # Only consider lines not yet invoiced — each re-request creates a new
+                # gov charge line; already-paid lines must be ignored so the new
+                # unpaid line drives the state correctly.
+                uninvoiced = gov_lines.filtered(lambda l: l.qty_invoiced == 0)
+                if not uninvoiced:
+                    # All gov charge lines have been invoiced and paid
+                    gov_charge_state = 'paid'
+                else:
+                    unpriced = uninvoiced.filtered(lambda l: l.price_unit == 0)
+                    priced = uninvoiced.filtered(lambda l: l.price_unit > 0)
+                    if unpriced:
+                        gov_charge_state = 'pending'
+                    elif priced:
+                        gov_charge_total = sum(priced.mapped('price_unit'))
                         gov_charge_state = 'confirmed'
         except Exception:
             pass

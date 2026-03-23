@@ -501,20 +501,26 @@ class KuecCustomerPortal(CustomerPortal):
             # Build per-entitlement government charge state map.
             # For each entitlement, inspect its activated lines:
             #   'none'    — no gov charges on this entitlement
-            #   'pending' — gov charge line exists but price not yet set (awaiting coordinator)
-            #   'set'     — gov charge line exists and amount has been confirmed
+            #   'pending' — charge line exists but price not yet set (awaiting coordinator)
+            #   'set'     — charge line exists, amount confirmed, awaiting payment
+            #   'paid'    — all gov charge lines have been invoiced and paid
+            # On re-activation a new charge line is created per activation.
+            # We look at the most-recent UNINVOICED line so prior paid charges
+            # do not mask a pending payment on the latest activation.
             gov_charge_map = {}
             for ent in entitlements:
-                gov_line = next(
-                    (l for l in ent.activated_line_ids if l.is_gov_charge_pending),
-                    None,
-                )
-                if not gov_line:
-                    gov_charge_map[ent.id] = {'state': 'none', 'amount': 0.0, 'currency': ''}
-                elif gov_line.price_unit == 0:
-                    gov_charge_map[ent.id] = {'state': 'pending', 'amount': 0.0, 'currency': order.currency_id.name}
+                all_gov = [l for l in ent.activated_line_ids if l.is_gov_charge_pending]
+                uninvoiced = [l for l in all_gov if l.qty_invoiced == 0]
+                if not uninvoiced:
+                    state = 'paid' if all_gov else 'none'
+                    gov_charge_map[ent.id] = {'state': state, 'amount': 0.0, 'currency': order.currency_id.name}
                 else:
-                    gov_charge_map[ent.id] = {'state': 'set', 'amount': gov_line.price_unit, 'currency': order.currency_id.name}
+                    # Most recent uninvoiced line drives the displayed state
+                    gov_line = max(uninvoiced, key=lambda l: l.id)
+                    if gov_line.price_unit == 0:
+                        gov_charge_map[ent.id] = {'state': 'pending', 'amount': 0.0, 'currency': order.currency_id.name}
+                    else:
+                        gov_charge_map[ent.id] = {'state': 'set', 'amount': gov_line.price_unit, 'currency': order.currency_id.name}
 
             bundle_data.append({
                 'order': order,
