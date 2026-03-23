@@ -2409,7 +2409,7 @@
                                                         <t t-elif="act.get('gov_state') == 'confirmed'">
                                                             <span class="badge"
                                                                   style="background:#fff3cd;color:#856404;font-size:.7rem;border:1px solid #ffc107;"
-                                                                  t-attf-title="Government charges confirmed: #{act.get('gov_amount', 0.0):.2f} #{act.get('gov_currency', '')}">
+                                                                  t-att-title="'Government charges confirmed: %.2f %s' % (act.get('gov_amount', 0.0), act.get('gov_currency', ''))">
                                                                 <i class="fa fa-exclamation-circle me-1"/>
                                                                 Gov. Charges: <t t-esc="'%.2f' % act.get('gov_amount', 0.0)"/> <t t-esc="act.get('gov_currency', '')"/>
                                                             </span>
