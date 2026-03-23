@@ -2398,6 +2398,34 @@
                                                         </span>
                                                         <span t-if="act.get('is_complete')" class="badge bg-success">Complete</span>
                                                         <span t-else="" class="badge bg-warning text-dark">In progress</span>
+                                                        <!-- Per-activation gov charge status -->
+                                                        <t t-if="act.get('gov_state') == 'pending'">
+                                                            <span class="badge"
+                                                                  style="background:#fff3cd;color:#856404;font-size:.7rem;border:1px solid #ffc107;"
+                                                                  title="Government charges are being confirmed by your coordinator.">
+                                                                <i class="fa fa-clock-o me-1"/>Gov. Charges Pending
+                                                            </span>
+                                                        </t>
+                                                        <t t-elif="act.get('gov_state') == 'confirmed'">
+                                                            <span class="badge"
+                                                                  style="background:#fff3cd;color:#856404;font-size:.7rem;border:1px solid #ffc107;"
+                                                                  t-attf-title="Government charges confirmed: #{act.get('gov_amount', 0.0):.2f} #{act.get('gov_currency', '')}">
+                                                                <i class="fa fa-exclamation-circle me-1"/>
+                                                                Gov. Charges: <t t-esc="'%.2f' % act.get('gov_amount', 0.0)"/> <t t-esc="act.get('gov_currency', '')"/>
+                                                            </span>
+                                                            <a t-attf-href="/my/requests/#{order.id}/pay-gov-charges"
+                                                               class="badge text-decoration-none"
+                                                               style="background:#198754;color:#fff;font-size:.7rem;border:1px solid #146c43;">
+                                                                <i class="fa fa-credit-card me-1"/>Pay Now
+                                                            </a>
+                                                        </t>
+                                                        <t t-elif="act.get('gov_state') == 'paid'">
+                                                            <span class="badge"
+                                                                  style="background:#d4edda;color:#155724;font-size:.7rem;border:1px solid #c3e6cb;"
+                                                                  title="Government charges have been paid.">
+                                                                <i class="fa fa-university me-1"/>Gov. Charges Paid
+                                                            </span>
+                                                        </t>
                                                     </div>
                                                 </t>
                                             </div>

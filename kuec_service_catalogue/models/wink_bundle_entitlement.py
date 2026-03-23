@@ -233,6 +233,7 @@ class WinkBundleEntitlement(models.Model):
                 'name': _('Government Charges — %s') % line_name,
                 'is_gov_charge_pending': True,
                 'wink_entitlement_id': self.id,
+                'wink_service_line_id': new_line.id,
             })
 
         # WF-BND-001: store employees per activated line

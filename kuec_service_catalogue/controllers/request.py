@@ -1367,18 +1367,38 @@ class WinkRequest(http.Controller):
                         complete = all(_task_done(t) for t in line_tasks)
                     line_completion[line.id] = complete
             for ent in entitlements:
-                # Exclude gov charge lines — they are separate records linked via
-                # wink_entitlement_id but should not appear as service activations.
+                # Exclude gov charge lines — they are separate sibling records;
+                # build a lookup from service line id → its gov charge sibling.
+                gov_by_service = {
+                    l.wink_service_line_id.id: l
+                    for l in ent.activated_line_ids
+                    if l.is_gov_charge_pending and l.wink_service_line_id
+                }
                 lines = ent.activated_line_ids.filtered(lambda l: not l.is_gov_charge_pending)
-                bundle_activation_map[ent.id] = [
-                    {
+                rows = []
+                for idx, line in enumerate(lines):
+                    gov = gov_by_service.get(line.id)
+                    gov_state = 'none'
+                    gov_amount = 0.0
+                    gov_currency = order.currency_id.name if order.currency_id else ''
+                    if gov:
+                        if gov.qty_invoiced > 0:
+                            gov_state = 'paid'
+                        elif gov.price_unit > 0:
+                            gov_state = 'confirmed'
+                        else:
+                            gov_state = 'pending'
+                        gov_amount = gov.price_unit
+                    rows.append({
                         'line_id': line.id,
                         'name': line.name or line.product_id.name or '',
                         'is_complete': line_completion.get(line.id, False),
                         'index': idx + 1,
-                    }
-                    for idx, line in enumerate(lines)
-                ]
+                        'gov_state': gov_state,
+                        'gov_amount': gov_amount,
+                        'gov_currency': gov_currency,
+                    })
+                bundle_activation_map[ent.id] = rows
         except Exception:
             bundle_activation_map = {}
 

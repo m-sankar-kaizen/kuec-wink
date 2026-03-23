@@ -33,6 +33,14 @@ class SaleOrderLineBundle(models.Model):
         help='Flags this activation line as carrying government charges. '
              'Update the unit price to the confirmed government amount to make it invoiceable.',
     )
+    wink_service_line_id = fields.Many2one(
+        'sale.order.line',
+        string='Service Activation Line',
+        ondelete='set null',
+        help='For gov charge lines: points to the sibling service activation '
+             'line created in the same action_activate() call. Used to show '
+             'per-activation gov charge status in the portal.',
+    )
 
     def write(self, vals):
         """Notify the customer when coordinator confirms the gov charge amount.
