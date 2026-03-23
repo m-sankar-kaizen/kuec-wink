@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # RET-005, RET-008, RET-009
 from datetime import date
-from odoo import http, _
+from odoo import http, fields, _
 from odoo.http import request
 from werkzeug.exceptions import NotFound
 from odoo.addons.sale.controllers.portal import CustomerPortal
@@ -1769,7 +1769,135 @@ class WinkRequest(http.Controller):
         if invoice.state == 'draft':
             invoice.sudo().action_post()
 
-        return request.redirect(f'/my/invoices/{invoice.id}')
+        return request.redirect(f'/my/requests/{order_id}/gov-charges-payment?invoice_id={invoice.id}')
+
+    @http.route('/my/requests/<int:order_id>/gov-charges-payment', type='http', auth='user', website=True, methods=['GET'])
+    def request_gov_charges_payment_page(self, order_id, invoice_id=None, **kwargs):
+        """Show payment method choice page for government charge invoice.
+
+        Displays the invoice amount alongside the customer's eWallet balance and
+        lets them choose between eWallet payment (instant, no redirect) or
+        standard card payment (Odoo native invoice page).
+        """
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        invoice = None
+        if invoice_id:
+            try:
+                invoice = request.env['account.move'].sudo().browse(int(invoice_id))
+                if not invoice.exists() or invoice.partner_id.commercial_partner_id != order.partner_id.commercial_partner_id:
+                    invoice = None
+            except Exception:
+                invoice = None
+
+        if not invoice:
+            return request.redirect(f'/my/requests/{order_id}')
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        wallet_balance = partner.wink_wallet_balance if hasattr(partner, 'wink_wallet_balance') else 0.0
+        wallet_journal = request.env['account.journal'].sudo().search(
+            [('is_ewallet_journal', '=', True), ('company_id', '=', request.env.company.id)], limit=1
+        )
+        ewallet_available = bool(wallet_journal)
+        error = kwargs.get('error', '')
+        success = kwargs.get('success', '')
+
+        return request.render('kuec_service_catalogue.wink_gov_charges_payment_page', {
+            'order': order,
+            'invoice': invoice,
+            'wallet_balance': wallet_balance,
+            'wallet_currency': order.currency_id.name if order.currency_id else '',
+            'ewallet_available': ewallet_available,
+            'error': error,
+            'success': success,
+        })
+
+    @http.route('/my/requests/<int:order_id>/gov-charges-payment/wallet', type='http', auth='user', website=True, methods=['POST'], csrf=True)
+    def request_gov_charges_pay_wallet(self, order_id, invoice_id=None, **post):
+        """Process eWallet payment for a government charge invoice.
+
+        Workflow:
+            1. Validate the invoice belongs to this order and is unpaid.
+            2. Check the customer has sufficient wallet balance.
+            3. Register payment via the WEWL journal (account.payment.register).
+            4. Create a kuec.wallet.transaction debit record.
+            5. Redirect back to the request page with a success message.
+        """
+        import logging as _log
+        _logger_w = _log.getLogger(__name__)
+
+        order = request.env['sale.order'].sudo().search([
+            ('id', '=', order_id),
+            ('partner_id', 'child_of', request.env.user.partner_id.commercial_partner_id.id),
+        ], limit=1)
+        if not order:
+            raise NotFound()
+
+        try:
+            invoice = request.env['account.move'].sudo().browse(int(invoice_id or 0))
+            if not invoice.exists():
+                raise ValueError('Invoice not found')
+        except Exception:
+            return request.redirect(f'/my/requests/{order_id}')
+
+        base_url = f'/my/requests/{order_id}/gov-charges-payment?invoice_id={invoice.id}'
+
+        partner = request.env.user.partner_id.commercial_partner_id
+        wallet_balance = partner.wink_wallet_balance if hasattr(partner, 'wink_wallet_balance') else 0.0
+        amount_due = invoice.amount_residual
+
+        if amount_due <= 0:
+            return request.redirect(f'{base_url}&success=already_paid')
+
+        if wallet_balance < amount_due:
+            return request.redirect(
+                f'{base_url}&error=insufficient_balance'
+            )
+
+        wallet_journal = request.env['account.journal'].sudo().search(
+            [('is_ewallet_journal', '=', True), ('company_id', '=', request.env.company.id)], limit=1
+        )
+        if not wallet_journal:
+            return request.redirect(f'{base_url}&error=no_wallet_journal')
+
+        try:
+            memo = _('Gov. Charges — %s') % (invoice.name or order.name)
+            payment_register = request.env['account.payment.register'].sudo().with_context(
+                active_model='account.move',
+                active_ids=invoice.ids,
+            ).create({
+                'journal_id': wallet_journal.id,
+                'amount': amount_due,
+                'currency_id': invoice.currency_id.id,
+                'communication': memo,
+                'payment_date': fields.Date.today(),
+            })
+            payment_register.action_create_payments()
+
+            payment = invoice.reconciled_payment_ids.filtered(
+                lambda p: p.journal_id == wallet_journal
+            ).sorted('id', reverse=True)[:1]
+            move_id = payment.move_id.id if payment and payment.move_id else False
+
+            request.env['kuec.wallet.transaction'].sudo().create({
+                'partner_id': partner.id,
+                'transaction_type': 'payment',
+                'amount': -amount_due,
+                'description': memo,
+                'currency_id': invoice.currency_id.id,
+                'order_id': order.id,
+                'move_id': move_id,
+            })
+        except Exception:
+            _logger_w.warning('eWallet payment failed for invoice %s', invoice.id, exc_info=True)
+            return request.redirect(f'{base_url}&error=payment_failed')
+
+        return request.redirect(f'/my/requests/{order_id}?gov_paid=1')
 
     @http.route('/my/requests/<int:order_id>/approve', type='http', auth='user', website=True, methods=['POST'], csrf=True)
     def request_approve_quote(self, order_id, **post):
