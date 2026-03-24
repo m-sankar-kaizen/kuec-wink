@@ -526,9 +526,14 @@ class SaleOrderWink(models.Model):
     def _wink_get_tier_monthly_price(self, tier):
         """Return the standard monthly price for a bundle tier (Story 1.12).
 
-        Uses the Monthly Price field set directly on the tier. This is the
-        single source of truth for all refund/charge/credit calculations —
-        the annual discount is always forfeited.
+        Price source priority:
+          1. sale.subscription.pricing where plan is the reference plan
+             (plan_id.kuec_is_reference_plan = True).
+          2. sale.subscription.pricing where plan billing period = 1 month.
+          3. tier.price_monthly fallback (manual override on the tier).
+
+        The annual discount is always forfeited — monthly rate is used for
+        all pro-rata calculations regardless of the customer's active plan.
 
         Args:
             tier (wink.bundle.tier): The tier record to look up.
@@ -536,6 +541,28 @@ class SaleOrderWink(models.Model):
         Returns:
             float: Monthly standard price, or 0.0 if not configured.
         """
+        if tier.product_variant_id:
+            tmpl_id = tier.product_variant_id.product_tmpl_id.id
+            Pricing = self.env['sale.subscription.pricing'].sudo()
+
+            # Priority 1: reference plan
+            pricing = Pricing.search([
+                ('product_template_id', '=', tmpl_id),
+                ('plan_id.kuec_is_reference_plan', '=', True),
+            ], limit=1)
+
+            # Priority 2: 1-month billing period plan
+            if not pricing:
+                pricing = Pricing.search([
+                    ('product_template_id', '=', tmpl_id),
+                    ('plan_id.billing_period_value', '=', 1),
+                    ('plan_id.billing_period_unit', '=', 'month'),
+                ], limit=1)
+
+            if pricing:
+                return float(pricing.price)
+
+        # Priority 3: manual fallback on the tier
         return float(tier.price_monthly) if tier.price_monthly else 0.0
 
     def _wink_bundle_compute_upgrade_charge(self, new_tier):
