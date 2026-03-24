@@ -2,6 +2,7 @@
 import logging
 import math
 import pprint
+import re
 
 from werkzeug import urls as werkzeug_urls
 
@@ -101,8 +102,15 @@ class PaymentTransaction(models.Model):
 
         # N-Genius only allows [a-zA-Z0-9\-]{1,37} for merchantOrderReference.
         # Odoo references like "INV/2026/00036" contain slashes — replace with hyphens.
-        import re
         safe_reference = re.sub(r'[^a-zA-Z0-9\-]', '-', self.reference)[:37]
+
+        # Build the per-order webhook URL with the Odoo reference embedded in the path.
+        # N-Genius calls notificationUrl asynchronously after payment — this lets the
+        # webhook handler locate the transaction without scanning all provider_references.
+        webhook_url = werkzeug_urls.url_join(
+            base_url,
+            f'{NGeniusController._webhook_url}/{safe_reference}',
+        )
 
         payload = {
             'action': 'SALE',
@@ -115,6 +123,7 @@ class PaymentTransaction(models.Model):
                 'redirectUrl': return_url,
                 'cancelUrl': return_url,
                 'skipConfirmationPage': True,
+                'notificationUrl': webhook_url,
             },
         }
 
