@@ -56,14 +56,12 @@ class WinkBundle(models.Model):
     )
     cancel_refund_policy = fields.Selection(
         [
-            ('pro_rata', 'Pro-Rata (annual price)'),
             ('monthly_rate', 'Monthly Rate (yearly discount forfeited)'),
             ('none', 'No Refund'),
         ],
         string='Cancellation Refund Policy',
         default='monthly_rate',
         help='How the refund is calculated when a customer cancels.\n'
-             '• Pro-Rata: refunds the proportion of the annual price for remaining days.\n'
              '• Monthly Rate: refunds using the standard monthly price — yearly discount is forfeited.\n'
              '• No Refund: no credit note is created.',
     )

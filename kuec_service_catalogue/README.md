@@ -42,6 +42,19 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.0 — 2026-03-24
+- [UPDT] Story 1.12: Bundle refund/charge/credit now uses monthly standard price exclusively (`sale.subscription.pricing` reference plan → 1-month plan → `tier.price_monthly` fallback)
+- [UPDT] New `_wink_get_tier_monthly_price()` replaces `_wink_get_tier_effective_price()` — queries `sale.subscription.pricing` correctly (annual discount always forfeited)
+- [FIX] `_wink_bundle_remaining_days()`: period start always derived from `plan_id.billing_period` relative to `next_invoice_date` — fixes stale value after subscription renewal
+- [FIX] Upgrade charge formula: `(new_monthly − old_monthly) / 30 × remaining_days`
+- [FIX] Downgrade credit formula: `(old_monthly − new_monthly) / 30 × remaining_days`
+- [FIX] Cancellation refund formula: `(monthly_price / 30) × remaining_days`
+- [FIX] `wink_cancellation_processed_by` now set on bundle self-service cancellation
+- [FIX] Invoice and credit note lines now include correct `taxes_id` from product
+- [FIX] Credit note `sale_line_ids` now links to original subscription line only (not upgrade charge lines)
+- [UPDT] Removed `pro_rata` from `cancel_refund_policy` selection (Story 1.12 mandates monthly rate)
+- [REF] All inline `from datetime import` and `from odoo import fields` moved to file top
+
 ### 18.0.2.21.1 — 2026-03-23
 - [UPDT] Activation modal now shows a Government Charges notice when the service requires gov charges — known mode displays base amount and per-employee rate with invoice pay notice; unknown mode shows a coordinator-confirmation warning
 

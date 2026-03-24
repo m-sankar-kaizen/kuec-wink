@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # RET-003
 
+from datetime import date as date_cls, timedelta
+
+from dateutil.relativedelta import relativedelta
+
 from odoo import models, fields, api, _, exceptions
 
 class SaleOrderWink(models.Model):
@@ -227,8 +231,7 @@ class SaleOrderWink(models.Model):
     def _wink_remaining_days(self):
         """Return remaining days in current subscription period (0 if not applicable)."""
         self.ensure_one()
-        from datetime import date
-        today = date.today()
+        today = date_cls.today()
         end_date = getattr(self, 'next_date', None) or getattr(self, 'next_invoice_date', None)
         if end_date and end_date > today:
             return (end_date - today).days
@@ -297,8 +300,7 @@ class SaleOrderWink(models.Model):
         ], limit=1)
         if not journal:
             return False
-        from odoo import fields as odoo_fields
-        today = odoo_fields.Date.context_today(self)
+        today = fields.Date.context_today(self)
         taxes = product.taxes_id or self.env['account.tax']
         line_vals = {
             'name': _('Retainer cancellation credit — %s') % (self.name or ''),
@@ -341,8 +343,7 @@ class SaleOrderWink(models.Model):
             raise exceptions.UserError(
                 _('Only coordinators can mark cancellation as processed.')
             )
-        from odoo import fields as odoo_fields
-        now = odoo_fields.Datetime.now()
+        now = fields.Datetime.now()
         user_name = self.env.user.name
         for order in self:
             if not order.wink_cancellation_requested:
@@ -458,54 +459,62 @@ class SaleOrderWink(models.Model):
         return None
 
     def _wink_bundle_remaining_days(self):
-        """Return (remaining_days, total_days) for the CURRENT billing period.
-        Period end = next_invoice_date (or wink_bundle_end_date override).
-        Period start = end minus the subscription plan duration — so it stays
-        accurate after renewal (when start_date would be years in the past).
-        Falls back to wink_bundle_start_date / start_date if no plan is set.
-        Returns (0, 0) when dates are unavailable or period has elapsed."""
+        """Return (remaining_days, total_days) for the current billing period.
+
+        Period end is next_invoice_date (or wink_bundle_end_date manual override).
+        Period start is always derived from the plan's billing period relative to
+        end — this stays correct after renewals (wink_bundle_start_date is only
+        set at activation and becomes stale in subsequent billing cycles).
+        Falls back to wink_bundle_start_date or start_date only when no plan is
+        available. Returns (0, 0) when dates are unavailable or elapsed.
+
+        Returns:
+            tuple[int, int]: (remaining_days, total_days).
+        """
         self.ensure_one()
-        from datetime import date as date_cls
-        from dateutil.relativedelta import relativedelta
         today = date_cls.today()
 
-        # Period end
         end = self.wink_bundle_end_date or self.next_invoice_date
         if not end or end <= today:
             return 0, 0
 
-        # Period start — derive from plan period so it's correct after renewal
-        start = self.wink_bundle_start_date
-        if not start:
-            plan = self.plan_id
-            if plan and plan.billing_period_value and plan.billing_period_unit:
-                unit = plan.billing_period_unit  # 'day', 'week', 'month', 'year'
-                kwargs = {unit + 's': plan.billing_period_value}
-                start = end - relativedelta(**kwargs)
-            else:
-                start = self.start_date
+        # Derive period start from plan billing period — accurate after every renewal
+        plan = self.plan_id
+        if plan and plan.billing_period_value and plan.billing_period_unit:
+            kwargs = {plan.billing_period_unit + 's': plan.billing_period_value}
+            start = end - relativedelta(**kwargs)
+        else:
+            # No plan configured — fall back to stored dates
+            start = self.wink_bundle_start_date or self.start_date
 
         if not start:
             return 0, 0
+
         remaining = (end - today).days
         total = (end - start).days
         return max(remaining, 0), max(total, 1)
 
     def _wink_bundle_compute_refund(self):
-        """Compute prorated refund amount for bundle cancellation based on bundle policy.
+        """Compute the cancellation refund using monthly standard price (Story 1.12).
 
-        Returns dict with: remaining_days, total_days, refund_amount, policy, note.
-        Returns refund_amount=0 when no active period or policy is 'none'.
+        Formula: (monthly_price / 30) × remaining_days
+        The annual discount is always forfeited. Monthly price is sourced from
+        sale.subscription.pricing (reference plan → 1-month plan → tier.price_monthly).
+
+        Returns:
+            dict: remaining_days, refund_amount, policy, note.
+                  refund_amount=0.0 when policy is 'none' or no days remain.
         """
         self.ensure_one()
-        remaining_days, total_days = self._wink_bundle_remaining_days()
+        remaining_days, _ = self._wink_bundle_remaining_days()
         bundle = self._wink_bundle_get_policy()
         tier = self.wink_bundle_tier_id
 
         if not bundle or not tier:
             return {
-                'remaining_days': remaining_days, 'total_days': total_days,
-                'refund_amount': 0.0, 'policy': 'none',
+                'remaining_days': remaining_days,
+                'refund_amount': 0.0,
+                'policy': 'none',
                 'note': 'No bundle or tier configured.',
             }
 
@@ -513,117 +522,143 @@ class SaleOrderWink(models.Model):
 
         if policy == 'none' or remaining_days <= 0:
             return {
-                'remaining_days': remaining_days, 'total_days': total_days,
-                'refund_amount': 0.0, 'policy': policy,
+                'remaining_days': remaining_days,
+                'refund_amount': 0.0,
+                'policy': policy,
                 'note': 'No refund per policy.' if policy == 'none' else 'No remaining days in period.',
             }
 
-        # Base amount: untaxed amount paid (so credit note taxes are computed correctly by Odoo)
-        paid_amount = self.amount_untaxed or 0.0
-
-        if policy == 'monthly_rate':
-            # Use standard monthly price — yearly discount is forfeited on cancellation
-            monthly_price = tier.price_monthly or 0.0
-            if not monthly_price and total_days > 0:
-                # Fallback: derive monthly equivalent from actual paid amount
-                monthly_price = paid_amount / max(total_days / 30.0, 1)
-            daily_rate = monthly_price / 30.0
-            refund_amount = round(daily_rate * remaining_days, 2)
-            # Never refund more than what was paid
-            refund_amount = min(refund_amount, paid_amount)
-            note = (
-                f'Monthly rate policy: ({monthly_price:.2f} / 30) × {remaining_days} days'
-                f' = {refund_amount:.2f} (yearly discount forfeited, capped at untaxed paid amount {paid_amount:.2f})'
-            )
-        else:  # pro_rata
-            refund_ratio = remaining_days / total_days
-            refund_amount = round(paid_amount * refund_ratio, 2)
-            note = (
-                f'Pro-rata: {paid_amount:.2f} × ({remaining_days}/{total_days})'
-                f' = {refund_amount:.2f}'
-            )
+        monthly_price = self._wink_get_tier_monthly_price(tier)
+        refund_amount = round((monthly_price / 30.0) * remaining_days, 2)
 
         return {
             'remaining_days': remaining_days,
-            'total_days': total_days,
             'refund_amount': max(refund_amount, 0.0),
             'policy': policy,
-            'note': note,
+            'note': (
+                f'Monthly rate: ({monthly_price:.2f} / 30) × {remaining_days} days'
+                f' = {refund_amount:.2f} (annual discount forfeited)'
+            ),
         }
 
-    def _wink_get_tier_effective_price(self, tier):
-        """Return effective price for a tier for proration calculations.
-        Prefers tier.price (legacy static). If zero, tries product.pricing
-        linked to the tier's product_variant_id and the order's plan.
-        Help: Used by upgrade/downgrade proration so price source is consistent."""
-        if tier.price is not None and tier.price > 0:
-            return float(tier.price)
+    def _wink_get_tier_monthly_price(self, tier):
+        """Return the standard monthly price for a bundle tier.
+
+        Queries sale.subscription.pricing for the tier's mapped product variant
+        using a reference plan or a 1-month billing plan (Story 1.12: annual
+        discount is always forfeited — monthly rate is used for all calculations).
+
+        Priority:
+            1. sale.subscription.pricing where plan.kuec_is_reference_plan = True
+            2. sale.subscription.pricing where plan.billing_period_value = 1
+               and plan.billing_period_unit = 'month'
+            3. tier.price_monthly (manual override fallback)
+
+        Args:
+            tier (wink.bundle.tier): The tier record to look up.
+
+        Returns:
+            float: Monthly standard price, or 0.0 if not configured.
+        """
         variant = tier.product_variant_id
-        if not variant:
-            return 0.0
-        Pricing = self.env.get('product.pricing')
-        if Pricing is None:
-            return 0.0
-        domain = [('product_variant_ids', 'in', [variant.id])]
-        plan = getattr(self, 'plan_id', None)
-        if plan:
-            domain.append(('recurrence_id', '=', plan.id))
-        pricing = Pricing.sudo().search(domain, limit=1)
-        return float(pricing.price) if pricing else 0.0
+        if variant:
+            Pricing = self.env['sale.subscription.pricing'].sudo()
+            tmpl_id = variant.product_tmpl_id.id
+
+            # 1. Reference plan pricing (highest priority)
+            pricing = Pricing.search([
+                ('product_template_id', '=', tmpl_id),
+                ('plan_id.kuec_is_reference_plan', '=', True),
+            ], limit=1)
+            if pricing:
+                return float(pricing.price)
+
+            # 2. 1-month billing plan pricing
+            pricing = Pricing.search([
+                ('product_template_id', '=', tmpl_id),
+                ('plan_id.billing_period_value', '=', 1),
+                ('plan_id.billing_period_unit', '=', 'month'),
+            ], limit=1)
+            if pricing:
+                return float(pricing.price)
+
+        # 3. Manual fallback
+        return float(tier.price_monthly) if tier.price_monthly else 0.0
 
     def _wink_bundle_compute_upgrade_charge(self, new_tier):
-        """Compute pro-rata charge amount for upgrading from current tier to new_tier.
-        Returns dict: remaining_days, total_days, charge_amount, note.
+        """Compute the pro-rata upgrade charge using monthly standard prices (Story 1.12).
+
+        Formula: (new_monthly − old_monthly) / 30 × remaining_days
+        The annual discount is always forfeited — monthly rate is used regardless
+        of which plan the customer is subscribed under.
+
+        Args:
+            new_tier (wink.bundle.tier): The target upgrade tier.
+
+        Returns:
+            dict: remaining_days, total_days, charge_amount, note.
         """
         self.ensure_one()
-        remaining_days, total_days = self._wink_bundle_remaining_days()
+        remaining_days, _ = self._wink_bundle_remaining_days()
         current_tier = self.wink_bundle_tier_id
-        price_delta = self._wink_get_tier_effective_price(new_tier) - (
-            self._wink_get_tier_effective_price(current_tier) if current_tier else 0.0
-        )
-        if price_delta <= 0 or remaining_days <= 0 or total_days <= 0:
+        old_monthly = self._wink_get_tier_monthly_price(current_tier) if current_tier else 0.0
+        new_monthly = self._wink_get_tier_monthly_price(new_tier)
+        price_delta = new_monthly - old_monthly
+
+        if price_delta <= 0 or remaining_days <= 0:
             return {
-                'remaining_days': remaining_days, 'total_days': total_days,
+                'remaining_days': remaining_days,
                 'charge_amount': 0.0,
-                'note': 'No upgrade charge (price delta ≤ 0 or no remaining period).',
+                'note': 'No upgrade charge (price delta ≤ 0 or no remaining days).',
             }
-        charge_amount = round(price_delta * (remaining_days / total_days), 2)
+
+        charge_amount = round((price_delta / 30.0) * remaining_days, 2)
         return {
             'remaining_days': remaining_days,
-            'total_days': total_days,
             'charge_amount': max(charge_amount, 0.0),
             'note': (
-                f'Upgrade charge: {price_delta:.2f} × ({remaining_days}/{total_days})'
+                f'Upgrade: ({new_monthly:.2f} − {old_monthly:.2f}) / 30 × {remaining_days} days'
                 f' = {charge_amount:.2f}'
             ),
         }
 
     def _wink_bundle_compute_downgrade_credit(self, new_tier):
-        """Compute pro-rata credit for downgrading from current tier to new_tier.
-        Returns dict: remaining_days, total_days, credit_amount, note.
+        """Compute the pro-rata downgrade credit using monthly standard prices (Story 1.12).
+
+        Formula: (old_monthly − new_monthly) / 30 × remaining_days
+        The annual discount is always forfeited — monthly rate is used regardless
+        of the customer's active subscription plan.
+
+        Args:
+            new_tier (wink.bundle.tier): The target downgrade tier.
+
+        Returns:
+            dict: remaining_days, credit_amount, policy, note.
         """
         self.ensure_one()
         bundle = self._wink_bundle_get_policy()
         policy = bundle.downgrade_credit_policy if bundle else 'none'
-        remaining_days, total_days = self._wink_bundle_remaining_days()
+        remaining_days, _ = self._wink_bundle_remaining_days()
         current_tier = self.wink_bundle_tier_id
-        price_delta = (
-            self._wink_get_tier_effective_price(current_tier) if current_tier else 0.0
-        ) - self._wink_get_tier_effective_price(new_tier)
-        if policy == 'none' or price_delta <= 0 or remaining_days <= 0 or total_days <= 0:
+        old_monthly = self._wink_get_tier_monthly_price(current_tier) if current_tier else 0.0
+        new_monthly = self._wink_get_tier_monthly_price(new_tier)
+        price_delta = old_monthly - new_monthly
+
+        if policy == 'none' or price_delta <= 0 or remaining_days <= 0:
             return {
-                'remaining_days': remaining_days, 'total_days': total_days,
-                'credit_amount': 0.0, 'policy': policy,
+                'remaining_days': remaining_days,
+                'credit_amount': 0.0,
+                'policy': policy,
                 'note': 'No downgrade credit per policy.' if policy == 'none' else 'No remaining days.',
             }
-        credit_amount = round(price_delta * (remaining_days / total_days), 2)
+
+        credit_amount = round((price_delta / 30.0) * remaining_days, 2)
         return {
             'remaining_days': remaining_days,
-            'total_days': total_days,
             'credit_amount': max(credit_amount, 0.0),
             'policy': policy,
             'note': (
-                f'Downgrade credit: {price_delta:.2f} × ({remaining_days}/{total_days})'
+                f'Downgrade: ({old_monthly:.2f} − {new_monthly:.2f}) / 30 × {remaining_days} days'
                 f' = {credit_amount:.2f}'
             ),
         }
@@ -663,8 +698,8 @@ class SaleOrderWink(models.Model):
         ], limit=1)
         if not journal:
             return False
-        from odoo import fields as odoo_fields
-        today = odoo_fields.Date.context_today(self)
+        today = fields.Date.context_today(self)
+        taxes = product.taxes_id.filtered(lambda t: t.company_id == self.company_id)
         invoice = self.env['account.move'].create({
             'move_type': 'out_invoice',
             'partner_id': self.partner_id.id,
@@ -682,6 +717,7 @@ class SaleOrderWink(models.Model):
                 'quantity': 1.0,
                 'price_unit': amount,
                 'account_id': account.id,
+                'tax_ids': [(6, 0, taxes.ids)],
             })],
         })
         try:
@@ -726,13 +762,15 @@ class SaleOrderWink(models.Model):
         ], limit=1)
         if not journal:
             return False
-        from odoo import fields as odoo_fields
-        today = odoo_fields.Date.context_today(self)
-        # Find original invoice to link as reversed entry
+        today = fields.Date.context_today(self)
+        taxes = product.taxes_id.filtered(lambda t: t.company_id == self.company_id)
+        # Link to the original subscription SO line only (not upgrade charge lines)
+        origin_line = self.order_line.filtered(
+            lambda l: l.product_id == product and not l.name.startswith('Bundle upgrade')
+        )[:1]
         source_invoice = self.invoice_ids.filtered(
             lambda m: m.state == 'posted' and m.move_type == 'out_invoice'
         ).sorted('invoice_date', reverse=True)[:1]
-        so_line_ids = self.order_line.ids
         credit_note = self.env['account.move'].create({
             'move_type': 'out_refund',
             'partner_id': self.partner_id.id,
@@ -751,7 +789,8 @@ class SaleOrderWink(models.Model):
                 'quantity': 1.0,
                 'price_unit': amount,
                 'account_id': account.id,
-                'sale_line_ids': [(6, 0, so_line_ids)] if so_line_ids else [],
+                'tax_ids': [(6, 0, taxes.ids)],
+                'sale_line_ids': [(4, origin_line.id)] if origin_line else [],
             })],
         })
         try:
@@ -883,7 +922,6 @@ class SaleOrderWink(models.Model):
             )
 
         # Log the event
-        from odoo import fields as odoo_fields
         self.env['wink.bundle.change.log'].sudo().create({
             'order_id': self.id,
             'change_type': 'cancel',
@@ -892,7 +930,6 @@ class SaleOrderWink(models.Model):
             'credit_note_id': credit_note.id if credit_note else False,
             'user_id': self.env.user.id,
             'remaining_days': refund_info.get('remaining_days', 0),
-            'total_days': refund_info.get('total_days', 0),
             'note': reason or '',
             'state': 'done',
         })
@@ -901,11 +938,12 @@ class SaleOrderWink(models.Model):
         # independent of whether action_cancel() succeeds below. This ensures the portal
         # reflects the cancelled state even when the order has invoices and cannot be
         # moved to state='cancel' by Odoo.
-        now = odoo_fields.Datetime.now()
+        now = fields.Datetime.now()
         self.sudo().write({
             'wink_cancellation_requested': True,
             'wink_cancellation_reason': reason,
             'wink_cancellation_requested_date': now,
+            'wink_cancellation_processed_by': self.env.user.id,
             'wink_cancellation_processed_date': now,
             'wink_cancellation_credit_note_id': credit_note.id if credit_note else False,
             'wink_bundle_cancelled': True,
@@ -977,7 +1015,6 @@ class SaleOrderWink(models.Model):
             )
 
         # Cooldown: prevent rapid tier changes within 24 hours to avoid exploit
-        from datetime import timedelta
         recent = self.env['wink.bundle.change.log'].sudo().search([
             ('order_id', '=', self.id),
             ('date', '>=', fields.Datetime.now() - timedelta(hours=24)),
@@ -1035,7 +1072,6 @@ class SaleOrderWink(models.Model):
             'charge_line_id': charge_line.id if charge_line else False,
             'user_id': self.env.user.id,
             'remaining_days': charge_info.get('remaining_days', 0),
-            'total_days': charge_info.get('total_days', 0),
             'note': charge_info.get('note', ''),
             'state': 'done',
         })
@@ -1091,7 +1127,6 @@ class SaleOrderWink(models.Model):
             )
 
         # Cooldown: prevent rapid tier changes within 24 hours to avoid exploit
-        from datetime import timedelta
         recent = self.env['wink.bundle.change.log'].sudo().search([
             ('order_id', '=', self.id),
             ('date', '>=', fields.Datetime.now() - timedelta(hours=24)),
@@ -1129,7 +1164,6 @@ class SaleOrderWink(models.Model):
             'credit_note_id': credit_note.id if credit_note else False,
             'user_id': self.env.user.id,
             'remaining_days': credit_info.get('remaining_days', 0),
-            'total_days': credit_info.get('total_days', 0),
             'note': credit_info.get('note', ''),
             'state': 'done',
         })
