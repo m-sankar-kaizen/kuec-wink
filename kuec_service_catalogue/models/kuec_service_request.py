@@ -443,6 +443,9 @@ class SaleOrderWink(models.Model):
             order.write(vals)
 
             # --- Churn the subscription ---
+            # set_close() only churns when end_date <= today; for active subscriptions
+            # (end_date in the future) we must call _set_closed_state() directly to
+            # immediately set subscription_state = '6_churn'.
             try:
                 close_reason = None
                 if order.wink_cancellation_reason:
@@ -450,9 +453,11 @@ class SaleOrderWink(models.Model):
                         [('name', '=', order.wink_cancellation_reason)], limit=1
                     )
                 if order.is_subscription:
-                    order.sudo().set_close(
-                        close_reason_id=close_reason.id if close_reason else None
-                    )
+                    order.sudo()._set_closed_state()
+                    order.sudo().write({
+                        'end_date': fields.Date.today(),
+                        'close_reason_id': close_reason.id if close_reason else None,
+                    })
                 else:
                     order.sudo().action_cancel()
             except Exception as e:

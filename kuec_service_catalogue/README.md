@@ -42,6 +42,9 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.7 — 2026-03-24
+- [FIX] Coordinator confirm cancellation: call _set_closed_state() directly instead of set_close() — set_close() only churns when end_date <= today, leaving active subscriptions open
+
 ### 18.0.2.22.6 — 2026-03-24
 - [FIX] action_wink_mark_cancellation_processed: always compute credit note via _wink_compute_proration() (removes dead policy guard); churn subscription via set_close() on confirm
 
