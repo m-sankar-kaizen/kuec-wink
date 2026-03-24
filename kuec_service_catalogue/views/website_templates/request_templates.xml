@@ -2214,7 +2214,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </t>
 
                         <!-- COMPLETED: Rate this service + Feedback -->
                         <t t-if="ps == 'completed'">
