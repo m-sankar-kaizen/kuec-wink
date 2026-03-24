@@ -559,10 +559,17 @@ class SaleOrderWink(models.Model):
         price_delta = new_monthly - old_monthly
 
         if price_delta <= 0 or remaining_days <= 0:
+            if remaining_days <= 0:
+                note = 'No remaining days in current period.'
+            else:
+                note = (
+                    f'No charge — price not configured or new tier costs less '
+                    f'(current: {old_monthly:.2f}, new: {new_monthly:.2f}).'
+                )
             return {
                 'remaining_days': remaining_days,
                 'charge_amount': 0.0,
-                'note': 'No upgrade charge (price delta ≤ 0 or no remaining days).',
+                'note': note,
             }
 
         charge_amount = round((price_delta / 30.0) * remaining_days, 2)
@@ -598,11 +605,20 @@ class SaleOrderWink(models.Model):
         price_delta = old_monthly - new_monthly
 
         if policy == 'none' or price_delta <= 0 or remaining_days <= 0:
+            if policy == 'none':
+                note = 'No downgrade credit per policy.'
+            elif remaining_days <= 0:
+                note = 'No remaining days in current period.'
+            else:
+                note = (
+                    f'No credit — price not configured or new tier costs more '
+                    f'(current: {old_monthly:.2f}, new: {new_monthly:.2f}).'
+                )
             return {
                 'remaining_days': remaining_days,
                 'credit_amount': 0.0,
                 'policy': policy,
-                'note': 'No downgrade credit per policy.' if policy == 'none' else 'No remaining days.',
+                'note': note,
             }
 
         credit_amount = round((price_delta / 30.0) * remaining_days, 2)
