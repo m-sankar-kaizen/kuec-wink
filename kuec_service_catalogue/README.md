@@ -42,6 +42,10 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.8 — 2026-03-24
+- [FIX] Request detail page: show service details and communication history even when cancelled — removed ps != 'cancelled' guard from action bar; added "Service Cancelled" card with credit note reference
+- [FIX] Bundle confirmed banner no longer shows after churn
+
 ### 18.0.2.22.7 — 2026-03-24
 - [FIX] Coordinator confirm cancellation: call _set_closed_state() directly instead of set_close() — set_close() only churns when end_date <= today, leaving active subscriptions open
 

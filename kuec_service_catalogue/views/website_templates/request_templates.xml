@@ -1708,7 +1708,29 @@
                     </div>
 
                     <!-- Action Bar — shown for non-bundle services (retainer + standalone/project) -->
-                    <t t-if="not wink_is_bundle and ps != 'cancelled'">
+                    <t t-if="not wink_is_bundle">
+
+                        <!-- CANCELLED: service has been closed -->
+                        <t t-if="ps == 'cancelled'">
+                            <div class="d-flex align-items-center gap-3 p-4 mb-4 rounded-3 shadow-sm"
+                                 style="background:rgba(108,117,125,0.07);border-left:4px solid #6c757d;">
+                                <i class="fa fa-times-circle fa-2x flex-shrink-0 text-secondary"/>
+                                <div>
+                                    <h6 class="mb-1 fw-semibold text-secondary">Service Cancelled</h6>
+                                    <p class="mb-0 text-muted small">
+                                        This service has been cancelled.
+                                        <t t-if="close_reason_name"> Reason: <strong t-esc="close_reason_name"/>.</t>
+                                        <t t-if="order.wink_cancellation_credit_note_id">
+                                            A credit note
+                                            <strong t-esc="order.wink_cancellation_credit_note_id.name"/> has been issued.
+                                        </t>
+                                    </p>
+                                </div>
+                            </div>
+                        </t>
+
+                        <!-- Status banners — only for active stages -->
+                        <t t-if="ps != 'cancelled'">
 
                         <!-- SUBMITTED: awaiting coordinator review (no required docs) -->
                         <t t-if="ps == 'submitted'">
@@ -2133,6 +2155,8 @@
                                 </div>
                             </div>
 
+                        </t><!-- /status banners (ps != cancelled) -->
+
                             <!-- Service summary card -->
                             <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
                                 <div class="card-header border-0 py-3 px-4 fw-semibold d-flex align-items-center gap-2"
@@ -2269,7 +2293,7 @@
                         <t t-if="order.wink_price_confirmed"> to confirm your request.</t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
-                    <div t-elif="order.state == 'sale' and is_paid" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div t-elif="order.state == 'sale' and is_paid and not is_closed_or_cancelled" class="alert alert-success alert-dismissible fade show" role="alert">
                         <strong>Your request has been confirmed!</strong>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
                     </div>
