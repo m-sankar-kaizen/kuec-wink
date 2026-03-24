@@ -42,6 +42,9 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.2 — 2026-03-24
+- [UPDT] Downgrade portal page: formula note and remaining-days display added to tier cards (matches upgrade template treatment)
+
 ### 18.0.2.22.1 — 2026-03-24
 - [FIX] Simplified price source: _wink_get_tier_monthly_price() now reads tier.price_monthly directly — removes complex sale.subscription.pricing lookup
 - [UPDT] Bundle form: price_monthly now editable inline on the tier list (no need to open individual tier forms)

@@ -459,40 +459,22 @@ class SaleOrderWink(models.Model):
         return None
 
     def _wink_bundle_remaining_days(self):
-        """Return (remaining_days, total_days) for the current billing period.
+        """Return remaining days until the end of the current billing period.
 
-        Period end is next_invoice_date (or wink_bundle_end_date manual override).
-        Period start is always derived from the plan's billing period relative to
-        end — this stays correct after renewals (wink_bundle_start_date is only
-        set at activation and becomes stale in subsequent billing cycles).
-        Falls back to wink_bundle_start_date or start_date only when no plan is
-        available. Returns (0, 0) when dates are unavailable or elapsed.
+        Story 1.12 formulas only need remaining_days — no period start or
+        total_days required. Works for all portal bundle orders regardless of
+        whether plan_id, wink_bundle_start_date or start_date are set.
 
         Returns:
-            tuple[int, int]: (remaining_days, total_days).
+            tuple[int, int]: (remaining_days, 0). Second value kept for
+            call-site compatibility but is unused.
         """
         self.ensure_one()
         today = date_cls.today()
-
         end = self.wink_bundle_end_date or self.next_invoice_date
         if not end or end <= today:
             return 0, 0
-
-        # Derive period start from plan billing period — accurate after every renewal
-        plan = self.plan_id
-        if plan and plan.billing_period_value and plan.billing_period_unit:
-            kwargs = {plan.billing_period_unit + 's': plan.billing_period_value}
-            start = end - relativedelta(**kwargs)
-        else:
-            # No plan configured — fall back to stored dates
-            start = self.wink_bundle_start_date or self.start_date
-
-        if not start:
-            return 0, 0
-
-        remaining = (end - today).days
-        total = (end - start).days
-        return max(remaining, 0), max(total, 1)
+        return max((end - today).days, 0), 0
 
     def _wink_bundle_compute_refund(self):
         """Compute the cancellation refund using monthly standard price (Story 1.12).

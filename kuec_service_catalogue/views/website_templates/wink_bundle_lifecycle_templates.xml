@@ -289,22 +289,31 @@
                                                     <t t-if="ut['tier'].description">
                                                         <div class="text-muted small mt-1" t-esc="ut['tier'].description"/>
                                                     </t>
-                                                    <div class="mt-2 d-flex align-items-center gap-2">
+                                                    <div class="mt-2">
                                                         <t t-if="ut['charge_amount'] > 0">
                                                             <span class="badge rounded-pill fw-semibold"
                                                                   style="background:rgba(0,85,183,0.1);color:var(--wink-primary);">
                                                                 + <t t-esc="currency.symbol or currency.name"/>
                                                                 <t t-esc="'%.2f' % ut['charge_amount']"/> today
                                                             </span>
-                                                            <span class="text-muted small">
-                                                                (<t t-esc="ut['remaining_days']"/> days remaining)
-                                                            </span>
                                                         </t>
                                                         <t t-else="">
                                                             <span class="badge rounded-pill fw-semibold"
-                                                                  style="background:rgba(25,135,84,0.1);color:#198754;">
+                                                                  style="background:rgba(108,117,125,0.1);color:#6c757d;">
                                                                 No charge today
                                                             </span>
+                                                        </t>
+                                                        <t t-if="ut['note']">
+                                                            <div class="text-muted mt-1" style="font-size:0.75rem;">
+                                                                <i class="fa fa-calculator me-1"/>
+                                                                <t t-esc="ut['note']"/>
+                                                            </div>
+                                                        </t>
+                                                        <t t-if="ut['remaining_days'] > 0">
+                                                            <div class="text-muted mt-1" style="font-size:0.75rem;">
+                                                                <i class="fa fa-calendar-o me-1"/>
+                                                                <t t-esc="ut['remaining_days']"/> days remaining in period
+                                                            </div>
                                                         </t>
                                                     </div>
                                                 </div>
@@ -424,15 +433,12 @@
                                                     <t t-if="dt['tier'].description">
                                                         <div class="text-muted small mt-1" t-esc="dt['tier'].description"/>
                                                     </t>
-                                                    <div class="mt-2 d-flex align-items-center gap-2">
+                                                    <div class="mt-2">
                                                         <t t-if="dt['credit_amount'] > 0">
                                                             <span class="badge rounded-pill fw-semibold"
                                                                   style="background:rgba(25,135,84,0.1);color:#198754;">
                                                                 Credit: <t t-esc="currency.symbol or currency.name"/>
                                                                 <t t-esc="'%.2f' % dt['credit_amount']"/>
-                                                            </span>
-                                                            <span class="text-muted small">
-                                                                (<t t-esc="dt['remaining_days']"/> days)
                                                             </span>
                                                         </t>
                                                         <t t-elif="dt['policy'] == 'none'">
@@ -446,6 +452,18 @@
                                                                   style="background:rgba(108,117,125,0.1);color:#6c757d;">
                                                                 No credit (same period)
                                                             </span>
+                                                        </t>
+                                                        <t t-if="dt['note']">
+                                                            <div class="text-muted mt-1" style="font-size:0.75rem;">
+                                                                <i class="fa fa-calculator me-1"/>
+                                                                <t t-esc="dt['note']"/>
+                                                            </div>
+                                                        </t>
+                                                        <t t-if="dt['remaining_days'] > 0">
+                                                            <div class="text-muted mt-1" style="font-size:0.75rem;">
+                                                                <i class="fa fa-calendar-o me-1"/>
+                                                                <t t-esc="dt['remaining_days']"/> days remaining in period
+                                                            </div>
                                                         </t>
                                                     </div>
                                                 </div>
