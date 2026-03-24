@@ -2091,22 +2091,20 @@ class WinkRequest(http.Controller):
             return request.redirect(f'/my/requests/{order_id}?error=cancel_not_allowed&message=%s' % werkzeug.urls.url_quote(msg or ''))
 
         proration = order._wink_compute_proration()
-        policy = order._wink_get_policy()
-        cancel_sel = dict(policy._fields['cancellation_credit_policy'].selection).get(policy.cancellation_credit_policy, '') if policy else ''
         end_date = getattr(order, 'next_date', None) or getattr(order, 'next_invoice_date', None)
         start_date = getattr(order, 'start_date', None) or getattr(order, 'wink_bundle_start_date', None)
-        show_refund = policy and policy.cancellation_credit_policy != 'no_refund'
+        show_refund = bool(proration and proration.get('remaining_value', 0) > 0)
         close_reasons = request.env['sale.order.close.reason'].sudo().search([], order='id')
 
         return request.render('kuec_service_catalogue.wink_retainer_cancel_preview', {
             'order': order,
             'product': product,
             'proration': proration,
-            'policy_label': cancel_sel,
+            'policy_label': '',
             'end_date': end_date,
             'start_date': start_date,
             'show_refund': show_refund,
-            'effective_date_policy': (policy and policy.effective_date_policy) or 'immediate',
+            'effective_date_policy': 'immediate',
             'close_reasons': close_reasons,
             'error': kwargs.get('error', ''),
         })

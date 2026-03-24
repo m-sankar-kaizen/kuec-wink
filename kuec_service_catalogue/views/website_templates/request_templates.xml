@@ -3283,15 +3283,20 @@
                                         <t t-esc="order.currency_id.symbol or 'AED'"/>&#160;<t t-esc="'%.2f' % refund_amount"/>
                                     </span>
                                 </div>
+                                <t t-if="proration and proration.get('note')">
+                                    <div class="text-muted small mt-1">
+                                        <i class="fa fa-calculator me-1"/>
+                                        <t t-esc="proration.get('note')"/>
+                                    </div>
+                                </t>
                                 <t t-if="proration and proration.get('remaining_days', 0) > 0">
-                                    <div class="text-muted small">
-                                        <t t-esc="proration.get('remaining_days', 0)"/> days remaining ×
-                                        <t t-esc="order.currency_id.symbol or 'AED'"/>&#160;<t t-esc="'%.4f' % proration.get('daily_rate', 0)"/>/day
-                                        <t t-if="policy_label"> · <t t-esc="policy_label"/></t>
+                                    <div class="text-muted small mt-1">
+                                        <i class="fa fa-calendar-o me-1"/>
+                                        <t t-esc="proration.get('remaining_days', 0)"/> days remaining in period
                                     </div>
                                 </t>
                                 <t t-if="not show_refund">
-                                    <div class="text-muted small">No refund will be issued per the cancellation policy.</div>
+                                    <div class="text-muted small">No refund — monthly price not configured on this service's Recurring Prices tab.</div>
                                 </t>
                                 <t t-if="effective_date_policy == 'next_cycle'">
                                     <div class="mt-2 small text-warning-emphasis fw-semibold">

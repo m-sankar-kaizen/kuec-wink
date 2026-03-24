@@ -219,9 +219,67 @@ class SaleOrderWink(models.Model):
                 order.wink_task_stage = ', '.join(stages) if stages else 'No stage'
 
     def _wink_compute_proration(self, plan_name_hint=None):
-        """Compute prorated remaining credit for the current subscription period.
-        Returns None — subscription group / plan tier support has been removed."""
-        return None
+        """Compute Story 1.12 cancellation refund for a standalone retainer/flexible service.
+
+        Formula: (monthly_price / 30) × remaining_days
+        Monthly price sourced from sale.subscription.pricing — reference plan first,
+        then 1-month billing period plan. Annual discount always forfeited.
+
+        Returns:
+            dict with remaining_days, daily_rate, remaining_value, monthly_price, note.
+            None if no price configured or no days remaining.
+        """
+        self.ensure_one()
+        remaining_days = self._wink_remaining_days()
+        if remaining_days <= 0:
+            return None
+
+        source = self.wink_source_product_id
+        if not source:
+            return None
+
+        tmpl_id = source.id if source._name == 'product.template' else source.product_tmpl_id.id
+        Pricing = self.env['sale.subscription.pricing'].sudo()
+
+        # Try to resolve specific variant from order lines for accurate pricing
+        variant = self.order_line.filtered(
+            lambda l: l.product_id.product_tmpl_id.id == tmpl_id
+        )[:1].product_id
+
+        pricing = None
+        for plan_domain in [
+            [('plan_id.kuec_is_reference_plan', '=', True)],
+            [('plan_id.billing_period_value', '=', 1),
+             ('plan_id.billing_period_unit', '=', 'month')],
+        ]:
+            base = [('product_template_id', '=', tmpl_id)] + plan_domain
+            if variant:
+                pricing = Pricing.search(
+                    base + [('product_variant_ids', 'in', [variant.id])], limit=1
+                ) or Pricing.search(
+                    base + [('product_variant_ids', '=', False)], limit=1
+                )
+            else:
+                pricing = Pricing.search(base, limit=1)
+            if pricing:
+                break
+
+        if not pricing or not pricing.price:
+            return None
+
+        monthly_price = float(pricing.price)
+        daily_rate = monthly_price / 30.0
+        remaining_value = round(daily_rate * remaining_days, 2)
+        return {
+            'remaining_days': remaining_days,
+            'daily_rate': daily_rate,
+            'remaining_value': remaining_value,
+            'monthly_price': monthly_price,
+            'note': (
+                f'({monthly_price:.2f} / 30) \u00d7 {remaining_days} days'
+                f' = {remaining_value:.2f}'
+            ),
+        }
 
     def _wink_get_policy(self):
         """Return the policy for this order's product, or None.

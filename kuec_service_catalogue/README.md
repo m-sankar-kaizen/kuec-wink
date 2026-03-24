@@ -42,6 +42,10 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.5 — 2026-03-24
+- [FIX] Standalone retainer/flexible cancel: _wink_compute_proration() now computes Story 1.12 refund (monthly_price/30 × remaining_days) from sale.subscription.pricing — same as bundle flow
+- [FIX] Retainer cancel page: show_refund now driven by proration result, not stub policy; formula note and remaining days displayed
+
 ### 18.0.2.22.4 — 2026-03-24
 - [FIX] _wink_get_tier_monthly_price(): filter sale.subscription.pricing by product_variant_ids (Many2many) to get variant-specific price, not just first row on the template
 
