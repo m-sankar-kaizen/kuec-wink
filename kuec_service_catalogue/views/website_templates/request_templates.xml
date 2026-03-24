@@ -2112,10 +2112,25 @@
                                     <h6 class="mb-1 fw-semibold text-success">Service is active</h6>
                                     <p class="mb-0 text-muted small">Your service has been activated by your coordinator and is now live.</p>
                                 </div>
-                                <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill flex-shrink-0"
-                                   onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
-                                    <i class="fa fa-comments me-1"/>Feedback
-                                </a>
+                                <div class="d-flex flex-wrap gap-2 flex-shrink-0">
+                                    <a href="#discussion" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                       onclick="(function(e){e.preventDefault();var el=document.getElementById('discussion');if(el){el.scrollIntoView({behavior:'smooth'});};})(event)">
+                                        <i class="fa fa-comments me-1"/>Feedback
+                                    </a>
+                                    <t t-if="is_retainer and not order.wink_entitlement_ids and is_paid and not is_closed_or_cancelled and not order.wink_cancellation_requested">
+                                        <a t-attf-href="/my/requests/#{order.id}/retainer/cancel/preview"
+                                           class="btn btn-outline-danger btn-sm rounded-pill"
+                                           title="Cancel your active retainer subscription — we will show the refund amount before you confirm.">
+                                            <i class="fa fa-times-circle me-1"/>Cancel Subscription
+                                        </a>
+                                    </t>
+                                    <t t-if="is_retainer and order.wink_cancellation_requested">
+                                        <span class="btn btn-sm rounded-pill disabled"
+                                              style="border:1px solid #ffc107;color:#856404;background:rgba(255,193,7,0.1);">
+                                            <i class="fa fa-clock-o me-1"/>Cancellation Pending
+                                        </span>
+                                    </t>
+                                </div>
                             </div>
 
                             <!-- Service summary card -->
@@ -2840,7 +2855,7 @@
                             </span>
                         </div>
 
-                        <!-- Normal state: plan actions + cancel -->
+                        <!-- Normal state: plan actions -->
                         <t t-if="not order.wink_cancellation_requested">
                         <div class="px-4 py-4">
                             <div class="d-flex flex-wrap align-items-center gap-3">
@@ -2849,20 +2864,16 @@
                                        class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
                                         <i class="fa fa-exchange me-2"/>Change Plan
                                     </a>
+                                    <p class="text-muted small mt-0 mb-0 ms-1">
+                                        <i class="fa fa-info-circle me-1"/>Plan changes show proration before you commit.
+                                    </p>
                                 </t>
-                                <!-- Cancel pushed to the right -->
-                                <div class="ms-auto">
-                                    <a t-attf-href="/my/requests/#{order.id}/retainer/cancel/preview"
-                                       class="btn btn-outline-danger rounded-pill px-4 fw-semibold">
-                                        <i class="fa fa-times-circle me-2"/>Request Cancellation
-                                    </a>
-                                </div>
+                                <t t-if="not retainer_allow_plan_change">
+                                    <p class="text-muted small mb-0">
+                                        <i class="fa fa-info-circle me-1"/>To cancel this subscription use the <strong>Cancel Subscription</strong> button at the top of this page.
+                                    </p>
+                                </t>
                             </div>
-                            <p class="text-muted small mt-3 mb-0">
-                                <i class="fa fa-info-circle me-1"/>
-                                <t t-if="retainer_allow_plan_change">Plan changes show proration before you commit. </t>
-                                Cancellation shows the refund amount before you confirm.
-                            </p>
                         </div>
                         </t>
 
