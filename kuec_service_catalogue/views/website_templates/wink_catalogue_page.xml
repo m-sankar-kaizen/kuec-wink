@@ -247,7 +247,7 @@
                                    t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if not bundles_only else 'btn-outline-secondary'}">
                                     All Services
                                 </a>
-                                <a t-attf-href="/services?bundles_only=1"
+                                <a href="/wink/packages"
                                    t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if bundles_only else 'btn-outline-secondary'}">
                                     <i class="fa fa-th-large me-1"/> Packages Only
                                 </a>

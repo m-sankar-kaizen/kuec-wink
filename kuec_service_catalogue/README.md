@@ -42,6 +42,11 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.23.0 — 2026-03-24
+- [ADD] `/wink/packages` route: smart landing page — 1 bundle → 302 redirect to tier-selection; 2+ bundles → full-width packages listing with tier cards per bundle
+- [UPDT] "Packages Only" catalogue button now links to `/wink/packages` instead of filter param
+- [ADD] `wink_packages_page.xml` template: responsive multi-row bundle cards with tier pricing, Most Popular badge, service count, and direct CTA
+
 ### 18.0.2.22.10 — 2026-03-24
 - [FIX] request_templates.xml: removed orphaned `</t>` left after ps!=cancelled wrapper was removed — fixes XMLSyntaxError (div/t mismatch at line 2910) that broke all portal request pages
 

@@ -115,6 +115,30 @@ class WinkCatalogue(http.Controller):
         }
         return request.render('kuec_service_catalogue.wink_catalogue_page', values)
 
+    @http.route(['/wink/packages'], type='http', auth='public', website=True, sitemap=False)
+    def wink_packages(self, **kwargs):
+        """Smart packages landing page.
+
+        Workflow:
+            1. Query all active bundle products visible on Wink.
+            2. If exactly 1 bundle → 302 redirect directly to its tier-selection page.
+            3. If 2+ bundles → render the dedicated packages listing page.
+            4. If 0 bundles → render the listing page (shows empty state).
+        """
+        Product = request.env['product.template'].sudo()
+        bundles = Product.search([
+            ('available_on_wink', '=', True),
+            ('sale_ok', '=', True),
+            ('active', '=', True),
+            ('wink_is_bundle', '=', True),
+        ], order='name asc')
+        if len(bundles) == 1:
+            return request.redirect(f'/my/requests/new?product_id={bundles.id}', code=302)
+        return request.render('kuec_service_catalogue.wink_packages_page', {
+            'bundles': bundles,
+            'page_name': 'packages',
+        })
+
     @http.route(['/services/<int:product_id>'], type='http', auth='public', website=True, sitemap=True)
     def service_detail(self, product_id, **kwargs):
         Product = request.env['product.template'].sudo()
