@@ -35,7 +35,7 @@
                         type="object"
                         class="btn-success"
                         groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        invisible="wink_entitlement_ids or not wink_is_portal_request or state not in ['sale','done'] or wink_bundle_activated"
+                        invisible="wink_entitlement_ids or not wink_is_portal_request or state not in ['sale','done'] or wink_bundle_activated or wink_source_product_id.delivery_model == 'project'"
                         confirm="Have you completed the confirmation call with the customer? This will mark the service as live."/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">

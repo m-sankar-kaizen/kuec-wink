@@ -171,6 +171,12 @@
                                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                     <input type="hidden" name="product_id" t-att-value="product.id"/>
 
+                                    <!-- Missing required documents error -->
+                                    <div role="alert" t-if="request.params.get('error') == 'missing_docs'" class="alert alert-danger mb-3">
+                                        <strong>Required documents missing.</strong>
+                                        Please upload all required documents before submitting.
+                                    </div>
+
                                     <!-- Error summary if errors exist -->
                                     <div role="alert" t-if="errors" class="alert alert-danger mb-3">
                                         <t t-foreach="errors" t-as="field_name">
@@ -1177,6 +1183,7 @@
                                                            t-att-name="'doc_file_%s' % doc.id"
                                                            t-att-id="'wink-doc-input-%s' % doc.id"
                                                            multiple="multiple"
+                                                           t-att-required="'required' if doc.requirement == 'required' else None"
                                                            style="display:none;"
                                                            onchange="(function(inp){
                                                                var container = inp.closest('.rounded-3');

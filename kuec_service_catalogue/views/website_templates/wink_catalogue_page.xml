@@ -9,7 +9,7 @@
             <!-- UI-TAG-001 (FB-001h): Diagonal ribbon on card; backend color + visible folded-corner -->
             <t t-if="product.wink_ribbon_tag_id">
                 <div class="wink-ribbon-wrapper">
-                    <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
+                    <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color_html and ('background: %s !important;' % product.wink_ribbon_tag_id.color_html) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
                 </div>
             </t>
             <div class="card-body d-flex flex-column">
@@ -50,7 +50,7 @@
                 <!-- UI-TAG-002 -->
                 <div class="d-flex flex-wrap gap-1 mb-3">
                     <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
-                        <span t-att-class="'badge wink-tag-badge' + ('' if tag.color else ' bg-secondary')" t-att-style="tag.color and ('background-color: %s; color: #fff; border: none;' % tag.color) or ''"><t t-esc="tag.name"/></span>
+                        <span t-att-class="'badge wink-tag-badge' + ('' if tag.color_html else ' bg-secondary')" t-att-style="tag.color_html and ('background-color: %s; color: #fff; border: none;' % tag.color_html) or ''"><t t-esc="tag.name"/></span>
                     </t>
                 </div>
 
@@ -335,7 +335,7 @@
                                 </t>
                                 <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
                                     <span class="wink-detail-badge"
-                                          t-att-style="tag.color and ('background-color: %s22; border-color: %s55; color: %s;' % (tag.color, tag.color, tag.color)) or ''">
+                                          t-att-style="tag.color_html and ('background-color: %s22; border-color: %s55; color: %s;' % (tag.color_html, tag.color_html, tag.color_html)) or ''">
                                         <t t-esc="tag.name"/>
                                     </span>
                                 </t>

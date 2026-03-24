@@ -8,7 +8,6 @@
             <!-- WINK Partner fields inside the Sales &amp; Purchase tab -->
             <xpath expr="//page[@name='sales_purchases']/group[@name='container_row_2']" position="inside">
                 <group string="WINK Details" name="kuec_wink_details">
-                    <field name="legal_entity_type" invisible="not is_company" required="is_company"/>
                     <field name="wink_company_type" invisible="not is_company"/>
                     <field name="trade_license_number"/>
                     <field name="tax_license_number"/>

@@ -1007,6 +1007,23 @@ class WinkRequest(http.Controller):
         else:
             order_vals['wink_price_confirmed'] = True
 
+        # F2: Server-side guard — block submission if required documents were not uploaded.
+        # The template marks required file inputs with the HTML `required` attribute for
+        # client-side enforcement; this is the server-side safety net.
+        if not wink_is_bundle and product:
+            req_docs = product.kuec_document_ids.filtered(lambda d: d.requirement == 'required')
+            if req_docs:
+                doc_files = request.httprequest.files
+                missing = [
+                    d.name for d in req_docs
+                    if not any(f.filename for f in doc_files.getlist(f'doc_file_{d.id}'))
+                ]
+                if missing:
+                    return request.redirect(
+                        f'/my/requests/new?product_id={product.id}'
+                        f'&error=missing_docs&missing={",".join(missing[:3])}'
+                    )
+
         order = request.env['sale.order'].sudo().create(order_vals)
 
         # Gov charges — Standalone known mode:
@@ -1178,7 +1195,7 @@ class WinkRequest(http.Controller):
                 _logger.warning("Auto-confirm failed for order %s: %s", order.name, e)
 
         order.sudo().message_post(
-            body=f"Service request submitted via portal by {request.env.user.partner_id.name}.",
+            body=_('Service request submitted via portal by %s.') % request.env.user.partner_id.name,
             message_type='comment',
             subtype_xmlid='mail.mt_note',
         )
@@ -1490,7 +1507,10 @@ class WinkRequest(http.Controller):
         quote_message = kwargs.get('message', '')
 
         # Payment status (for banner: confirm only after payment; retainer: show manage only when paid)
-        tx_paid = order.transaction_ids.filtered(lambda tx: tx.state in ('authorized', 'done', 'pending'))
+        # 'pending' is intentionally excluded — it means the customer visited the payment page
+        # but the transaction is not confirmed yet. Including it caused the payment block to
+        # disappear prematurely when a payment was initiated but failed (e.g. card declined).
+        tx_paid = order.transaction_ids.filtered(lambda tx: tx.state in ('authorized', 'done'))
         inv_paid = order.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.payment_state in ('in_payment', 'paid'))
         is_paid = bool(tx_paid or inv_paid)
 

@@ -68,7 +68,7 @@
     <template id="kuec_service_ribbons" inherit_id="website_sale.products_item" name="KUEC Custom Ribbons">
         <xpath expr="//div[hasclass('oe_product_image')]" position="inside">
             <t t-if="product.wink_ribbon_tag_id">
-                <span class="o_ribbon wink-ribbon" t-esc="product.wink_ribbon_tag_id.name" t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or 'background: var(--wink-primary);'" style="position: absolute; top: 0; right: 0; padding: 6px 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #fff !important; transform-origin: 100% 0; transform: rotate(45deg); box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10;"/>
+                <span class="o_ribbon wink-ribbon" t-esc="product.wink_ribbon_tag_id.name" t-att-style="product.wink_ribbon_tag_id.color_html and ('background: %s !important;' % product.wink_ribbon_tag_id.color_html) or 'background: var(--wink-primary);'" style="position: absolute; top: 0; right: 0; padding: 6px 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #fff !important; transform-origin: 100% 0; transform: rotate(45deg); box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10;"/>
             </t>
         </xpath>
     </template>

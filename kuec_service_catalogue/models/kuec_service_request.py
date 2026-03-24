@@ -769,8 +769,15 @@ class SaleOrderWink(models.Model):
         Works identically to action_wink_activate_bundle but targets non-bundle orders.
         Sets wink_bundle_activated=True, records the date and the activating user,
         and posts a chatter note.
+        Not applicable to project-based services (delivery_model == 'project').
         """
         for order in self:
+            product = order.wink_source_product_id
+            if product and getattr(product, 'delivery_model', '') == 'project':
+                raise exceptions.UserError(_(
+                    'Activation is not applicable for project-based services. '
+                    'The service is delivered via project tasks.'
+                ))
             if order.state not in ('sale', 'done'):
                 raise exceptions.UserError(_(
                     'Service can only be activated on a confirmed (paid) order. '
@@ -789,7 +796,7 @@ class SaleOrderWink(models.Model):
             })
             order.message_post(
                 body=_(
-                    'Service activated by <b>%(user)s</b> on %(date)s after confirmation call. '
+                    'Service activated by %(user)s on %(date)s after confirmation call.\n'
                     'The service is now live.'
                 ) % {
                     'user': self.env.user.name,
@@ -834,7 +841,7 @@ class SaleOrderWink(models.Model):
             })
             order.message_post(
                 body=_(
-                    'Bundle activated by <b>%(user)s</b> on %(date)s after confirmation call. '
+                    'Bundle activated by %(user)s on %(date)s after confirmation call.\n'
                     'Services are now live and can be requested by the customer.'
                 ) % {
                     'user': self.env.user.name,
@@ -931,14 +938,14 @@ class SaleOrderWink(models.Model):
 
         # Chatter
         msg = _(
-            'Bundle cancelled by customer. Refund: <strong>%(amount)s %(currency)s</strong>.'
+            'Bundle cancelled by customer. Refund: %(amount)s %(currency)s.'
         ) % {'amount': f'{refund_amount:,.2f}', 'currency': self.currency_id.name or ''}
         if reason:
-            msg += _(' Reason: %s') % reason
+            msg += _('\nReason: %s') % reason
         if credit_note:
             msg += _(
-                ' Credit note <a href="/web#model=account.move&amp;id=%(id)s">%(name)s</a> created.'
-            ) % {'id': credit_note.id, 'name': credit_note.name or _('Draft')}
+                '\nCredit note %(name)s created.'
+            ) % {'name': credit_note.name or _('Draft')}
         self.sudo().message_post(body=msg, message_type='comment', subtype_xmlid='mail.mt_note')
 
         return {'refund_amount': refund_amount, 'credit_note': credit_note}
@@ -1043,8 +1050,8 @@ class SaleOrderWink(models.Model):
         # Chatter
         self.sudo().message_post(
             body=_(
-                'Bundle upgraded from <strong>%(old)s</strong> to <strong>%(new)s</strong>.'
-                ' Pro-rata charge: <strong>%(amount)s %(currency)s</strong>.'
+                'Bundle upgraded from %(old)s to %(new)s.\n'
+                'Pro-rata charge: %(amount)s %(currency)s.'
             ) % {
                 'old': current_tier.name if current_tier else '—',
                 'new': new_tier.name,
@@ -1137,8 +1144,8 @@ class SaleOrderWink(models.Model):
         # Chatter
         self.sudo().message_post(
             body=_(
-                'Bundle downgraded from <strong>%(old)s</strong> to <strong>%(new)s</strong>.'
-                ' Credit: <strong>%(amount)s %(currency)s</strong>.'
+                'Bundle downgraded from %(old)s to %(new)s.\n'
+                'Credit: %(amount)s %(currency)s.'
             ) % {
                 'old': current_tier.name if current_tier else '—',
                 'new': new_tier.name,
