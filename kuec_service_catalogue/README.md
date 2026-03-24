@@ -42,6 +42,9 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.4 — 2026-03-24
+- [FIX] _wink_get_tier_monthly_price(): filter sale.subscription.pricing by product_variant_ids (Many2many) to get variant-specific price, not just first row on the template
+
 ### 18.0.2.22.3 — 2026-03-24
 - [FIX] _wink_get_tier_monthly_price() restored to read from sale.subscription.pricing — reference plan first, then 1-month billing period plan, fallback to tier.price_monthly
 - [FIX] Upgrade/downgrade zero-amount note now shows actual cause (price not configured vs no remaining days)

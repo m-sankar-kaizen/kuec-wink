@@ -542,27 +542,26 @@ class SaleOrderWink(models.Model):
             float: Monthly standard price, or 0.0 if not configured.
         """
         if tier.product_variant_id:
-            tmpl_id = tier.product_variant_id.product_tmpl_id.id
+            variant = tier.product_variant_id
+            tmpl_id = variant.product_tmpl_id.id
             Pricing = self.env['sale.subscription.pricing'].sudo()
 
-            # Priority 1: reference plan
-            pricing = Pricing.search([
-                ('product_template_id', '=', tmpl_id),
-                ('plan_id.kuec_is_reference_plan', '=', True),
-            ], limit=1)
+            for plan_domain in [
+                [('plan_id.kuec_is_reference_plan', '=', True)],
+                [('plan_id.billing_period_value', '=', 1),
+                 ('plan_id.billing_period_unit', '=', 'month')],
+            ]:
+                base = [('product_template_id', '=', tmpl_id)] + plan_domain
+                # Prefer variant-specific row; fall back to template-wide row
+                pricing = Pricing.search(
+                    base + [('product_variant_ids', 'in', [variant.id])], limit=1
+                ) or Pricing.search(
+                    base + [('product_variant_ids', '=', False)], limit=1
+                )
+                if pricing:
+                    return float(pricing.price)
 
-            # Priority 2: 1-month billing period plan
-            if not pricing:
-                pricing = Pricing.search([
-                    ('product_template_id', '=', tmpl_id),
-                    ('plan_id.billing_period_value', '=', 1),
-                    ('plan_id.billing_period_unit', '=', 'month'),
-                ], limit=1)
-
-            if pricing:
-                return float(pricing.price)
-
-        # Priority 3: manual fallback on the tier
+        # Fallback: manual price on the tier
         return float(tier.price_monthly) if tier.price_monthly else 0.0
 
     def _wink_bundle_compute_upgrade_charge(self, new_tier):
