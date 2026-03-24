@@ -490,9 +490,9 @@ class ProductTemplate(models.Model):
              "Only used when 'Charge Amount is Fixed' and 'Requires Employee Selection' are both enabled."
     )
 
-    # GOV-001: Government charges per activation
+    # GOV-001: Government charges per activation (standalone request flow)
     wink_has_gov_charge = fields.Boolean(
-        string='Requires Government Charges',
+        string='Gov. Charges (Standalone Request)',
         default=False,
         help='Enable when this service involves government fees (e.g. visa, license, trade license). '
              'If enabled, the customer will see the gov charge amount and a per-employee invoice '
