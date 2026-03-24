@@ -410,46 +410,60 @@ class SaleOrderWink(models.Model):
                 'wink_cancellation_processed_by': self.env.user.id,
                 'wink_cancellation_processed_date': now,
             }
-            # Create credit note when policy is refund or wallet and no credit note yet
+
+            # --- Credit note ---
             if not order.wink_cancellation_credit_note_id:
-                policy = order._wink_get_policy()
-                if policy and policy.cancellation_credit_policy in ('refund', 'wallet'):
-                    proration = order._wink_compute_proration()
-                    remaining = proration.get('remaining_value', 0) if proration else 0
-                    if remaining > 0:
-                        try:
-                            credit_note = order._wink_create_cancellation_credit_note(remaining)
-                            if credit_note:
-                                vals['wink_cancellation_credit_note_id'] = credit_note.id
-                            else:
-                                order.message_post(
-                                    body=_(
-                                        'Credit note was not created (e.g. missing product variant '
-                                        'or income account). Please check the service product configuration.'
-                                    ),
-                                    message_type='comment',
-                                    subtype_xmlid='mail.mt_note',
-                                )
-                        except Exception as e:
+                proration = order._wink_compute_proration()
+                remaining = proration.get('remaining_value', 0) if proration else 0
+                if remaining > 0:
+                    try:
+                        credit_note = order._wink_create_cancellation_credit_note(remaining)
+                        if credit_note:
+                            vals['wink_cancellation_credit_note_id'] = credit_note.id
+                        else:
                             order.message_post(
-                                body=_('Credit note creation failed: %s') % str(e),
+                                body=_(
+                                    'Credit note was not created (missing product variant or '
+                                    'income account). Check the service product configuration.'
+                                ),
                                 message_type='comment',
                                 subtype_xmlid='mail.mt_note',
                             )
-                            raise exceptions.UserError(
-                                _('Credit note creation failed for order %s: %s')
-                                % (order.name, str(e))
-                            ) from e
-                    else:
+                    except Exception as e:
                         order.message_post(
-                            body=_(
-                                'No credit note created: remaining value is 0 or proration could not be computed '
-                                '(check subscription period / next invoice date).'
-                            ),
+                            body=_('Credit note creation failed: %s') % str(e),
                             message_type='comment',
                             subtype_xmlid='mail.mt_note',
                         )
+                        raise exceptions.UserError(
+                            _('Credit note creation failed for order %s: %s')
+                            % (order.name, str(e))
+                        ) from e
+
             order.write(vals)
+
+            # --- Churn the subscription ---
+            try:
+                close_reason = None
+                if order.wink_cancellation_reason:
+                    close_reason = self.env['sale.order.close.reason'].sudo().search(
+                        [('name', '=', order.wink_cancellation_reason)], limit=1
+                    )
+                if order.is_subscription:
+                    order.sudo().set_close(
+                        close_reason_id=close_reason.id if close_reason else None
+                    )
+                else:
+                    order.sudo().action_cancel()
+            except Exception as e:
+                order.message_post(
+                    body=_(
+                        'Order state could not be updated to churned/cancelled: %s. '
+                        'Cancellation is recorded but the order state may need manual update.'
+                    ) % str(e),
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_note',
+                )
             body = _(
                 "Coordinator %(user)s marked cancellation as processed on %(when)s."
             ) % {'user': user_name, 'when': now}
