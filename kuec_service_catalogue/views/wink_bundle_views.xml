@@ -50,8 +50,10 @@
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
-                                    <field name="product_variant_id"/>
+                                    <field name="price_monthly" string="Monthly Price"
+                                           help="Standard monthly price used for all pro-rata calculations (upgrade, downgrade, cancellation). Annual discount is always forfeited."/>
                                     <field name="is_most_popular" widget="boolean_toggle" optional="show"/>
+                                    <field name="product_variant_id" optional="hide"/>
                                     <field name="price" column_invisible="True"/>
                                     <field name="item_count" string="Services"/>
                                     <button name="action_open_tier_services" type="object" string="Add / edit services" class="btn-link" icon="fa-arrow-right"/>

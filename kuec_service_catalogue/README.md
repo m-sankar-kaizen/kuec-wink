@@ -42,6 +42,11 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.1 — 2026-03-24
+- [FIX] Simplified price source: _wink_get_tier_monthly_price() now reads tier.price_monthly directly — removes complex sale.subscription.pricing lookup
+- [UPDT] Bundle form: price_monthly now editable inline on the tier list (no need to open individual tier forms)
+- [UPDT] product_variant_id column moved to optional/hidden on tier list
+
 ### 18.0.2.22.0 — 2026-03-24
 - [UPDT] Story 1.12: Bundle refund/charge/credit now uses monthly standard price exclusively (`sale.subscription.pricing` reference plan → 1-month plan → `tier.price_monthly` fallback)
 - [UPDT] New `_wink_get_tier_monthly_price()` replaces `_wink_get_tier_effective_price()` — queries `sale.subscription.pricing` correctly (annual discount always forfeited)

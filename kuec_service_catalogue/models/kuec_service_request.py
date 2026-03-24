@@ -542,17 +542,11 @@ class SaleOrderWink(models.Model):
         }
 
     def _wink_get_tier_monthly_price(self, tier):
-        """Return the standard monthly price for a bundle tier.
+        """Return the standard monthly price for a bundle tier (Story 1.12).
 
-        Queries sale.subscription.pricing for the tier's mapped product variant
-        using a reference plan or a 1-month billing plan (Story 1.12: annual
-        discount is always forfeited — monthly rate is used for all calculations).
-
-        Priority:
-            1. sale.subscription.pricing where plan.kuec_is_reference_plan = True
-            2. sale.subscription.pricing where plan.billing_period_value = 1
-               and plan.billing_period_unit = 'month'
-            3. tier.price_monthly (manual override fallback)
+        Uses the Monthly Price field set directly on the tier. This is the
+        single source of truth for all refund/charge/credit calculations —
+        the annual discount is always forfeited.
 
         Args:
             tier (wink.bundle.tier): The tier record to look up.
@@ -560,29 +554,6 @@ class SaleOrderWink(models.Model):
         Returns:
             float: Monthly standard price, or 0.0 if not configured.
         """
-        variant = tier.product_variant_id
-        if variant:
-            Pricing = self.env['sale.subscription.pricing'].sudo()
-            tmpl_id = variant.product_tmpl_id.id
-
-            # 1. Reference plan pricing (highest priority)
-            pricing = Pricing.search([
-                ('product_template_id', '=', tmpl_id),
-                ('plan_id.kuec_is_reference_plan', '=', True),
-            ], limit=1)
-            if pricing:
-                return float(pricing.price)
-
-            # 2. 1-month billing plan pricing
-            pricing = Pricing.search([
-                ('product_template_id', '=', tmpl_id),
-                ('plan_id.billing_period_value', '=', 1),
-                ('plan_id.billing_period_unit', '=', 'month'),
-            ], limit=1)
-            if pricing:
-                return float(pricing.price)
-
-        # 3. Manual fallback
         return float(tier.price_monthly) if tier.price_monthly else 0.0
 
     def _wink_bundle_compute_upgrade_charge(self, new_tier):
