@@ -42,6 +42,10 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.22.9 — 2026-03-24
+- [FIX] Standalone/retainer cancelled page: service details card now shows for all stages — removed ps!=cancelled wrapper; ps==active block closes correctly before service details
+- [FIX] Redundant "This request has been closed" banner suppressed for non-bundle; bundles retain it
+
 ### 18.0.2.22.8 — 2026-03-24
 - [FIX] Request detail page: show service details and communication history even when cancelled — removed ps != 'cancelled' guard from action bar; added "Service Cancelled" card with credit note reference
 - [FIX] Bundle confirmed banner no longer shows after churn

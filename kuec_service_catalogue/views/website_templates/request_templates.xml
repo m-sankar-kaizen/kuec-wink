@@ -1729,9 +1729,6 @@
                             </div>
                         </t>
 
-                        <!-- Status banners — only for active stages -->
-                        <t t-if="ps != 'cancelled'">
-
                         <!-- SUBMITTED: awaiting coordinator review (no required docs) -->
                         <t t-if="ps == 'submitted'">
                             <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
@@ -2155,7 +2152,7 @@
                                 </div>
                             </div>
 
-                        </t><!-- /status banners (ps != cancelled) -->
+                        </t><!-- /ps == active -->
 
                             <!-- Service summary card -->
                             <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
@@ -2281,7 +2278,8 @@
                         </div>
                     </div>
                     <t t-if="not submitted">
-                    <div t-if="is_closed_or_cancelled" class="alert alert-secondary alert-dismissible fade show" role="alert">
+                    <!-- Closed banner shown for bundles only; standalone/retainer use the Service Cancelled card above -->
+                    <div t-if="is_closed_or_cancelled and wink_is_bundle" class="alert alert-secondary alert-dismissible fade show" role="alert">
                         <strong>This request has been closed.</strong>
                         <t t-if="close_reason_name"> (<t t-esc="close_reason_name"/>)</t>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"/>
