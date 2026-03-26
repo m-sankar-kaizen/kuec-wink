@@ -221,22 +221,29 @@ class SaleOrderWink(models.Model):
     def _wink_compute_proration(self, plan_name_hint=None):
         """Compute Story 1.12 cancellation refund for a standalone retainer/flexible service.
 
-        Formula: (monthly_price / 30) × remaining_days, capped at order.amount_total.
+        Formula: Refund = Amount Paid − (Consumed Days × Undiscounted Daily Rate)
 
-        Price resolution priority:
-            1. Customer's actual subscribed plan — price divided by plan months to get
-               monthly equivalent (e.g. yearly 10,500 AED → 875 AED/month).
-            2. Reference plan pricing (kuec_is_reference_plan = True).
-            3. 1-month billing period plan.
+        Consumed days are always charged at the UNDISCOUNTED monthly list price / 30.
+        The annual discount is forfeited for time already used — only the remainder
+        of the paid amount after deducting consumed cost is refunded.
 
-        The refund is always capped at order.amount_total — a refund can never
-        exceed what the customer actually paid.
+        Price source (undiscounted rate only — never the actual yearly plan price):
+            1. Reference plan (kuec_is_reference_plan = True).
+            2. 1-month billing period plan.
+
+        Refund is capped at order.amount_total — cannot exceed what was paid.
 
         Returns:
-            dict with remaining_days, daily_rate, remaining_value, monthly_price, note.
-            None if no price configured or no days remaining.
+            dict with remaining_days, consumed_days, daily_rate, consumed_amount,
+            remaining_value, monthly_price, note.
+            None if no price configured, no days remaining, or nothing paid.
         """
         self.ensure_one()
+
+        paid_amount = float(self.amount_total or 0)
+        if paid_amount <= 0:
+            return None
+
         remaining_days = self._wink_remaining_days()
         if remaining_days <= 0:
             return None
@@ -262,53 +269,42 @@ class SaleOrderWink(models.Model):
                 )
             return Pricing.search(base, limit=1)
 
-        def _plan_to_months(plan):
-            """Convert a billing plan period to number of months."""
-            value = plan.billing_period_value or 1
-            unit = plan.billing_period_unit or 'month'
-            return value * 12 if unit == 'year' else value
-
+        # Undiscounted monthly list price — reference plan → 1-month plan
         monthly_price = 0.0
-
-        # Priority 1: customer's actual subscribed plan — derive monthly equivalent
-        actual_plan = self.plan_id
-        if actual_plan:
-            p = _search_pricing([('plan_id', '=', actual_plan.id)])
+        for domain in [
+            [('plan_id.kuec_is_reference_plan', '=', True)],
+            [('plan_id.billing_period_value', '=', 1),
+             ('plan_id.billing_period_unit', '=', 'month')],
+        ]:
+            p = _search_pricing(domain)
             if p and p.price:
-                plan_months = _plan_to_months(actual_plan)
-                monthly_price = float(p.price) / max(plan_months, 1)
-
-        # Priority 2 & 3: reference plan → 1-month plan
-        if not monthly_price:
-            for domain in [
-                [('plan_id.kuec_is_reference_plan', '=', True)],
-                [('plan_id.billing_period_value', '=', 1),
-                 ('plan_id.billing_period_unit', '=', 'month')],
-            ]:
-                p = _search_pricing(domain)
-                if p and p.price:
-                    monthly_price = float(p.price)
-                    break
+                monthly_price = float(p.price)
+                break
 
         if not monthly_price:
             return None
 
-        daily_rate = monthly_price / 30.0
-        remaining_value = round(daily_rate * remaining_days, 2)
+        undiscounted_daily_rate = monthly_price / 30.0
 
-        # Hard cap: refund cannot exceed amount actually paid
-        paid_amount = float(self.amount_total or 0)
-        if paid_amount > 0:
-            remaining_value = min(remaining_value, paid_amount)
+        # Consumed days = subscription start → today
+        today = date_cls.today()
+        start = self.start_date or (self.date_order.date() if self.date_order else None)
+        consumed_days = max((today - start).days, 0) if start else 0
+
+        consumed_amount = round(undiscounted_daily_rate * consumed_days, 2)
+        refund = max(round(paid_amount - consumed_amount, 2), 0.0)
+        refund = min(refund, paid_amount)  # safety cap
 
         return {
             'remaining_days': remaining_days,
-            'daily_rate': daily_rate,
-            'remaining_value': remaining_value,
+            'consumed_days': consumed_days,
+            'daily_rate': undiscounted_daily_rate,
+            'consumed_amount': consumed_amount,
+            'remaining_value': refund,
             'monthly_price': monthly_price,
             'note': (
-                f'({monthly_price:.2f} / 30) \u00d7 {remaining_days} days'
-                f' = {remaining_value:.2f}'
+                f'{paid_amount:.2f} \u2212 ({consumed_days} days \u00d7'
+                f' {undiscounted_daily_rate:.2f}/day) = {refund:.2f}'
             ),
         }
 

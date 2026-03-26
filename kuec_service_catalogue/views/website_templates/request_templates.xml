@@ -3304,11 +3304,21 @@
                                         <t t-esc="proration.get('note')"/>
                                     </div>
                                 </t>
-                                <t t-if="proration and proration.get('remaining_days', 0) > 0">
-                                    <div class="text-muted small mt-1">
-                                        <i class="fa fa-calendar-o me-1"/>
-                                        <t t-esc="proration.get('remaining_days', 0)"/> days remaining in period
-                                    </div>
+                                <t t-if="proration">
+                                    <t t-set="_consumed" t-value="proration.get('consumed_days', 0)"/>
+                                    <t t-set="_remaining" t-value="proration.get('remaining_days', 0)"/>
+                                    <t t-if="_consumed > 0">
+                                        <div class="text-muted small mt-1">
+                                            <i class="fa fa-clock-o me-1"/>
+                                            <t t-esc="_consumed"/> days used at <t t-esc="'%.2f' % proration.get('daily_rate', 0)"/>/day (undiscounted)
+                                        </div>
+                                    </t>
+                                    <t t-if="_remaining > 0">
+                                        <div class="text-muted small mt-1">
+                                            <i class="fa fa-calendar-o me-1"/>
+                                            <t t-esc="_remaining"/> days remaining in period
+                                        </div>
+                                    </t>
                                 </t>
                                 <t t-if="not show_refund">
                                     <div class="text-muted small">No refund — monthly price not configured on this service's Recurring Prices tab.</div>
