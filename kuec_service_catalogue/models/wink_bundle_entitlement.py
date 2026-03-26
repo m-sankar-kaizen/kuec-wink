@@ -180,6 +180,19 @@ class WinkBundleEntitlement(models.Model):
         'wink_gov_charge_invoice_id', 'wink_gov_charge_invoice_id.payment_state',
     )
     def _compute_state(self):
+        """Compute the activation state of this entitlement.
+
+        Priority order (highest → lowest):
+            1. expired — parent order is cancelled or bundle is cancelled.
+            2. pending_gov_payment — a government charge invoice exists and has
+               not yet been paid/in_payment. Keeps the Pay button visible in
+               the portal regardless of qty_activated (GOV-001).
+            3. fully_activated — qty_activated >= qty_entitled.
+            4. available — default state, units still available to activate.
+
+        Returns:
+            None — writes to self.state directly.
+        """
         for rec in self:
             if rec.order_id and (rec.order_id.state == 'cancel' or rec.order_id.wink_bundle_cancelled):
                 rec.state = 'expired'

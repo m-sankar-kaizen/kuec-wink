@@ -17,6 +17,15 @@ class SaleSubscriptionPlan(models.Model):
 
     @api.constrains('kuec_is_reference_plan')
     def _check_only_one_reference_plan(self):
+        """Ensure only one plan is marked as the reference plan.
+
+        The reference plan is used as the monthly price baseline for savings
+        calculations across the portal. Multiple reference plans would produce
+        ambiguous results, so this constraint enforces uniqueness system-wide.
+
+        Raises:
+            ValidationError: If another plan already has kuec_is_reference_plan = True.
+        """
         for rec in self:
             if not rec.kuec_is_reference_plan:
                 continue

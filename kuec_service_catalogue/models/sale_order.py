@@ -140,7 +140,11 @@ class SaleOrder(models.Model):
             if template:
                 template.send_mail(sub.id, force_send=True)
             sub.message_post(
-                body=f"Subscription <b>Expiry Reminder</b> triggered automatically. Outstanding duration remains at {remaining_days} days."
+                body=_(
+                    'Subscription Expiry Reminder triggered automatically. '
+                    'Outstanding duration remains at %(days)s days.',
+                    days=remaining_days,
+                )
             )
             sent_set.add(remaining_days)
             sub.wink_expiry_reminder_sent_days = ','.join(str(d) for d in sorted(sent_set))

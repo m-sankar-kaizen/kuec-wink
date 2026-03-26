@@ -46,7 +46,7 @@ class WinkFinalizeWizard(models.TransientModel):
         order.wink_price_confirmed = True
         body = _('Pricing has been finalized and payment is now unlocked for the customer.')
         if self.coordinator_note:
-            body += '<br/><b>Note:</b> ' + self.coordinator_note
+            body += '\nNote: ' + self.coordinator_note
         order.message_post(
             body=body,
             message_type='comment',
