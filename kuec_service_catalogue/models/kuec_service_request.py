@@ -221,9 +221,16 @@ class SaleOrderWink(models.Model):
     def _wink_compute_proration(self, plan_name_hint=None):
         """Compute Story 1.12 cancellation refund for a standalone retainer/flexible service.
 
-        Formula: (monthly_price / 30) × remaining_days
-        Monthly price sourced from sale.subscription.pricing — reference plan first,
-        then 1-month billing period plan. Annual discount always forfeited.
+        Formula: (monthly_price / 30) × remaining_days, capped at order.amount_total.
+
+        Price resolution priority:
+            1. Customer's actual subscribed plan — price divided by plan months to get
+               monthly equivalent (e.g. yearly 10,500 AED → 875 AED/month).
+            2. Reference plan pricing (kuec_is_reference_plan = True).
+            3. 1-month billing period plan.
+
+        The refund is always capped at order.amount_total — a refund can never
+        exceed what the customer actually paid.
 
         Returns:
             dict with remaining_days, daily_rate, remaining_value, monthly_price, note.
@@ -241,35 +248,59 @@ class SaleOrderWink(models.Model):
         tmpl_id = source.id if source._name == 'product.template' else source.product_tmpl_id.id
         Pricing = self.env['sale.subscription.pricing'].sudo()
 
-        # Try to resolve specific variant from order lines for accurate pricing
+        # Resolve specific variant from order lines for accurate pricing
         variant = self.order_line.filtered(
             lambda l: l.product_id.product_tmpl_id.id == tmpl_id
         )[:1].product_id
 
-        pricing = None
-        for plan_domain in [
-            [('plan_id.kuec_is_reference_plan', '=', True)],
-            [('plan_id.billing_period_value', '=', 1),
-             ('plan_id.billing_period_unit', '=', 'month')],
-        ]:
-            base = [('product_template_id', '=', tmpl_id)] + plan_domain
+        def _search_pricing(domain):
+            base = [('product_template_id', '=', tmpl_id)] + domain
             if variant:
-                pricing = Pricing.search(
-                    base + [('product_variant_ids', 'in', [variant.id])], limit=1
-                ) or Pricing.search(
-                    base + [('product_variant_ids', '=', False)], limit=1
+                return (
+                    Pricing.search(base + [('product_variant_ids', 'in', [variant.id])], limit=1)
+                    or Pricing.search(base + [('product_variant_ids', '=', False)], limit=1)
                 )
-            else:
-                pricing = Pricing.search(base, limit=1)
-            if pricing:
-                break
+            return Pricing.search(base, limit=1)
 
-        if not pricing or not pricing.price:
+        def _plan_to_months(plan):
+            """Convert a billing plan period to number of months."""
+            value = plan.billing_period_value or 1
+            unit = plan.billing_period_unit or 'month'
+            return value * 12 if unit == 'year' else value
+
+        monthly_price = 0.0
+
+        # Priority 1: customer's actual subscribed plan — derive monthly equivalent
+        actual_plan = self.plan_id
+        if actual_plan:
+            p = _search_pricing([('plan_id', '=', actual_plan.id)])
+            if p and p.price:
+                plan_months = _plan_to_months(actual_plan)
+                monthly_price = float(p.price) / max(plan_months, 1)
+
+        # Priority 2 & 3: reference plan → 1-month plan
+        if not monthly_price:
+            for domain in [
+                [('plan_id.kuec_is_reference_plan', '=', True)],
+                [('plan_id.billing_period_value', '=', 1),
+                 ('plan_id.billing_period_unit', '=', 'month')],
+            ]:
+                p = _search_pricing(domain)
+                if p and p.price:
+                    monthly_price = float(p.price)
+                    break
+
+        if not monthly_price:
             return None
 
-        monthly_price = float(pricing.price)
         daily_rate = monthly_price / 30.0
         remaining_value = round(daily_rate * remaining_days, 2)
+
+        # Hard cap: refund cannot exceed amount actually paid
+        paid_amount = float(self.amount_total or 0)
+        if paid_amount > 0:
+            remaining_value = min(remaining_value, paid_amount)
+
         return {
             'remaining_days': remaining_days,
             'daily_rate': daily_rate,
