@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data noupdate="0">
         <!-- Tags mapping standard ribbons for Wink services -->
         <record id="kuec_ribbon_tag_new" model="product.tag">
             <field name="name">New</field>
