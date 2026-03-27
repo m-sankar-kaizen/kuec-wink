@@ -934,8 +934,8 @@ class SaleOrderWink(models.Model):
             })
             order.message_post(
                 body=_(
-                    'Service activated by %(user)s on %(date)s after confirmation call.\n'
-                    'The service is now live.'
+                    'Retainer subscription activated by %(user)s on %(date)s.\n'
+                    'The subscription is now live.'
                 ) % {
                     'user': self.env.user.name,
                     'date': today,
