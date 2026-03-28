@@ -42,6 +42,12 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.24.0 — 2026-03-28
+- [FIX] Portal file upload: accumulate files across selections using DataTransfer API; add per-chip × remove button — re-selecting files no longer wipes previous choices
+- [FIX] Activation modal: add `modal-dialog-scrollable` to all portal modals so overflowing content is reachable on small viewports
+- [UPDT] T&C per product: add `wink_terms_html` field on `product.template`; portal T&C link passes `?product_id=X` when product has own T&C, controller falls back to global company T&C
+- [UPDT] Satisfaction Rate: rename "Label" column to "Satisfaction Rate" in CX report; map 1–5 score to 5-point labels (Extremely Unsatisfied → Extremely Satisfied) via `wink_satisfaction_label` computed field on `rating.rating`
+
 ### 18.0.2.23.0 — 2026-03-24
 - [ADD] `/wink/packages` route: smart landing page — 1 bundle → 302 redirect to tier-selection; 2+ bundles → full-width packages listing with tier cards per bundle
 - [UPDT] "Packages Only" catalogue button now links to `/wink/packages` instead of filter param

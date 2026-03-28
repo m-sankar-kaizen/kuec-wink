@@ -315,12 +315,13 @@ class WinkBundleEntitlement(models.Model):
                 total_gov = gov_amount + (num_employees * gov_per_emp)
                 if total_gov > 0:
                     gov_price = total_gov
+            gov_product = self.env.company.wink_gov_charge_product_id
             self.env['sale.order.line'].sudo().create({
                 'order_id': order.id,
-                'product_id': variant.id,
+                'product_id': gov_product.id if gov_product else variant.id,
                 'product_uom_qty': 1,
                 'price_unit': gov_price,
-                'name': _('Government Charges — %s') % line_name,
+                'name': self.service_product_id.name or line_name,
                 'is_gov_charge_pending': True,
                 'wink_entitlement_id': self.id,
                 'wink_service_line_id': new_line.id,

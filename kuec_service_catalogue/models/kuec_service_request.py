@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 # RET-003
 
+import logging
 from datetime import date as date_cls, timedelta
 
 from dateutil.relativedelta import relativedelta
 
 from odoo import models, fields, api, _, exceptions
+
+_logger = logging.getLogger(__name__)
 
 class SaleOrderWink(models.Model):
     _inherit = 'sale.order'
@@ -30,6 +33,30 @@ class SaleOrderWink(models.Model):
         'product.template',
         string='Requested Service',
         ondelete='set null'
+    )
+    wink_source_delivery_model = fields.Selection(
+        related='wink_source_product_id.delivery_model',
+        store=True,
+        string='Delivery Model',
+        help='Stored relay of the source product delivery model. Used in view invisible conditions.',
+    )
+    wink_vendor_id = fields.Many2one(
+        'res.partner',
+        string='Pre-assigned Vendor',
+        domain=[('is_company', '=', True)],
+        ondelete='set null',
+        help='Vendor assigned by the coordinator before the order is confirmed. '
+             'Automatically propagated to the delivery task and RFQ on confirmation. '
+             'Only applicable to hidden-price, project-based portal requests.',
+    )
+    wink_preassigned_po_id = fields.Many2one(
+        'purchase.order',
+        string='Pre-assigned RFQ',
+        ondelete='set null',
+        copy=False,
+        readonly=True,
+        help='Draft RFQ created when the coordinator assigns a vendor at quotation stage '
+             '(before order confirmation). Linked to the delivery task on confirmation.',
     )
     wink_price_confirmed = fields.Boolean(
         string='Price Confirmed',
@@ -943,6 +970,18 @@ class SaleOrderWink(models.Model):
                 message_type='comment',
                 subtype_xmlid='mail.mt_note',
             )
+            template = self.env.ref(
+                'kuec_service_catalogue.mail_template_wink_service_activated',
+                raise_if_not_found=False,
+            )
+            if template:
+                try:
+                    template.send_mail(order.id, force_send=True)
+                except Exception:
+                    _logger.warning(
+                        'WINK: failed to send service activation email for order %s', order.id,
+                        exc_info=True,
+                    )
 
     def action_wink_activate_bundle(self):
         """Coordinator activates the bundle after the confirmation call.
@@ -988,6 +1027,18 @@ class SaleOrderWink(models.Model):
                 message_type='comment',
                 subtype_xmlid='mail.mt_note',
             )
+            template = self.env.ref(
+                'kuec_service_catalogue.mail_template_wink_bundle_activated',
+                raise_if_not_found=False,
+            )
+            if template:
+                try:
+                    template.send_mail(order.id, force_send=True)
+                except Exception:
+                    _logger.warning(
+                        'WINK: failed to send bundle activation email for order %s', order.id,
+                        exc_info=True,
+                    )
 
     def _wink_bundle_do_cancel(self, reason=''):
         """Portal self-service cancellation.

@@ -33,6 +33,11 @@ class SaleOrderLineBundle(models.Model):
         help='Flags this activation line as carrying government charges. '
              'Update the unit price to the confirmed government amount to make it invoiceable.',
     )
+    gov_charge_display = fields.Char(
+        compute='_compute_gov_charge_display',
+        string='Gov. Charges',
+        help='Display label for government charge status shown in the sale order line list.',
+    )
     wink_service_line_id = fields.Many2one(
         'sale.order.line',
         string='Service Activation Line',
@@ -74,6 +79,14 @@ class SaleOrderLineBundle(models.Model):
                     )
                     notified_orders.add(line.order_id.id)
         return result
+
+    @api.depends('is_gov_charge_pending', 'price_unit')
+    def _compute_gov_charge_display(self):
+        for line in self:
+            if line.is_gov_charge_pending:
+                line.gov_charge_display = 'Pending' if line.price_unit == 0 else 'Confirmed'
+            else:
+                line.gov_charge_display = ''
 
     @api.depends('is_gov_charge_pending', 'price_unit')
     def _compute_qty_to_invoice(self):

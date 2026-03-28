@@ -88,6 +88,16 @@
                         </list>
                     </field>
                 </page>
+
+                <page string="Terms &amp; Conditions" name="wink_terms_tab" invisible="not available_on_wink or type != 'service' or not sale_ok">
+                    <group col="1">
+                        <div class="text-muted small mb-2">
+                            Define service-specific terms shown to customers during portal request submission.
+                            If left empty the global company Terms &amp; Conditions will be used as fallback.
+                        </div>
+                        <field name="wink_terms_html" nolabel="1"/>
+                    </group>
+                </page>
             </xpath>
         </field>
     </record>

@@ -121,5 +121,110 @@
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
+        <!-- WINK: Standalone Service Activated — sent to customer after coordinator activates a standalone/retainer service -->
+        <record id="mail_template_wink_service_activated" model="mail.template">
+            <field name="name">WINK: Service Activated (Customer)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Your service is now active &#8212; {{ object.name or '' }}</field>
+            <field name="email_from">{{ object.company_id.email_formatted or user.email_formatted }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="description">Sent to the customer when the coordinator activates a standalone or retainer service.</field>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-family:Arial,sans-serif;">
+    <p style="font-size:13px;margin:0 0 12px 0;">
+        Dear <t t-out="object.partner_id.name or ''">Customer</t>,
+    </p>
+    <p style="font-size:13px;margin:0 0 12px 0;">
+        Great news — your service is now <strong>active</strong> and ready to use.
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin:0 0 16px 0;">
+        <tr>
+            <td style="padding:6px 12px 6px 0;color:#555;width:140px;">Service</td>
+            <td style="padding:6px 0;font-weight:bold;"><t t-out="object.wink_source_product_id.name or ''">Service Name</t></td>
+        </tr>
+        <tr>
+            <td style="padding:6px 12px 6px 0;color:#555;">Reference</td>
+            <td style="padding:6px 0;"><t t-out="object.name or ''">SO001</t></td>
+        </tr>
+        <tr>
+            <td style="padding:6px 12px 6px 0;color:#555;">Activated On</td>
+            <td style="padding:6px 0;"><t t-out="format_date(object.wink_bundle_activation_date) or ''">01/01/2026</t></td>
+        </tr>
+    </table>
+    <div style="text-align:center;margin:20px 0;">
+        <a t-attf-href="{{ object.get_base_url() }}/my/requests/{{ object.id }}"
+           style="background-color:#1F4E79;padding:10px 24px;text-decoration:none;color:#fff;border-radius:5px;font-size:13px;">
+            View My Request
+        </a>
+    </div>
+    <p style="font-size:12px;color:#888;margin:16px 0 0 0;">
+        Best regards,<br/>
+        <strong><t t-out="object.company_id.name or ''">KUEC</t></strong>
+    </p>
+</div>
+            </field>
+        </record>
+
+        <!-- WINK: Bundle Activated — sent to customer after coordinator activates a bundle -->
+        <record id="mail_template_wink_bundle_activated" model="mail.template">
+            <field name="name">WINK: Bundle Activated (Customer)</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="subject">Your bundle is now active &#8212; {{ object.name or '' }}</field>
+            <field name="email_from">{{ object.company_id.email_formatted or user.email_formatted }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+            <field name="description">Sent to the customer when the coordinator activates a bundle after the confirmation call.</field>
+            <field name="auto_delete" eval="True"/>
+            <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-family:Arial,sans-serif;">
+    <p style="font-size:13px;margin:0 0 12px 0;">
+        Dear <t t-out="object.partner_id.name or ''">Customer</t>,
+    </p>
+    <p style="font-size:13px;margin:0 0 12px 0;">
+        Your bundle is now <strong>active</strong>. You can start requesting included services from your portal.
+    </p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin:0 0 16px 0;">
+        <tr>
+            <td style="padding:6px 12px 6px 0;color:#555;width:140px;">Bundle</td>
+            <td style="padding:6px 0;font-weight:bold;"><t t-out="object.wink_source_product_id.name or ''">Bundle Name</t></td>
+        </tr>
+        <t t-if="object.wink_bundle_tier_id">
+        <tr>
+            <td style="padding:6px 12px 6px 0;color:#555;">Tier</td>
+            <td style="padding:6px 0;"><t t-out="object.wink_bundle_tier_id.name or ''">Tier Name</t></td>
+        </tr>
+        </t>
+        <tr>
+            <td style="padding:6px 12px 6px 0;color:#555;">Reference</td>
+            <td style="padding:6px 0;"><t t-out="object.name or ''">SO001</t></td>
+        </tr>
+        <tr>
+            <td style="padding:6px 12px 6px 0;color:#555;">Activated On</td>
+            <td style="padding:6px 0;"><t t-out="format_date(object.wink_bundle_activation_date) or ''">01/01/2026</t></td>
+        </tr>
+    </table>
+    <t t-if="object.wink_entitlement_ids">
+    <p style="font-size:13px;font-weight:bold;margin:0 0 8px 0;">Included Services</p>
+    <ul style="font-size:13px;margin:0 0 16px 0;padding-left:20px;">
+        <t t-foreach="object.wink_entitlement_ids" t-as="ent">
+            <li style="padding:3px 0;"><t t-out="ent.name or ''">Service</t></li>
+        </t>
+    </ul>
+    </t>
+    <div style="text-align:center;margin:20px 0;">
+        <a t-attf-href="{{ object.get_base_url() }}/my/requests/{{ object.id }}"
+           style="background-color:#1F4E79;padding:10px 24px;text-decoration:none;color:#fff;border-radius:5px;font-size:13px;">
+            Go to My Bundle
+        </a>
+    </div>
+    <p style="font-size:12px;color:#888;margin:16px 0 0 0;">
+        Best regards,<br/>
+        <strong><t t-out="object.company_id.name or ''">KUEC</t></strong>
+    </p>
+</div>
+            </field>
+        </record>
     </data>
 </odoo>

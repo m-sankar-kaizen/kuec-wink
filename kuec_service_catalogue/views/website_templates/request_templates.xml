@@ -544,6 +544,19 @@
                         </div>
                     </div>
 
+                    <!-- Project-based: description/notes field (Item 2) -->
+                    <t t-if="product.delivery_model == 'project' and step != 3">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" for="wink_project_notes">
+                                <i class="fa fa-align-left me-1"/>Project Description
+                                <span class="text-muted fw-normal small ms-1">(required)</span>
+                            </label>
+                            <textarea id="wink_project_notes" name="notes" class="form-control" rows="4"
+                                      placeholder="Describe your project requirements, scope, timeline, or any other relevant details…"
+                                      required="required"><t t-esc="post.get('notes') or ''"/></textarea>
+                        </div>
+                    </t>
+
                     <!-- Upgrade/Downgrade notice banner (Story 1.12) -->
                     <div t-if="change_from_id" class="card border-info mb-4">
                         <div class="card-header d-flex align-items-center gap-2" style="background:#E8F4FD; border-color:#bee5eb;">
@@ -1182,29 +1195,22 @@
                                                     <input type="file"
                                                            t-att-name="'doc_file_%s' % doc.id"
                                                            t-att-id="'wink-doc-input-%s' % doc.id"
+                                                           t-att-data-doc-id="doc.id"
                                                            multiple="multiple"
                                                            t-att-required="'required' if doc.requirement == 'required' else None"
                                                            style="display:none;"
                                                            onchange="(function(inp){
-                                                               var container = inp.closest('.rounded-3');
-                                                               var list = container ? container.querySelector('.wink-file-list') : null;
-                                                               var btn  = inp.closest('label');
-                                                               if (!list) return;
-                                                               list.innerHTML = '';
-                                                               if (inp.files.length === 0) {
-                                                                   if (btn) { btn.classList.remove('btn-success','border-success'); btn.classList.add('btn-outline-primary'); btn.querySelector('i').className='fa fa-paperclip me-1'; }
-                                                                   return;
-                                                               }
-                                                               if (btn) { btn.classList.remove('btn-outline-primary'); btn.classList.add('btn-success','border-success'); btn.querySelector('i').className='fa fa-check me-1'; }
-                                                               for (var i=0; i &lt; inp.files.length; i++){
-                                                                   var f = inp.files[i];
-                                                                   var size = f.size &lt; 1024*1024 ? (Math.round(f.size/1024)+'KB') : (Math.round(f.size/1024/1024*10)/10+'MB');
-                                                                   var el = document.createElement('div');
-                                                                   el.className = 'wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';
-                                                                   el.style.cssText = 'background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:260px;';
-                                                                   el.innerHTML = '&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;&quot;&gt;'+size+'&lt;/span&gt;';
-                                                                   list.appendChild(el);
-                                                               }
+                                                               if(!window._winkRm){window._winkRm=function(id,idx,trigger){id=''+id;window._wf=window._wf||{};if(!window._wf[id])return;window._wf[id].splice(idx,1);var cnt=trigger.closest('.rounded-3');var pi=cnt.querySelector('input[type=file]');var li=cnt.querySelector('.wink-file-list');var bt=pi.closest('label');var dt=new DataTransfer();window._wf[id].forEach(function(f){dt.items.add(f);});try{pi.files=dt.files;}catch(e){}li.innerHTML='';if(!window._wf[id].length){bt.classList.remove('btn-success','border-success');bt.classList.add('btn-outline-primary');bt.querySelector('i').className='fa fa-paperclip me-1';return;}bt.classList.remove('btn-outline-primary');bt.classList.add('btn-success','border-success');bt.querySelector('i').className='fa fa-check me-1';window._wf[id].forEach(function(f,i){var sz=f.size&lt;1048576?Math.round(f.size/1024)+'KB':(Math.round(f.size/1048576*10)/10+'MB');var el=document.createElement('div');el.className='wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';el.style.cssText='background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:260px;';el.innerHTML='&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;margin-left:4px&quot;&gt;'+sz+'&lt;/span&gt;&lt;span onclick=&quot;window._winkRm('+id+','+i+',this)&quot; style=&quot;cursor:pointer;font-weight:bold;flex-shrink:0;margin-left:6px;color:#dc3545&quot; title=&quot;Remove&quot;&gt;×&lt;/span&gt;';li.appendChild(el);});};}
+                                                               window._wf=window._wf||{};var id=''+inp.dataset.docId;
+                                                               if(!window._wf[id])window._wf[id]=[];
+                                                               for(var i=0;i&lt;inp.files.length;i++)window._wf[id].push(inp.files[i]);
+                                                               var dt=new DataTransfer();window._wf[id].forEach(function(f){dt.items.add(f);});
+                                                               try{inp.files=dt.files;}catch(e){}
+                                                               var list=inp.closest('.rounded-3').querySelector('.wink-file-list');
+                                                               var btn=inp.closest('label');list.innerHTML='';
+                                                               if(!window._wf[id].length){btn.classList.remove('btn-success','border-success');btn.classList.add('btn-outline-primary');btn.querySelector('i').className='fa fa-paperclip me-1';return;}
+                                                               btn.classList.remove('btn-outline-primary');btn.classList.add('btn-success','border-success');btn.querySelector('i').className='fa fa-check me-1';
+                                                               window._wf[id].forEach(function(f,i){var sz=f.size&lt;1048576?Math.round(f.size/1024)+'KB':(Math.round(f.size/1048576*10)/10+'MB');var el=document.createElement('div');el.className='wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';el.style.cssText='background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:260px;';el.innerHTML='&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;margin-left:4px&quot;&gt;'+sz+'&lt;/span&gt;&lt;span onclick=&quot;window._winkRm('+id+','+i+',this)&quot; style=&quot;cursor:pointer;font-weight:bold;flex-shrink:0;margin-left:6px;color:#dc3545&quot; title=&quot;Remove&quot;&gt;×&lt;/span&gt;';list.appendChild(el);});
                                                            })(this)"/>
                                                 </label>
                                             </div>
@@ -1224,7 +1230,7 @@
                                 <input type="checkbox" class="form-check-input" id="wink-tnc-check"/>
                                 <label class="form-check-label ms-2 small" for="wink-tnc-check">
                                     I have read and agree to the
-                                    <a href="/terms-and-conditions" target="_blank" class="fw-semibold" style="color:var(--wink-primary);">Terms &amp; Conditions</a>
+                                    <a t-attf-href="/terms-and-conditions#{('?product_id=' + str(product.id)) if product.wink_terms_html else ''}" target="_blank" class="fw-semibold" style="color:var(--wink-primary);">Terms &amp; Conditions</a>
                                     and confirm I am authorised to submit this request.
                                 </label>
                             </div>
@@ -1979,8 +1985,8 @@
                                                     <i class="fa fa-credit-card me-1"/>Proceed to Payment
                                                 </a>
                                             </t>
-                                            <t t-if="pb_tasks">
-                                                <a t-attf-href="/my/tasks?search_in=all&amp;search=#{order.name}"
+                                            <t t-if="pb_tasks and pb_project">
+                                                <a t-attf-href="/my/projects/#{pb_project.id}"
                                                    class="btn btn-outline-primary btn-sm rounded-pill">
                                                     <i class="fa fa-eye me-1"/>View Tasks
                                                 </a>
@@ -2198,13 +2204,15 @@
                                             </div>
                                         </div>
                                         </t>
-                                        <!-- Amount -->
+                                        <!-- Amount — hidden until coordinator confirms the price -->
+                                        <t t-if="order.wink_price_confirmed">
                                         <div class="col-6 col-md-3 p-4">
                                             <div class="text-muted small mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Amount</div>
                                             <div class="fw-bold" style="font-size:0.95rem;color:var(--wink-primary);">
                                                 <t t-esc="order.amount_total" t-options="{'widget':'monetary','display_currency':order.currency_id}"/>
                                             </div>
                                         </div>
+                                        </t>
                                     </div>
                                 </div>
                             </div>
@@ -2603,7 +2611,7 @@
                         <t t-set="prereq" t-value="entitlement_prereqs.get(ent_m.id, {})"/>
                         <div class="modal fade" t-attf-id="wink-activate-modal-#{ent_m.id}"
                              tabindex="-1" aria-modal="true" role="dialog">
-                            <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content wink-activate-modal-content">
                                     <div class="modal-header wink-activate-modal-header">
                                         <h5 class="modal-title">
@@ -2622,6 +2630,7 @@
                                           t-attf-action="/my/requests/#{order.id}/bundle/#{ent_m.id}/activate"
                                           t-attf-id="wink-activate-form-#{ent_m.id}"
                                           class="wink-activate-form"
+                                          style="display:flex;flex-direction:column;overflow:hidden;flex:1 1 0%;"
                                           enctype="multipart/form-data">
                                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                         <div class="modal-body p-0">
@@ -2639,10 +2648,29 @@
                                                             </div>
                                                             <input type="hidden" t-att-name="'bnd_req_id_%d_%d' % (doc['req_id'], ent_m.id)"
                                                                    t-att-value="doc['req_id']"/>
-                                                            <input type="file" t-att-name="'bnd_attach_%d_%d' % (doc['req_id'], ent_m.id)"
-                                                                   class="form-control form-control-sm mt-1"
-                                                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                                                   multiple="multiple"/>
+                                                            <label class="btn btn-sm btn-outline-primary rounded-pill mt-1 mb-0"
+                                                                   style="cursor:pointer;font-size:0.8rem;">
+                                                                <i class="fa fa-paperclip me-1"/>Attach files
+                                                                <input type="file"
+                                                                       t-att-name="'bnd_attach_%d_%d' % (doc['req_id'], ent_m.id)"
+                                                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                                                       multiple="multiple"
+                                                                       style="display:none;"
+                                                                       onchange="(function(inp){
+                                                                           if(!window._winkRm){window._winkRm=function(id,idx,trigger){id=''+id;window._wf=window._wf||{};if(!window._wf[id])return;window._wf[id].splice(idx,1);var cnt=trigger.closest('.wink-activate-doc-row');var pi=cnt.querySelector('input[type=file]');var li=cnt.querySelector('.wink-bnd-file-list');var bt=pi.closest('label');var dt=new DataTransfer();window._wf[id].forEach(function(f){dt.items.add(f);});try{pi.files=dt.files;}catch(e){}li.innerHTML='';if(!window._wf[id].length){bt.classList.remove('btn-success','border-success');bt.classList.add('btn-outline-primary');bt.querySelector('i').className='fa fa-paperclip me-1';return;}bt.classList.remove('btn-outline-primary');bt.classList.add('btn-success','border-success');bt.querySelector('i').className='fa fa-check me-1';window._wf[id].forEach(function(f,i){var sz=f.size&lt;1048576?Math.round(f.size/1024)+'KB':(Math.round(f.size/1048576*10)/10+'MB');var el=document.createElement('div');el.className='wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';el.style.cssText='background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:240px;';el.innerHTML='&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;margin-left:4px&quot;&gt;'+sz+'&lt;/span&gt;&lt;span onclick=&quot;window._winkRm('+JSON.stringify(id)+','+i+',this)&quot; style=&quot;cursor:pointer;font-weight:bold;flex-shrink:0;margin-left:6px;color:#dc3545&quot; title=&quot;Remove&quot;&gt;×&lt;/span&gt;';li.appendChild(el);});};}
+                                                                           window._wf=window._wf||{};var id=''+inp.name;
+                                                                           if(!window._wf[id])window._wf[id]=[];
+                                                                           for(var i=0;i&lt;inp.files.length;i++)window._wf[id].push(inp.files[i]);
+                                                                           var dt=new DataTransfer();window._wf[id].forEach(function(f){dt.items.add(f);});
+                                                                           try{inp.files=dt.files;}catch(e){}
+                                                                           var list=inp.closest('.wink-activate-doc-row').querySelector('.wink-bnd-file-list');
+                                                                           var btn=inp.closest('label');list.innerHTML='';
+                                                                           if(!window._wf[id].length){btn.classList.remove('btn-success','border-success');btn.classList.add('btn-outline-primary');btn.querySelector('i').className='fa fa-paperclip me-1';return;}
+                                                                           btn.classList.remove('btn-outline-primary');btn.classList.add('btn-success','border-success');btn.querySelector('i').className='fa fa-check me-1';
+                                                                           window._wf[id].forEach(function(f,i){var sz=f.size&lt;1048576?Math.round(f.size/1024)+'KB':(Math.round(f.size/1048576*10)/10+'MB');var el=document.createElement('div');el.className='wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';el.style.cssText='background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:240px;';el.innerHTML='&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;margin-left:4px&quot;&gt;'+sz+'&lt;/span&gt;&lt;span onclick=&quot;window._winkRm('+JSON.stringify(id)+','+i+',this)&quot; style=&quot;cursor:pointer;font-weight:bold;flex-shrink:0;margin-left:6px;color:#dc3545&quot; title=&quot;Remove&quot;&gt;×&lt;/span&gt;';list.appendChild(el);});
+                                                                       })(this)"/>
+                                                            </label>
+                                                            <div class="wink-bnd-file-list d-flex flex-wrap gap-2 mt-2"/>
                                                             <small class="text-muted" style="font-size:.72rem;">Optional — attach one or more files</small>
                                                         </div>
                                                     </t>
@@ -3833,7 +3861,7 @@
                             <t t-set="prereq" t-value="entitlement_prereqs.get(ent_m.id, {})"/>
                             <div class="modal fade" t-attf-id="wink-bnd-modal-#{ent_m.id}"
                                  tabindex="-1" aria-modal="true" role="dialog">
-                                <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                                     <div class="modal-content wink-activate-modal-content">
                                         <div class="modal-header wink-activate-modal-header">
                                             <h5 class="modal-title">
@@ -3845,6 +3873,7 @@
                                               t-attf-action="/my/requests/#{prereq.get('order_id')}/bundle/#{ent_m.id}/activate"
                                               t-attf-id="wink-bnd-form-#{ent_m.id}"
                                               class="wink-activate-form"
+                                              style="display:flex;flex-direction:column;overflow:hidden;flex:1 1 0%;"
                                               enctype="multipart/form-data">
                                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                             <div class="modal-body p-0">
@@ -3862,10 +3891,29 @@
                                                                 </div>
                                                                 <input type="hidden" t-att-name="'bnd_req_id_%d_%d' % (doc['req_id'], ent_m.id)"
                                                                        t-att-value="doc['req_id']"/>
-                                                                <input type="file" t-att-name="'bnd_attach_%d_%d' % (doc['req_id'], ent_m.id)"
-                                                                       class="form-control form-control-sm mt-1"
-                                                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                                                       multiple="multiple"/>
+                                                                <label class="btn btn-sm btn-outline-primary rounded-pill mt-1 mb-0"
+                                                                       style="cursor:pointer;font-size:0.8rem;">
+                                                                    <i class="fa fa-paperclip me-1"/>Attach files
+                                                                    <input type="file"
+                                                                           t-att-name="'bnd_attach_%d_%d' % (doc['req_id'], ent_m.id)"
+                                                                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                                                           multiple="multiple"
+                                                                           style="display:none;"
+                                                                           onchange="(function(inp){
+                                                                               if(!window._winkRm){window._winkRm=function(id,idx,trigger){id=''+id;window._wf=window._wf||{};if(!window._wf[id])return;window._wf[id].splice(idx,1);var cnt=trigger.closest('.wink-activate-doc-row');var pi=cnt.querySelector('input[type=file]');var li=cnt.querySelector('.wink-bnd-file-list');var bt=pi.closest('label');var dt=new DataTransfer();window._wf[id].forEach(function(f){dt.items.add(f);});try{pi.files=dt.files;}catch(e){}li.innerHTML='';if(!window._wf[id].length){bt.classList.remove('btn-success','border-success');bt.classList.add('btn-outline-primary');bt.querySelector('i').className='fa fa-paperclip me-1';return;}bt.classList.remove('btn-outline-primary');bt.classList.add('btn-success','border-success');bt.querySelector('i').className='fa fa-check me-1';window._wf[id].forEach(function(f,i){var sz=f.size&lt;1048576?Math.round(f.size/1024)+'KB':(Math.round(f.size/1048576*10)/10+'MB');var el=document.createElement('div');el.className='wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';el.style.cssText='background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:240px;';el.innerHTML='&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;margin-left:4px&quot;&gt;'+sz+'&lt;/span&gt;&lt;span onclick=&quot;window._winkRm('+JSON.stringify(id)+','+i+',this)&quot; style=&quot;cursor:pointer;font-weight:bold;flex-shrink:0;margin-left:6px;color:#dc3545&quot; title=&quot;Remove&quot;&gt;×&lt;/span&gt;';li.appendChild(el);});};}
+                                                                               window._wf=window._wf||{};var id=''+inp.name;
+                                                                               if(!window._wf[id])window._wf[id]=[];
+                                                                               for(var i=0;i&lt;inp.files.length;i++)window._wf[id].push(inp.files[i]);
+                                                                               var dt=new DataTransfer();window._wf[id].forEach(function(f){dt.items.add(f);});
+                                                                               try{inp.files=dt.files;}catch(e){}
+                                                                               var list=inp.closest('.wink-activate-doc-row').querySelector('.wink-bnd-file-list');
+                                                                               var btn=inp.closest('label');list.innerHTML='';
+                                                                               if(!window._wf[id].length){btn.classList.remove('btn-success','border-success');btn.classList.add('btn-outline-primary');btn.querySelector('i').className='fa fa-paperclip me-1';return;}
+                                                                               btn.classList.remove('btn-outline-primary');btn.classList.add('btn-success','border-success');btn.querySelector('i').className='fa fa-check me-1';
+                                                                               window._wf[id].forEach(function(f,i){var sz=f.size&lt;1048576?Math.round(f.size/1024)+'KB':(Math.round(f.size/1048576*10)/10+'MB');var el=document.createElement('div');el.className='wink-file-chip d-flex align-items-center gap-1 px-2 py-1 rounded-pill border small';el.style.cssText='background:#e8f5e9;border-color:#a5d6a7!important;color:#2e7d32;font-size:0.75rem;max-width:240px;';el.innerHTML='&lt;i class=&quot;fa fa-file-o&quot; style=&quot;flex-shrink:0&quot;&gt;&lt;/i&gt;&lt;span style=&quot;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1&quot;&gt;'+f.name+'&lt;/span&gt;&lt;span style=&quot;flex-shrink:0;opacity:0.7;margin-left:4px&quot;&gt;'+sz+'&lt;/span&gt;&lt;span onclick=&quot;window._winkRm('+JSON.stringify(id)+','+i+',this)&quot; style=&quot;cursor:pointer;font-weight:bold;flex-shrink:0;margin-left:6px;color:#dc3545&quot; title=&quot;Remove&quot;&gt;×&lt;/span&gt;';list.appendChild(el);});
+                                                                           })(this)"/>
+                                                                </label>
+                                                                <div class="wink-bnd-file-list d-flex flex-wrap gap-2 mt-2"/>
                                                                 <small class="text-muted" style="font-size:.72rem;">Optional — attach one or more files</small>
                                                             </div>
                                                         </t>

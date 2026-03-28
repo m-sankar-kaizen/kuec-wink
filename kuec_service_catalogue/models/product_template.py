@@ -81,6 +81,12 @@ class ProductTemplate(models.Model):
         help='Single ribbon tag shown as the diagonal ribbon on the Wink portal card and detail page.',
     )
 
+    wink_terms_html = fields.Html(
+        string='Terms & Conditions',
+        help='Product-specific terms and conditions shown to customers during portal request submission. '
+             'If left empty the global company Terms & Conditions will be used.',
+    )
+
     @api.onchange('wink_is_bundle')
     def _onchange_wink_is_bundle(self):
         if self.wink_is_bundle:

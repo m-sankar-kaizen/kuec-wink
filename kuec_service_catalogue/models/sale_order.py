@@ -74,6 +74,13 @@ class SaleOrder(models.Model):
                 'rating_active': True,
                 'rating_status': 'stage',
             })
+            # ITEM-VIEW-TASKS: Make project visible to portal users so "View Tasks"
+            # works on the portal request detail page. 'portal' allows the order
+            # partner (customer) to navigate to /my/projects/<id> without needing
+            # to be an explicit follower.
+            projects.filtered(
+                lambda p: p.privacy_visibility not in ('portal',)
+            ).sudo().write({'privacy_visibility': 'portal'})
             # Ensure every folded stage of the project has a rating template so
             # that _send_task_rating_mail() actually dispatches the email.
             if rating_template:
@@ -82,7 +89,68 @@ class SaleOrder(models.Model):
                 )
                 if folded_stages:
                     folded_stages.sudo().write({'rating_template_id': rating_template.id})
+        # Item-7: propagate pre-assigned vendor to auto-created tasks after confirmation
+        for order in self:
+            if not order.wink_is_portal_request:
+                continue
+            if not order.wink_vendor_id:
+                continue
+            if order.wink_source_delivery_model != 'project':
+                continue
+            tasks = self.env['project.task'].sudo().search([
+                ('sale_order_id', '=', order.id),
+            ])
+            for task in tasks:
+                if task.wink_vendor_id:
+                    continue
+                task.wink_vendor_id = order.wink_vendor_id
+                # If an RFQ was already created at quotation stage, link it
+                # to the task instead of creating a duplicate.
+                if order.wink_preassigned_po_id:
+                    task.sudo().write({
+                        'wink_purchase_order_id': order.wink_preassigned_po_id.id,
+                    })
+                else:
+                    try:
+                        task.action_assign_vendor_rfq()
+                    except Exception:
+                        _logger.warning(
+                            'WINK: failed to create RFQ after vendor propagation '
+                            'for order %s task %s', order.id, task.id,
+                            exc_info=True,
+                        )
         return result
+
+    def action_open_assign_vendor_order_wizard(self):
+        """Open the Assign Vendor wizard at quotation stage (no task yet)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Assign Vendor'),
+            'res_model': 'wink.assign.vendor.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_order_id': self.id},
+        }
+
+    def _send_payment_succeeded_for_order_mail(self):
+        """Suppress native Odoo 'Payment Executed' email for WINK portal orders.
+
+        The native email (sale.mail_template_sale_payment_executed) fires from
+        sale/models/payment_transaction.py whenever a transaction is processed.
+        For WINK portal orders this creates a duplicate because:
+          - Retainer/subscription orders also receive the invoice email via
+            sale_subscription._create_or_link_to_invoice() -> _send_invoice().
+          - Customers already receive a submission confirmation and, once
+            activated, a separate activation email from WINK templates.
+
+        Delegating non-portal orders to super() preserves the native behaviour
+        for ordinary sales.
+        """
+        wink_orders = self.filtered(lambda o: o.wink_is_portal_request)
+        non_wink = self - wink_orders
+        if non_wink:
+            super(SaleOrder, non_wink)._send_payment_succeeded_for_order_mail()
 
     def action_kuec_finalize_price(self):
         """Open the Finalize & Unlock Payment wizard."""

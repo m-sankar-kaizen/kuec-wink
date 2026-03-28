@@ -1338,13 +1338,25 @@ class KuecCustomerPortal(CustomerPortal):
             return None
 
     @http.route('/terms-and-conditions', type='http', auth='public', website=True)
-    def terms_and_conditions(self, **kwargs):
-        """Serve the WINK Terms & Conditions page. Content editable from Settings → Wink."""
-        company = request.env.company
-        terms_html = company.sudo().wink_terms_html or ''
+    def terms_and_conditions(self, product_id=None, **kwargs):
+        """Serve the WINK Terms & Conditions page.
+
+        Uses the product-level T&C when product_id is supplied and the product
+        has wink_terms_html set. Falls back to the global company T&C otherwise.
+        """
+        terms_html = ''
+        if product_id:
+            try:
+                product = request.env['product.template'].sudo().browse(int(product_id))
+                if product.exists():
+                    terms_html = product.wink_terms_html or ''
+            except Exception:
+                pass
+        if not terms_html:
+            terms_html = request.env.company.sudo().wink_terms_html or ''
         return request.render('kuec_service_catalogue.wink_terms_and_conditions', {
             'terms_html': terms_html,
-            'company': company,
+            'company': request.env.company,
         })
 
     # ── V-1: Vendor Portal Ratings ────────────────────────────────────────────

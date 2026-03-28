@@ -8,6 +8,7 @@
         <field name="arch" type="xml">
             <xpath expr="//list" position="inside">
                 <field name="wink_employee_ids" widget="many2many_tags" optional="show" string="Employees"/>
+                <field name="wink_vendor_id" optional="show" string="Vendor"/>
             </xpath>
         </field>
     </record>

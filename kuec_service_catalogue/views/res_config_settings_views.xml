@@ -16,6 +16,16 @@
                         </setting>
                     </block>
 
+                    <!-- Government Charges global product -->
+                    <block title="Government Charges" name="kuec_wink_gov_charge_setting_container">
+                        <setting id="kuec_gov_charge_product" string="Government Charges Product"
+                                 help="Select the product to use on all government charge sale order lines. If not set, the service product is used as fallback.">
+                            <field name="wink_gov_charge_product_id"
+                                   options="{'no_create': True}"
+                                   placeholder="Select a product…"/>
+                        </setting>
+                    </block>
+
                     <!-- Terms & Conditions editor -->
                     <block title="Portal Terms &amp; Conditions" name="kuec_wink_terms_setting_container">
                         <setting id="kuec_terms_html" string="Terms &amp; Conditions Content"

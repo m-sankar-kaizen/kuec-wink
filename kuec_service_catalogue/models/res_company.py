@@ -18,3 +18,10 @@ class ResCompany(models.Model):
         help='HTML content shown at /terms-and-conditions on the customer portal. '
              'Editable here or via Settings → Wink → Terms & Conditions.'
     )
+    wink_gov_charge_product_id = fields.Many2one(
+        'product.product',
+        string='Government Charges Product',
+        ondelete='set null',
+        help='Global product used for all government charge lines on sale orders. '
+             'If not set, the service product is used as fallback.',
+    )

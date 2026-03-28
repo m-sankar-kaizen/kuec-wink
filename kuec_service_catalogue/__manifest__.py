@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'KUEC Service Catalogue',
-    'version': '18.0.2.23.6',
+    'version': '18.0.2.25.4',
     'category': 'Sales',
     'summary': 'Service Catalogue & Business Configurability',
     'description': """

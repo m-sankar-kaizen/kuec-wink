@@ -193,7 +193,7 @@
                        decoration-success="rating &gt;= 4"
                        decoration-warning="rating == 3"
                        decoration-danger="rating &lt; 3"/>
-                <field name="rating_text" string="Label" widget="badge" optional="show"/>
+                <field name="wink_satisfaction_label" string="Satisfaction Rate" widget="badge" optional="show"/>
                 <field name="feedback" string="Feedback" optional="show"/>
                 <field name="write_date" string="Date"/>
                 <field name="consumed" column_invisible="1"/>
@@ -207,7 +207,7 @@
         <field name="arch" type="xml">
             <pivot string="CX Ratings Pivot">
                 <field name="rated_partner_id" type="row"/>
-                <field name="rating_text" type="col"/>
+                <field name="wink_satisfaction_label" type="col"/>
                 <field name="rating" type="measure"/>
             </pivot>
         </field>

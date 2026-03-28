@@ -27,3 +27,9 @@ class ResConfigSettings(models.TransientModel):
         sanitize=False,
         help='HTML content shown at /terms-and-conditions on the customer portal.'
     )
+    wink_gov_charge_product_id = fields.Many2one(
+        related='company_id.wink_gov_charge_product_id',
+        string='Government Charges Product',
+        readonly=False,
+        help='Global product used for all government charge lines on sale orders.',
+    )

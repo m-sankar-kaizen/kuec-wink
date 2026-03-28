@@ -456,7 +456,6 @@ class WinkRequest(http.Controller):
                         'min_days_notice': _min_days,
                         'change_disallowed_message': _change_disallowed_message,
                     })
-
             # Story 1.12 — proration and policy for upgrade/downgrade
             change_proration = None          # dict from _compute_remaining_credit or None
             change_policy = None             # wink.subscription.group record or None
@@ -492,9 +491,9 @@ class WinkRequest(http.Controller):
             # CR-6: review step display (type_label, tier_name, plan_name, employee_names)
             # CR-6: review step display (type_label, tier_name, plan_name, employee_names, price_str)
             review_display = {
-                'type_label': '', 
-                'tier_name': '', 
-                'plan_name': '', 
+                'type_label': '',
+                'tier_name': '',
+                'plan_name': '',
                 'employee_names': [],
                 'price_str': '',
                 'currency_symbol': 'AED',
@@ -512,7 +511,7 @@ class WinkRequest(http.Controller):
                             review_display['tier_name'] = ''
                     else:
                         review_display['tier_name'] = ''
-                    
+
                     # UI-013: Map plan name and price for bundles
                     rec_id = wizard_draft.get('selected_pricing_id') or wizard_draft.get('bundle_recurrence_id')
                     if rec_id:
@@ -648,10 +647,10 @@ class WinkRequest(http.Controller):
                                 # Also index by variant attribute names (lowercase) for robust matching
                                 for attr_name in p.get('variant_attribute_names', []):
                                     pricing_matrix['%s|%s' % (rid, attr_name.lower().strip())] = p
-                    
+
                     render_vals['billing_cycles'] = billing_cycles
                     render_vals['pricing_matrix'] = pricing_matrix
-                    
+
                     # Pre-identify cycles for the toggle
                     monthly = None
                     annual = None
@@ -1038,12 +1037,13 @@ class WinkRequest(http.Controller):
                 num_emp = len(employee_ids) if employee_ids else 0
                 total_gov = gov_base + (num_emp * gov_per_emp)
                 if total_gov > 0:
+                    gov_product = request.env.company.sudo().wink_gov_charge_product_id
                     request.env['sale.order.line'].sudo().create({
                         'order_id': order.id,
-                        'product_id': variant.id,
+                        'product_id': gov_product.id if gov_product else variant.id,
                         'product_uom_qty': 1,
                         'price_unit': total_gov,
-                        'name': _('Government Charges — %s') % product.name,
+                        'name': product.name,
                         'is_gov_charge_pending': True,
                     })
 
@@ -1185,7 +1185,10 @@ class WinkRequest(http.Controller):
         )
         if is_auto_confirm:
             try:
-                order.sudo().action_confirm()
+                # mail_notrack=True: prevents Odoo from sending the native
+                # sale order confirmation chatter notification to followers —
+                # we send our own kuec_request_confirmation_template below.
+                order.sudo().with_context(mail_notrack=True).action_confirm()
             except (ValueError, Exception) as e:
                 # Odoo 18 bug: project template with 0 tasks causes ValueError
                 # in project_task.create() — order is still created, coordinator

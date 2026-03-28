@@ -35,21 +35,26 @@
                         type="object"
                         class="btn-success"
                         groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"
-                        invisible="wink_entitlement_ids or not wink_is_portal_request or state not in ['sale','done'] or wink_bundle_activated or wink_source_product_id.delivery_model == 'project'"
+                        invisible="wink_entitlement_ids or not wink_is_portal_request or state not in ['sale','done'] or wink_bundle_activated or wink_source_delivery_model == 'project'"
                         confirm="Have you completed the confirmation call with the customer? This will mark the service as live."/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="wink_is_portal_request" invisible="1"/>
                 <field name="has_pending_gov_charges" invisible="1"/>
             </xpath>
+            <xpath expr="//field[@name='order_line']/list" position="attributes">
+                <attribute name="decoration-warning">is_gov_charge_pending and price_unit == 0</attribute>
+                <attribute name="decoration-success">is_gov_charge_pending and price_unit &gt; 0</attribute>
+            </xpath>
             <xpath expr="//field[@name='order_line']/list" position="inside">
                 <field name="wink_entitlement_id" column_invisible="1"/>
-                <field name="is_gov_charge_pending"
+                <field name="is_gov_charge_pending" column_invisible="1"/>
+                <field name="gov_charge_display"
                        string="Gov. Charges"
                        widget="badge"
                        optional="show"
                        decoration-warning="is_gov_charge_pending and price_unit == 0"
-                       decoration-success="is_gov_charge_pending and price_unit > 0"
+                       decoration-success="is_gov_charge_pending and price_unit &gt; 0"
                        column_invisible="not parent.has_pending_gov_charges"/>
             </xpath>
             <xpath expr="//field[@name='order_line']" position="before">
@@ -89,6 +94,29 @@
                         <field name="wink_proration_charge" readonly="1" invisible="not wink_change_type"/>
                         <field name="wink_plan_change_effective_date" readonly="1" invisible="not wink_change_type"/>
                         <field name="wink_request_notes" readonly="1" colspan="2" nolabel="1"/>
+                        <!-- Pre-assign vendor at quotation stage (project-based, hidden price) -->
+                        <field name="wink_vendor_id" invisible="1"/>
+                        <field name="wink_preassigned_po_id" invisible="1"/>
+                        <div colspan="2"
+                             invisible="wink_source_delivery_model != 'project' or state not in ('draft', 'sent')"
+                             groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system">
+                            <!-- Show button when no vendor assigned yet -->
+                            <button name="action_open_assign_vendor_order_wizard"
+                                    string="Assign Vendor"
+                                    type="object"
+                                    class="btn-primary btn-sm"
+                                    invisible="wink_vendor_id"/>
+                            <!-- Show vendor + RFQ once assigned -->
+                            <div invisible="not wink_vendor_id" class="d-flex align-items-center gap-3 flex-wrap">
+                                <span class="fw-semibold">
+                                    <i class="fa fa-building me-1 text-muted"/>
+                                    <field name="wink_vendor_id" readonly="1" nolabel="1" options="{'no_open': True}"/>
+                                </span>
+                                <field name="wink_preassigned_po_id" readonly="1" nolabel="1"
+                                       invisible="not wink_preassigned_po_id"
+                                       string="RFQ" options="{'no_open': False}"/>
+                            </div>
+                        </div>
                     </group>
                     <group string="Employees (standalone)" invisible="wink_entitlement_ids">
                         <field name="wink_selected_employee_ids" widget="many2many_tags" nolabel="1"/>
