@@ -2244,20 +2244,6 @@
                     </t>
                     <!-- /Standalone Action Bar -->
 
-                    <!-- Portal Chatter: shown directly below the action bar for all non-bundle stages -->
-                    <t t-if="not wink_is_bundle">
-                        <div id="wink-portal-chatter" class="mt-4">
-                            <h5 class="border-bottom pb-2"><i class="fa fa-comments me-2"/>Communication History</h5>
-                            <t t-call="portal.message_thread">
-                                <t t-set="object" t-value="order"/>
-                                <t t-set="chatter_mode" t-value="'view'"/>
-                                <t t-set="allow_composer" t-value="True"/>
-                                <t t-set="allow_upload" t-value="True"/>
-                                <t t-set="display_rating" t-value="False"/>
-                                <t t-set="token" t-value="order.access_token"/>
-                            </t>
-                        </div>
-                    </t>
 
                     <!-- Submission success banner — bundles only (retainer + standalone use action bar) -->
                     <div role="status" t-if="submitted and wink_is_bundle" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
@@ -2926,6 +2912,19 @@
                         });
                     </script>
 
+
+                    <!-- Portal Chatter: always at the bottom, after all service content -->
+                    <div id="wink-portal-chatter" class="mt-5">
+                        <h5 class="border-bottom pb-2"><i class="fa fa-comments me-2"/>Communication History</h5>
+                        <t t-call="portal.message_thread">
+                            <t t-set="object" t-value="order"/>
+                            <t t-set="chatter_mode" t-value="'view'"/>
+                            <t t-set="allow_composer" t-value="True"/>
+                            <t t-set="allow_upload" t-value="True"/>
+                            <t t-set="display_rating" t-value="False"/>
+                            <t t-set="token" t-value="order.access_token"/>
+                        </t>
+                    </div>
 
                     </t><!-- /not submitted -->
                     </t><!-- /normal view (t-else of bundle_review) -->

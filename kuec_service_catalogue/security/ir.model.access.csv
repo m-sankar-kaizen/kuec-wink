@@ -46,3 +46,5 @@ access_kuec_document_submission_user,kuec.document.submission.user,model_kuec_do
 access_kuec_document_submission_portal,kuec.document.submission.portal,model_kuec_document_submission,base.group_portal,1,1,1,0
 access_wink_bundle_import_wizard_coordinator,wink.bundle.import.wizard.coordinator,model_wink_bundle_import_wizard,kuec_portal_foundation.group_kuec_coordinator,1,1,1,1
 access_wink_bundle_import_wizard_admin,wink.bundle.import.wizard.admin,model_wink_bundle_import_wizard,base.group_system,1,1,1,1
+access_kuec_portal_notification_portal,kuec.portal.notification.portal,model_kuec_portal_notification,base.group_portal,1,1,1,1
+access_kuec_portal_notification_user,kuec.portal.notification.user,model_kuec_portal_notification,base.group_user,1,1,1,1

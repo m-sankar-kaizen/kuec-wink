@@ -22,3 +22,4 @@ from . import wink_bundle_change_log
 from . import kuec_wallet
 from . import kuec_document_submission
 from . import rating_rating
+from . import kuec_portal_notification
