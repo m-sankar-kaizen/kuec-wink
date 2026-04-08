@@ -106,9 +106,13 @@ class WinkWalletTopupWizard(models.TransientModel):
 
         memo = self.description or 'Wallet Top-Up'
 
-        # Post direct journal entry: DR bank account / CR WEWL liability
+        # Post journal entry on the PAYMENT journal (bank/cash):
+        #   DR  Bank/Cash liquidity account  (money received into bank)
+        #   CR  WEWL liability account       (wallet balance increases)
+        # Posting on the payment journal ensures bank reconciliation works
+        # correctly — the debit sits in the journal that owns that account.
         move = self.env['account.move'].create({
-            'journal_id': wallet_journal.id,
+            'journal_id': self.journal_id.id,
             'ref': memo,
             'line_ids': [
                 Command.create({

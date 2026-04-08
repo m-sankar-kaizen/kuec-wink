@@ -140,31 +140,26 @@ class AccountMoveWallet(models.Model):
     # ── Reset to Draft: cancel the linked wallet transaction ─────────────────
 
     def _wink_cancel_wallet_txns(self):
-        """Cancel any done wallet transactions linked to WEWL moves in self.
+        """Cancel any done wallet transactions linked to moves in self.
 
-        Called by both button_draft() and button_cancel() so that any path
-        that voids a WEWL payment JV correctly restores the wallet balance.
+        Uses move_id linkage (not journal filter) so that both top-up JVs
+        (posted on bank/cash journal) and payment JVs (posted on WEWL journal)
+        are caught when cancelled or reset to draft.
         """
-        wallet_journal = self._wink_get_wallet_journal()
-        if not wallet_journal:
-            return
-        wewl_moves = self.filtered(lambda m: m.journal_id == wallet_journal)
-        if wewl_moves:
-            self.env['kuec.wallet.transaction'].search([
-                ('move_id', 'in', wewl_moves.ids),
-                ('state', '=', 'done'),
-            ]).write({'state': 'cancelled'})
+        self.env['kuec.wallet.transaction'].search([
+            ('move_id', 'in', self.ids),
+            ('state', '=', 'done'),
+        ]).write({'state': 'cancelled'})
 
     def button_draft(self):
-        """When a WEWL payment JV is reset to draft, cancel the linked wallet transaction."""
+        """When any wallet JV is reset to draft, cancel the linked wallet transaction."""
         self._wink_cancel_wallet_txns()
         return super().button_draft()
 
     def button_cancel(self):
-        """When a WEWL payment JV is cancelled directly, cancel the linked wallet transaction.
+        """When any wallet JV is cancelled, cancel the linked wallet transaction.
 
-        Odoo 18 account.payment.action_cancel() calls move_id.button_cancel() directly,
-        bypassing button_draft(), so this hook is required to cover that cancellation path.
+        Covers both top-up JVs (on bank journal) and payment JVs (on WEWL journal).
         """
         self._wink_cancel_wallet_txns()
         return super().button_cancel()

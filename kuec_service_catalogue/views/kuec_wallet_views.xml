@@ -183,8 +183,9 @@
                     </group>
                     <div class="alert alert-info" role="alert">
                         <strong>Journal Entry that will be posted:</strong><br/>
-                        DR  Selected Payment Journal (Bank / Gateway)<br/>
-                        &#160;&#160;&#160;CR  WINK eWallet Liability (WEWL)
+                        DR  Bank / Cash Account (from selected payment journal)<br/>
+                        &#160;&#160;&#160;CR  WINK eWallet Liability (WEWL)<br/>
+                        <small class="text-muted">Posted on the selected payment journal for correct bank reconciliation.</small>
                     </div>
                 </sheet>
                 <footer>
@@ -242,14 +243,6 @@
             </xpath>
         </field>
     </record>
-
-    <!-- ── Coordinator Menu: eWallet Transactions ────────────────────────── -->
-    <menuitem id="menu_wink_ewallet_transactions"
-              name="eWallet Transactions"
-              parent="menu_wink_operations_root"
-              action="action_kuec_wallet_transactions"
-              sequence="40"
-              groups="kuec_portal_foundation.group_kuec_coordinator,kuec_portal_foundation.group_kuec_admin"/>
 
     <!-- ── Accounting > Customers: Wallet Payments ────────────────────────── -->
     <record id="action_kuec_wallet_payments" model="ir.actions.act_window">

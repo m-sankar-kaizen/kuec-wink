@@ -62,10 +62,28 @@ class ProjectTaskWink(models.Model):
         string='RFQ / PO Count',
         help='Number of Purchase Orders linked to this task (0 or 1).',
     )
+    wink_is_vendor_subtask = fields.Boolean(
+        string='Vendor Subtask',
+        default=False,
+        help='If True, this task is a vendor-managed subtask. '
+             'The vendor is a follower; the customer is excluded from followers.',
+    )
+    wink_vendor_subtask_count = fields.Integer(
+        compute='_compute_wink_vendor_subtask_count',
+        string='Vendor Subtasks',
+        help='Number of vendor subtasks linked to this task.',
+    )
 
     def _compute_wink_purchase_order_count(self):
         for task in self:
             task.wink_purchase_order_count = 1 if task.wink_purchase_order_id else 0
+
+    @api.depends('child_ids', 'child_ids.wink_is_vendor_subtask')
+    def _compute_wink_vendor_subtask_count(self):
+        for task in self:
+            task.wink_vendor_subtask_count = len(
+                task.child_ids.filtered('wink_is_vendor_subtask')
+            )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -108,22 +126,98 @@ class ProjectTaskWink(models.Model):
     def _send_task_rating_mail(self, **kwargs):
         """Only send rating email for WINK portal tasks that have a vendor assigned.
 
-        Skips silently if:
-        - Task has no linked WINK portal order (non-WINK tasks use default behaviour)
-        - Task has no wink_vendor_id (vendor not yet assigned — rating email would be meaningless)
+        Workflow:
+            1. If this is a vendor subtask and has a parent, forward the rating
+               trigger to the parent task (rating is sent in the context of the
+               main task, not the subtask).
+            2. For regular WINK tasks, skip if no vendor is assigned.
         """
+        if self.wink_is_vendor_subtask and self.parent_id:
+            return self.parent_id._send_task_rating_mail(**kwargs)
         if self.sale_order_id and self.sale_order_id.wink_is_portal_request:
             if not self.wink_vendor_id:
                 return
         return super()._send_task_rating_mail(**kwargs)
 
     def _rating_get_operator(self):
-        """Return the assigned vendor as the rated operator so that customer
-        ratings are linked to the vendor, not the internal user."""
+        """Return the assigned vendor as the rated operator.
+
+        For vendor subtasks, fall back to the parent task's vendor if not set locally.
+        """
         self.ensure_one()
         if self.wink_vendor_id:
             return self.wink_vendor_id
+        if self.wink_is_vendor_subtask and self.parent_id and self.parent_id.wink_vendor_id:
+            return self.parent_id.wink_vendor_id
         return super()._rating_get_operator()
+
+    # ── Vendor subtask creation ───────────────────────────────────────────────
+
+    def action_create_vendor_subtask(self):
+        """Create a vendor-managed subtask for this task.
+
+        Workflow:
+            1. Validate vendor is set and this is not already a vendor subtask.
+            2. Create a child task with wink_is_vendor_subtask = True.
+            3. Add the vendor as a follower on the subtask.
+            4. Remove all customer-related partners from the subtask followers.
+            5. Post a chatter note on the parent task.
+            6. Open the new subtask form.
+        """
+        self.ensure_one()
+        if not self.wink_vendor_id:
+            raise UserError(_('Please select a vendor before creating a vendor subtask.'))
+        if self.wink_is_vendor_subtask:
+            raise UserError(_('Cannot create a vendor subtask from another vendor subtask.'))
+
+        subtask = self.env['project.task'].sudo().create({
+            'name': _('%s — Vendor: %s') % (self.name, self.wink_vendor_id.name),
+            'parent_id': self.id,
+            'project_id': self.project_id.id if self.project_id else False,
+            'sale_order_id': self.sale_order_id.id if self.sale_order_id else False,
+            'wink_vendor_id': self.wink_vendor_id.id,
+            'wink_is_vendor_subtask': True,
+        })
+
+        # Add vendor as follower
+        subtask.message_subscribe(partner_ids=[self.wink_vendor_id.id])
+
+        # Strip all customer-related partners from the subtask followers
+        if self.sale_order_id and self.sale_order_id.partner_id:
+            commercial = self.sale_order_id.partner_id.commercial_partner_id
+            customer_partners = self.env['res.partner'].sudo().search([
+                '|',
+                ('id', '=', commercial.id),
+                ('commercial_partner_id', '=', commercial.id),
+            ])
+            subtask.message_unsubscribe(partner_ids=customer_partners.ids)
+
+        self.message_post(
+            body=_('Vendor subtask created: %s') % subtask.name,
+            message_type='comment',
+            subtype_xmlid='mail.mt_note',
+        )
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Vendor Subtask'),
+            'res_model': 'project.task',
+            'res_id': subtask.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_view_vendor_subtasks(self):
+        """Open the list of vendor subtasks for this task."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Vendor Subtasks'),
+            'res_model': 'project.task',
+            'view_mode': 'list,form',
+            'domain': [('parent_id', '=', self.id), ('wink_is_vendor_subtask', '=', True)],
+            'target': 'current',
+        }
 
     # ── Vendor RFQ creation ───────────────────────────────────────────────────
 
@@ -170,6 +264,7 @@ class ProjectTaskWink(models.Model):
             'origin': origin,
             'notes': _('Auto-generated from WINK task: %s') % self.name,
             'order_line': po_line_vals,
+            'wink_task_id': self.id,
         })
         self.sudo().write({'wink_purchase_order_id': po.id})
 

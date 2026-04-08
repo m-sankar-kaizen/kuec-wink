@@ -45,8 +45,32 @@ class WinkAssignVendorWizard(models.TransientModel):
             return self._action_assign_order()
         raise UserError(_('No task or order linked to this wizard.'))
 
+    def action_assign_subtask(self):
+        """Assign the vendor and create a vendor subtask (no RFQ).
+
+        Workflow:
+            1. Resolve the task — from task_id if set, otherwise from the
+               project task linked to order_id.
+            2. Set wink_vendor_id on the task.
+            3. Delegate subtask creation to task.action_create_vendor_subtask().
+        """
+        self.ensure_one()
+        task = self.task_id
+        if not task and self.order_id:
+            task = self.env['project.task'].sudo().search([
+                ('sale_order_id', '=', self.order_id.id),
+                ('wink_is_vendor_subtask', '=', False),
+            ], limit=1)
+        if not task:
+            raise UserError(_(
+                'No delivery task found. Please confirm the order first so a task is created, '
+                'then assign the vendor subtask.'
+            ))
+        task.sudo().write({'wink_vendor_id': self.vendor_id.id})
+        return task.action_create_vendor_subtask()
+
     def _action_assign_task(self):
-        """Existing task-level vendor assignment."""
+        """Existing task-level vendor assignment — assigns vendor and creates RFQ."""
         task = self.task_id
         if not task.exists():
             raise UserError(_('The linked task no longer exists.'))

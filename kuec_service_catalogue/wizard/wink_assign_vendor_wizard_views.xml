@@ -7,6 +7,7 @@
             <form string="Assign Vendor">
                 <group>
                     <field name="task_id" invisible="1"/>
+                    <field name="order_id" invisible="1"/>
                     <field name="vendor_id"
                            options="{'no_create': True}"
                            placeholder="Search vendor…"/>
@@ -16,6 +17,10 @@
                             string="Assign &amp; Create RFQ"
                             type="object"
                             class="btn-primary"/>
+                    <button name="action_assign_subtask"
+                            string="Assign &amp; Create Subtask"
+                            type="object"
+                            class="btn-secondary"/>
                     <button string="Cancel"
                             class="btn-secondary"
                             special="cancel"/>

@@ -36,6 +36,13 @@
               sequence="30"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
+    <menuitem id="menu_wink_services"
+              name="Services"
+              parent="menu_wink_group_requests"
+              action="action_wink_services"
+              sequence="40"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
     <!-- ── Group 2: Subscriptions ── -->
     <menuitem id="menu_wink_group_subscriptions"
               name="Subscriptions"
@@ -65,7 +72,28 @@
               sequence="30"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
-    <!-- ── Group 4: Reports ── -->
+    <!-- ── Group 4: eWallet ── -->
+    <menuitem id="menu_wink_group_ewallet"
+              name="eWallet"
+              parent="menu_wink_operations_root"
+              sequence="40"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_wallet_transactions"
+              name="Transactions"
+              parent="menu_wink_group_ewallet"
+              action="action_kuec_wallet_transactions"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_wallet_topup"
+              name="Top-Up Wallet"
+              parent="menu_wink_group_ewallet"
+              action="action_wink_wallet_topup_wizard"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 5: Reports ── -->
     <menuitem id="menu_wink_reports_root"
               name="Reports"
               parent="menu_wink_operations_root"

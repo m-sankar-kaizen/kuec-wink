@@ -27,9 +27,15 @@
                         class="btn-primary"
                         invisible="not sale_order_id or not sale_order_id.wink_is_portal_request or wink_vendor_id"
                         help="Opens the Assign Vendor dialog to select a vendor and auto-create a draft RFQ."/>
+                <button name="action_create_vendor_subtask"
+                        string="Create Vendor Subtask"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="not sale_order_id or not sale_order_id.wink_is_portal_request or not wink_vendor_id or wink_is_vendor_subtask"
+                        help="Create a subtask for the vendor. The vendor will be a follower; the customer will not."/>
             </xpath>
 
-            <!-- ── Smart button: RFQ / PO ─────────────────────────────────── -->
+            <!-- ── Smart buttons ──────────────────────────────────────────── -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_rfq_po"
                         type="object"
@@ -42,6 +48,19 @@
                             <field name="wink_purchase_order_count"/>
                         </span>
                         <span class="o_stat_text">RFQ / PO</span>
+                    </div>
+                </button>
+                <button name="action_view_vendor_subtasks"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-tasks"
+                        invisible="not wink_vendor_subtask_count"
+                        help="View vendor subtasks linked to this task.">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="wink_vendor_subtask_count"/>
+                        </span>
+                        <span class="o_stat_text">Vendor Subtask(s)</span>
                     </div>
                 </button>
             </xpath>
@@ -57,10 +76,11 @@
                                    options="{'no_create': True}"
                                    placeholder="Search vendor…"/>
                             <field name="wink_purchase_order_id" readonly="1"/>
+                            <field name="wink_is_vendor_subtask" readonly="1"/>
                         </group>
                     </group>
 
-                    <group string="Employees">
+                    <group string="Employees" invisible="wink_is_vendor_subtask">
                         <field name="wink_customer_partner_id" invisible="1"/>
                         <field name="wink_employee_ids" widget="many2many_tags" nolabel="1"
                                domain="[('partner_id', '=', wink_customer_partner_id)] if wink_customer_partner_id else []"/>

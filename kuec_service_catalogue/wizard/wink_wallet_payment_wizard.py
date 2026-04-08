@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api, _
+from odoo import models, fields, api, Command, _
 from odoo.exceptions import UserError
 
 
@@ -74,17 +74,18 @@ class WinkWalletPaymentWizard(models.TransientModel):
             self.description = self.invoice_id.name or ''
 
     def action_pay(self):
-        """Register wallet payment against the invoice and post the clearing JV.
+        """Settle an invoice using the customer eWallet balance via a direct JV + reconcile.
 
         Workflow:
             1. Validate amount against wallet balance and invoice residual.
-            2. Locate the WINK eWallet journal (WEWL).
-            3. Register account.payment from WEWL journal against the invoice:
-               DR  Customer Wallet Liability (WEWL)
-               CR  Accounts Receivable (partner)
-            4. Odoo auto-reconciles CR AR on this payment with DR AR on invoice.
-               Net result: DR Wallet Liability / CR Sales Revenue.
-            5. Create kuec.wallet.transaction (payment type, negative amount)
+            2. Locate the WINK eWallet journal (WEWL) and its liability account.
+            3. Find the exact AR line on the invoice to reconcile against.
+            4. Post a direct account.move on the WEWL journal:
+               DR  WEWL liability account   (wallet balance decreases)
+               CR  AR account from invoice  (same account — guaranteed match)
+            5. Manually reconcile the CR AR line with the invoice DR AR line.
+               This eliminates the orphaned receivable caused by account.payment.register.
+            6. Create kuec.wallet.transaction (payment type, negative amount)
                linked to the generated journal entry.
 
         Returns:
@@ -113,29 +114,61 @@ class WinkWalletPaymentWizard(models.TransientModel):
                 'open the eWallet journal and enable "eWallet Journal".'
             ))
 
+        wewl_account = wallet_journal.default_account_id
+        if not wewl_account:
+            raise UserError(_(
+                'The eWallet journal has no default account configured. '
+                'Please set it in Accounting > Configuration > Journals.'
+            ))
+
+        # Find the AR line on the invoice to reconcile against.
+        # This guarantees the CR account matches exactly — no orphaned receivable.
+        invoice_ar_line = self.invoice_id.line_ids.filtered(
+            lambda l: l.account_id.account_type == 'asset_receivable' and not l.reconciled
+        )
+        if not invoice_ar_line:
+            raise UserError(_(
+                'No open receivable line found on invoice %s. '
+                'It may already be fully paid.'
+            ) % self.invoice_id.name)
+        invoice_ar_line = invoice_ar_line[0]
+        ar_account = invoice_ar_line.account_id
+
         memo = self.description or ('Wallet payment — %s' % self.invoice_id.name)
 
-        # Register payment from WEWL journal against the invoice
-        # DR: WEWL (Customer Wallet Liability)   CR: AR (partner)
-        payment_register = self.env['account.payment.register'].with_context(
-            active_model='account.move',
-            active_ids=self.invoice_id.ids,
-        ).create({
+        # Post direct JV on WEWL journal:
+        #   DR  WEWL liability account  (wallet balance decreases)
+        #   CR  AR account (same as invoice)  (will be reconciled below)
+        move = self.env['account.move'].create({
             'journal_id': wallet_journal.id,
-            'amount': self.amount,
-            'currency_id': self.currency_id.id,
-            'communication': memo,
-            'payment_date': fields.Date.today(),
+            'ref': memo,
+            'line_ids': [
+                Command.create({
+                    'account_id': wewl_account.id,
+                    'partner_id': self.partner_id.id,
+                    'debit': self.amount,
+                    'credit': 0.0,
+                    'name': memo,
+                    'currency_id': self.currency_id.id,
+                }),
+                Command.create({
+                    'account_id': ar_account.id,
+                    'partner_id': self.partner_id.id,
+                    'debit': 0.0,
+                    'credit': self.amount,
+                    'name': memo,
+                    'currency_id': self.currency_id.id,
+                }),
+            ],
         })
-        payment_register.action_create_payments()
+        move.action_post()
 
-        # Retrieve the created payment via the invoice's reconciled payments —
-        # this is reliable regardless of amount rounding or timing.
-        payment = self.invoice_id.reconciled_payment_ids.filtered(
-            lambda p: p.journal_id == wallet_journal
-        ).sorted('id', reverse=True)[:1]
-
-        move_id = payment.move_id.id if payment and payment.move_id else False
+        # Reconcile the CR AR line on the new move with the DR AR line on the invoice.
+        payment_ar_line = move.line_ids.filtered(
+            lambda l: l.account_id == ar_account
+        )
+        if payment_ar_line and invoice_ar_line:
+            (payment_ar_line + invoice_ar_line).reconcile()
 
         # Record the debit transaction (negative = funds consumed from wallet)
         self.env['kuec.wallet.transaction'].create({
@@ -148,6 +181,6 @@ class WinkWalletPaymentWizard(models.TransientModel):
                         self.env['sale.order'].search(
                             [('name', '=', self.invoice_id.invoice_origin)], limit=1
                         ).id or False,
-            'move_id': move_id,
+            'move_id': move.id,
         })
         return {'type': 'ir.actions.act_window_close'}
