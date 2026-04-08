@@ -23,3 +23,4 @@ from . import kuec_wallet
 from . import kuec_document_submission
 from . import rating_rating
 from . import kuec_portal_notification
+from . import purchase_order
