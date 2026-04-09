@@ -306,6 +306,13 @@ class WinkBundleTier(models.Model):
         digits=(10, 2),
         help='Standard monthly price used for refund/credit calculations when yearly discount is forfeited on cancellation or downgrade.',
     )
+    # Used for product_variant_id domain restriction in the tier form
+    product_tmpl_id = fields.Many2one(
+        related='bundle_id.product_tmpl_id',
+        string='Service Template',
+        store=False,
+        help='Service template linked to the parent bundle — used to scope variant picker to this template\'s variants only.',
+    )
 
     @api.depends('item_ids')
     def _compute_item_count(self):
@@ -411,12 +418,15 @@ class WinkBundleTierItem(models.Model):
         Fires before save so the user gets instant feedback instead of a cryptic
         DB constraint error after clicking Save.
         """
-        if not self.service_product_id or not self.tier_id:
+        if not self.service_product_id or not self.service_product_id.id or not self.tier_id:
             return
         already_used = self.tier_id.item_ids.filtered(
-            lambda x: x.service_product_id == self.service_product_id and x != self._origin
+            lambda x: x.service_product_id.id
+            and x.service_product_id == self.service_product_id
+            and x != self._origin
         )
         if already_used:
+            svc_name = already_used[0].service_product_id.name or _('(unknown)')
             self.service_product_id = False
             return {
                 'warning': {
@@ -424,13 +434,15 @@ class WinkBundleTierItem(models.Model):
                     'message': _(
                         '"%s" is already included in tier "%s". '
                         'Each service can only appear once per tier.'
-                    ) % (already_used[0].service_product_id.name, self.tier_id.name),
+                    ) % (svc_name, self.tier_id.name),
                 }
             }
 
     @api.constrains('tier_id', 'service_product_id')
     def _check_unique_service_per_tier(self):
         for rec in self:
+            if not rec.service_product_id or not rec.service_product_id.id:
+                continue
             duplicates = self.search_count([
                 ('tier_id', '=', rec.tier_id.id),
                 ('service_product_id', '=', rec.service_product_id.id),

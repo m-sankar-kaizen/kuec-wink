@@ -159,6 +159,13 @@ class ProductTemplate(models.Model):
                     rec.wink_bundle_id = bundle.id
                 elif not rec.wink_bundle_id.product_tmpl_id:
                     rec.wink_bundle_id.product_tmpl_id = rec.id
+        # Sync bundle name when the service template is renamed
+        if 'name' in vals:
+            for rec in self:
+                if (rec.wink_is_bundle
+                        and rec.wink_bundle_id
+                        and rec.wink_bundle_id.product_tmpl_id.id == rec.id):
+                    rec.wink_bundle_id.sudo().write({'name': vals['name']})
         return result
 
     def action_view_linked_bundle(self):

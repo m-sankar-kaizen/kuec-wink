@@ -62,8 +62,7 @@
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="is_most_popular" widget="boolean_toggle" optional="show"/>
-                                    <field name="product_variant_id" optional="hide"
-                                           domain="[('product_tmpl_id', '=', parent.product_tmpl_id)]"/>
+                                    <field name="product_variant_id" optional="hide"/>
                                     <field name="price" column_invisible="True"/>
                                     <field name="item_count" string="Services"/>
                                     <button name="action_open_tier_services" type="object" string="Add / edit services" class="btn-link" icon="fa-arrow-right"/>
@@ -102,7 +101,11 @@
                         </group>
                         <group>
                             <field name="sequence"/>
-                            <field name="product_variant_id"/>
+                            <field name="product_variant_id"
+                                   domain="[('product_tmpl_id', '=', product_tmpl_id)]"
+                                   invisible="not product_tmpl_id"
+                                   help="Select a specific variant to map pricing. Only available when this bundle has a linked service template."/>
+                            <field name="product_tmpl_id" invisible="1"/>
                             <field name="price" invisible="1"/>
                         </group>
                     </group>
