@@ -5,6 +5,20 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
+            <!-- Bundle smart button: visible only on bundle template products -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_linked_bundle"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-cubes"
+                        invisible="not wink_is_bundle or not wink_bundle_id">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Bundle</span>
+                        <span class="o_stat_text">Package</span>
+                    </div>
+                </button>
+            </xpath>
+
             <!-- Available on Wink: only shown for service type products -->
             <xpath expr="//div[@name='options']" position="inside">
                 <span class="d-inline-block" invisible="type != 'service'">

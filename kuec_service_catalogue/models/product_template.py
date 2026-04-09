@@ -120,11 +120,21 @@ class ProductTemplate(models.Model):
             # Sub-services (bundled but not bundle template) must never appear in catalog
             if vals.get('commercial_structure') == 'bundled' and not vals.get('wink_is_bundle'):
                 vals['available_on_wink'] = False
-        return super().create(vals_list)
+        templates = super().create(vals_list)
+        for tmpl in templates:
+            if tmpl.wink_is_bundle and not tmpl.wink_bundle_id:
+                bundle = self.env['wink.bundle'].create({
+                    'name': tmpl.name,
+                    'company_id': tmpl.company_id.id,
+                    'product_tmpl_id': tmpl.id,
+                })
+                tmpl.wink_bundle_id = bundle.id
+        return templates
 
     def write(self, vals):
         """Enforce delivery_model=retainer and recurring_invoice when wink_is_bundle is set.
-        Enforce available_on_wink=False for bundled sub-services (not bundle templates)."""
+        Enforce available_on_wink=False for bundled sub-services (not bundle templates).
+        Auto-create wink.bundle when wink_is_bundle is set to True and no bundle exists yet."""
         if vals.get('wink_is_bundle'):
             vals['delivery_model'] = 'retainer'
             vals['recurring_invoice'] = True
@@ -137,7 +147,31 @@ class ProductTemplate(models.Model):
                 if not is_bundle:
                     vals['available_on_wink'] = False
                     break
-        return super().write(vals)
+        result = super().write(vals)
+        if vals.get('wink_is_bundle'):
+            for rec in self:
+                if not rec.wink_bundle_id:
+                    bundle = self.env['wink.bundle'].create({
+                        'name': rec.name,
+                        'company_id': rec.company_id.id,
+                        'product_tmpl_id': rec.id,
+                    })
+                    rec.wink_bundle_id = bundle.id
+                elif not rec.wink_bundle_id.product_tmpl_id:
+                    rec.wink_bundle_id.product_tmpl_id = rec.id
+        return result
+
+    def action_view_linked_bundle(self):
+        """Open the linked wink.bundle form for this bundle template product."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Bundle Package'),
+            'res_model': 'wink.bundle',
+            'res_id': self.wink_bundle_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
     @api.onchange('commercial_structure')
     def _onchange_commercial_structure(self):

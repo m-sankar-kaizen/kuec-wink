@@ -38,6 +38,15 @@ class WinkBundle(models.Model):
         string='Tiers',
     )
 
+    # Reverse link to the bundle wrapper product template
+    product_tmpl_id = fields.Many2one(
+        'product.template',
+        string='Service Template',
+        ondelete='set null',
+        index=True,
+        help='The product template (bundle wrapper) that auto-created this bundle configuration.',
+    )
+
     # --- Self-service lifecycle policy (one-time admin config) ---
     allow_self_service_upgrade = fields.Boolean(
         string='Allow Self-Service Upgrade',
@@ -179,6 +188,18 @@ class WinkBundle(models.Model):
                 ('wink_source_product_id', 'in', products.ids),
                 ('state', 'in', ['sale', 'done']),
             ],
+        }
+
+    def action_view_service_template(self):
+        """Open the linked service template product form."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Service Template'),
+            'res_model': 'product.template',
+            'res_id': self.product_tmpl_id.id,
+            'view_mode': 'form',
+            'target': 'current',
         }
 
     # B-4: Tier Comparison Matrix action

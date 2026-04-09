@@ -9,6 +9,16 @@
                 <sheet>
                     <!-- F-2: Smart Buttons -->
                     <div class="oe_button_box" name="button_box">
+                        <button name="action_view_service_template"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-cogs"
+                                invisible="not product_tmpl_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Service</span>
+                                <span class="o_stat_text">Template</span>
+                            </div>
+                        </button>
                         <button name="action_view_orders"
                                 type="object"
                                 class="oe_stat_button"
@@ -37,6 +47,7 @@
                         <group>
                             <field name="active" widget="boolean_toggle"/>
                             <field name="tier_count" string="Tiers" readonly="1"/>
+                            <field name="product_tmpl_id" readonly="1" invisible="not product_tmpl_id"/>
                         </group>
                         <group>
                             <field name="company_id" groups="base.group_multi_company"/>
@@ -51,7 +62,8 @@
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="is_most_popular" widget="boolean_toggle" optional="show"/>
-                                    <field name="product_variant_id" optional="hide"/>
+                                    <field name="product_variant_id" optional="hide"
+                                           domain="[('product_tmpl_id', '=', parent.product_tmpl_id)]"/>
                                     <field name="price" column_invisible="True"/>
                                     <field name="item_count" string="Services"/>
                                     <button name="action_open_tier_services" type="object" string="Add / edit services" class="btn-link" icon="fa-arrow-right"/>
