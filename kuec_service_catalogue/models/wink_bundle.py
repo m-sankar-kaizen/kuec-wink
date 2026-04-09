@@ -420,27 +420,25 @@ class WinkBundleTierItem(models.Model):
 
         Workflow:
             1. Guard: skip if service or tier is unset.
-            2. Identify self among item_ids using DB id (saved) or NewId (new records)
-               to avoid matching the current line against itself.
-            3. If another item in the tier carries the same service, clear the field
-               and return a user-friendly warning.
+            2. Require the tier to be a persisted DB record — skip for new/unsaved
+               tiers (the DB UNIQUE constraint handles that case at save time).
+            3. Query the DB directly instead of iterating virtual item_ids to avoid
+               NewId comparison issues with unsaved lines.
+            4. Exclude self from the query using self._origin.id (0 for new records,
+               real DB id for saved ones).
         """
         if not self.service_product_id or not self.service_product_id.id or not self.tier_id:
             return
-        current_svc_id = self.service_product_id.id
-        origin_id = self._origin.id  # DB id for saved records; False/NewId for new ones
-        for item in self.tier_id.item_ids:
-            if not item.service_product_id.id or item.service_product_id.id != current_svc_id:
-                continue
-            # Exclude self: saved records compare by DB id; new records compare by NewId identity
-            if origin_id:
-                if item._origin.id == origin_id:
-                    continue
-            else:
-                if item.id == self.id:
-                    continue
-            # A different item in this tier already carries the same service
-            svc_name = item.service_product_id.name or _('(unknown)')
+        tier_db_id = self.tier_id._origin.id
+        if not tier_db_id:
+            return  # tier not yet in DB — UNIQUE constraint handles duplicates at save
+        duplicate = self.env['wink.bundle.tier.item'].search([
+            ('tier_id', '=', tier_db_id),
+            ('service_product_id', '=', self.service_product_id.id),
+            ('id', '!=', self._origin.id or 0),
+        ], limit=1)
+        if duplicate:
+            svc_name = self.service_product_id.name
             self.service_product_id = False
             return {
                 'warning': {
