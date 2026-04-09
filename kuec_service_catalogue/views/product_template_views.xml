@@ -39,6 +39,8 @@
                                help="Link this product to a bundle package so tiers and services are configured there."/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
+                        <field name="price_visibility" required="available_on_wink"/>
+                        <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
                         <field name="wink_payment_term_id" invisible="delivery_model == 'retainer'"/>
                         <separator string="Portal Configuration"/>
                         <field name="requires_employee_selection" invisible="wink_is_bundle"/>
