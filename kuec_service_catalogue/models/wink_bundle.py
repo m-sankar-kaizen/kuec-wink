@@ -417,16 +417,30 @@ class WinkBundleTierItem(models.Model):
 
         Fires before save so the user gets instant feedback instead of a cryptic
         DB constraint error after clicking Save.
+
+        Workflow:
+            1. Guard: skip if service or tier is unset.
+            2. Identify self among item_ids using DB id (saved) or NewId (new records)
+               to avoid matching the current line against itself.
+            3. If another item in the tier carries the same service, clear the field
+               and return a user-friendly warning.
         """
         if not self.service_product_id or not self.service_product_id.id or not self.tier_id:
             return
-        already_used = self.tier_id.item_ids.filtered(
-            lambda x: x.service_product_id.id
-            and x.service_product_id == self.service_product_id
-            and x != self._origin
-        )
-        if already_used:
-            svc_name = already_used[0].service_product_id.name or _('(unknown)')
+        current_svc_id = self.service_product_id.id
+        origin_id = self._origin.id  # DB id for saved records; False/NewId for new ones
+        for item in self.tier_id.item_ids:
+            if not item.service_product_id.id or item.service_product_id.id != current_svc_id:
+                continue
+            # Exclude self: saved records compare by DB id; new records compare by NewId identity
+            if origin_id:
+                if item._origin.id == origin_id:
+                    continue
+            else:
+                if item.id == self.id:
+                    continue
+            # A different item in this tier already carries the same service
+            svc_name = item.service_product_id.name or _('(unknown)')
             self.service_product_id = False
             return {
                 'warning': {
