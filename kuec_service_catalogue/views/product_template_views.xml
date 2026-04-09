@@ -62,7 +62,6 @@
                         <field name="gov_charge_is_known" invisible="wink_is_bundle or not requires_government_charges"/>
                         <field name="gov_charge_amount" invisible="wink_is_bundle or not requires_government_charges or not gov_charge_is_known"/>
                         <field name="gov_charge_per_employee" invisible="wink_is_bundle or not requires_government_charges or not gov_charge_is_known or not requires_employee_selection"/>
-                        <field name="reminder_days_before"/>
                         <separator string="Tags &amp; Ribbon (Portal)"/>
                         <field name="product_tag_ids" widget="many2many_tags"
                                placeholder="Tags shown on portal cards and detail"
