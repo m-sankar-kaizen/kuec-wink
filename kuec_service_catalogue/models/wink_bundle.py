@@ -319,6 +319,37 @@ class WinkBundleTier(models.Model):
         for rec in self:
             rec.item_count = len(rec.item_ids)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        for rec in records:
+            if rec.is_most_popular and rec.bundle_id:
+                self.search([
+                    ('bundle_id', '=', rec.bundle_id.id),
+                    ('is_most_popular', '=', True),
+                    ('id', '!=', rec.id),
+                ]).write({'is_most_popular': False})
+        return records
+
+    def write(self, vals):
+        """Auto-clear is_most_popular on sibling tiers when this tier is promoted.
+
+        Only one tier per bundle may be marked Most Popular. When a tier is
+        written with is_most_popular=True, all other tiers in the same bundle
+        are automatically set to False so the constraint is always satisfied
+        without requiring the coordinator to manually uncheck the previous one.
+        """
+        result = super().write(vals)
+        if vals.get('is_most_popular'):
+            for rec in self:
+                if rec.bundle_id:
+                    self.search([
+                        ('bundle_id', '=', rec.bundle_id.id),
+                        ('is_most_popular', '=', True),
+                        ('id', '!=', rec.id),
+                    ]).write({'is_most_popular': False})
+        return result
+
     def action_open_tier_services(self):
         """Open this tier form so the user can add/edit included services."""
         self.ensure_one()
