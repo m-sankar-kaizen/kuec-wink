@@ -1898,6 +1898,11 @@ class WinkRequest(http.Controller):
         except Exception:
             return request.redirect(f'/my/requests/{order_id}')
 
+        # Security: verify the invoice belongs to this order — prevents IDOR where a portal
+        # user submits a forged invoice_id from another customer's order.
+        if invoice.id not in order.invoice_ids.ids:
+            raise NotFound()
+
         base_url = f'/my/requests/{order_id}/gov-charges-payment?invoice_id={invoice.id}'
 
         partner = request.env.user.partner_id.commercial_partner_id

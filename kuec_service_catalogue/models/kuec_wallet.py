@@ -195,6 +195,12 @@ class AccountMoveWallet(models.Model):
             ], limit=1)
             if not original_txn:
                 continue
+            # Idempotency: skip if a refund transaction for this reversal already exists
+            if self.env['kuec.wallet.transaction'].search([
+                ('move_id', '=', reversal.id),
+                ('transaction_type', '=', 'refund'),
+            ], limit=1):
+                continue
             # Create refund transaction to restore balance
             self.env['kuec.wallet.transaction'].create({
                 'partner_id': original_txn.partner_id.id,

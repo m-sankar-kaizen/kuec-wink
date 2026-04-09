@@ -117,12 +117,21 @@ class ResPartner(models.Model):
             partner.wallet_currency_id = currency
 
     @api.depends('wallet_transaction_ids.amount', 'wallet_transaction_ids.state')
+    @api.depends_context('company')
     def _compute_wink_wallet_balance(self):
-        """Sum all done wallet transaction amounts using a single aggregated query."""
+        """Sum all done wallet transaction amounts for the current company only.
+
+        Scoped by company_id to prevent cross-company balance contamination in
+        multi-company setups.
+        """
         if not self.ids:
             return
         result = self.env['kuec.wallet.transaction'].read_group(
-            domain=[('partner_id', 'in', self.ids), ('state', '=', 'done')],
+            domain=[
+                ('partner_id', 'in', self.ids),
+                ('state', '=', 'done'),
+                ('company_id', '=', self.env.company.id),
+            ],
             fields=['partner_id', 'amount:sum'],
             groupby=['partner_id'],
         )

@@ -13,10 +13,14 @@ try:
 
         @http.route('/invoice/transaction/<int:invoice_id>', type='json', auth='public')
         def invoice_transaction(self, invoice_id, access_token=None, **kwargs):
-            if not access_token:
+            if not access_token and not request.env.user._is_public():
+                # Security: only generate a token for authenticated users who own this invoice.
+                # Public users are passed through without a token — super() will reject them.
                 invoice = request.env['account.move'].sudo().browse(invoice_id)
                 if invoice.exists():
-                    access_token = invoice._portal_ensure_token()
+                    partner = request.env.user.partner_id.commercial_partner_id
+                    if invoice.partner_id.commercial_partner_id == partner:
+                        access_token = invoice._portal_ensure_token()
             return super().invoice_transaction(invoice_id, access_token, **kwargs)
 
 except ImportError:
@@ -1181,13 +1185,23 @@ class KuecCustomerPortal(CustomerPortal):
         if not amount or session_partner_id != partner.id:
             return request.redirect('/my/wallet')
 
-        # Find the most recent completed payment transaction for this amount/partner
+        # Collect already-credited tx references so we never match a tx that already has a
+        # wallet credit — handles concurrent same-amount top-ups correctly.
+        credited_refs = set()
+        for txn in request.env['kuec.wallet.transaction'].sudo().search([
+            ('partner_id', '=', partner.id),
+            ('transaction_type', '=', 'topup'),
+        ]):
+            if txn.description and txn.description.startswith('eWallet Top-Up \u2014 '):
+                credited_refs.add(txn.description[len('eWallet Top-Up \u2014 '):])
+
         tx = request.env['payment.transaction'].sudo().search([
             ('partner_id', 'child_of', [partner.id]),
             ('amount', '=', amount),
             ('currency_id', '=', currency_id),
             ('state', '=', 'done'),
             ('create_date', '>=', odoo_fields.Datetime.now() - timedelta(minutes=30)),
+            ('reference', 'not in', list(credited_refs)),
         ], order='create_date desc', limit=1)
 
         if not tx:

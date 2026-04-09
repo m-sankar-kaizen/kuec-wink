@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'KUEC Service Catalogue',
-    'version': '18.0.2.27.0',
+    'version': '18.0.2.28.0',
     'category': 'Sales',
     'summary': 'Service Catalogue & Business Configurability',
     'description': """
@@ -25,7 +25,6 @@
         'helpdesk',
     ],
     'data': [
-        'security/kuec_service_catalogue_security.xml',
         'security/record_rules.xml',
         'security/ir.model.access.csv',
         'data/sale_config_parameter.xml',
