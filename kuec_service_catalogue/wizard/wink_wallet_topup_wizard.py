@@ -7,19 +7,48 @@ class WinkWalletTopupWizard(models.TransientModel):
     _name = 'wink.wallet.topup.wizard'
     _description = 'WINK eWallet Top-Up Wizard'
 
+    topup_type = fields.Selection([
+        ('payment', 'Customer Payment'),
+        ('gift', 'Gift / Expense'),
+    ], string='Top-Up Type', required=True, default='payment',
+        help='Customer Payment: customer paid via bank/cash — DR bank account, CR WEWL liability.\n'
+             'Gift / Expense: company-funded gift — DR expense account, CR WEWL liability. '
+             'No bank or cash movement is recorded.',
+    )
     partner_id = fields.Many2one(
         'res.partner',
         string='Customer',
         required=True,
         help='Customer whose wallet to top up.',
     )
+    # ── Payment top-up fields ─────────────────────────────────────────────────
     journal_id = fields.Many2one(
         'account.journal',
         string='Payment Journal',
-        required=True,
         domain=[('type', 'in', ['bank', 'cash']), ('is_ewallet_journal', '=', False)],
-        help='Journal representing the payment source (Bank, Cash, Payment Gateway, etc.). The eWallet journal is excluded.',
+        help='Journal representing the payment source (Bank, Cash, Payment Gateway, etc.).',
     )
+    # ── Gift / Expense top-up fields ──────────────────────────────────────────
+    expense_account_id = fields.Many2one(
+        'account.account',
+        string='Expense Account',
+        domain=[('account_type', 'like', 'expense')],
+        help='Expense account to debit for this gift (e.g. "Customer Gifts & Donations", "Marketing Expense").',
+    )
+    gift_journal_id = fields.Many2one(
+        'account.journal',
+        string='Expense Journal',
+        domain=[('type', '=', 'general')],
+        default=lambda self: self.env['account.journal'].search(
+            [('type', '=', 'general'), ('company_id', '=', self.env.company.id)], limit=1
+        ),
+        help='General/miscellaneous journal for posting the gift expense entry.',
+    )
+    gift_reason = fields.Char(
+        string='Gift Reason',
+        help='Internal note explaining why this gift was granted (e.g. "Ramadan gift", "Loyalty reward").',
+    )
+    # ── Common fields ─────────────────────────────────────────────────────────
     amount = fields.Monetary(
         string='Top-Up Amount',
         required=True,
@@ -34,9 +63,8 @@ class WinkWalletTopupWizard(models.TransientModel):
         help='Currency for this top-up transaction.',
     )
     description = fields.Char(
-        string='Description',
-        default='Wallet Top-Up',
-        help='Optional note about this top-up (appears on the journal entry memo).',
+        string='Description / Memo',
+        help='Optional note that appears on the journal entry.',
     )
     current_balance = fields.Monetary(
         string='Current Balance',
@@ -51,31 +79,8 @@ class WinkWalletTopupWizard(models.TransientModel):
         for rec in self:
             rec.current_balance = rec.partner_id.wink_wallet_balance if rec.partner_id else 0.0
 
-    def action_topup(self):
-        """Create a wallet transaction and post the corresponding journal entry.
-
-        Workflow:
-            1. Validate the amount is positive.
-            2. Locate the WINK eWallet journal (WEWL).
-            3. Resolve the source account (bank/cash journal liquidity account) and the
-               WEWL liability account (WEWL journal default account).
-            4. Post a direct account.move on the WEWL journal:
-               DR  Bank/Cash liquidity account  (money received)
-               CR  WEWL liability account       (wallet balance increases)
-            5. Create a kuec.wallet.transaction linked to the journal entry.
-
-        Note:
-            In Odoo 18, account.payment no longer carries destination_journal_id for
-            internal transfers.  A direct account.move gives us full control over
-            which accounts are debited/credited without involving AR/AP.
-
-        Returns:
-            dict: Action to close the wizard dialog.
-        """
-        self.ensure_one()
-        if self.amount <= 0:
-            raise UserError(_('Top-up amount must be positive.'))
-
+    def _get_wallet_journal_and_account(self):
+        """Return (wallet_journal, wewl_account) or raise UserError if not configured."""
         wallet_journal = self.env['account.journal'].search(
             [('is_ewallet_journal', '=', True), ('company_id', '=', self.env.company.id)], limit=1
         )
@@ -85,32 +90,61 @@ class WinkWalletTopupWizard(models.TransientModel):
                 'Please go to Accounting → Configuration → Journals, '
                 'open the eWallet journal and enable "eWallet Journal".'
             ))
+        wewl_account = wallet_journal.default_account_id
+        if not wewl_account:
+            raise UserError(_(
+                'The eWallet journal has no default account configured. '
+                'Please set it in Accounting → Configuration → Journals.'
+            ))
+        return wallet_journal, wewl_account
 
+    def action_topup(self):
+        """Create a wallet transaction and post the corresponding journal entry.
+
+        Workflow:
+            1. Validate inputs based on topup_type.
+            2. Locate the WINK eWallet journal (WEWL) and its liability account.
+            3. For 'payment': post JV on bank/cash journal — DR bank, CR WEWL.
+            4. For 'gift':    post JV on general journal  — DR expense, CR WEWL.
+            5. Create a kuec.wallet.transaction linked to the journal entry.
+
+        Returns:
+            dict: Action to close the wizard dialog.
+        """
+        self.ensure_one()
+        if self.amount <= 0:
+            raise UserError(_('Top-up amount must be positive.'))
+
+        wallet_journal, wewl_account = self._get_wallet_journal_and_account()
+
+        if self.topup_type == 'payment':
+            self._action_topup_payment(wallet_journal, wewl_account)
+        else:
+            self._action_topup_gift(wewl_account)
+
+        return {'type': 'ir.actions.act_window_close'}
+
+    def _action_topup_payment(self, wallet_journal, wewl_account):
+        """Post a customer-payment top-up JV: DR bank/cash, CR WEWL.
+
+        Workflow:
+            1. Validate journal selection and source account availability.
+            2. Create and post account.move on the bank/cash journal.
+            3. Create kuec.wallet.transaction of type 'topup'.
+        """
+        if not self.journal_id:
+            raise UserError(_('Please select a payment journal.'))
         if self.journal_id.id == wallet_journal.id:
             raise UserError(_('Payment journal and eWallet journal cannot be the same.'))
 
-        # Source: bank/cash journal liquidity account
         source_account = self.journal_id.default_account_id
         if not source_account:
             raise UserError(_(
                 'The selected journal "%s" has no default account configured.'
             ) % self.journal_id.name)
 
-        # Destination: eWallet journal liability account
-        wewl_account = wallet_journal.default_account_id
-        if not wewl_account:
-            raise UserError(_(
-                'The eWallet journal has no default account configured. '
-                'Please set it in Accounting > Configuration > Journals.'
-            ))
+        memo = self.description or _('Wallet Top-Up — %s') % self.partner_id.name
 
-        memo = self.description or 'Wallet Top-Up'
-
-        # Post journal entry on the PAYMENT journal (bank/cash):
-        #   DR  Bank/Cash liquidity account  (money received into bank)
-        #   CR  WEWL liability account       (wallet balance increases)
-        # Posting on the payment journal ensures bank reconciliation works
-        # correctly — the debit sits in the journal that owns that account.
         move = self.env['account.move'].create({
             'journal_id': self.journal_id.id,
             'ref': memo,
@@ -135,7 +169,6 @@ class WinkWalletTopupWizard(models.TransientModel):
         })
         move.action_post()
 
-        # Create wallet transaction record linked to the journal entry
         self.env['kuec.wallet.transaction'].create({
             'partner_id': self.partner_id.id,
             'transaction_type': 'topup',
@@ -144,4 +177,59 @@ class WinkWalletTopupWizard(models.TransientModel):
             'currency_id': self.currency_id.id,
             'move_id': move.id,
         })
-        return {'type': 'ir.actions.act_window_close'}
+
+    def _action_topup_gift(self, wewl_account):
+        """Post a gift/expense top-up JV: DR expense account, CR WEWL.
+
+        Workflow:
+            1. Validate expense account, journal, and reason.
+            2. Create and post account.move on the general expense journal.
+            3. Create kuec.wallet.transaction of type 'adjustment' with gift prefix.
+        """
+        if not self.expense_account_id:
+            raise UserError(_('Please select an expense account for the gift top-up.'))
+        if not self.gift_journal_id:
+            raise UserError(_('Please select an expense journal for the gift entry.'))
+        if not self.gift_reason:
+            raise UserError(_('Please provide a reason for this gift (e.g. "Ramadan gift").'))
+
+        reason = self.gift_reason.strip()
+        memo = _('Gift: %(reason)s — %(partner)s') % {
+            'reason': reason,
+            'partner': self.partner_id.name,
+        }
+        if self.description:
+            memo = self.description
+
+        move = self.env['account.move'].create({
+            'journal_id': self.gift_journal_id.id,
+            'ref': memo,
+            'line_ids': [
+                Command.create({
+                    'account_id': self.expense_account_id.id,
+                    'partner_id': self.partner_id.id,
+                    'debit': self.amount,
+                    'credit': 0.0,
+                    'name': memo,
+                    'currency_id': self.currency_id.id,
+                }),
+                Command.create({
+                    'account_id': wewl_account.id,
+                    'partner_id': self.partner_id.id,
+                    'debit': 0.0,
+                    'credit': self.amount,
+                    'name': memo,
+                    'currency_id': self.currency_id.id,
+                }),
+            ],
+        })
+        move.action_post()
+
+        self.env['kuec.wallet.transaction'].create({
+            'partner_id': self.partner_id.id,
+            'transaction_type': 'adjustment',
+            'amount': self.amount,
+            'description': memo,
+            'currency_id': self.currency_id.id,
+            'move_id': move.id,
+        })

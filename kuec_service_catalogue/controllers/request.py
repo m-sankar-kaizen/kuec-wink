@@ -2263,16 +2263,12 @@ class WinkRequest(http.Controller):
             # Invoice already fully paid — skip payment, just record wallet debit if needed
             return request.redirect(f'/my/requests/{order_id}?payment=success')
 
-        # Find or create the eWallet journal — always sudo to avoid portal ACL errors
-        journal = request.env.ref(
-            'kuec_service_catalogue.kuec_ewallet_journal', raise_if_not_found=False
-        )
-        if journal:
-            journal = journal.sudo()
-        else:
-            journal = request.env['account.journal'].sudo().search([
-                ('is_ewallet_journal', '=', True), ('company_id', '=', order.company_id.id)
-            ], limit=1)
+        # Always resolve the eWallet journal via is_ewallet_journal flag — never via env.ref()
+        # because env.ref() returns the original XML-created journal even after the coordinator
+        # changes which journal is the active eWallet journal.
+        journal = request.env['account.journal'].sudo().search([
+            ('is_ewallet_journal', '=', True), ('company_id', '=', order.company_id.id)
+        ], limit=1)
         if not journal:
             return request.redirect(f'/my/requests/{order_id}/pay?error=wallet_journal_missing')
 
