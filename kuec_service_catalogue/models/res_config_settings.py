@@ -33,3 +33,10 @@ class ResConfigSettings(models.TransientModel):
         readonly=False,
         help='Global product used for all government charge lines on sale orders.',
     )
+    wink_expense_journal_id = fields.Many2one(
+        related='company_id.wink_expense_journal_id',
+        string='Promotional Credit Expense Journal',
+        readonly=False,
+        domain=[('type', '=', 'general')],
+        help='Default journal for Promotional Credit top-up expense entries.',
+    )

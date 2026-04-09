@@ -25,3 +25,11 @@ class ResCompany(models.Model):
         help='Global product used for all government charge lines on sale orders. '
              'If not set, the service product is used as fallback.',
     )
+    wink_expense_journal_id = fields.Many2one(
+        'account.journal',
+        string='Promotional Credit Expense Journal',
+        domain=[('type', '=', 'general')],
+        ondelete='set null',
+        help='Default general/miscellaneous journal used when posting a Promotional Credit '
+             'wallet top-up expense entry. Configure once here; overridable per wizard.',
+    )

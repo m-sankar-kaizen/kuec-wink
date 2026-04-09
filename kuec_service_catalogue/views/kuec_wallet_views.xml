@@ -179,11 +179,13 @@
                         <group string="Amount">
                             <field name="amount"/>
                             <field name="currency_id"/>
-                            <field name="description" placeholder="Optional memo on the journal entry"/>
+                            <field name="description"
+                                   placeholder="Memo / reason for this top-up"
+                                   help="For Promotional Credit this is also used as the reason on the journal entry."/>
                         </group>
                     </group>
 
-                    <!-- Payment journal fields (Customer Payment only) -->
+                    <!-- Prepaid Credit: payment journal -->
                     <group string="Payment Source" invisible="topup_type != 'payment'">
                         <field name="journal_id"
                                required="topup_type == 'payment'"
@@ -201,18 +203,15 @@
                         <field name="gift_journal_id"
                                required="topup_type == 'gift'"
                                options="{'no_create': True}"
-                               help="General journal for posting the expense entry."/>
-                        <field name="gift_reason"
-                               required="topup_type == 'gift'"
-                               placeholder="e.g. Ramadan promotion, loyalty reward, service compensation"/>
+                               help="General journal for posting the expense entry. Default is set in Settings → WINK → eWallet."/>
                     </group>
 
-                    <!-- JV preview: Payment -->
+                    <!-- JV preview: Prepaid Credit (positive) -->
                     <div class="alert alert-info" role="alert" invisible="topup_type != 'payment'">
-                        <strong>Journal Entry (Customer Payment):</strong><br/>
-                        DR  Bank / Cash Account (selected payment journal)<br/>
-                        &#160;&#160;&#160;CR  WINK eWallet Liability (WEWL)<br/>
-                        <small class="text-muted">Posted on the payment journal — ensures correct bank reconciliation.</small>
+                        <strong>Journal Entry (Prepaid Credit):</strong><br/>
+                        Positive amount: DR Bank/Cash &#160;&#160; CR WINK eWallet Liability (WEWL)<br/>
+                        Negative amount (overdraft): DR WINK eWallet Liability &#160;&#160; CR Bank/Cash<br/>
+                        <small class="text-muted">Negative values are allowed — use for wallet deductions / overdraft adjustments.</small>
                     </div>
 
                     <!-- JV preview: Promotional Credit -->

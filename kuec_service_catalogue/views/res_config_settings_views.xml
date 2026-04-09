@@ -26,6 +26,16 @@
                         </setting>
                     </block>
 
+                    <!-- eWallet Promotional Credit expense journal -->
+                    <block title="eWallet" name="kuec_wink_ewallet_setting_container">
+                        <setting id="kuec_expense_journal" string="Promotional Credit Expense Journal"
+                                 help="Default journal for posting the expense entry when a Promotional Credit top-up is issued. Must be a general/miscellaneous journal.">
+                            <field name="wink_expense_journal_id"
+                                   options="{'no_create': True}"
+                                   placeholder="Select a general journal…"/>
+                        </setting>
+                    </block>
+
                     <!-- Terms & Conditions editor -->
                     <block title="Portal Terms &amp; Conditions" name="kuec_wink_terms_setting_container">
                         <setting id="kuec_terms_html" string="Terms &amp; Conditions Content"
