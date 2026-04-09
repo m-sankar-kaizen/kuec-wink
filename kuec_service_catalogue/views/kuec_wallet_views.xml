@@ -192,8 +192,8 @@
                                help="Bank, cash, or payment gateway journal from which funds were received."/>
                     </group>
 
-                    <!-- Gift / Expense fields -->
-                    <group string="Gift / Expense Details" invisible="topup_type != 'gift'">
+                    <!-- Promotional Credit fields -->
+                    <group string="Promotional Credit Details" invisible="topup_type != 'gift'">
                         <field name="expense_account_id"
                                required="topup_type == 'gift'"
                                options="{'no_create': True}"
@@ -204,7 +204,7 @@
                                help="General journal for posting the expense entry."/>
                         <field name="gift_reason"
                                required="topup_type == 'gift'"
-                               placeholder="e.g. Ramadan gift, loyalty reward, service compensation"/>
+                               placeholder="e.g. Ramadan promotion, loyalty reward, service compensation"/>
                     </group>
 
                     <!-- JV preview: Payment -->
@@ -215,9 +215,9 @@
                         <small class="text-muted">Posted on the payment journal — ensures correct bank reconciliation.</small>
                     </div>
 
-                    <!-- JV preview: Gift -->
+                    <!-- JV preview: Promotional Credit -->
                     <div class="alert alert-warning" role="alert" invisible="topup_type != 'gift'">
-                        <strong>Journal Entry (Gift / Expense):</strong><br/>
+                        <strong>Journal Entry (Promotional Credit):</strong><br/>
                         DR  Expense Account (selected above)<br/>
                         &#160;&#160;&#160;CR  WINK eWallet Liability (WEWL)<br/>
                         <small class="text-muted">No cash or bank movement — cost is recognized as a company expense.</small>

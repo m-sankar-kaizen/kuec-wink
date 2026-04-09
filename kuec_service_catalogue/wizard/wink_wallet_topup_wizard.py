@@ -9,10 +9,10 @@ class WinkWalletTopupWizard(models.TransientModel):
 
     topup_type = fields.Selection([
         ('payment', 'Customer Payment'),
-        ('gift', 'Gift / Expense'),
+        ('gift', 'Promotional Credit'),
     ], string='Top-Up Type', required=True, default='payment',
         help='Customer Payment: customer paid via bank/cash — DR bank account, CR WEWL liability.\n'
-             'Gift / Expense: company-funded gift — DR expense account, CR WEWL liability. '
+             'Promotional Credit: company-funded credit — DR expense account, CR WEWL liability. '
              'No bank or cash movement is recorded.',
     )
     partner_id = fields.Many2one(
@@ -45,8 +45,8 @@ class WinkWalletTopupWizard(models.TransientModel):
         help='General/miscellaneous journal for posting the gift expense entry.',
     )
     gift_reason = fields.Char(
-        string='Gift Reason',
-        help='Internal note explaining why this gift was granted (e.g. "Ramadan gift", "Loyalty reward").',
+        string='Reason',
+        help='Internal note explaining this promotional credit (e.g. "Ramadan promotion", "Loyalty reward").',
     )
     # ── Common fields ─────────────────────────────────────────────────────────
     amount = fields.Monetary(
@@ -179,22 +179,22 @@ class WinkWalletTopupWizard(models.TransientModel):
         })
 
     def _action_topup_gift(self, wewl_account):
-        """Post a gift/expense top-up JV: DR expense account, CR WEWL.
+        """Post a promotional credit top-up JV: DR expense account, CR WEWL.
 
         Workflow:
             1. Validate expense account, journal, and reason.
             2. Create and post account.move on the general expense journal.
-            3. Create kuec.wallet.transaction of type 'adjustment' with gift prefix.
+            3. Create kuec.wallet.transaction of type 'adjustment' with promo prefix.
         """
         if not self.expense_account_id:
-            raise UserError(_('Please select an expense account for the gift top-up.'))
+            raise UserError(_('Please select an expense account for the promotional credit.'))
         if not self.gift_journal_id:
-            raise UserError(_('Please select an expense journal for the gift entry.'))
+            raise UserError(_('Please select an expense journal for the promotional credit entry.'))
         if not self.gift_reason:
-            raise UserError(_('Please provide a reason for this gift (e.g. "Ramadan gift").'))
+            raise UserError(_('Please provide a reason for this promotional credit (e.g. "Ramadan promotion").'))
 
         reason = self.gift_reason.strip()
-        memo = _('Gift: %(reason)s — %(partner)s') % {
+        memo = _('Promotional Credit: %(reason)s — %(partner)s') % {
             'reason': reason,
             'partner': self.partner_id.name,
         }
