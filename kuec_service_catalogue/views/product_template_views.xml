@@ -5,13 +5,13 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
-            <!-- Move Available on Wink and Is Bundle to the top options div -->
+            <!-- Available on Wink: only shown for service type products -->
             <xpath expr="//div[@name='options']" position="inside">
-                <span class="d-inline-block">
+                <span class="d-inline-block" invisible="type != 'service'">
                     <field name="available_on_wink"/>
                     <label for="available_on_wink"/>
                 </span>
-                <span class="d-inline-block">
+                <span class="d-inline-block" invisible="type != 'service'">
                     <field name="wink_is_bundle"/>
                     <label for="wink_is_bundle"/>
                 </span>
@@ -22,8 +22,8 @@
                 <page string="Wink" name="wink_tab" invisible="not available_on_wink or type != 'service' or not sale_ok">
                     <group name="wink_core_settings">
                         <separator string="Classification"/>
-                        <field name="department_ids" widget="many2many_tags"/>
                         <field name="nature_id"/>
+                        <field name="department_ids" widget="many2many_tags"/>
 
                         <separator string="Delivery"/>
                         <field name="delivery_model" widget="radio" readonly="wink_is_bundle or commercial_structure == 'bundled'"
@@ -39,8 +39,6 @@
                                help="Link this product to a bundle package so tiers and services are configured there."/>
                     </group>
                     <group name="wink_commercial" string="Commercial Settings">
-                        <field name="price_visibility" required="available_on_wink"/>
-                        <field name="price_hidden_label" invisible="price_visibility == 'visible'"/>
                         <field name="wink_payment_term_id" invisible="delivery_model == 'retainer'"/>
                         <separator string="Portal Configuration"/>
                         <field name="requires_employee_selection" invisible="wink_is_bundle"/>
@@ -50,14 +48,12 @@
                         <field name="gov_charge_per_employee" invisible="wink_is_bundle or not requires_government_charges or not gov_charge_is_known or not requires_employee_selection"/>
                         <field name="reminder_days_before"/>
                         <separator string="Tags &amp; Ribbon (Portal)"/>
-                        <field name="product_tag_ids" widget="many2many_tags" placeholder="Tags shown on portal cards and detail"/>
-                        <field name="wink_ribbon_tag_id" placeholder="Select a ribbon tag"/>
-                    </group>
-                    <group string="Tags &amp; Ribbon" name="wink_tags_help">
-                        <div class="text-muted">
-                            <p class="mb-1"><strong>Tags:</strong> Shown as badges on the service catalogue and detail page.</p>
-                            <p class="mb-0"><strong>Ribbon:</strong> Choose a single ribbon tag in the field above. Ribbon tags are defined in Product Catalog → Product Tags by enabling \"Show as Ribbon on Website\".</p>
-                        </div>
+                        <field name="product_tag_ids" widget="many2many_tags"
+                               placeholder="Tags shown on portal cards and detail"
+                               help="Badges shown on the service catalogue and detail page."/>
+                        <field name="wink_ribbon_tag_id"
+                               placeholder="Select a ribbon tag"
+                               help="Single ribbon tag displayed on the service card. Ribbon tags are defined in Product Catalog → Product Tags by enabling 'Show as Ribbon on Website'."/>
                     </group>
 
                     <separator string="Service Content &amp; Media"/>
