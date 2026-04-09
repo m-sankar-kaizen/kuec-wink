@@ -159,20 +159,20 @@
                             <form method="get" action="/services" id="wink-filter-form-mobile">
                                 <input type="hidden" name="search" t-att-value="search or ''"/>
                                 <div class="wink-filter-group mb-4">
-                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
-                                    <t t-foreach="departments" t-as="dept">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" t-att-id="'filter_dept_mob_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
-                                            <label class="form-check-label text-muted" t-att-for="'filter_dept_mob_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
-                                        </div>
-                                    </t>
-                                </div>
-                                <div class="wink-filter-group mb-4">
                                     <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
                                     <t t-foreach="request.env['kuec.service.nature'].sudo().search([])" t-as="nature">
                                         <div class="form-check my-2 d-flex align-items-center">
                                             <input type="radio" class="form-check-input" t-att-id="'filter_nature_mob_%s' % nature.id" name="nature_id" t-att-value="nature.id" t-att-checked="nature.id == current_filters.get('nature_id')"/>
                                             <label class="form-check-label ms-2" t-att-for="'filter_nature_mob_%s' % nature.id" t-esc="nature.name"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="wink-filter-group mb-4">
+                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
+                                    <t t-foreach="departments" t-as="dept">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" t-att-id="'filter_dept_mob_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
+                                            <label class="form-check-label text-muted" t-att-for="'filter_dept_mob_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
                                         </div>
                                     </t>
                                 </div>
@@ -204,20 +204,20 @@
                                     <input type="hidden" name="search" t-att-value="search or ''"/>
                                     <h6 class="fw-bold mb-3 border-bottom pb-2"><i class="fa fa-filter me-1"/> Filters</h6>
                                     <div class="wink-filter-group mb-4">
-                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
-                                        <t t-foreach="departments" t-as="dept">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input wink-filter-checkbox" t-att-id="'filter_dept_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
-                                                <label class="form-check-label text-muted" t-att-for="'filter_dept_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
-                                            </div>
-                                        </t>
-                                    </div>
-                                    <div class="wink-filter-group mb-4">
                                         <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
                                         <t t-foreach="natures" t-as="nature">
                                             <div class="form-check">
                                             <input type="radio" class="form-check-input wink-filter-checkbox" t-att-id="'filter_nature_%s' % nature.id" name="nature_id" t-att-value="nature.id" t-att-checked="nature.id == current_filters.get('nature_id')"/>
                                                 <label class="form-check-label text-muted" t-att-for="'filter_nature_%s' % nature.id"><t t-esc="nature.name"/></label>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
+                                        <t t-foreach="departments" t-as="dept">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input wink-filter-checkbox" t-att-id="'filter_dept_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
+                                                <label class="form-check-label text-muted" t-att-for="'filter_dept_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
                                             </div>
                                         </t>
                                     </div>
