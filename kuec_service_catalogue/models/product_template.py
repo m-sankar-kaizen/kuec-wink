@@ -125,7 +125,7 @@ class ProductTemplate(models.Model):
             if tmpl.wink_is_bundle and not tmpl.wink_bundle_id:
                 bundle = self.env['wink.bundle'].create({
                     'name': tmpl.name,
-                    'company_id': tmpl.company_id.id,
+                    'company_id': tmpl.company_id.id or self.env.company.id,
                     'product_tmpl_id': tmpl.id,
                 })
                 tmpl.wink_bundle_id = bundle.id
@@ -153,7 +153,7 @@ class ProductTemplate(models.Model):
                 if not rec.wink_bundle_id:
                     bundle = self.env['wink.bundle'].create({
                         'name': rec.name,
-                        'company_id': rec.company_id.id,
+                        'company_id': rec.company_id.id or self.env.company.id,
                         'product_tmpl_id': rec.id,
                     })
                     rec.wink_bundle_id = bundle.id
