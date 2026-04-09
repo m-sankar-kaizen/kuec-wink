@@ -134,12 +134,6 @@
                             </field>
                         </page>
                         <page string="Upgrade / Downgrade" name="tier_changes">
-                            <group>
-                                <group string="Pricing">
-                                    <field name="price" string="Annual / Full Price"/>
-                                    <field name="price_monthly" string="Standard Monthly Price"/>
-                                </group>
-                            </group>
                             <group string="Allowed Changes">
                                 <field name="upgrade_to_ids"
                                        widget="many2many_tags"
