@@ -51,13 +51,18 @@ class WinkRequest(http.Controller):
             'errors': errors or {},
             'post': post or {},
         }
-        if product.commercial_structure == 'bundled' and product.wink_bundle_id:
+        _is_bundle_product = product.wink_is_bundle or product.commercial_structure == 'bundled'
+        if _is_bundle_product:
             bundle = product.wink_bundle_id
-            tiers = bundle.tier_ids.sorted('sequence')
-            tier_data = []
-            for tier in tiers:
-                tier_data.append({'tier': tier, 'items': tier.item_ids.sorted('sequence')})
-            vals.update({'wink_is_bundle': True, 'bundle': bundle, 'tier_data': tier_data})
+            if not bundle:
+                # Fallback: product predates auto-create — look up via reverse relation
+                bundle = request.env['wink.bundle'].sudo().search(
+                    [('product_tmpl_id', '=', product.id)], limit=1
+                )
+            if bundle:
+                tiers = bundle.tier_ids.sorted('sequence')
+                tier_data = [{'tier': t, 'items': t.item_ids.sorted('sequence')} for t in tiers]
+                vals.update({'wink_is_bundle': True, 'bundle': bundle, 'tier_data': tier_data})
 
         # Plan selection: Odoo subscription only (Recurring Prices tab)
         recurring_lines = product._wink_recurring_plan_lines()
@@ -72,7 +77,7 @@ class WinkRequest(http.Controller):
             vals['subscription_plans'] = subscription_plans
             vals['selected_plan'] = None  # bundles must NOT pre-select
 
-            if product.commercial_structure == 'bundled':
+            if product.commercial_structure == 'bundled' or product.wink_is_bundle:
                 # Build billing_cycles (unique recurring plans, ordered by duration)
                 seen_cycles = {}
                 billing_cycles = []
@@ -499,7 +504,11 @@ class WinkRequest(http.Controller):
                 'currency_symbol': 'AED',
             }
             if step == 3 and wizard_draft:
-                wink_is_bundle = (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False)) and product.wink_bundle_id
+                _rb = product.wink_bundle_id or (
+                    request.env['wink.bundle'].sudo().search([('product_tmpl_id', '=', product.id)], limit=1)
+                    if (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False)) else False
+                )
+                wink_is_bundle = bool(_rb)
                 if wink_is_bundle:
                     review_display['type_label'] = 'Bundle'
                     tier_id = wizard_draft.get('tier_id')
@@ -583,8 +592,13 @@ class WinkRequest(http.Controller):
 
             # Bundle tier data; UI-BUG-005f (FB-005.8): bundle total for selected tier
             is_bundle_config = (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False))
-            if is_bundle_config and product.wink_bundle_id:
-                bundle = product.wink_bundle_id
+            _step1_bundle = product.wink_bundle_id
+            if is_bundle_config and not _step1_bundle:
+                _step1_bundle = request.env['wink.bundle'].sudo().search(
+                    [('product_tmpl_id', '=', product.id)], limit=1
+                )
+            if is_bundle_config and _step1_bundle:
+                bundle = _step1_bundle
                 tiers = bundle.tier_ids.sorted('sequence')
                 tier_data = []
                 for tier in tiers:
@@ -820,10 +834,13 @@ class WinkRequest(http.Controller):
         employee_ids = request.httprequest.form.getlist('employee_ids')
         employee_ids = [int(e) for e in employee_ids if str(e).isdigit()]
 
-        wink_is_bundle = (
-            (product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False))
-            and product.wink_bundle_id
-        )
+        _is_bundle_flag = product.commercial_structure == 'bundled' or getattr(product, 'wink_is_bundle', False)
+        _bundle_rec = product.wink_bundle_id
+        if _is_bundle_flag and not _bundle_rec:
+            _bundle_rec = request.env['wink.bundle'].sudo().search(
+                [('product_tmpl_id', '=', product.id)], limit=1
+            )
+        wink_is_bundle = bool(_is_bundle_flag and _bundle_rec)
 
         tier = None
         try:
