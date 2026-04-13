@@ -8,13 +8,6 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app data-string="Wink" string="Wink" name="kuec_service_catalogue" groups="base.group_user">
-                    <!-- ISSUE-006: Company reminder days + global default. -->
-                    <block title="Subscription Settings" name="kuec_wink_subscription_setting_container">
-                        <setting id="kuec_reminder_days" string="Expiry Reminder Intervals" help="Define default comma-separated days to send expiry reminders before a Wink subscription ends.">
-                            <field name="kuec_default_reminder_days"/>
-                            <field name="wink_company_reminder_days"/>
-                        </setting>
-                    </block>
 
                     <!-- Government Charges global product -->
                     <block title="Government Charges" name="kuec_wink_gov_charge_setting_container">
@@ -36,14 +29,19 @@
                         </setting>
                     </block>
 
-                    <!-- Terms & Conditions editor -->
+                    <!-- Terms & Conditions full-width editor -->
                     <block title="Portal Terms &amp; Conditions" name="kuec_wink_terms_setting_container">
-                        <setting id="kuec_terms_html" string="Terms &amp; Conditions Content"
-                                 help="HTML content displayed at /terms-and-conditions on the customer portal. Shown to customers before bundle payment.">
-                            <div class="col-12 mt-2">
-                                <field name="wink_terms_html" widget="html" style="min-height:300px;"/>
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_right_pane w-100">
+                                <div class="o_form_label fw-bold">Terms &amp; Conditions Content</div>
+                                <div class="text-muted small mb-3">
+                                    HTML content displayed at <code>/terms-and-conditions</code> on the customer portal.
+                                    Shown to customers before bundle payment.
+                                </div>
+                                <field name="wink_terms_html" widget="html"
+                                       style="min-height:400px; border:1px solid #dee2e6; border-radius:6px; padding:12px;"/>
                             </div>
-                        </setting>
+                        </div>
                     </block>
                 </app>
             </xpath>
