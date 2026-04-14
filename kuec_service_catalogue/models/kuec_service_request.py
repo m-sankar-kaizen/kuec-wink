@@ -644,14 +644,22 @@ class SaleOrderWink(models.Model):
         monthly_price = self._wink_get_tier_monthly_price(tier)
         refund_amount = round((monthly_price / 30.0) * remaining_days, 2)
 
+        # Cap refund at the amount actually paid — never refund more than collected.
+        # amount_total is the annual contract value invoiced to the customer.
+        amount_paid = round(float(self.amount_total or 0.0), 2)
+        note = (
+            f'Monthly rate: ({monthly_price:.2f} / 30) × {remaining_days} days'
+            f' = {refund_amount:.2f} (annual discount forfeited)'
+        )
+        if amount_paid > 0 and refund_amount > amount_paid:
+            note += f' → capped at amount paid: {amount_paid:.2f}'
+            refund_amount = amount_paid
+
         return {
             'remaining_days': remaining_days,
             'refund_amount': max(refund_amount, 0.0),
             'policy': policy,
-            'note': (
-                f'Monthly rate: ({monthly_price:.2f} / 30) × {remaining_days} days'
-                f' = {refund_amount:.2f} (annual discount forfeited)'
-            ),
+            'note': note,
         }
 
     def _wink_get_tier_monthly_price(self, tier):
