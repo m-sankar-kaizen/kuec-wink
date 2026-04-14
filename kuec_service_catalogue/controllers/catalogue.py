@@ -108,7 +108,7 @@ class WinkCatalogue(http.Controller):
                 ('order_id.state', '=', 'sale'),
                 ('order_id.subscription_state', '!=', '6_churn'),
                 ('order_id.wink_bundle_cancelled', '=', False),
-                ('state', '=', 'available'),
+                ('state', 'in', ('available', 'fully_activated')),
             ])
             for ent in entitlements:
                 if ent.service_product_id:
@@ -248,19 +248,29 @@ class WinkCatalogue(http.Controller):
                         })
                 active_period = display_plan['period_label']
 
-        # Bundle entitlement: check if authenticated user has an available entitlement for this service
+        # Bundle entitlement: check if authenticated user has an entitlement for this service.
+        # entitlement          → available (activate button shown)
+        # entitlement_activated → fully_activated (service already active; show status badge)
         entitlement = False
+        entitlement_activated = False
         bundle_employees = request.env['kuec.employee.directory']
         if is_authenticated:
             partner = request.env.user.partner_id.commercial_partner_id
-            entitlement = request.env['wink.bundle.entitlement'].sudo().search([
+            _base_domain = [
                 ('service_product_id', '=', product.id),
                 ('order_id.partner_id', 'child_of', partner.id),
                 ('order_id.state', '=', 'sale'),
                 ('order_id.subscription_state', '!=', '6_churn'),
                 ('order_id.wink_bundle_cancelled', '=', False),
-                ('state', '=', 'available'),
-            ], limit=1)
+            ]
+            entitlement = request.env['wink.bundle.entitlement'].sudo().search(
+                _base_domain + [('state', '=', 'available')], limit=1
+            )
+            if not entitlement:
+                # No available slot — check if already fully activated
+                entitlement_activated = request.env['wink.bundle.entitlement'].sudo().search(
+                    _base_domain + [('state', '=', 'fully_activated')], limit=1
+                )
             if entitlement and getattr(product, 'requires_employee_selection', False):
                 bundle_employees = request.env['kuec.employee.directory'].sudo().search([
                     ('partner_id', 'child_of', partner.id)
@@ -277,6 +287,7 @@ class WinkCatalogue(http.Controller):
             'unique_periods': unique_periods,
             'active_period': active_period,
             'entitlement': entitlement,
+            'entitlement_activated': entitlement_activated,
             'bundle_employees': bundle_employees,
             'bundle_requested': kwargs.get('bundle_requested') == '1',
             'activation_error': kwargs.get('activation_error', ''),

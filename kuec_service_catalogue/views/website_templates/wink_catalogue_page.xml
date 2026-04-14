@@ -28,9 +28,17 @@
 
                 <div class="d-flex flex-wrap gap-1 mb-2">
                     <t t-if="entitlement_map and entitlement_map.get(product.id)">
-                        <span class="badge rounded-pill fw-semibold" style="background:#d4edda;color:#155724;font-size:0.72rem;">
-                            <i class="fa fa-check me-1"/>In Your Bundle
-                        </span>
+                        <t t-set="_ent_card" t-value="entitlement_map.get(product.id)"/>
+                        <t t-if="_ent_card.state == 'fully_activated'">
+                            <span class="badge rounded-pill fw-semibold" style="background:#155724;color:#fff;font-size:0.72rem;">
+                                <i class="fa fa-check-circle me-1"/>Activated
+                            </span>
+                        </t>
+                        <t t-else="">
+                            <span class="badge rounded-pill fw-semibold" style="background:#d4edda;color:#155724;font-size:0.72rem;">
+                                <i class="fa fa-check me-1"/>In Your Bundle
+                            </span>
+                        </t>
                     </t>
                     <t t-if="product.department_ids">
                         <span class="badge border text-dark"><t t-esc="product.department_ids[0].name"/></span>
@@ -461,6 +469,11 @@
                                             <i class="fa fa-check-circle me-1"/>Activate Service
                                         </span>
                                     </t>
+                                    <t t-elif="entitlement_activated">
+                                        <span class="wink-pricing-header-price" style="font-size: 1.25rem;">
+                                            <i class="fa fa-check-circle me-1"/>Service Activated
+                                        </span>
+                                    </t>
                                     <t t-else="">
                                         <span class="wink-pricing-header-price" style="font-size: 1.25rem;">Request This Service</span>
                                     </t>
@@ -603,6 +616,22 @@
                                                     <i class="fa fa-tag me-1"/>Included in your active bundle —
                                                     <a t-attf-href="/my/requests/#{entitlement.order_id.id}" class="text-decoration-none">view bundle</a>
                                                 </small>
+                                            </div>
+                                        </t>
+                                        <t t-elif="entitlement_activated">
+                                            <!-- Service already fully activated from bundle -->
+                                            <div class="rounded-3 p-3 text-center"
+                                                 style="background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.3);">
+                                                <div class="fw-semibold mb-1" style="color:#155724;">
+                                                    <i class="fa fa-check-circle me-1"/>This service is active
+                                                </div>
+                                                <div class="text-muted small mb-2">
+                                                    Activated from your bundle.
+                                                </div>
+                                                <a t-attf-href="/my/requests/#{entitlement_activated.order_id.id}"
+                                                   class="btn btn-sm btn-outline-success rounded-pill">
+                                                    <i class="fa fa-eye me-1"/>View Bundle
+                                                </a>
                                             </div>
                                         </t>
                                         <t t-else="">
