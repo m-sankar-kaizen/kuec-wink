@@ -316,7 +316,17 @@ class WinkBundleEntitlement(models.Model):
         # The gov charge line shares wink_entitlement_id with the service line
         # so it appears in activated_line_ids but is filtered out of the portal
         # activation display (filtered by is_gov_charge_pending).
-        if getattr(self.service_product_id, 'requires_government_charges', False):
+        #
+        # SKIP if the charges were already collected via the direct invoice route
+        # (catalogue activation page → account.move). In that path, catalogue.py
+        # creates and posts an account.move directly; action_gov_charge_paid()
+        # then calls this method. Creating another order line would produce a
+        # duplicate "Government Charges" line on the sale order.
+        _gov_via_invoice = bool(
+            self.wink_gov_charge_invoice_id and
+            self.wink_gov_charge_invoice_id.payment_state in ('paid', 'in_payment')
+        )
+        if getattr(self.service_product_id, 'requires_government_charges', False) and not _gov_via_invoice:
             gov_known = getattr(self.service_product_id, 'gov_charge_is_known', False)
             gov_amount = getattr(self.service_product_id, 'gov_charge_amount', 0.0)
             gov_per_emp = getattr(self.service_product_id, 'gov_charge_per_employee', 0.0)
