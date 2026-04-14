@@ -44,7 +44,6 @@
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
         'views/kuec_reports.xml',
-        'views/coordinator_menu.xml',
         'views/portal_components.xml',
         'views/website_templates/employee_portal_templates.xml',
         'views/website_templates/request_templates.xml',
@@ -68,6 +67,7 @@
         'views/website_templates/notification_templates.xml',
         'views/wink_bundle_change_log_views.xml',
         'views/kuec_wallet_views.xml',
+        'views/coordinator_menu.xml',
     ],
     'demo': [
         'data/demo_data.xml',
