@@ -313,10 +313,11 @@ class SaleOrderWink(models.Model):
 
         undiscounted_daily_rate = monthly_price / 30.0
 
-        # Consumed days = subscription start → today
+        # Consumed days = subscription start → today (inclusive on both ends).
+        # The start day itself counts as day 1; cancelling on day 0 = 1 consumed day.
         today = date_cls.today()
         start = self.start_date or (self.date_order.date() if self.date_order else None)
-        consumed_days = max((today - start).days, 0) if start else 0
+        consumed_days = max((today - start).days + 1, 1) if start else 1
 
         consumed_amount = round(undiscounted_daily_rate * consumed_days, 2)
         refund = max(round(paid_amount - consumed_amount, 2), 0.0)
@@ -666,10 +667,12 @@ class SaleOrderWink(models.Model):
 
         daily_rate = monthly_price / 30.0
 
-        # Consumed days: bundle activation date → today
+        # Consumed days: bundle activation date → today (inclusive on both ends).
+        # The activation day itself counts as day 1, so we always add 1.
+        # Cancelling on the same day as activation = 1 consumed day.
         today = date_cls.today()
         start = self.wink_bundle_start_date or (self.date_order.date() if self.date_order else None)
-        consumed_days = max((today - start).days, 0) if start else 0
+        consumed_days = max((today - start).days + 1, 1) if start else 1
 
         amount_paid = round(float(self.amount_total or 0.0), 2)
         consumed_amount = round(daily_rate * consumed_days, 2)
