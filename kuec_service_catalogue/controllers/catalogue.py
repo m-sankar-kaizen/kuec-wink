@@ -320,15 +320,22 @@ class WinkCatalogue(http.Controller):
         has_gov_charge = _wink_gov or _req_gov
 
         # Resolve charge amount and known-flag
+        # gov_charge_base    — fixed component (charged once regardless of employee count)
+        # gov_charge_per_unit — variable component multiplied by number of employees
+        # gov_charge_per_emp  — combined display amount for 1 employee (base + per_unit)
         if _wink_gov:
-            gov_charge_per_emp = float(getattr(product, 'wink_default_gov_charge', 0.0) or 0.0)
+            gov_charge_base = 0.0
+            gov_charge_per_unit = float(getattr(product, 'wink_default_gov_charge', 0.0) or 0.0)
+            gov_charge_per_emp = gov_charge_per_unit
             gov_charge_is_known = True
         elif _req_gov:
             gov_charge_is_known = bool(getattr(product, 'gov_charge_is_known', False))
-            _gov_base = float(getattr(product, 'gov_charge_amount', 0.0) or 0.0)
-            _gov_per_emp = float(getattr(product, 'gov_charge_per_employee', 0.0) or 0.0)
-            gov_charge_per_emp = _gov_base + _gov_per_emp  # display estimate per activation
+            gov_charge_base = float(getattr(product, 'gov_charge_amount', 0.0) or 0.0)
+            gov_charge_per_unit = float(getattr(product, 'gov_charge_per_employee', 0.0) or 0.0)
+            gov_charge_per_emp = gov_charge_base + gov_charge_per_unit
         else:
+            gov_charge_base = 0.0
+            gov_charge_per_unit = 0.0
             gov_charge_per_emp = 0.0
             gov_charge_is_known = False
 
@@ -362,6 +369,25 @@ class WinkCatalogue(http.Controller):
                     'partner_id': partner.id,
                 })
                 employee_ids.append(new_emp.id)
+
+            # ── Save uploaded activation documents as attachments on the entitlement ──
+            import base64 as _b64
+            _doc_files = request.httprequest.files
+            for _key in list(_doc_files.keys()):
+                if not _key.startswith('doc_file_'):
+                    continue
+                for _uf in _doc_files.getlist(_key):
+                    if _uf and getattr(_uf, 'filename', None):
+                        _content = _uf.read()
+                        if _content:
+                            request.env['ir.attachment'].sudo().create({
+                                'name': _uf.filename,
+                                'res_model': 'wink.bundle.entitlement',
+                                'res_id': entitlement.id,
+                                'datas': _b64.b64encode(_content).decode(),
+                                'mimetype': _uf.content_type or 'application/octet-stream',
+                                'description': 'Activation document',
+                            })
 
             # ── Gov charge path A: wink_has_gov_charge (standalone-style, invoice-first) ──
             # Or requires_government_charges + gov_charge_is_known (known amount upfront)
@@ -454,6 +480,8 @@ class WinkCatalogue(http.Controller):
             'has_gov_charge': has_gov_charge,
             'gov_charge_is_known': gov_charge_is_known,
             'gov_charge_per_emp': gov_charge_per_emp,
+            'gov_charge_base': gov_charge_base,
+            'gov_charge_per_unit': gov_charge_per_unit,
             'employees': employees,
             'error': request.httprequest.args.get('error', '') or '',
         })
