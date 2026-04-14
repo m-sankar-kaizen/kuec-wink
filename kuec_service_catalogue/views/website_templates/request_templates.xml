@@ -3119,6 +3119,7 @@
                                 <t t-set="extra" t-value="request_extra.get(req.id, {})"/>
                                 <t t-set="req_type" t-value="extra.get('type', 'onetime')"/>
                                 <t t-set="req_payment" t-value="extra.get('payment', 'due')"/>
+                                <t t-set="is_bundle" t-value="bool(req.wink_entitlement_ids)"/>
                                 <a t-attf-href="/my/requests/#{req.id}" class="d-block border-bottom p-3 text-decoration-none text-dark">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
@@ -3130,6 +3131,17 @@
                                     <div class="mt-2">
                                         <span t-if="req_type == 'retainer'" class="badge badge-wink-type-retainer rounded-pill me-1">Retainer</span>
                                         <span t-if="req_type == 'onetime'" class="badge badge-wink-type-onetime rounded-pill me-1">One-time</span>
+                                        <t t-if="is_bundle">
+                                            <t t-if="req.wink_bundle_cancelled or req.state == 'cancel'">
+                                                <span class="badge rounded-pill me-1" style="background:#dc3545;color:#fff;font-size:0.72rem;"><i class="fa fa-times-circle me-1"/>Cancelled</span>
+                                            </t>
+                                            <t t-elif="req.wink_bundle_activated">
+                                                <span class="badge rounded-pill me-1" style="background:#198754;color:#fff;font-size:0.72rem;"><i class="fa fa-check-circle me-1"/>Active</span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="badge rounded-pill me-1" style="background:#fd7e14;color:#fff;font-size:0.72rem;"><i class="fa fa-clock-o me-1"/>Pending</span>
+                                            </t>
+                                        </t>
                                         <span t-if="req.state in ('draft', 'sent')" class="badge badge-wink-status-quotation rounded-pill me-1"><i class="fa fa-fw fa-circle small"/> Quotation</span>
                                         <span t-if="req.state in ('sale', 'done')" class="badge badge-wink-status-salesorder rounded-pill me-1"><i class="fa fa-fw fa-circle small"/> Sales Order</span>
                                         <span t-if="req_payment == 'locked'" class="badge badge-wink-payment-locked rounded-pill">Locked</span>
@@ -3150,6 +3162,7 @@
                             <th>Order Date</th>
                             <th>Service</th>
                             <th>Type</th>
+                            <th class="text-center">Bundle</th>
                             <th class="text-end">Total Amount</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Payment</th>
@@ -3160,6 +3173,7 @@
                             <t t-set="extra" t-value="request_extra.get(req.id, {})"/>
                             <t t-set="req_type" t-value="extra.get('type', 'onetime')"/>
                             <t t-set="req_payment" t-value="extra.get('payment', 'due')"/>
+                            <t t-set="is_bundle" t-value="bool(req.wink_entitlement_ids)"/>
                             <tr>
                                 <td>
                                     <a t-attf-href="/my/requests/#{req.id}" class="fw-bold"><t t-esc="req.name"/></a>
@@ -3171,6 +3185,28 @@
                                 <td>
                                     <span t-if="req_type == 'retainer'" class="badge badge-wink-type-retainer rounded-pill">Retainer</span>
                                     <span t-if="req_type == 'onetime'" class="badge badge-wink-type-onetime rounded-pill">One-time</span>
+                                </td>
+                                <td class="text-center">
+                                    <t t-if="is_bundle">
+                                        <t t-if="req.wink_bundle_cancelled or req.state == 'cancel'">
+                                            <span class="badge rounded-pill" style="background:#dc3545;color:#fff;font-size:0.72rem;">
+                                                <i class="fa fa-times-circle me-1"/>Cancelled
+                                            </span>
+                                        </t>
+                                        <t t-elif="req.wink_bundle_activated">
+                                            <span class="badge rounded-pill" style="background:#198754;color:#fff;font-size:0.72rem;">
+                                                <i class="fa fa-check-circle me-1"/>Active
+                                            </span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge rounded-pill" style="background:#fd7e14;color:#fff;font-size:0.72rem;">
+                                                <i class="fa fa-clock-o me-1"/>Pending
+                                            </span>
+                                        </t>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="text-muted small">—</span>
+                                    </t>
                                 </td>
                                 <td class="text-end"><span t-field="req.amount_total" t-options="{'widget': 'monetary', 'display_currency': req.currency_id}"/></td>
                                 <td class="text-center">
