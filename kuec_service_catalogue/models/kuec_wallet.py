@@ -228,8 +228,8 @@ class AccountMoveWallet(models.Model):
                 ], limit=1)
                 if not entitlement:
                     continue
-                # Check via raw SQL: if wink_gov_charge_invoice_id is still set, activation
-                # has not yet happened (action_gov_charge_paid clears it as its first step).
+                # Check via raw SQL: if wink_gov_charge_invoice_id is cleared, activation
+                # already completed (action_gov_charge_paid clears it AFTER successful activation).
                 self.env.cr.execute(
                     "SELECT wink_gov_charge_invoice_id FROM wink_bundle_entitlement WHERE id = %s",
                     (entitlement.id,)
@@ -311,6 +311,7 @@ class PaymentTransactionGovCharge(models.Model):
                 entitlement = self.env['wink.bundle.entitlement'].sudo().search([
                     ('wink_gov_charge_invoice_id', '=', invoice.id),
                 ], limit=1)
+                # Skip if invoice link already cleared — activation already completed
                 if not entitlement or not entitlement.wink_gov_charge_invoice_id:
                     continue
                 try:

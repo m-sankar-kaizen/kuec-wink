@@ -2762,7 +2762,17 @@ class WinkRequest(http.Controller):
             # Instead: check wink_gov_charge_invoice_id directly — if still set, not yet activated.
             entitlement.invalidate_recordset(['wink_gov_charge_invoice_id'])
             if entitlement.wink_gov_charge_invoice_id:
-                entitlement.sudo().action_gov_charge_paid()
+                # Wrap separately: a failed activation must NOT show "payment failed" to
+                # the customer — the wallet debit already happened. Activation failure
+                # is logged and the lazy heal on the request page will retry.
+                try:
+                    entitlement.sudo().action_gov_charge_paid()
+                except Exception:
+                    _logger.warning(
+                        "GOV-001: Activation after gov charge wallet payment failed for entitlement %s "
+                        "(invoice %s). Payment succeeded — lazy heal will retry on next page load.",
+                        entitlement_id, invoice.id, exc_info=True,
+                    )
 
         except Exception:
             _logger.warning(

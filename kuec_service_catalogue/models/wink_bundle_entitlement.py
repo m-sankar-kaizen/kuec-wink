@@ -136,32 +136,39 @@ class WinkBundleEntitlement(models.Model):
 
     def action_gov_charge_paid(self):
         """Called automatically when the gov charge invoice is reconciled/paid.
-        Activates using the stored pending employees, then clears the invoice reference.
+        Activates using the stored pending employees, then clears both pending fields.
 
         Workflow:
-            1. Capture pending employee IDs and clear the pending employees list.
+            1. Snapshot employee IDs from wink_pending_employee_ids (do NOT clear yet).
             2. Call action_activate() with those employees.
-            3. Only clear wink_gov_charge_invoice_id AFTER activation succeeds.
-               Keeping the invoice reference on failure prevents a second invoice
-               from being created if the user retries (double-billing guard).
+            3. Only clear wink_gov_charge_invoice_id AND wink_pending_employee_ids
+               AFTER activation succeeds.
+
+        Why both fields are kept until success:
+            - wink_gov_charge_invoice_id: prevents _create_invoice_now from creating a
+              second invoice on retry (double-billing guard).
+            - wink_pending_employee_ids: ensures that if activation fails, the employee
+              list is still available for the next retry. Clearing it before success
+              means retries always call action_activate(employee_ids=None), which raises
+              UserError on services that require employee selection.
 
         Returns:
             None — side-effects only (writes + activate).
         """
         self.ensure_one()
+        # Snapshot employees BEFORE activation — do NOT clear yet.
         employee_ids = self.wink_pending_employee_ids.ids or []
-        # Clear only pending employees — keep invoice reference until activation succeeds.
-        # If activation fails, the invoice stays attached so _create_invoice_now stays False
-        # on any retry, preventing a second gov charge invoice from being created.
-        self.sudo().write({'wink_pending_employee_ids': [(5, 0, 0)]})
         try:
             self.action_activate(employee_ids=employee_ids if employee_ids else None)
-            # Activation succeeded — safe to clear the invoice reference now
-            self.sudo().write({'wink_gov_charge_invoice_id': False})
+            # Activation succeeded — now safe to clear both pending fields atomically.
+            self.sudo().write({
+                'wink_gov_charge_invoice_id': False,
+                'wink_pending_employee_ids': [(5, 0, 0)],
+            })
         except Exception:
             _logger.warning(
                 "GOV-001: Auto-activation after gov charge payment failed for entitlement %s — "
-                "invoice reference preserved to prevent double-billing on retry.",
+                "invoice reference and pending employees preserved for retry.",
                 self.id, exc_info=True,
             )
 
