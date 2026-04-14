@@ -109,7 +109,7 @@
                              invisible="not wink_vendor_id or wink_source_delivery_model != 'project'">
                             <div class="d-flex align-items-center gap-3 flex-wrap">
                                 <span class="fw-semibold">
-                                    <i class="fa fa-building me-1 text-muted"/>
+                                    <i class="fa fa-building me-1 text-muted" title="Vendor"/>
                                     <field name="wink_vendor_id" readonly="1" nolabel="1" options="{'no_open': True}"/>
                                 </span>
                                 <field name="wink_preassigned_po_id" readonly="1" nolabel="1"
