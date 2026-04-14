@@ -343,8 +343,38 @@ class WinkCatalogue(http.Controller):
             ('partner_id', 'child_of', partner.id)
         ])
 
+        # ── Double-billing guard: entitlement has a paid invoice from a previous attempt ──
+        # This happens when action_gov_charge_paid() was called, cleared pending employees,
+        # called action_activate() which failed silently, but now keeps the invoice reference.
+        # If invoice is paid we must NOT show the form again (it would create a 2nd invoice).
+        # Instead retry activation and redirect to the request page.
+        if entitlement.wink_gov_charge_invoice_id:
+            _guard_inv = entitlement.wink_gov_charge_invoice_id
+            if _guard_inv.payment_state in ('paid', 'in_payment'):
+                try:
+                    entitlement.sudo().action_gov_charge_paid()
+                except Exception:
+                    pass
+                return request.redirect(f'/my/requests/{order.id}')
+
         # ── POST: process activation ──────────────────────────────────────────
         if request.httprequest.method == 'POST':
+            # POST-level double-billing guard: if an existing paid invoice is on the
+            # entitlement, don't create a new one — retry activation or redirect to pay.
+            if entitlement.wink_gov_charge_invoice_id:
+                _post_inv = entitlement.wink_gov_charge_invoice_id
+                if _post_inv.payment_state in ('paid', 'in_payment'):
+                    try:
+                        entitlement.sudo().action_gov_charge_paid()
+                    except Exception:
+                        pass
+                    return request.redirect(f'/my/requests/{order.id}')
+                else:
+                    # Unpaid invoice already exists — send customer back to pay it
+                    return request.redirect(
+                        f'/my/requests/{order.id}/gov-charges-payment?invoice_id={_post_inv.id}'
+                    )
+
             employee_ids = []
             for val in request.httprequest.form.getlist('employee_ids'):
                 if str(val).isdigit():

@@ -136,21 +136,32 @@ class WinkBundleEntitlement(models.Model):
 
     def action_gov_charge_paid(self):
         """Called automatically when the gov charge invoice is reconciled/paid.
-        Clears the pending invoice, activates using the stored pending employees,
-        and cleans up pending fields.
+        Activates using the stored pending employees, then clears the invoice reference.
+
+        Workflow:
+            1. Capture pending employee IDs and clear the pending employees list.
+            2. Call action_activate() with those employees.
+            3. Only clear wink_gov_charge_invoice_id AFTER activation succeeds.
+               Keeping the invoice reference on failure prevents a second invoice
+               from being created if the user retries (double-billing guard).
+
+        Returns:
+            None — side-effects only (writes + activate).
         """
         self.ensure_one()
         employee_ids = self.wink_pending_employee_ids.ids or []
-        # Clear pending fields before activating so the guard in action_activate() passes
-        self.sudo().write({
-            'wink_gov_charge_invoice_id': False,
-            'wink_pending_employee_ids': [(5, 0, 0)],
-        })
+        # Clear only pending employees — keep invoice reference until activation succeeds.
+        # If activation fails, the invoice stays attached so _create_invoice_now stays False
+        # on any retry, preventing a second gov charge invoice from being created.
+        self.sudo().write({'wink_pending_employee_ids': [(5, 0, 0)]})
         try:
             self.action_activate(employee_ids=employee_ids if employee_ids else None)
+            # Activation succeeded — safe to clear the invoice reference now
+            self.sudo().write({'wink_gov_charge_invoice_id': False})
         except Exception:
             _logger.warning(
-                "GOV-001: Auto-activation after gov charge payment failed for entitlement %s",
+                "GOV-001: Auto-activation after gov charge payment failed for entitlement %s — "
+                "invoice reference preserved to prevent double-billing on retry.",
                 self.id, exc_info=True,
             )
 

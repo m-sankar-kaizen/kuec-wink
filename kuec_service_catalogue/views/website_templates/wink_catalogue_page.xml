@@ -820,16 +820,29 @@
                                                                 <t t-else="">Optional</t>
                                                             </span>
                                                         </div>
-                                                        <!-- Row 2: file upload (multiple files allowed) -->
-                                                        <div class="w-100 ps-1">
+                                                        <!-- Row 2: custom multi-file picker with individual remove -->
+                                                        <div class="w-100 ps-1 wink-file-picker"
+                                                             t-att-data-input-id="'wink_doc_input_%d' % doc.id">
+                                                            <!-- Hidden input submitted with the form -->
                                                             <input type="file"
                                                                    t-att-name="'doc_file_%d' % doc.id"
+                                                                   t-att-id="'wink_doc_input_%d' % doc.id"
                                                                    multiple="multiple"
                                                                    t-att-required="'required' if doc.requirement == 'required' else None"
-                                                                   class="form-control form-control-sm"
-                                                                   style="font-size:0.8rem;"/>
+                                                                   class="wink-file-real-input"
+                                                                   style="display:none;"/>
+                                                            <!-- File chips list -->
+                                                            <div t-att-id="'wink_doc_list_%d' % doc.id"
+                                                                 class="wink-doc-file-list d-flex flex-wrap gap-1 mb-2"
+                                                                 style="min-height:4px;"/>
+                                                            <!-- Attach button -->
+                                                            <label t-att-for="'wink_doc_input_%d' % doc.id"
+                                                                   class="btn btn-outline-secondary btn-sm rounded-pill"
+                                                                   style="cursor:pointer;font-size:0.78rem;">
+                                                                <i class="fa fa-paperclip me-1"/>Attach files
+                                                            </label>
                                                             <div class="text-muted mt-1" style="font-size:0.72rem;">
-                                                                You may attach multiple files for this document.
+                                                                Click to select one or more files. Use <i class="fa fa-times"/> to remove individual files.
                                                             </div>
                                                         </div>
                                                     </div>
@@ -887,7 +900,7 @@
                                                 </div>
                                                 <!-- New employee rows container — JS appends more rows -->
                                                 <div id="wink-new-emp-rows">
-                                                    <!-- Row 0 (always present) -->
+                                                    <!-- Row 0 (always present — clear-only if it is the last row) -->
                                                     <div class="wink-new-emp-row row g-2 mb-2 align-items-center">
                                                         <div class="col-sm-6">
                                                             <input type="text" name="new_emp_name[]" class="form-control form-control-sm"
@@ -906,7 +919,9 @@
                                                                    placeholder="Mobile (optional)"/>
                                                         </div>
                                                         <div class="col-sm-2 d-flex justify-content-end">
-                                                            <!-- placeholder — first row cannot be removed -->
+                                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill wink-rm-emp-row" title="Remove row">
+                                                                <i class="fa fa-times"/>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -916,8 +931,29 @@
                                             </div>
                                             <script>
                                             (function(){
+                                                var container = document.getElementById('wink-new-emp-rows');
+
+                                                // Remove row if multiple rows exist; clear all inputs if it is the last row
+                                                function removeOrClear(row) {
+                                                    var rows = container.querySelectorAll('.wink-new-emp-row');
+                                                    if (rows.length > 1) {
+                                                        container.removeChild(row);
+                                                    } else {
+                                                        row.querySelectorAll('input').forEach(function(inp) {
+                                                            inp.value = '';
+                                                            inp.dispatchEvent(new Event('input', {bubbles: true}));
+                                                        });
+                                                    }
+                                                }
+
+                                                // Bind existing Row 0 remove button
+                                                container.querySelectorAll('.wink-rm-emp-row').forEach(function(btn) {
+                                                    var row = btn.closest('.wink-new-emp-row');
+                                                    btn.addEventListener('click', function() { removeOrClear(row); });
+                                                });
+
+                                                // Add Another — append a new row with its own remove button
                                                 document.getElementById('wink-add-emp-row').addEventListener('click', function(){
-                                                    var container = document.getElementById('wink-new-emp-rows');
                                                     var row = document.createElement('div');
                                                     row.className = 'wink-new-emp-row row g-2 mb-2 align-items-center';
                                                     row.innerHTML = [
@@ -925,9 +961,9 @@
                                                         '<div class="col-sm-6"><input type="text" name="new_emp_job[]" class="form-control form-control-sm" placeholder="Job title (optional)"/></div>',
                                                         '<div class="col-sm-5"><input type="email" name="new_emp_email[]" class="form-control form-control-sm" placeholder="Email (optional)"/></div>',
                                                         '<div class="col-sm-5"><input type="text" name="new_emp_mobile[]" class="form-control form-control-sm" placeholder="Mobile (optional)"/></div>',
-                                                        '<div class="col-sm-2 d-flex justify-content-end"><button type="button" class="btn btn-sm btn-outline-danger rounded-pill wink-rm-emp-row" title="Remove"><i class="fa fa-times"/></button></div>'
+                                                        '<div class="col-sm-2 d-flex justify-content-end"><button type="button" class="btn btn-sm btn-outline-danger rounded-pill wink-rm-emp-row" title="Remove row"><i class="fa fa-times"/></button></div>'
                                                     ].join('');
-                                                    row.querySelector('.wink-rm-emp-row').addEventListener('click', function(){ container.removeChild(row); });
+                                                    row.querySelector('.wink-rm-emp-row').addEventListener('click', function() { removeOrClear(row); });
                                                     container.appendChild(row);
                                                 });
                                             })();
@@ -1099,6 +1135,83 @@
 
                         </div><!-- /row -->
                     </form>
+
+                    <!-- ── Custom file picker: individual file remove chips ── -->
+                    <script t-ignore="1">
+                    (function() {
+                        function escHtml(s) {
+                            return String(s)
+                                .replace(/&amp;/g, '&amp;amp;')
+                                .replace(/&lt;/g, '&amp;lt;')
+                                .replace(/&gt;/g, '&amp;gt;')
+                                .replace(/"/g, '&amp;quot;');
+                        }
+
+                        document.querySelectorAll('.wink-file-picker').forEach(function(picker) {
+                            var inputId = picker.dataset.inputId;
+                            var input   = document.getElementById(inputId);
+                            var listId  = inputId.replace('wink_doc_input_', 'wink_doc_list_');
+                            var listEl  = document.getElementById(listId);
+                            if (!input || !listEl) return;
+
+                            // DataTransfer holds the managed file collection
+                            var dt = new DataTransfer();
+
+                            function renderFiles() {
+                                listEl.innerHTML = '';
+                                for (var i = 0; i &lt; dt.items.length; i++) {
+                                    (function(idx) {
+                                        var f = dt.items[idx].getAsFile();
+                                        var chip = document.createElement('span');
+                                        chip.className = 'd-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill';
+                                        chip.style.cssText = 'background:#e9ecef;color:#495057;font-size:0.75rem;max-width:200px;';
+
+                                        var icon = document.createElement('i');
+                                        icon.className = 'fa fa-file-o flex-shrink-0';
+
+                                        var nameSpan = document.createElement('span');
+                                        nameSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;display:inline-block;';
+                                        nameSpan.textContent = f.name;
+                                        nameSpan.title = f.name;
+
+                                        var rmBtn = document.createElement('button');
+                                        rmBtn.type = 'button';
+                                        rmBtn.title = 'Remove ' + f.name;
+                                        rmBtn.style.cssText = 'background:none;border:none;padding:0 0 0 2px;cursor:pointer;color:#6c757d;font-size:0.85rem;line-height:1;flex-shrink:0;';
+                                        rmBtn.innerHTML = '&amp;times;';
+                                        rmBtn.addEventListener('click', function() {
+                                            dt.items.remove(idx);
+                                            try { input.files = dt.files; } catch(e) {}
+                                            renderFiles();
+                                        });
+
+                                        chip.appendChild(icon);
+                                        chip.appendChild(nameSpan);
+                                        chip.appendChild(rmBtn);
+                                        listEl.appendChild(chip);
+                                    })(i);
+                                }
+                            }
+
+                            input.addEventListener('change', function(e) {
+                                Array.from(e.target.files || []).forEach(function(f) {
+                                    // Skip duplicates by name
+                                    var dup = false;
+                                    for (var j = 0; j &lt; dt.items.length; j++) {
+                                        if (dt.items[j].getAsFile().name === f.name) { dup = true; break; }
+                                    }
+                                    if (!dup) dt.items.add(f);
+                                });
+                                try { input.files = dt.files; } catch(e) {}
+                                renderFiles();
+                                // Reset value so the same file can be re-added after removal
+                                input.value = '';
+                            });
+
+                            renderFiles();
+                        });
+                    })();
+                    </script>
 
                 </div><!-- /container -->
             </div><!-- /wrap -->
