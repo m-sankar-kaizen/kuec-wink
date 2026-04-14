@@ -674,7 +674,14 @@ class SaleOrderWink(models.Model):
         start = self.wink_bundle_start_date or (self.date_order.date() if self.date_order else None)
         consumed_days = max((today - start).days + 1, 1) if start else 1
 
-        amount_paid = round(float(self.amount_total or 0.0), 2)
+        # Base refund on bundle lines only — exclude government charge lines.
+        # Gov charges are a pass-through cost and are not refunded on cancellation.
+        bundle_subtotal = sum(
+            line.price_subtotal
+            for line in self.order_line
+            if not line.is_gov_charge_pending
+        )
+        amount_paid = round(float(bundle_subtotal or 0.0), 2)
         consumed_amount = round(daily_rate * consumed_days, 2)
         refund_amount = round(max(min(amount_paid - consumed_amount, amount_paid), 0.0), 2)
 
