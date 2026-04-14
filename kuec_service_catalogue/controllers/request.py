@@ -991,8 +991,23 @@ class WinkRequest(http.Controller):
                 # v2: selected_pricing is the pricing record (product.pricing, sale.subscription.pricing, or wink.subscription.plan)
                 # Odoo 18 often uses 'price' (related/computed) or 'recurring_price'
                 price_unit = getattr(selected_pricing, 'price', 0.0) or getattr(selected_pricing, 'recurring_price', 0.0)
-                
                 price_unit = price_unit or getattr(selected_pricing, 'list_price', 0.0) or price_unit
+            elif wink_is_bundle and not price_unit:
+                # Modern bundles use product.pricing / sale.subscription.pricing via the pricing matrix.
+                # wink.bundle.tier.price is a legacy field (may be 0).
+                # When tier.price = 0 fall back to the pricing record found from selected_pricing_id.
+                try:
+                    _sp = selected_pricing  # set at line ~902 if pricing_line was found, else empty record
+                    if getattr(_sp, 'exists', lambda: False)() and _sp.exists():
+                        _sp_price = float(
+                            getattr(_sp, 'price', 0.0) or
+                            getattr(_sp, 'recurring_price', 0.0) or
+                            getattr(_sp, 'list_price', 0.0) or 0.0
+                        )
+                        if _sp_price:
+                            price_unit = _sp_price
+                except Exception:
+                    pass
 
 
         line_vals = {

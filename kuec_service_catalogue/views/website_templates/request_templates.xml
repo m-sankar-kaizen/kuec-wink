@@ -2249,15 +2249,24 @@
                     <div role="status" t-if="submitted and wink_is_bundle" class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-4 rounded-3 text-white" style="background:#28a745;">
                         <i class="fa fa-check-circle fa-2x flex-shrink-0"/>
                         <div class="flex-grow-1">
-                            <h5 class="mb-1 fw-bold">Request submitted successfully!</h5>
+                            <!-- Title changes once the bundle moves past the draft/pricing stage -->
+                            <h5 class="mb-1 fw-bold">
+                                <t t-if="portal_stage == 'active'">Bundle activated successfully!</t>
+                                <t t-elif="portal_stage in ('pending_activation',) and is_paid">Payment confirmed!</t>
+                                <t t-elif="portal_stage in ('pending_activation',) and not is_paid">Request confirmed!</t>
+                                <t t-else="">Request submitted successfully!</t>
+                            </h5>
                             <p class="mb-0 opacity-90 small">
                                 <t t-if="portal_stage == 'ready_for_payment'">Your proposal is ready — review the details below and proceed to payment.</t>
                                 <t t-elif="portal_stage == 'processing'">Documents are required. Upload them below so our team can proceed.</t>
-                                <t t-else="">Our team will review your request and notify you once pricing is confirmed.</t>
+                                <t t-elif="portal_stage == 'active'">Your bundle is now active. Start activating your included services using the buttons below.</t>
+                                <t t-elif="portal_stage == 'pending_activation' and is_paid">Payment received! Your coordinator is finalising the setup and will activate your services shortly.</t>
+                                <t t-elif="portal_stage == 'pending_activation' and not is_paid">Your request has been approved — please review the details below and complete payment to start activating your services.</t>
+                                <t t-else="">Our team will review your request and confirm pricing shortly. You will be notified once it is ready.</t>
                             </p>
                         </div>
                         <div class="d-flex gap-2 flex-shrink-0 flex-wrap">
-                            <t t-if="portal_stage == 'ready_for_payment'">
+                            <t t-if="portal_stage == 'ready_for_payment' or (portal_stage == 'pending_activation' and not is_paid)">
                                 <a t-attf-href="/my/requests/#{order.id}/pay" class="btn btn-light fw-bold rounded-pill px-4">
                                     <i class="fa fa-credit-card me-1"/>Pay Now
                                 </a>

@@ -79,13 +79,6 @@
               sequence="40"
               groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
-    <menuitem id="menu_wink_wallet_transactions"
-              name="Transactions"
-              parent="menu_wink_group_ewallet"
-              action="action_kuec_wallet_transactions"
-              sequence="10"
-              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
-
     <menuitem id="menu_wink_wallet_topup"
               name="Top-Up Wallet"
               parent="menu_wink_group_ewallet"
