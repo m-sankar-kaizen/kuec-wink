@@ -27,6 +27,11 @@
                 </p>
 
                 <div class="d-flex flex-wrap gap-1 mb-2">
+                    <t t-if="entitlement_map and entitlement_map.get(product.id)">
+                        <span class="badge rounded-pill fw-semibold" style="background:#d4edda;color:#155724;font-size:0.72rem;">
+                            <i class="fa fa-check me-1"/>In Your Bundle
+                        </span>
+                    </t>
                     <t t-if="product.department_ids">
                         <span class="badge border text-dark"><t t-esc="product.department_ids[0].name"/></span>
                     </t>
@@ -65,9 +70,17 @@
                     </t>
                 </div>
 
+                <t t-set="card_ent" t-value="entitlement_map.get(product.id) if entitlement_map else False"/>
                 <div class="d-grid gap-2 d-md-flex">
                     <a t-attf-href="/services/#{product.id}" class="btn btn-wink-ghost btn-sm">Details</a>
-                    <t t-if="request.env.user._is_public()">
+                    <t t-if="card_ent">
+                        <a t-attf-href="/services/#{product.id}/activate/#{card_ent.id}"
+                           class="btn btn-sm fw-semibold"
+                           style="background:#1a5f1a;color:#fff;border:none;">
+                            <i class="fa fa-check-circle me-1"/>Activate
+                        </a>
+                    </t>
+                    <t t-elif="request.env.user._is_public()">
                         <button type="button" class="btn btn-wink-primary btn-sm wink-request-btn" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">Request <i class="fa fa-arrow-right ms-1"/></button>
                     </t>
                     <t t-else="">
@@ -344,6 +357,26 @@
                     </div>
                 </div>
 
+                <!-- ── Activation feedback banners ── -->
+                <div class="container mt-3">
+                    <t t-if="bundle_requested">
+                        <div class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-3 rounded-3 text-white mb-0"
+                             style="background:#1a5f1a;">
+                            <i class="fa fa-check-circle fa-lg flex-shrink-0"/>
+                            <div>
+                                <strong>Service activated successfully!</strong>
+                                Your request has been submitted and our team will process it shortly.
+                            </div>
+                        </div>
+                    </t>
+                    <t t-if="activation_error">
+                        <div class="alert alert-danger d-flex align-items-center gap-3 p-3 rounded-3 mb-0">
+                            <i class="fa fa-exclamation-circle fa-lg flex-shrink-0"/>
+                            <div><strong>Activation failed:</strong> <t t-esc="activation_error"/></div>
+                        </div>
+                    </t>
+                </div>
+
                 <!-- ── Main Content ── -->
                 <div class="container wink-detail-main">
                     <div class="row">
@@ -421,6 +454,11 @@
                                         <span class="wink-pricing-starting-label">Starting at</span>
                                         <span class="wink-pricing-header-price">
                                             AED <t t-esc="'{:,.2f}'.format(subscription_plans[0]['price'])"/>
+                                        </span>
+                                    </t>
+                                    <t t-elif="entitlement">
+                                        <span class="wink-pricing-header-price" style="font-size: 1.25rem;">
+                                            <i class="fa fa-check-circle me-1"/>Activate Service
                                         </span>
                                     </t>
                                     <t t-else="">
@@ -553,6 +591,20 @@
                                                 <t t-else="">Request Service <i class="fa fa-arrow-right ms-1"/></t>
                                             </button>
                                         </t>
+                                        <t t-elif="entitlement">
+                                            <!-- User has an available entitlement — link to dedicated activation page -->
+                                            <a t-attf-href="/services/#{product.id}/activate/#{entitlement.id}"
+                                               class="wink-cta-btn w-100 text-center"
+                                               style="background:#1a5f1a;border-color:#1a5f1a;display:block;">
+                                                <i class="fa fa-check-circle me-2"/>Activate Service
+                                            </a>
+                                            <div class="text-center mt-2">
+                                                <small class="text-muted">
+                                                    <i class="fa fa-tag me-1"/>Included in your active bundle —
+                                                    <a t-attf-href="/my/requests/#{entitlement.order_id.id}" class="text-decoration-none">view bundle</a>
+                                                </small>
+                                            </div>
+                                        </t>
                                         <t t-else="">
                                             <t t-if="is_bundle">
                                                 <a t-attf-href="/services/#{product.id}/request"
@@ -679,4 +731,526 @@
             <t t-call="kuec_service_catalogue.wink_login_modal_snippet"/>
         </t>
     </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Dedicated Bundle Service Activation Page
+         Route: GET/POST /services/<product_id>/activate/<entitlement_id>
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="wink_service_activate_page" name="WINK Service Activate Page">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure oe_empty">
+
+                <!-- Hero -->
+                <div class="wink-detail-hero">
+                    <div class="container">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb wink-detail-breadcrumb mb-3">
+                                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+                                <li class="breadcrumb-item"><a href="/services" class="text-decoration-none">Services</a></li>
+                                <li class="breadcrumb-item">
+                                    <a t-attf-href="/services/#{product.id}" class="text-decoration-none"><t t-esc="product.name"/></a>
+                                </li>
+                                <li class="breadcrumb-item active">Activate</li>
+                            </ol>
+                        </nav>
+                        <h1 class="wink-detail-title mb-2"><t t-esc="product.name"/></h1>
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge rounded-pill fw-semibold px-3 py-2"
+                                  style="background:#d4edda;color:#155724;font-size:0.8rem;">
+                                <i class="fa fa-check me-1"/>Included in Your Bundle —
+                                <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none" style="color:#155724;">
+                                    <t t-esc="order.name"/>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container py-5" style="max-width:900px;">
+
+                    <!-- Error banner -->
+                    <t t-if="error">
+                        <div class="alert alert-danger d-flex align-items-center gap-3 mb-4 rounded-3">
+                            <i class="fa fa-exclamation-circle fa-lg flex-shrink-0"/>
+                            <div><strong>Activation failed:</strong> <t t-esc="error"/></div>
+                        </div>
+                    </t>
+
+                    <form t-attf-action="/services/#{product.id}/activate/#{entitlement.id}"
+                          method="post" enctype="multipart/form-data" id="wink-activation-form">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                        <div class="row g-4">
+
+                            <!-- ── LEFT: Service Info + Employee + Docs ── -->
+                            <div class="col-lg-7">
+
+                                <!-- Service Description -->
+                                <t t-if="product.wink_description">
+                                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                        <div class="card-body p-4">
+                                            <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                                <i class="fa fa-info-circle me-2"/>Service Information
+                                            </h5>
+                                            <div class="wink-prose">
+                                                <t t-out="product.wink_description"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+
+                                <!-- Required Documents -->
+                                <t t-if="product.kuec_document_ids">
+                                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                        <div class="card-body p-4">
+                                            <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                                <i class="fa fa-file-text-o me-2"/>Required Documents
+                                            </h5>
+                                            <div class="wink-doc-list">
+                                                <t t-foreach="product.kuec_document_ids" t-as="doc">
+                                                    <div class="wink-doc-item">
+                                                        <div class="wink-doc-icon-box">
+                                                            <i class="fa fa-file-text-o"/>
+                                                        </div>
+                                                        <span class="wink-doc-name flex-grow-1"><t t-esc="doc.name"/></span>
+                                                        <span t-attf-class="badge rounded-pill #{'wink-badge-required' if doc.requirement == 'required' else 'wink-badge-optional'}">
+                                                            <t t-if="doc.requirement == 'required'">Required</t>
+                                                            <t t-else="">Optional</t>
+                                                        </span>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+
+                                <!-- Employee Assignment -->
+                                <t t-if="requires_employees">
+                                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                        <div class="card-body p-4">
+                                            <h5 class="fw-bold mb-1" style="color:#1F3864;">
+                                                <i class="fa fa-users me-2"/>Assign Employees
+                                            </h5>
+                                            <p class="text-muted small mb-3">
+                                                Select one or more employees to assign to this service. You can also add a new employee below.
+                                            </p>
+
+                                            <!-- Existing employees (multi-select checkboxes) -->
+                                            <t t-if="employees">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold small">Select from your employees</label>
+                                                    <div class="border rounded-3 p-3" style="max-height:220px;overflow-y:auto;">
+                                                        <t t-foreach="employees" t-as="emp">
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                       name="employee_ids"
+                                                                       t-att-value="emp.id"
+                                                                       t-att-id="'emp_' + str(emp.id)"/>
+                                                                <label class="form-check-label" t-att-for="'emp_' + str(emp.id)">
+                                                                    <span class="fw-semibold"><t t-esc="emp.name"/></span>
+                                                                    <t t-if="emp.job_title">
+                                                                        <span class="text-muted small ms-1">— <t t-esc="emp.job_title"/></span>
+                                                                    </t>
+                                                                </label>
+                                                            </div>
+                                                        </t>
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- Add new employees (multiple rows supported) -->
+                                            <div class="border rounded-3 p-3 bg-light">
+                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                                    <div class="fw-semibold small">
+                                                        <i class="fa fa-plus-circle me-1 text-primary"/>Add New Employee(s)
+                                                    </div>
+                                                    <button type="button" id="wink-add-emp-row"
+                                                            class="btn btn-outline-primary btn-sm rounded-pill"
+                                                            style="font-size:0.75rem;">
+                                                        <i class="fa fa-plus me-1"/>Add Another
+                                                    </button>
+                                                </div>
+                                                <!-- New employee rows container — JS appends more rows -->
+                                                <div id="wink-new-emp-rows">
+                                                    <!-- Row 0 (always present) -->
+                                                    <div class="wink-new-emp-row row g-2 mb-2 align-items-center">
+                                                        <div class="col-sm-6">
+                                                            <input type="text" name="new_emp_name[]" class="form-control form-control-sm"
+                                                                   placeholder="Full name *"/>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <input type="text" name="new_emp_job[]" class="form-control form-control-sm"
+                                                                   placeholder="Job title (optional)"/>
+                                                        </div>
+                                                        <div class="col-sm-5">
+                                                            <input type="email" name="new_emp_email[]" class="form-control form-control-sm"
+                                                                   placeholder="Email (optional)"/>
+                                                        </div>
+                                                        <div class="col-sm-5">
+                                                            <input type="text" name="new_emp_mobile[]" class="form-control form-control-sm"
+                                                                   placeholder="Mobile (optional)"/>
+                                                        </div>
+                                                        <div class="col-sm-2 d-flex justify-content-end">
+                                                            <!-- placeholder — first row cannot be removed -->
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-muted" style="font-size:0.72rem;margin-top:4px;">
+                                                    Leave <em>Full name</em> blank to skip adding a new employee.
+                                                </div>
+                                            </div>
+                                            <script>
+                                            (function(){
+                                                document.getElementById('wink-add-emp-row').addEventListener('click', function(){
+                                                    var container = document.getElementById('wink-new-emp-rows');
+                                                    var row = document.createElement('div');
+                                                    row.className = 'wink-new-emp-row row g-2 mb-2 align-items-center';
+                                                    row.innerHTML = [
+                                                        '<div class="col-sm-6"><input type="text" name="new_emp_name[]" class="form-control form-control-sm" placeholder="Full name *"/></div>',
+                                                        '<div class="col-sm-6"><input type="text" name="new_emp_job[]" class="form-control form-control-sm" placeholder="Job title (optional)"/></div>',
+                                                        '<div class="col-sm-5"><input type="email" name="new_emp_email[]" class="form-control form-control-sm" placeholder="Email (optional)"/></div>',
+                                                        '<div class="col-sm-5"><input type="text" name="new_emp_mobile[]" class="form-control form-control-sm" placeholder="Mobile (optional)"/></div>',
+                                                        '<div class="col-sm-2 d-flex justify-content-end"><button type="button" class="btn btn-sm btn-outline-danger rounded-pill wink-rm-emp-row" title="Remove"><i class="fa fa-times"/></button></div>'
+                                                    ].join('');
+                                                    row.querySelector('.wink-rm-emp-row').addEventListener('click', function(){ container.removeChild(row); });
+                                                    container.appendChild(row);
+                                                });
+                                            })();
+                                            </script>
+
+                                        </div>
+                                    </div>
+                                </t>
+
+                            </div><!-- /col-lg-7 -->
+
+                            <!-- ── RIGHT: Summary + Gov Charge + Activate ── -->
+                            <div class="col-lg-5">
+                                <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top:100px;">
+                                    <div class="card-body p-0">
+
+                                        <!-- Header -->
+                                        <div class="p-4 rounded-top-3"
+                                             style="background:linear-gradient(135deg,#1a5f1a 0%,#2e8b2e 100%);color:#fff;">
+                                            <div class="fw-bold" style="font-size:1.1rem;">
+                                                <i class="fa fa-check-circle me-2"/>Activation Summary
+                                            </div>
+                                            <div class="opacity-75 small mt-1">
+                                                Bundle: <t t-esc="order.name"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4">
+
+                                            <!-- Service row -->
+                                            <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+                                                <div>
+                                                    <div class="fw-semibold text-dark"><t t-esc="product.name"/></div>
+                                                    <div class="text-muted small">
+                                                        <t t-esc="str(entitlement.qty_activated)"/> of
+                                                        <t t-esc="str(entitlement.qty_entitled)"/> activations used
+                                                    </div>
+                                                </div>
+                                                <span class="badge rounded-pill"
+                                                      style="background:#d4edda;color:#155724;font-size:0.72rem;">
+                                                    Included
+                                                </span>
+                                            </div>
+
+                                            <!-- Government charges — known amount (invoice will be created) -->
+                                            <t t-if="has_gov_charge and gov_charge_is_known">
+                                                <div class="rounded-3 p-3 mb-3"
+                                                     style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);">
+                                                    <div class="fw-semibold mb-1" style="color:#856404;">
+                                                        <i class="fa fa-credit-card me-1"/>Government Charges Required
+                                                    </div>
+                                                    <div class="small mb-1" style="color:#856404;">
+                                                        Amount: <strong>AED <t t-esc="'{:,.2f}'.format(gov_charge_per_emp)"/></strong>
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        After clicking "Submit", an invoice will be created and you will be taken directly
+                                                        to the payment page. Activation is completed once payment is received.
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- Government charges — amount to be confirmed by coordinator -->
+                                            <t t-if="has_gov_charge and not gov_charge_is_known">
+                                                <div class="rounded-3 p-3 mb-3"
+                                                     style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);">
+                                                    <div class="fw-semibold mb-1" style="color:#856404;">
+                                                        <i class="fa fa-info-circle me-1"/>Government Charges Apply
+                                                    </div>
+                                                    <div class="text-muted small mb-1">
+                                                        This service involves government fees. The exact charge amount will be
+                                                        confirmed by our coordinator after submission.
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        You will be contacted with the payment details before any charge is made.
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- No extra charges -->
+                                            <t t-if="not has_gov_charge">
+                                                <div class="rounded-3 p-3 mb-3"
+                                                     style="background:rgba(40,167,69,0.07);border:1px solid rgba(40,167,69,0.2);">
+                                                    <div class="fw-semibold small" style="color:#155724;">
+                                                        <i class="fa fa-check me-1"/>No additional charges
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        This service is fully covered by your bundle.
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- Activate button -->
+                                            <button type="submit" class="btn w-100 fw-bold py-3 rounded-3"
+                                                    style="background:#1a5f1a;color:#fff;font-size:1rem;border:none;">
+                                                <i class="fa fa-check-circle me-2"/>
+                                                <t t-if="has_gov_charge and gov_charge_is_known">Submit &amp; Pay Government Charges</t>
+                                                <t t-elif="has_gov_charge">Submit Activation Request</t>
+                                                <t t-else="">Activate Service</t>
+                                            </button>
+
+                                            <div class="text-center mt-3">
+                                                <a t-attf-href="/services/#{product.id}" class="text-muted small text-decoration-none">
+                                                    <i class="fa fa-arrow-left me-1"/>Back to service
+                                                </a>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- /col-lg-5 -->
+
+                        </div><!-- /row -->
+                    </form>
+
+                </div><!-- /container -->
+            </div><!-- /wrap -->
+        </t>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Activation Success Page (no payment required)
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="wink_service_activate_success" name="WINK Service Activation Success">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure oe_empty">
+                <div class="container py-5" style="max-width:680px;">
+
+                    <!-- ── Variant A: Gov charges pending (coordinator must confirm amount) ── -->
+                    <t t-if="gov_charges_pending">
+                        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+
+                            <!-- Amber header -->
+                            <div class="p-4 text-white text-center"
+                                 style="background:linear-gradient(135deg,#b45309 0%,#d97706 100%);">
+                                <div class="mb-3">
+                                    <i class="fa fa-clock-o" style="font-size:3.5rem;opacity:0.9;"/>
+                                </div>
+                                <h3 class="fw-bold mb-1">Request Submitted!</h3>
+                                <p class="mb-0 opacity-80">
+                                    <t t-esc="product.name"/> — Government charges are pending confirmation.
+                                </p>
+                            </div>
+
+                            <div class="p-4">
+
+                                <!-- Important notice box -->
+                                <div class="rounded-3 p-3 mb-4"
+                                     style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);">
+                                    <div class="fw-semibold mb-2" style="color:#856404;">
+                                        <i class="fa fa-info-circle me-1"/>What this means for you
+                                    </div>
+                                    <p class="small mb-1" style="color:#6b5a00;">
+                                        This service requires <strong>government charges</strong> that vary depending on your specific situation.
+                                        Our coordinator will contact you with the exact amount before any payment is processed.
+                                    </p>
+                                    <p class="small mb-0" style="color:#6b5a00;">
+                                        <strong>You will not be charged anything right now.</strong>
+                                    </p>
+                                </div>
+
+                                <!-- What happens next -->
+                                <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                    <i class="fa fa-list-ol me-2"/>What Happens Next
+                                </h5>
+
+                                <div class="d-flex flex-column gap-3 mb-4">
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#28a745;">
+                                            <i class="fa fa-check text-white" style="font-size:0.8rem;"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Request received</div>
+                                            <div class="text-muted small">Your activation request for <t t-esc="product.name"/> has been received.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#d97706;">
+                                            <span class="text-white fw-bold" style="font-size:0.75rem;">2</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Coordinator confirms charges</div>
+                                            <div class="text-muted small">Our coordinator will check the exact government fees and contact you directly — usually within 1 business day.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#0055b7;">
+                                            <span class="text-white fw-bold" style="font-size:0.75rem;">3</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">You pay the government fees</div>
+                                            <div class="text-muted small">Once confirmed, you will receive a payment link via your portal. You can pay using your eWallet balance or by card.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#dee2e6;">
+                                            <span class="text-muted fw-bold" style="font-size:0.75rem;">4</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Service delivered</div>
+                                            <div class="text-muted small">After payment is received, our team will process your service and notify you when it is complete.</div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Bundle reference -->
+                                <div class="rounded-3 p-3 mb-4"
+                                     style="background:rgba(0,85,183,0.05);border-left:4px solid #0055b7;">
+                                    <div class="small text-muted mb-1">Bundle Order Reference</div>
+                                    <div class="fw-semibold text-dark">
+                                        <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none">
+                                            <t t-esc="order.name"/>
+                                        </a>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        You can track this activation and view your payment link from your bundle order page.
+                                    </div>
+                                </div>
+
+                                <!-- Action buttons -->
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a t-attf-href="/my/requests/#{order.id}"
+                                       class="btn fw-semibold px-4 py-2"
+                                       style="background:#0055b7;color:#fff;border:none;">
+                                        <i class="fa fa-eye me-1"/>View Bundle Order
+                                    </a>
+                                    <a href="/services"
+                                       class="btn btn-outline-secondary fw-semibold px-4 py-2">
+                                        <i class="fa fa-th-large me-1"/>Back to Services
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ── Variant B: Clean activation (no gov charges) ── -->
+                    <t t-else="">
+                        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+
+                            <!-- Green header -->
+                            <div class="p-4 text-white text-center"
+                                 style="background:linear-gradient(135deg,#1a5f1a 0%,#2e8b2e 100%);">
+                                <div class="mb-3">
+                                    <i class="fa fa-check-circle" style="font-size:3.5rem;opacity:0.9;"/>
+                                </div>
+                                <h3 class="fw-bold mb-1">Service Activated!</h3>
+                                <p class="mb-0 opacity-80">
+                                    <t t-esc="product.name"/> has been submitted for processing.
+                                </p>
+                            </div>
+
+                            <div class="p-4">
+
+                                <!-- What happens next -->
+                                <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                    <i class="fa fa-list-ol me-2"/>What Happens Next
+                                </h5>
+
+                                <div class="d-flex flex-column gap-3 mb-4">
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#28a745;">
+                                            <i class="fa fa-check text-white" style="font-size:0.8rem;"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Request submitted</div>
+                                            <div class="text-muted small">Your service activation has been received and is queued for processing.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#0055b7;">
+                                            <span class="text-white fw-bold" style="font-size:0.75rem;">2</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Coordinator review</div>
+                                            <div class="text-muted small">Our team will review your request and prepare the necessary documentation. No action needed from you at this stage.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#dee2e6;">
+                                            <span class="text-muted fw-bold" style="font-size:0.75rem;">3</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Service delivered</div>
+                                            <div class="text-muted small">You will be notified once the service is fully processed and delivered. You can also check the status below.</div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Bundle reference -->
+                                <div class="rounded-3 p-3 mb-4"
+                                     style="background:rgba(0,85,183,0.05);border-left:4px solid #0055b7;">
+                                    <div class="small text-muted mb-1">Bundle Order Reference</div>
+                                    <div class="fw-semibold text-dark">
+                                        <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none">
+                                            <t t-esc="order.name"/>
+                                        </a>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        Track your activation status from your bundle order page.
+                                    </div>
+                                </div>
+
+                                <!-- Action buttons -->
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a t-attf-href="/my/requests/#{order.id}"
+                                       class="btn fw-semibold px-4 py-2"
+                                       style="background:#0055b7;color:#fff;border:none;">
+                                        <i class="fa fa-eye me-1"/>View Bundle Order
+                                    </a>
+                                    <a href="/services"
+                                       class="btn btn-outline-secondary fw-semibold px-4 py-2">
+                                        <i class="fa fa-th-large me-1"/>Back to Services
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </t>
+
+                </div><!-- /container -->
+            </div><!-- /wrap -->
+        </t>
+    </template>
+
 </odoo>

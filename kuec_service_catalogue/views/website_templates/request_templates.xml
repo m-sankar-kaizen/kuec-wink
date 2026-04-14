@@ -2569,18 +2569,16 @@
                                                 <!-- One-time already used — no button -->
                                             </t>
                                             <t t-elif="ent.qty_activated >= 1">
-                                                <button type="button" class="btn btn-sm btn-outline-success"
-                                                        t-attf-data-bs-target="#wink-activate-modal-#{ent.id}"
-                                                        data-bs-toggle="modal">
+                                                <a class="btn btn-sm btn-outline-success"
+                                                   t-attf-href="/services/#{ent.service_product_id.id}/activate/#{ent.id}">
                                                     <i class="fa fa-refresh me-1"/>Request Again
-                                                </button>
+                                                </a>
                                             </t>
                                             <t t-else="">
-                                                <button type="button" class="btn btn-sm wink-btn-primary"
-                                                        t-attf-data-bs-target="#wink-activate-modal-#{ent.id}"
-                                                        data-bs-toggle="modal">
+                                                <a class="btn btn-sm wink-btn-primary"
+                                                   t-attf-href="/services/#{ent.service_product_id.id}/activate/#{ent.id}">
                                                     <i class="fa fa-play me-1"/>Activate
-                                                </button>
+                                                </a>
                                             </t>
                                         </t>
                                         <t t-elif="order.state not in ('sale', 'done')">

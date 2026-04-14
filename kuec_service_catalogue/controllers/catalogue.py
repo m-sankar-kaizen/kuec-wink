@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import re
-from odoo import http
+import werkzeug
+from odoo import http, _
 from odoo.http import request
+from odoo.exceptions import UserError
 from odoo.tools import html2plaintext
 from werkzeug.exceptions import NotFound
 
@@ -96,12 +98,52 @@ class WinkCatalogue(http.Controller):
             else:
                 product_dept_slugs[p.id] = ''
 
+        # Bundle entitlement map: show bundled services to users who have an active bundle
+        entitlement_map = {}  # {product_tmpl_id: entitlement_record}
+        user = request.env.user
+        if not user._is_public():
+            partner = user.partner_id.commercial_partner_id
+            entitlements = request.env['wink.bundle.entitlement'].sudo().search([
+                ('order_id.partner_id', 'child_of', partner.id),
+                ('order_id.state', '=', 'sale'),
+                ('order_id.subscription_state', '!=', '6_churn'),
+                ('order_id.wink_bundle_cancelled', '=', False),
+                ('state', '=', 'available'),
+            ])
+            for ent in entitlements:
+                if ent.service_product_id:
+                    pid = ent.service_product_id.id
+                    if pid not in entitlement_map:
+                        entitlement_map[pid] = ent
+            # Include bundled services that have available entitlements in the product list
+            if entitlement_map:
+                bundle_svc_ids = list(entitlement_map.keys())
+                bundle_svcs = request.env['product.template'].sudo().search([
+                    ('id', 'in', bundle_svc_ids),
+                    ('active', '=', True),
+                ])
+                existing_ids = set(products.ids)
+                extra = bundle_svcs.filtered(lambda p: p.id not in existing_ids)
+                if extra:
+                    products = products | extra
+                    for p in extra:
+                        if p.wink_description:
+                            text = html2plaintext(p.wink_description).strip()
+                            short_descs[p.id] = text[:117] + '...' if len(text) > 120 else text
+                        if p.department_ids:
+                            raw = (p.department_ids[0].name or '').lower()
+                            slug = raw.replace('&', 'and').replace(' ', '-')
+                            slug = re.sub(r'[^a-z0-9-]', '', slug)
+                            slug = re.sub(r'-+', '-', slug).strip('-')
+                            product_dept_slugs[p.id] = slug or 'other'
+
         values = {
             'products': products,
             'product_dept_slugs': product_dept_slugs,
             'departments': departments,
             'dept_counts': dept_counts,
             'natures': natures,
+            'entitlement_map': entitlement_map,
             'delivery_models': delivery_models,
             'current_filters': {
                 'department_ids': cur_dept,
@@ -206,6 +248,24 @@ class WinkCatalogue(http.Controller):
                         })
                 active_period = display_plan['period_label']
 
+        # Bundle entitlement: check if authenticated user has an available entitlement for this service
+        entitlement = False
+        bundle_employees = request.env['kuec.employee.directory']
+        if is_authenticated:
+            partner = request.env.user.partner_id.commercial_partner_id
+            entitlement = request.env['wink.bundle.entitlement'].sudo().search([
+                ('service_product_id', '=', product.id),
+                ('order_id.partner_id', 'child_of', partner.id),
+                ('order_id.state', '=', 'sale'),
+                ('order_id.subscription_state', '!=', '6_churn'),
+                ('order_id.wink_bundle_cancelled', '=', False),
+                ('state', '=', 'available'),
+            ], limit=1)
+            if entitlement and getattr(product, 'requires_employee_selection', False):
+                bundle_employees = request.env['kuec.employee.directory'].sudo().search([
+                    ('partner_id', 'child_of', partner.id)
+                ])
+
         values = {
             'product': product,
             'is_authenticated': is_authenticated,
@@ -216,5 +276,184 @@ class WinkCatalogue(http.Controller):
             'display_plan': display_plan,
             'unique_periods': unique_periods,
             'active_period': active_period,
+            'entitlement': entitlement,
+            'bundle_employees': bundle_employees,
+            'bundle_requested': kwargs.get('bundle_requested') == '1',
+            'activation_error': kwargs.get('activation_error', ''),
         }
         return request.render('kuec_service_catalogue.wink_service_detail_page', values)
+
+    @http.route(
+        '/services/<int:product_id>/activate/<int:entitlement_id>',
+        type='http', auth='user', website=True, methods=['GET', 'POST'], csrf=True,
+    )
+    def service_activate_page(self, product_id, entitlement_id, **post):
+        """Dedicated full-page activation flow for bundle-included services.
+
+        GET  — render the activation page (service info + employee picker + gov charge info).
+        POST — process activation, then redirect to payment or success.
+        """
+        partner = request.env.user.partner_id.commercial_partner_id
+
+        # Verify the entitlement belongs to this user and is still available
+        entitlement = request.env['wink.bundle.entitlement'].sudo().search([
+            ('id', '=', entitlement_id),
+            ('service_product_id', '=', product_id),
+            ('order_id.partner_id', 'child_of', partner.id),
+            ('order_id.state', '=', 'sale'),
+            ('order_id.subscription_state', '!=', '6_churn'),
+            ('order_id.wink_bundle_cancelled', '=', False),
+            ('state', '=', 'available'),
+        ], limit=1)
+        if not entitlement:
+            raise NotFound()
+
+        product = entitlement.service_product_id
+        order = entitlement.order_id
+        requires_employees = bool(getattr(product, 'requires_employee_selection', False))
+
+        # Gov charge detection — two separate systems:
+        #   wink_has_gov_charge    → standalone request flow: invoice created immediately, amount always known
+        #   requires_government_charges → bundle entitlement flow: may or may not have a known amount
+        _wink_gov = bool(getattr(product, 'wink_has_gov_charge', False))
+        _req_gov = bool(getattr(product, 'requires_government_charges', False))
+        has_gov_charge = _wink_gov or _req_gov
+
+        # Resolve charge amount and known-flag
+        if _wink_gov:
+            gov_charge_per_emp = float(getattr(product, 'wink_default_gov_charge', 0.0) or 0.0)
+            gov_charge_is_known = True
+        elif _req_gov:
+            gov_charge_is_known = bool(getattr(product, 'gov_charge_is_known', False))
+            _gov_base = float(getattr(product, 'gov_charge_amount', 0.0) or 0.0)
+            _gov_per_emp = float(getattr(product, 'gov_charge_per_employee', 0.0) or 0.0)
+            gov_charge_per_emp = _gov_base + _gov_per_emp  # display estimate per activation
+        else:
+            gov_charge_per_emp = 0.0
+            gov_charge_is_known = False
+
+        employees = request.env['kuec.employee.directory'].sudo().search([
+            ('partner_id', 'child_of', partner.id)
+        ])
+
+        # ── POST: process activation ──────────────────────────────────────────
+        if request.httprequest.method == 'POST':
+            employee_ids = []
+            for val in request.httprequest.form.getlist('employee_ids'):
+                if str(val).isdigit():
+                    employee_ids.append(int(val))
+
+            # Create new employees from the inline multi-row form.
+            # Fields use array notation (new_emp_name[]) so getlist() returns all rows.
+            _form = request.httprequest.form
+            _new_names = _form.getlist('new_emp_name[]')
+            _new_jobs = _form.getlist('new_emp_job[]')
+            _new_emails = _form.getlist('new_emp_email[]')
+            _new_mobiles = _form.getlist('new_emp_mobile[]')
+            for _i, _raw_name in enumerate(_new_names):
+                _name = (_raw_name or '').strip()
+                if not _name:
+                    continue  # blank row — skip
+                new_emp = request.env['kuec.employee.directory'].sudo().create({
+                    'name': _name,
+                    'job_title': (_new_jobs[_i] if _i < len(_new_jobs) else '').strip() or False,
+                    'email': (_new_emails[_i] if _i < len(_new_emails) else '').strip() or False,
+                    'mobile': (_new_mobiles[_i] if _i < len(_new_mobiles) else '').strip() or False,
+                    'partner_id': partner.id,
+                })
+                employee_ids.append(new_emp.id)
+
+            # ── Gov charge path A: wink_has_gov_charge (standalone-style, invoice-first) ──
+            # Or requires_government_charges + gov_charge_is_known (known amount upfront)
+            _create_invoice_now = (
+                (_wink_gov and not entitlement.wink_gov_charge_invoice_id) or
+                (_req_gov and gov_charge_is_known and not entitlement.wink_gov_charge_invoice_id)
+            )
+
+            if _create_invoice_now:
+                from datetime import date as _date
+                num_employees = max(len(employee_ids), 1)
+                if _wink_gov:
+                    total_gov = float(getattr(product, 'wink_default_gov_charge', 0.0) or 0.0) * num_employees
+                else:
+                    # requires_government_charges + gov_charge_is_known
+                    _base = float(getattr(product, 'gov_charge_amount', 0.0) or 0.0)
+                    _per = float(getattr(product, 'gov_charge_per_employee', 0.0) or 0.0)
+                    total_gov = _base + (_per * num_employees)
+                gov_product = request.env.company.sudo().wink_gov_charge_product_id
+                variant = product.product_variant_ids[:1]
+                inv_line = {
+                    'name': 'Government Charges: %s' % entitlement.name,
+                    'quantity': 1,
+                    'price_unit': total_gov,
+                    'tax_ids': [(5, 0, 0)],
+                }
+                if gov_product:
+                    inv_line['product_id'] = gov_product.id
+                elif variant:
+                    inv_line['product_id'] = variant.id
+                if order.order_line:
+                    inv_line['sale_line_ids'] = [(4, order.order_line[:1].id)]
+                gov_invoice = request.env['account.move'].sudo().create({
+                    'move_type': 'out_invoice',
+                    'partner_id': order.partner_id.id,
+                    'invoice_date': _date.today(),
+                    'invoice_origin': order.name,
+                    'ref': 'Gov Charge - %s - %s' % (entitlement.name, order.name),
+                    'invoice_line_ids': [(0, 0, inv_line)],
+                })
+                try:
+                    gov_invoice.sudo().action_post()
+                except Exception:
+                    pass
+                entitlement.sudo().write({
+                    'wink_gov_charge_invoice_id': gov_invoice.id,
+                    'wink_gov_charge_per_employee': total_gov / max(num_employees, 1),
+                    'wink_pending_employee_ids': [(6, 0, employee_ids)] if employee_ids else [(5, 0, 0)],
+                })
+                # Send customer directly to the payment page — show invoice amount + pay options
+                return request.redirect(
+                    f'/my/requests/{order.id}/gov-charges-payment?invoice_id={gov_invoice.id}'
+                )
+
+            # ── Gov charge path B: requires_government_charges, amount NOT yet known ──
+            # Call action_activate() which creates an is_gov_charge_pending=True sale order line.
+            # The coordinator will confirm the amount; show customer a clear "pending" message.
+            _pending_gov_charges = _req_gov and not gov_charge_is_known
+
+            # ── Direct activation path (no gov charges, or pending-coordinator path) ──
+            try:
+                entitlement.sudo().action_activate(employee_ids=employee_ids)
+            except UserError as e:
+                err = werkzeug.urls.url_quote(str(e))
+                return request.redirect(
+                    f'/services/{product_id}/activate/{entitlement_id}?error={err}'
+                )
+            except Exception:
+                err = werkzeug.urls.url_quote(_('Activation failed. Please try again.'))
+                return request.redirect(
+                    f'/services/{product_id}/activate/{entitlement_id}?error={err}'
+                )
+
+            # Show dedicated success + next-steps page
+            # Pass gov_charges_pending=True so the template can show the
+            # "coordinator will contact you about charges" message
+            return request.render('kuec_service_catalogue.wink_service_activate_success', {
+                'product': product,
+                'order': order,
+                'entitlement': entitlement,
+                'gov_charges_pending': _pending_gov_charges,
+            })
+
+        # ── GET: render activation page ───────────────────────────────────────
+        return request.render('kuec_service_catalogue.wink_service_activate_page', {
+            'product': product,
+            'entitlement': entitlement,
+            'order': order,
+            'requires_employees': requires_employees,
+            'has_gov_charge': has_gov_charge,
+            'gov_charge_is_known': gov_charge_is_known,
+            'gov_charge_per_emp': gov_charge_per_emp,
+            'employees': employees,
+            'error': request.httprequest.args.get('error', '') or '',
+        })

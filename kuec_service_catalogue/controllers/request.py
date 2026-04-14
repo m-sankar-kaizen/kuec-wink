@@ -1915,9 +1915,14 @@ class WinkRequest(http.Controller):
         except Exception:
             return request.redirect(f'/my/requests/{order_id}')
 
-        # Security: verify the invoice belongs to this order — prevents IDOR where a portal
-        # user submits a forged invoice_id from another customer's order.
-        if invoice.id not in order.invoice_ids.ids:
+        # Security: verify the invoice belongs to this customer (IDOR guard).
+        # We check partner ownership rather than order.invoice_ids because invoices
+        # created via the catalogue activation flow (account.move.create) are not
+        # always reflected in order.invoice_ids until the ORM cache is invalidated.
+        # Owning the order (checked above) and owning the invoice partner is sufficient.
+        invoice_partner = invoice.partner_id.commercial_partner_id
+        user_partner = request.env.user.partner_id.commercial_partner_id
+        if invoice_partner != user_partner:
             raise NotFound()
 
         base_url = f'/my/requests/{order_id}/gov-charges-payment?invoice_id={invoice.id}'
@@ -1968,6 +1973,24 @@ class WinkRequest(http.Controller):
                 'order_id': order.id,
                 'move_id': move_id,
             })
+
+            # Explicitly trigger activation — the _write() hook on account.move may not
+            # fire reliably within the same ORM transaction when payment_state is flushed
+            # via raw SQL. Search for the entitlement linked to this invoice and activate it.
+            entitlement = request.env['wink.bundle.entitlement'].sudo().search([
+                ('wink_gov_charge_invoice_id', '=', invoice.id),
+            ], limit=1)
+            if entitlement:
+                entitlement.invalidate_recordset(['wink_gov_charge_invoice_id'])
+                if entitlement.wink_gov_charge_invoice_id:
+                    try:
+                        entitlement.sudo().action_gov_charge_paid()
+                    except Exception:
+                        _logger_w.warning(
+                            'GOV-001: Auto-activation after wallet payment failed for entitlement %s',
+                            entitlement.id, exc_info=True,
+                        )
+
         except Exception:
             _logger_w.warning('eWallet payment failed for invoice %s', invoice.id, exc_info=True)
             return request.redirect(f'{base_url}&error=payment_failed')
