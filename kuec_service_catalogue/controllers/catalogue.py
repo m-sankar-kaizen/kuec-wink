@@ -17,6 +17,8 @@ class WinkCatalogue(http.Controller):
 
         # Fix 4: "Packages Only" toggle
         bundles_only = kwargs.get('bundles_only') == '1'
+        # "In Your Bundle" toggle — shows only services the user has bundle entitlements for
+        bundle_included = kwargs.get('bundle_included') == '1'
 
         # Base domain — all users see all available services
         # Exclude child/sub-services (commercial_structure='bundled' but NOT a bundle template).
@@ -137,6 +139,29 @@ class WinkCatalogue(http.Controller):
                             slug = re.sub(r'-+', '-', slug).strip('-')
                             product_dept_slugs[p.id] = slug or 'other'
 
+        # "In Your Bundle" filter: restrict product list to only bundle-entitled services
+        if bundle_included and entitlement_map:
+            bundle_ids = set(entitlement_map.keys())
+            products = products.filtered(lambda p: p.id in bundle_ids)
+            # Rebuild short_descs and dept slugs for filtered set
+            for p in products:
+                if p.id not in short_descs:
+                    if p.wink_description:
+                        text = html2plaintext(p.wink_description).strip()
+                        short_descs[p.id] = text[:117] + '...' if len(text) > 120 else text
+                    else:
+                        short_descs[p.id] = ''
+                if p.id not in product_dept_slugs:
+                    if p.department_ids:
+                        raw = (p.department_ids[0].name or '').lower()
+                        slug = raw.replace('&', 'and').replace(' ', '-')
+                        slug = re.sub(r'[^a-z0-9-]', '', slug)
+                        slug = re.sub(r'-+', '-', slug).strip('-')
+                        product_dept_slugs[p.id] = slug or 'other'
+                    else:
+                        product_dept_slugs[p.id] = ''
+            active_filter_count += 1
+
         values = {
             'products': products,
             'product_dept_slugs': product_dept_slugs,
@@ -154,6 +179,7 @@ class WinkCatalogue(http.Controller):
             'search': search,
             'short_descs': short_descs,
             'bundles_only': bundles_only,
+            'bundle_included': bundle_included,
         }
         return request.render('kuec_service_catalogue.wink_catalogue_page', values)
 
@@ -267,7 +293,10 @@ class WinkCatalogue(http.Controller):
                 _base_domain + [('state', '=', 'available')], limit=1
             )
             if not entitlement:
-                # No available slot — check if already fully activated
+                # No available slot — check if already fully activated.
+                # For non-one-time services we still want to offer re-activation
+                # (e.g. add more employees), so pass entitlement_activated separately
+                # so the template can show the appropriate Activate Again button.
                 entitlement_activated = request.env['wink.bundle.entitlement'].sudo().search(
                     _base_domain + [('state', '=', 'fully_activated')], limit=1
                 )
@@ -306,7 +335,9 @@ class WinkCatalogue(http.Controller):
         """
         partner = request.env.user.partner_id.commercial_partner_id
 
-        # Verify the entitlement belongs to this user and is still available
+        # Verify the entitlement belongs to this user and is activatable.
+        # Accept both 'available' and 'fully_activated' states — non-one-time services
+        # allow re-activation (e.g. additional employees) even after all entitled slots are used.
         entitlement = request.env['wink.bundle.entitlement'].sudo().search([
             ('id', '=', entitlement_id),
             ('service_product_id', '=', product_id),
@@ -314,7 +345,7 @@ class WinkCatalogue(http.Controller):
             ('order_id.state', '=', 'sale'),
             ('order_id.subscription_state', '!=', '6_churn'),
             ('order_id.wink_bundle_cancelled', '=', False),
-            ('state', '=', 'available'),
+            ('state', 'in', ('available', 'fully_activated')),
         ], limit=1)
         if not entitlement:
             raise NotFound()

@@ -152,6 +152,7 @@
                                 <input type="hidden" name="nature_id" t-att-value="current_filters.get('nature_id')"/>
                             </t>
                             <input type="hidden" name="delivery_model" t-att-value="current_filters.get('delivery_model')" t-if="current_filters.get('delivery_model')"/>
+                            <input type="hidden" name="bundle_included" value="1" t-if="bundle_included"/>
                             <div class="input-group flex-grow-1">
                                 <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
                                 <input type="text" name="search" placeholder="Search services by name or keyword..." class="form-control border-start-0" t-att-value="search or ''"/>
@@ -206,6 +207,22 @@
                                         </div>
                                     </t>
                                 </div>
+                                <!-- In Your Bundle filter (logged-in users with a bundle only) -->
+                                <t t-if="not request.env.user._is_public() and entitlement_map">
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">My Bundle</h6>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input"
+                                                   id="filter_bundle_included_mob"
+                                                   name="bundle_included"
+                                                   value="1"
+                                                   t-att-checked="'checked' if bundle_included else None"/>
+                                            <label class="form-check-label text-muted" for="filter_bundle_included_mob">
+                                                In Your Bundle <span class="text-muted small">(<t t-esc="len(entitlement_map)"/>)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </t>
                                 <t t-if="active_filter_count > 0">
                                     <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear All Filters (<t t-esc="active_filter_count"/>)</a>
                                 </t>
@@ -251,6 +268,23 @@
                                             </div>
                                         </t>
                                     </div>
+                                    <!-- In Your Bundle filter (logged-in users with a bundle only) -->
+                                    <t t-if="not request.env.user._is_public() and entitlement_map">
+                                        <div class="wink-filter-group mb-4">
+                                            <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">My Bundle</h6>
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input wink-filter-checkbox"
+                                                       id="filter_bundle_included"
+                                                       name="bundle_included"
+                                                       value="1"
+                                                       t-att-checked="'checked' if bundle_included else None"
+                                                       onchange="this.form.submit()"/>
+                                                <label class="form-check-label text-muted" for="filter_bundle_included">
+                                                    In Your Bundle <span class="text-muted small">(<t t-esc="len(entitlement_map)"/>)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </t>
                                     <t t-if="active_filter_count > 0">
                                         <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear All Filters (<t t-esc="active_filter_count"/>)</a>
                                     </t>
@@ -262,16 +296,23 @@
                         </div>
 
                         <div class="col-md-9 pt-3 pt-md-0 space-y-6">
-                            <!-- Fix 4: Packages Only toggle -->
+                            <!-- Fix 4: Packages Only toggle + In Your Bundle filter -->
                             <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                                 <a href="/services"
-                                   t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if not bundles_only else 'btn-outline-secondary'}">
+                                   t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if not bundles_only and not bundle_included else 'btn-outline-secondary'}">
                                     All Services
                                 </a>
                                 <a href="/wink/packages"
                                    t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if bundles_only else 'btn-outline-secondary'}">
                                     <i class="fa fa-th-large me-1"/> Packages Only
                                 </a>
+                                <!-- Only show for logged-in users who have bundle entitlements -->
+                                <t t-if="not request.env.user._is_public() and entitlement_map">
+                                    <a t-attf-href="/services?bundle_included=1"
+                                       t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-success' if bundle_included else 'btn-outline-success'}">
+                                        <i class="fa fa-check me-1"/>In Your Bundle
+                                    </a>
+                                </t>
                             </div>
                             <p class="text-muted small mb-3">Showing <t t-esc="len(products)"/> service<t t-if="len(products) != 1">s</t></p>
                             <div class="row g-4" id="wink-services-grid">
@@ -470,8 +511,11 @@
                                         </span>
                                     </t>
                                     <t t-elif="entitlement_activated">
+                                        <t t-set="_is_one_time_hdr" t-value="entitlement_activated.service_product_id.request_frequency == 'one_time'"/>
                                         <span class="wink-pricing-header-price" style="font-size: 1.25rem;">
-                                            <i class="fa fa-check-circle me-1"/>Service Activated
+                                            <i class="fa fa-check-circle me-1"/>
+                                            <t t-if="_is_one_time_hdr">Service Activated</t>
+                                            <t t-else="">Activate Again</t>
                                         </span>
                                     </t>
                                     <t t-else="">
@@ -619,20 +663,34 @@
                                             </div>
                                         </t>
                                         <t t-elif="entitlement_activated">
-                                            <!-- Service already fully activated from bundle -->
-                                            <div class="rounded-3 p-3 text-center"
+                                            <!-- Service fully activated — show status + optionally allow re-activation -->
+                                            <t t-set="_is_one_time" t-value="entitlement_activated.service_product_id.request_frequency == 'one_time'"/>
+                                            <div class="rounded-3 p-3 mb-3"
                                                  style="background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.3);">
                                                 <div class="fw-semibold mb-1" style="color:#155724;">
                                                     <i class="fa fa-check-circle me-1"/>This service is active
                                                 </div>
                                                 <div class="text-muted small mb-2">
-                                                    Activated from your bundle.
+                                                    <t t-if="_is_one_time">
+                                                        This is a one-time service and has already been activated.
+                                                    </t>
+                                                    <t t-else="">
+                                                        Activated from your bundle.
+                                                    </t>
                                                 </div>
                                                 <a t-attf-href="/my/requests/#{entitlement_activated.order_id.id}"
                                                    class="btn btn-sm btn-outline-success rounded-pill">
                                                     <i class="fa fa-eye me-1"/>View Bundle
                                                 </a>
                                             </div>
+                                            <!-- Re-activation button for non-one-time services -->
+                                            <t t-if="not _is_one_time">
+                                                <a t-attf-href="/services/#{product.id}/activate/#{entitlement_activated.id}"
+                                                   class="wink-cta-btn w-100 text-center"
+                                                   style="background:#1a5f1a;border-color:#1a5f1a;display:block;">
+                                                    <i class="fa fa-refresh me-2"/>Activate Again
+                                                </a>
+                                            </t>
                                         </t>
                                         <t t-else="">
                                             <t t-if="is_bundle">
