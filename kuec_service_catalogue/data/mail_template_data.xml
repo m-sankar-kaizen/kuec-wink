@@ -1,5 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Override the helpdesk rating template with WINK 5-face design.
+         noupdate="0" so this is applied on every module upgrade. -->
+    <data noupdate="0">
+        <record id="helpdesk.rating_ticket_request_email_template" model="mail.template">
+            <field name="name">Helpdesk: Ticket Rating Request</field>
+            <field name="subject">{{ object.company_id.name or object.user_id.company_id.name or 'Helpdesk' }}: How did we do on "{{ object.name }}"?</field>
+            <field name="email_from">{{ (object.team_id.alias_email_from or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ (object.partner_email if not object.sudo().partner_id.email or object.sudo().partner_id.email != object.partner_email else '') }}</field>
+            <field name="partner_to">{{ object.partner_id.id if object.sudo().partner_id.email and object.sudo().partner_id.email == object.partner_email else '' }}</field>
+            <field name="body_html" type="html">
+<div>
+    <t t-set="access_token" t-value="object._rating_get_access_token()"/>
+    <t t-set="partner" t-value="object._rating_get_partner()"/>
+    <t t-set="base_url" t-value="object.get_base_url()"/>
+    <table border="0" cellpadding="0" cellspacing="0" width="590" style="width:100%;max-width:590px;margin:0 auto;font-family:Arial,sans-serif;">
+    <tbody>
+        <tr><td valign="top" style="font-size:13px;padding-bottom:16px;">
+            <t t-if="partner.name">Hello <t t-out="partner.name or ''">Customer</t>,<br/><br/></t>
+            <t t-else="">Hello,<br/><br/></t>
+            Thank you for contacting us. We would love to hear your feedback on how we handled your ticket
+            <strong t-out="object.name or ''">ticket name</strong>.
+        </td></tr>
+        <tr><td style="text-align:center;padding:24px 0 8px 0;">
+            <p style="font-size:15px;font-weight:bold;margin:0 0 6px 0;">Rate your experience</p>
+            <p style="font-size:12px;color:#888;margin:0 0 20px 0;">Click on the face that best reflects your experience</p>
+            <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/1" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_1.svg" width="65" height="65" alt="Very Bad" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Very Bad</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/2" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_2.svg" width="65" height="65" alt="Poor" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Poor</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/3" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_3.svg" width="65" height="65" alt="Medium" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Medium</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/4" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_4.svg" width="65" height="65" alt="Good" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_off.svg" width="14" height="14" alt="-"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Good</div>
+                        </a>
+                    </td>
+                    <td style="padding:0 10px;text-align:center;vertical-align:top;">
+                        <a t-attf-href="/rate/{{ access_token }}/5" style="text-decoration:none;display:block;">
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_face_5.svg" width="65" height="65" alt="Excellent" style="display:block;margin:0 auto 6px auto;"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <img t-attf-src="{{ base_url }}/kuec_service_catalogue/static/src/img/wink_star_on.svg" width="14" height="14" alt="*"/>
+                            <div style="font-size:11px;color:#555;margin-top:4px;">Excellent</div>
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </td></tr>
+        <tr><td valign="top" style="font-size:13px;padding-top:20px;color:#444;">
+            We appreciate your feedback. It helps us improve continuously.<br/>
+            <span style="font-size:11px;color:#aaa;">This survey was sent because your support ticket has been resolved.</span>
+        </td></tr>
+        <tr><td style="padding-top:16px;font-size:13px;">Best regards,<br/><strong><t t-out="object.company_id.name or ''">KUEC</t></strong></td></tr>
+    </tbody>
+    </table>
+</div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+    </data>
+
     <data noupdate="1">
         <record id="mail_template_kuec_subscription_expiry" model="mail.template">
             <field name="name">Subscription: Expiry Reminder</field>

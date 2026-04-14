@@ -124,19 +124,15 @@ class ProjectTaskWink(models.Model):
     # ── Rating: vendor is the rated operator ─────────────────────────────────
 
     def _send_task_rating_mail(self, **kwargs):
-        """Only send rating email for WINK portal tasks that have a vendor assigned.
+        """Forward vendor subtask rating triggers to the parent task.
 
-        Workflow:
-            1. If this is a vendor subtask and has a parent, forward the rating
-               trigger to the parent task (rating is sent in the context of the
-               main task, not the subtask).
-            2. For regular WINK tasks, skip if no vendor is assigned.
+        If this is a vendor subtask and has a parent, the rating email is sent
+        in the context of the main (parent) task rather than the subtask.
+        No other restrictions apply — the email is always sent when a stage with
+        a rating template is reached.
         """
         if self.wink_is_vendor_subtask and self.parent_id:
             return self.parent_id._send_task_rating_mail(**kwargs)
-        if self.sale_order_id and self.sale_order_id.wink_is_portal_request:
-            if not self.wink_vendor_id:
-                return
         return super()._send_task_rating_mail(**kwargs)
 
     def _rating_get_operator(self):
