@@ -110,7 +110,14 @@
                                 Refund is calculated at the standard monthly rate.
                             </div>
                         </t>
-                        <t t-if="refund_info.get('remaining_days', 0) > 0">
+                        <t t-if="refund_info.get('consumed_days', 0) > 0">
+                            <div class="mt-1 small text-muted">
+                                <i class="fa fa-clock-o me-1"/>
+                                <t t-esc="refund_info.get('consumed_days', 0)"/> days consumed ·
+                                <t t-esc="refund_info.get('remaining_days', 0)"/> days remaining.
+                            </div>
+                        </t>
+                        <t t-elif="refund_info.get('remaining_days', 0) > 0">
                             <div class="mt-1 small text-muted">
                                 <i class="fa fa-calendar-o me-1"/>
                                 <t t-esc="refund_info.get('remaining_days', 0)"/> days remaining in current period.

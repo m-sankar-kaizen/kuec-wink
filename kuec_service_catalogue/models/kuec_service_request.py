@@ -608,15 +608,29 @@ class SaleOrderWink(models.Model):
         return max((end - today).days, 0), 0
 
     def _wink_bundle_compute_refund(self):
-        """Compute the cancellation refund using monthly standard price (Story 1.12).
+        """Compute the cancellation refund for a bundle order (Story 1.12).
 
-        Formula: (monthly_price / 30) × remaining_days
-        The annual discount is always forfeited. Monthly price is sourced from
-        sale.subscription.pricing (reference plan → 1-month plan → tier.price_monthly).
+        Formula:
+            daily_rate     = monthly_price / 30   (undiscounted standard rate)
+            consumed_cost  = consumed_days × daily_rate
+            refund         = amount_paid − consumed_cost
+            refund         = max(min(refund, amount_paid), 0)
+
+        The annual discount is forfeited — consumed days are charged at the
+        undiscounted monthly rate. The refund is taken from what the customer
+        actually paid, not recalculated at the undiscounted full-period price.
+
+        Example:
+            Paid AED 50,000 annual. Used 5 days at AED 166.67/day (5000/30).
+            Consumed = 833.33 → Refund = 50,000 − 833.33 = 49,166.67.
+
+        Price source: sale.subscription.pricing reference plan → 1-month plan
+                      → tier.price_monthly fallback.
 
         Returns:
-            dict: remaining_days, refund_amount, policy, note.
-                  refund_amount=0.0 when policy is 'none' or no days remain.
+            dict: remaining_days, consumed_days, daily_rate, consumed_amount,
+                  refund_amount, policy, note.
+                  refund_amount=0.0 when policy is 'none' or nothing remains.
         """
         self.ensure_one()
         remaining_days, _ = self._wink_bundle_remaining_days()
@@ -642,22 +656,37 @@ class SaleOrderWink(models.Model):
             }
 
         monthly_price = self._wink_get_tier_monthly_price(tier)
-        refund_amount = round((monthly_price / 30.0) * remaining_days, 2)
+        if not monthly_price:
+            return {
+                'remaining_days': remaining_days,
+                'refund_amount': 0.0,
+                'policy': policy,
+                'note': 'Monthly price not configured for this tier.',
+            }
 
-        # Cap refund at the amount actually paid — never refund more than collected.
-        # amount_total is the annual contract value invoiced to the customer.
+        daily_rate = monthly_price / 30.0
+
+        # Consumed days: bundle activation date → today
+        today = date_cls.today()
+        start = self.wink_bundle_start_date or (self.date_order.date() if self.date_order else None)
+        consumed_days = max((today - start).days, 0) if start else 0
+
         amount_paid = round(float(self.amount_total or 0.0), 2)
+        consumed_amount = round(daily_rate * consumed_days, 2)
+        refund_amount = round(max(min(amount_paid - consumed_amount, amount_paid), 0.0), 2)
+
         note = (
-            f'Monthly rate: ({monthly_price:.2f} / 30) × {remaining_days} days'
-            f' = {refund_amount:.2f} (annual discount forfeited)'
+            f'Paid: {amount_paid:.2f} − '
+            f'({consumed_days} days × {daily_rate:.2f}/day) = {refund_amount:.2f} '
+            f'(annual discount forfeited)'
         )
-        if amount_paid > 0 and refund_amount > amount_paid:
-            note += f' → capped at amount paid: {amount_paid:.2f}'
-            refund_amount = amount_paid
 
         return {
             'remaining_days': remaining_days,
-            'refund_amount': max(refund_amount, 0.0),
+            'consumed_days': consumed_days,
+            'daily_rate': daily_rate,
+            'consumed_amount': consumed_amount,
+            'refund_amount': refund_amount,
             'policy': policy,
             'note': note,
         }
