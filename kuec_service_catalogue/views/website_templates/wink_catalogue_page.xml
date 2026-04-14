@@ -910,12 +910,16 @@
                                                         <!-- Row 2: custom multi-file picker with individual remove -->
                                                         <div class="w-100 ps-1 wink-file-picker"
                                                              t-att-data-input-id="'wink_doc_input_%d' % doc.id">
-                                                            <!-- Hidden input submitted with the form -->
+                                                            <!-- Hidden input submitted with the form.
+                                                                 required is NOT set here because the input is display:none —
+                                                                 browsers cannot focus hidden inputs for native validation.
+                                                                 Required enforcement is handled by the JS submit validator below. -->
                                                             <input type="file"
                                                                    t-att-name="'doc_file_%d' % doc.id"
                                                                    t-att-id="'wink_doc_input_%d' % doc.id"
                                                                    multiple="multiple"
-                                                                   t-att-required="'required' if doc.requirement == 'required' else None"
+                                                                   t-att-data-required="'1' if doc.requirement == 'required' else None"
+                                                                   t-att-data-doc-name="doc.name"
                                                                    class="wink-file-real-input"
                                                                    style="display:none;"/>
                                                             <!-- File chips list -->
@@ -1297,6 +1301,51 @@
 
                             renderFiles();
                         });
+
+                        // ── Submit validator: required doc enforcement ──
+                        // Hidden inputs cannot receive browser focus for native validation.
+                        // Block submit and show an inline error if a required doc has no files.
+                        var _form = document.getElementById('wink-activation-form');
+                        if (_form) {
+                            _form.addEventListener('submit', function(ev) {
+                                var missing = [];
+                                document.querySelectorAll('.wink-file-real-input[data-required="1"]').forEach(function(inp) {
+                                    if (!inp.files || inp.files.length === 0) {
+                                        missing.push(inp.dataset.docName || inp.name);
+                                        var picker = inp.closest('.wink-file-picker');
+                                        if (picker) picker.style.outline = '2px solid #dc3545';
+                                    }
+                                });
+                                if (missing.length > 0) {
+                                    ev.preventDefault();
+                                    var errEl = document.getElementById('wink-doc-val-err');
+                                    if (!errEl) {
+                                        errEl = document.createElement('div');
+                                        errEl.id = 'wink-doc-val-err';
+                                        errEl.className = 'alert alert-danger rounded-3 mb-3';
+                                        errEl.style.fontSize = '0.875rem';
+                                        var docList = document.querySelector('.wink-doc-list');
+                                        if (docList) {
+                                            docList.parentNode.insertBefore(errEl, docList);
+                                        }
+                                    }
+                                    errEl.textContent = 'Please attach a file for: ' + missing.join(', ');
+                                    errEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+                                } else {
+                                    var old = document.getElementById('wink-doc-val-err');
+                                    if (old) old.remove();
+                                }
+                            });
+                            // Clear error outline when user attaches a file
+                            document.addEventListener('change', function(ev) {
+                                if (ev.target &amp;&amp; ev.target.classList.contains('wink-file-real-input')) {
+                                    var p = ev.target.closest('.wink-file-picker');
+                                    if (p) p.style.outline = '';
+                                    var old2 = document.getElementById('wink-doc-val-err');
+                                    if (old2) old2.remove();
+                                }
+                            });
+                        }
                     })();
                     </script>
 
