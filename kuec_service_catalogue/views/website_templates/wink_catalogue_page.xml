@@ -297,8 +297,11 @@
 
                         <div class="col-md-9 pt-3 pt-md-0 space-y-6">
                             <!-- Fix 4: Packages Only toggle + In Your Bundle filter -->
+                            <!-- Pill hrefs preserve department/nature/delivery/search so toggling
+                                 between "All Services" and "In Your Bundle" keeps the rest of the
+                                 user's filter selection intact. -->
                             <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
-                                <a href="/services"
+                                <a t-attf-href="/services#{('?' + pill_qs_base) if pill_qs_base else ''}"
                                    t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if not bundles_only and not bundle_included else 'btn-outline-secondary'}">
                                     All Services
                                 </a>
@@ -308,7 +311,7 @@
                                 </a>
                                 <!-- Only show for logged-in users who have bundle entitlements -->
                                 <t t-if="not request.env.user._is_public() and entitlement_map">
-                                    <a t-attf-href="/services?bundle_included=1"
+                                    <a t-attf-href="/services?bundle_included=1#{('&amp;' + pill_qs_base) if pill_qs_base else ''}"
                                        t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-success' if bundle_included else 'btn-outline-success'}">
                                         <i class="fa fa-check me-1"/>In Your Bundle
                                     </a>
@@ -328,13 +331,23 @@
                                     </t>
                                 </t>
                                 <t t-else="">
-                                    <!-- CAT-8 Empty state -->
+                                    <!-- CAT-8 Empty state — bundle-aware message when "In Your Bundle" is on -->
                                     <div class="col-12">
                                         <div class="wink-empty-state card-premium rounded-2xl p-6">
                                             <i class="fa fa-search d-block"/>
-                                            <h6 class="fw-bold text-dark mb-2">No services found</h6>
-                                            <p class="text-muted mb-3">Try adjusting your search or filters.</p>
-                                            <a href="/services" class="btn btn-outline-primary">Clear all filters</a>
+                                            <t t-if="bundle_included">
+                                                <h6 class="fw-bold text-dark mb-2">No services in your bundle match these filters</h6>
+                                                <p class="text-muted mb-3">Your bundle entitlements don't intersect with the active department, nature, delivery model, or search filters.</p>
+                                                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                                    <a href="/services?bundle_included=1" class="btn btn-outline-success">Show all bundle services</a>
+                                                    <a href="/services" class="btn btn-outline-primary">Clear all filters</a>
+                                                </div>
+                                            </t>
+                                            <t t-else="">
+                                                <h6 class="fw-bold text-dark mb-2">No services found</h6>
+                                                <p class="text-muted mb-3">Try adjusting your search or filters.</p>
+                                                <a href="/services" class="btn btn-outline-primary">Clear all filters</a>
+                                            </t>
                                         </div>
                                     </div>
                                 </t>

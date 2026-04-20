@@ -2,6 +2,7 @@
 
 import re
 import werkzeug
+from werkzeug.urls import url_encode
 from odoo import http, _
 from odoo.http import request
 from odoo.exceptions import UserError
@@ -100,8 +101,11 @@ class WinkCatalogue(http.Controller):
             else:
                 product_dept_slugs[p.id] = ''
 
-        # Bundle entitlement map: show bundled services to users who have an active bundle
-        entitlement_map = {}  # {product_tmpl_id: entitlement_record}
+        # Bundle entitlement map: {product_tmpl_id: entitlement_record}
+        # Dedup priority: an 'available' entitlement always beats a 'fully_activated' one
+        # for the same product so the card surfaces the Activate CTA instead of the
+        # "Activated" badge when the user still has an unused slot.
+        entitlement_map = {}
         user = request.env.user
         if not user._is_public():
             partner = user.partner_id.commercial_partner_id
@@ -113,37 +117,39 @@ class WinkCatalogue(http.Controller):
                 ('state', 'in', ('available', 'fully_activated')),
             ])
             for ent in entitlements:
-                if ent.service_product_id:
-                    pid = ent.service_product_id.id
-                    if pid not in entitlement_map:
-                        entitlement_map[pid] = ent
-            # Include bundled services that have available entitlements in the product list
-            if entitlement_map:
-                bundle_svc_ids = list(entitlement_map.keys())
-                bundle_svcs = request.env['product.template'].sudo().search([
-                    ('id', 'in', bundle_svc_ids),
-                    ('active', '=', True),
-                ])
-                existing_ids = set(products.ids)
-                extra = bundle_svcs.filtered(lambda p: p.id not in existing_ids)
-                if extra:
-                    products = products | extra
-                    for p in extra:
-                        if p.wink_description:
-                            text = html2plaintext(p.wink_description).strip()
-                            short_descs[p.id] = text[:117] + '...' if len(text) > 120 else text
-                        if p.department_ids:
-                            raw = (p.department_ids[0].name or '').lower()
-                            slug = raw.replace('&', 'and').replace(' ', '-')
-                            slug = re.sub(r'[^a-z0-9-]', '', slug)
-                            slug = re.sub(r'-+', '-', slug).strip('-')
-                            product_dept_slugs[p.id] = slug or 'other'
+                if not ent.service_product_id:
+                    continue
+                pid = ent.service_product_id.id
+                existing = entitlement_map.get(pid)
+                if existing is None or (existing.state == 'fully_activated' and ent.state == 'available'):
+                    entitlement_map[pid] = ent
 
-        # "In Your Bundle" filter: restrict product list to only bundle-entitled services
+        # "In Your Bundle" filter — applied as a domain clause so other active filters
+        # (department, nature, delivery_model, search) intersect with it instead of being
+        # overridden. Rerun the search with the bundle constraint added.
         if bundle_included and entitlement_map:
-            bundle_ids = set(entitlement_map.keys())
-            products = products.filtered(lambda p: p.id in bundle_ids)
-            # Rebuild short_descs and dept slugs for filtered set
+            bundle_ids = list(entitlement_map.keys())
+            # Drop the bundle/standalone OR clause from the base domain — restricting by
+            # id already implies the inclusion semantics, and bundled-only child services
+            # would otherwise be excluded by ('commercial_structure', '!=', 'bundled').
+            bundle_domain = [
+                ('available_on_wink', '=', True),
+                ('sale_ok', '=', True),
+                ('active', '=', True),
+                ('id', 'in', bundle_ids),
+            ]
+            if bundles_only:
+                bundle_domain.append(('wink_is_bundle', '=', True))
+            if department_ids:
+                bundle_domain.append(('department_ids', 'in', [int(d) for d in department_ids if d.isdigit()]))
+            if nature_id and nature_id.isdigit():
+                bundle_domain.append(('nature_id', '=', int(nature_id)))
+            if delivery_model:
+                bundle_domain.append(('delivery_model', '=', delivery_model))
+            if search:
+                bundle_domain.append(('name', 'ilike', search))
+            products = Product.search(bundle_domain)
+            # Refresh derived dicts for any newly added bundled-only services
             for p in products:
                 if p.id not in short_descs:
                     if p.wink_description:
@@ -161,6 +167,43 @@ class WinkCatalogue(http.Controller):
                     else:
                         product_dept_slugs[p.id] = ''
             active_filter_count += 1
+        elif entitlement_map:
+            # Filter is off — keep the original behaviour of surfacing entitled services
+            # (including bundled-only children) on the catalogue so the "In Your Bundle"
+            # badge appears next to them.
+            bundle_svc_ids = list(entitlement_map.keys())
+            bundle_svcs = Product.search([
+                ('id', 'in', bundle_svc_ids),
+                ('active', '=', True),
+            ])
+            existing_ids = set(products.ids)
+            extra = bundle_svcs.filtered(lambda p: p.id not in existing_ids)
+            if extra:
+                products = products | extra
+                for p in extra:
+                    if p.wink_description:
+                        text = html2plaintext(p.wink_description).strip()
+                        short_descs[p.id] = text[:117] + '...' if len(text) > 120 else text
+                    if p.department_ids:
+                        raw = (p.department_ids[0].name or '').lower()
+                        slug = raw.replace('&', 'and').replace(' ', '-')
+                        slug = re.sub(r'[^a-z0-9-]', '', slug)
+                        slug = re.sub(r'-+', '-', slug).strip('-')
+                        product_dept_slugs[p.id] = slug or 'other'
+
+        # Encoded query string of the non-toggle filters (department, nature, delivery,
+        # search). Used by the pill buttons so toggling "All Services" / "In Your Bundle"
+        # preserves whatever the user has already selected.
+        pill_params = []
+        for _d in cur_dept:
+            pill_params.append(('department_ids', _d))
+        if cur_nature:
+            pill_params.append(('nature_id', cur_nature))
+        if delivery_model:
+            pill_params.append(('delivery_model', delivery_model))
+        if search:
+            pill_params.append(('search', search))
+        pill_qs_base = url_encode(pill_params) if pill_params else ''
 
         values = {
             'products': products,
@@ -180,6 +223,7 @@ class WinkCatalogue(http.Controller):
             'short_descs': short_descs,
             'bundles_only': bundles_only,
             'bundle_included': bundle_included,
+            'pill_qs_base': pill_qs_base,
         }
         return request.render('kuec_service_catalogue.wink_catalogue_page', values)
 

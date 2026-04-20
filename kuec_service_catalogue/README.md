@@ -42,6 +42,12 @@ docker exec odoo_18_ai odoo -i kuec_service_catalogue -d PORTAL --no-http --stop
 
 ## Changelog
 
+### 18.0.2.30.2 — 2026-04-20
+- [UPDT] "In Your Bundle" filter now intersects with department, nature, delivery model, and search filters instead of overriding them — applied as a domain clause in `Product.search()` rather than a post-filter
+- [FIX] Entitlement dedup priority: when a product has both `available` and `fully_activated` entitlements, the `available` one wins so the Activate CTA stays visible (was nondeterministic, sometimes hiding the button under the "Activated" badge)
+- [UPDT] Catalogue pill buttons ("All Services" / "In Your Bundle") now preserve active department/nature/delivery_model/search params via new `pill_qs_base` query string built in the controller — sidebar checkbox already preserved them, pills now consistent
+- [UPDT] Empty-state message is bundle-aware: when "In Your Bundle" yields no results, shows a dedicated message with two CTAs ("Show all bundle services" / "Clear all filters") instead of the generic "No services found" copy
+
 ### 18.0.2.24.0 — 2026-03-28
 - [FIX] Portal file upload: accumulate files across selections using DataTransfer API; add per-chip × remove button — re-selecting files no longer wipes previous choices
 - [FIX] Activation modal: add `modal-dialog-scrollable` to all portal modals so overflowing content is reachable on small viewports
