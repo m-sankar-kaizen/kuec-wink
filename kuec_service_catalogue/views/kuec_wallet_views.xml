@@ -333,12 +333,5 @@
         </field>
     </record>
 
-    <!-- ── Wallet Transactions Menu (defined here so action exists at parse time) ── -->
-    <menuitem id="menu_wink_wallet_transactions"
-              name="Transactions"
-              parent="menu_wink_group_ewallet"
-              action="action_kuec_wallet_transactions"
-              sequence="10"
-              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
 
 </odoo>

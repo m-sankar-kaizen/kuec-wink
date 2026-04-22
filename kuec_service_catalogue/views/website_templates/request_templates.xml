@@ -1819,7 +1819,7 @@
                                 <div class="px-4 pt-4 pb-3">
                                     <div class="text-muted fw-semibold mb-3"
                                          style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.6px;">What&#x27;s happening</div>
-                                    <!-- ✅ Submitted -->
+                                    <!--Submitted -->
                                     <div class="d-flex align-items-start gap-3 mb-3">
                                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
                                              style="width:28px;height:28px;min-width:28px;background:#28a745;">
@@ -1830,7 +1830,7 @@
                                             <div class="text-muted" style="font-size:0.8rem;">Received on <t t-esc="order.create_date" t-options="{'widget':'date'}"/>.</div>
                                         </div>
                                     </div>
-                                    <!-- 🔄 Coordinator reviewing -->
+                                    <!--Coordinator reviewing -->
                                     <div class="d-flex align-items-start gap-3 mb-3">
                                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
                                              style="width:28px;height:28px;min-width:28px;background:#1a73c7;">
@@ -1841,7 +1841,7 @@
                                             <div class="text-muted" style="font-size:0.8rem;">Our team is assessing requirements and preparing a price proposal.</div>
                                         </div>
                                     </div>
-                                    <!-- ⬜ Proposal & Payment (pending) -->
+                                    <!--Proposal & Payment (pending) -->
                                     <div class="d-flex align-items-start gap-3 mb-1" style="opacity:0.4;">
                                         <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
                                              style="width:28px;height:28px;min-width:28px;background:#dee2e6;">
