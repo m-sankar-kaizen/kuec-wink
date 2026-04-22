@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_reject_warning_wizard,reject_warning_wizard,model_reject_warning_wizard,,1,1,1,1
+budget_transfer_line,budget_transfer_line_access,model_budget_transfer_line,,1,1,1,1
+budget_transfer_wizard,budget_transfer_wizard_access,model_budget_transfer_wizard,,1,1,1,1
+budget_transfer_request,budget_transfer_request_access,model_budget_transfer_request,,1,1,1,1
+budget_transfer_request_line,budget_transfer_request_line_access,model_budget_transfer_request_line,,1,1,1,1
+purchase_confirmation_wizard,purchase_confirmation_wizard_access,model_purchase_confirmation_wizard,,1,1,1,1
+purchase_approval_line,purchase_approval_lineaccess,model_requisition_approval_line,,1,1,1,1
+vendor_requisition_wizard,vendor_requisition_wizard_acc,model_vendor_requisition_wizard,,1,1,1,1

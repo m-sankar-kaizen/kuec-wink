@@ -1,0 +1,17 @@
+<odoo>
+    <record id="view_hr_employee_form_inherit" model="ir.ui.view">
+    <field name="name">hr.employee.form.inherit</field>
+    <field name="model">hr.employee</field>
+    <field name="inherit_id" ref="hr.view_employee_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//div[@class='oe_button_box']" position="inside">
+            <button name="action_open_warning"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-exclamation-triangle">
+                <field name="warning_count" widget="statinfo"/>
+            </button>
+        </xpath>
+    </field>
+</record>
+</odoo>

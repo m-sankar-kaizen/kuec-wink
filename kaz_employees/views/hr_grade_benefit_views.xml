@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    ===================================================================
+    Form View: HR Grade Benefit Form
+    Displays the summary of grade-related allowances over time.
+    Used for reviewing and aggregating total compensation values
+    such as personal, living, connectivity, and premium allowances.
+
+    Model: hr.grade.benefit
+    One2many: grade_line_ids (linked to hr.grade)
+    ===================================================================
+    -->
+    <record id="action_hr_grade_benefit_form" model="ir.ui.view">
+        <field name="name">hr.grade.benefit.form</field>
+        <field name="model">hr.grade.benefit</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <!-- Summary metadata -->
+                    <group>
+                        <field name="date"/>
+                    </group>
+
+                    <notebook>
+                        <!--
+                        Tab: Grade Lines
+                        Lists each grade line (linked from hr.grade) to show
+                        respective monthly allowance components. Editable inline.
+                        -->
+                        <page string="Grade Lines">
+                            <field name="grade_line_ids">
+                                <list editable="bottom">
+                                    <!-- Optional fields commented out for future use -->
+                                    <!-- <field name="department_id"/> -->
+                                    <!-- <field name="job_id" domain="[('department_id','=',department_id)]"/> -->
+
+                                    <field name="monthly_personal_allowance" optional="hide"/>
+                                    <field name="monthly_premium_uae_allowance" optional="hide"/>
+                                    <field name="monthly_living_allowance" optional="hide"/>
+                                    <field name="monthly_connectivity" optional="hide"/>
+                                </list>
+                            </field>
+
+                            <!--
+                            Totals Section:
+                            Aggregated values for total monthly allowances.
+                            Computed from grade_line_ids using compute methods.
+                            -->
+                            <group>
+                                <group>
+                                    <!-- <field name="average_compa_ratio"/> -->
+                                    <!-- <field name="total_monthly_basic_salary"/> -->
+                                    <field name="total_monthly_personal_allowance"/>
+                                    <field name="total_monthly_premium_uae_allowance"/>
+                                </group>
+                                <group>
+                                    <field name="total_monthly_living_allowance"/>
+                                    <!-- <field name="total_monthly_child_allowance"/> -->
+                                    <field name="total_monthly_connectivity"/>
+                                    <!-- <field name="total_monthly_vacation_allowance"/> -->
+                                    <!-- <field name="total_monthly_total_payroll"/> -->
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    Tree/List View: HR Grade Benefit
+    Shows a list of benefit summaries by date.
+    Useful for historical reviews or periodic tracking.
+    -->
+    <record id="action_hr_grade_benefit_tree" model="ir.ui.view">
+        <field name="name">hr.grade.benefit.list</field>
+        <field name="model">hr.grade.benefit</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    Window Action: Grade Benefit
+    Binds the form and list views into a unified action
+    to be used from menus or smart buttons.
+    -->
+    <record id="action_hr_grade_benefit" model="ir.actions.act_window">
+        <field name="name">Grade Benefit</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.grade.benefit</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!--
+    Menu Item (Commented Out):
+    Uncomment to enable access to this model from Payroll Configuration.
+    Place under: Payroll > Configuration > Grade Benefit
+    -->
+    <!--
+    <menuitem id="hr_grade_benefit_menu"
+              name="Grade Benefit"
+              sequence="13"
+              parent="hr_work_entry_contract_enterprise.menu_hr_payroll_configuration"
+              action="kaz_employees.action_hr_grade_benefit"/>
+    -->
+
+</odoo>

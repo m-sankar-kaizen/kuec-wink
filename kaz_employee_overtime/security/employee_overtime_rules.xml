@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Rule: Employee Overtime: User
+        Description: Grants basic users access to their own employee overtime requests.
+        Condition: The logged-in user must be the user linked to the employee on the record.
+    -->
+    <record id="employee_overtime_user_rule" model="ir.rule">
+        <field name="name">Employee Overtime: User</field>
+        <field name="model_id" ref="model_employee_overtime"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    </record>
+
+    <!--
+        Rule: Employee Overtime: Line Manager
+        Description: Grants access to overtime requests of employees belonging to the same department as the line manager.
+        This assumes a line manager is responsible for managing requests from their department.
+    -->
+    <record id="employee_overtime_line_manager_rule" model="ir.rule">
+        <field name="name">Employee Overtime: Line Manager</field>
+        <field name="model_id" ref="model_employee_overtime"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_overtime.group_line_manager'))]"/>
+        <field name="domain_force">[('employee_id.department_id', '=', user.employee_id.department_id.id)]</field>
+    </record>
+
+    <!--
+        Rule: Employee Overtime: HR
+        Description: Grants HR full access to all employee overtime requests across the company.
+        No domain filter applied, so all records are visible to HR group members.
+    -->
+    <record id="employee_overtime_hr_rule" model="ir.rule">
+        <field name="name">Employee Overtime: HR</field>
+        <field name="model_id" ref="model_employee_overtime"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_overtime.group_hr_person'))]"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+    </record>
+
+    <!--
+        Rule: Employee Overtime: Director
+        Description: Grants directors access to overtime requests in their own department,
+        similar to line managers but targeted at the director-level group.
+    -->
+    <record id="employee_overtime_director_rule" model="ir.rule">
+        <field name="name">Employee Overtime: Director</field>
+        <field name="model_id" ref="model_employee_overtime"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_overtime.group_director'))]"/>
+        <field name="domain_force">[('employee_id.department_id', '=', user.employee_id.department_id.id)]</field>
+    </record>
+
+    <!--
+        Rule: Employee Overtime: Company
+        Description: Adds an implicit filter to ensure records are limited to the user's company or shared records (company_id is False).
+        Typically used as a global filter to restrict multi-company visibility.
+    -->
+    <record id="employee_overtime_company_rule" model="ir.rule">
+        <field name="name">Employee Overtime: Company</field>
+        <field name="model_id" ref="model_employee_overtime"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

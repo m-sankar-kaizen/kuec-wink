@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_religion_user,access_hr_religion_user,model_hr_religion,base.group_user,1,0,0,0
+access_hr_sub_religion_user,access_hr_sub_religion_user,model_hr_sub_religion,base.group_user,1,0,0,0
+access_hr_religion_hr,access_hr_religion_hr,model_hr_religion,hr.group_hr_user,1,1,1,1
+access_hr_sub_religion_hr,access_hr_sub_religion_hr,model_hr_sub_religion,hr.group_hr_user,1,1,1,1

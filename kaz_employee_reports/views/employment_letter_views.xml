@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    =================================================================================
+    Tree View: employment_letter_tree_view
+    =================================================================================
+    Displays a list of employment letter records in a tabular format.
+    Includes:
+    - date: Date of the request/letter creation
+    - name: Employee (Many2one to res.partner or hr.employee)
+    - address_type: Type of recipient (e.g. 'entity' or 'individual')
+    -->
+    <record id="employment_letter_tree_view" model="ir.ui.view">
+        <field name="name">employment letter list</field>
+        <field name="model">employment.letter</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="name"/>
+                <field name="address_type"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    =================================================================================
+    Form View: employment_letter_form_view
+    =================================================================================
+    Displays the form for creating or editing a single Employment Letter record.
+    Dynamic field behavior:
+    - letter_id is visible & required only when address_type == 'entity'
+    - The 'name' field has access control based on HR group
+    - Most fields are read-only or limited in creation/modification to preserve data integrity
+    -->
+    <record id="employment_letter_form_view" model="ir.ui.view">
+        <field name="name">employment letter list</field>
+        <field name="model">employment.letter</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="date" readonly="1"/>
+                            <field name="address_type"/>
+
+                            <!-- Shown only if address_type is 'entity', and required in that case -->
+                            <field name="letter_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   invisible="address_type != 'entity'" required="address_type == 'entity'"/>
+
+                            <!-- Name field: editable for HR managers only -->
+                            <field name="name"
+                                   groups="kaz_employee_reports.group_letter_manager"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+
+                            <!-- Name field: read-only for regular users -->
+                            <field name="name"
+                                   groups="base.group_user,!kaz_employee_reports.group_letter_manager"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   readonly="1"/>
+
+                            <field name="employee_no"/>
+                            <field name="job_title"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="join_date"/>
+                            <field name="nationality"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="id_no"/>
+                            <field name="company_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="country_id" invisible="1"/>
+                            <field name="state_id" domain="[('country_id', '=', country_id)]" options="{'no_create': True, 'no_open': True}" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    =================================================================================
+    Window Action: action_ank_letters
+    =================================================================================
+    Enables opening the list/form view of `employment.letter` from a menu item.
+    View mode: list + form.
+    Help text: Appears when no records exist.
+    -->
+    <record id="action_ank_letters" model="ir.actions.act_window">
+        <field name="name">Employment Letter</field>
+        <field name="res_model">employment.letter</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Employment Letter
+            </p>
+        </field>
+    </record>
+
+    <!--
+    =================================================================================
+    Menu Structure
+    =================================================================================
+    Parent Menu: "Ank Letters" under the root HR menu.
+    Child Menu: "Employment Letter" links to the above window action.
+    -->
+    <menuitem id="ankbot_letter_menu"
+              name="Ank Letters"
+              parent="hr.menu_hr_root"
+              sequence="21"/>
+
+    <menuitem id="employment_letter_menu"
+              name="Employment Letter"
+              parent="kaz_employee_reports.ankbot_letter_menu"
+              action="action_ank_letters"/>
+</odoo>

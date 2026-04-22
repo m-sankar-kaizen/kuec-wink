@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_partner_view_form" model="ir.ui.view">
+        <field name="name">res.partner.view.form.inherit.kaz.contact.approval</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <form position="attributes">
+                <attribute name="js_class">readonly_form</attribute>
+            </form>
+            <sheet position="before">
+                <header name="kuec_approval_buttons">
+                    <field name="is_readonly" invisible="1"/>
+                    <button class="btn-primary"
+                            name="action_add_partner_attachment_lines"
+                            string="Submit Request"
+                            invisible="state != 'draft' or partner_attachment_line_ids"
+                            groups="kaz_contact_approval.group_contact_pre_approver"
+                            type="object"/>
+                    <button class="btn-primary"
+                            name="action_pre_approve"
+                            string="Pre-Approve"
+                            invisible="state != 'draft' or not partner_attachment_line_ids"
+                            groups="kaz_contact_approval.group_contact_pre_approver"
+                            type="object"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            invisible="state != 'draft' or not partner_attachment_line_ids"
+                            groups="kaz_contact_approval.group_contact_pre_approver"
+                            type="object"/>
+
+                    <button class="btn-primary"
+                            name="action_qualified"
+                            string="Qualify"
+                            invisible="state != 'pre_approved'"
+                            groups="kaz_contact_approval.group_contact_qualifier"
+                            type="object"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            invisible="state != 'pre_approved'"
+                            groups="kaz_contact_approval.group_contact_qualifier"
+                            type="object"/>
+
+                    <button class="btn-primary"
+                            name="action_approve"
+                            string="Approve"
+                            invisible="state != 'qualified'"
+                            groups="kaz_contact_approval.group_contact_admin"
+                            type="object"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            invisible="state != 'qualified'"
+                            groups="kaz_contact_approval.group_contact_admin"
+                            type="object"/>
+
+                    <button name="action_draft"
+                            string="Reset to Draft"
+                            invisible="state not in ['approved', 'rejected']"
+                            groups="kaz_contact_approval.group_contact_admin"
+                            type="object"/>
+
+                    <field name="state" widget='statusbar' statusbar_visible='draft,pre_approved,qualified,approved'/>
+
+                </header>
+            </sheet>
+
+            <xpath expr="//sheet/group/group[last()]" position="after">
+                <group name="commercial_partner_type" string="Partner Type">
+                    <field name="has_expired_documents" invisible="1"/>
+                    <div class="badge rounded-pill text-bg-danger float-end" invisible="not has_expired_documents">Expired</div>
+                    <field name="is_vendor" widget="boolean_toggle" readonly="state != 'draft'" required="not is_customer"/>
+                    <field name="is_customer" widget="boolean_toggle" readonly="state != 'draft'" required="not is_vendor"/>
+                    <field name="show_partner_category_required" invisible="1"/>
+                    <field name="partner_category_ids" widget="many2many_tags" required="show_partner_category_required" options="{'no_quick_create':True,'no_create_edit':True}"/>
+                </group>
+            </xpath>
+
+            <page name="internal_notes" position="after">
+                <page name="partner_checklist" invisible="not partner_checklist_ids" string="Checklist"
+                      groups="kaz_contact_approval.group_contact_qualifier">
+                    <field name="partner_checklist_ids">
+                        <list create="0" delete="0" editable="bottom" default_order="sequence">
+                            <field name="sequence" width="10px;" readonly="1"/>
+                            <field name="name" width="300px;" readonly="1"/>
+                            <field name="is_checked" width="50px;" widget="boolean_toggle"/>
+                            <field name="for_customer" optional="hidden" widget="boolean_toggle" readonly="1"/>
+                            <field name="for_vendor" optional="hidden" widget="boolean_toggle" readonly="1"/>
+                        </list>
+                    </field>
+                    <button name="action_add_checklist_lines"
+                            string="Regenerate Lines"
+                            icon="fa-repeat"
+                            confirm="This will overwrite existing lines, and all progress on these lines will be lost. Are you sure you want to continue?"
+                            invisible="state != 'pre_approved'"
+                            groups="kaz_contact_approval.group_contact_qualifier"
+                            type="object"/>
+                </page>
+                <page name="attachment_checklist" string="Attachments" invisible="not partner_attachment_line_ids">
+                    <field name="partner_attachment_line_ids">
+                        <list decoration-danger="is_expired" create="0" delete="0" editable="bottom"
+                              default_order="sequence">
+                            <field name="partner_id" column_invisible="1"/>
+                            <field name="is_expired" column_invisible="1"/>
+                            <field name="sequence" width="10px;" readonly="1"/>
+                            <field name="name" width="300px;" readonly="1"/>
+                            <field name="attachment_type" width="50px;" readonly="1"/>
+                            <field name="attachment_is_required" width="80px;" widget="boolean_toggle" readonly="1"/>
+                            <field name="ir_attachment_ids" width="80px;" widget="many2many_binary"
+                                   invisible="attachment_type != 'attachment'"/>
+                            <field name="attachment_link" width="80px;" column_invisible="1" invisible="attachment_type != 'link'"/>
+                            <!--_________^^^^^^^^^^^Field is no longer in use.                            -->
+                            <field name="expiry_date_required" width="80px;" widget="boolean_toggle" readonly="1"/>
+                            <field name="expiry_date" width="80px;"/>
+                            <field name="is_expired" optional="hidden"/>
+                        </list>
+                    </field>
+                    <button name="action_add_partner_attachment_lines"
+                            string="Regenerate Lines"
+                            icon="fa-repeat"
+                            confirm="This will overwrite existing lines, and all progress on these lines will be lost. Are you sure you want to continue?"
+                            invisible="state != 'draft'"
+                            groups="kaz_contact_approval.group_contact_admin"
+                            type="object"/>
+                </page>
+            </page>
+
+        </field>
+    </record>
+</odoo>

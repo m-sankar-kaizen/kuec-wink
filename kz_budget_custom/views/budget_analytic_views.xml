@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+      View Inheritance: Budget Form View Enhancement
+      Purpose: Enhance the standard budget form to:
+        - Display computed total values (planned, practical, theoretical)
+        - Show masked (absolute) monetary values
+        - Rename "user_id" to "Cost Center Manager"
+        - Add "Expense" flag to budget line
+    -->
+    <record id="budget_form_inherit_budget_custom" model="ir.ui.view">
+        <field name="name">budget.analytic.view.form.inherit.kaz.budget.custom</field>
+        <field name="model">budget.analytic</field>
+        <field name="inherit_id" ref="account_budget.view_budget_analytic_form"/>
+        <field name="arch" type="xml">
+
+            <field name="budget_type" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <!--
+              Enhancement: Add a totals section below the budget line One2many
+              Fields added: total_planned_amount, total_practical_amount, total_theoritical_amount
+              These fields are computed and readonly, displaying the aggregate of respective budget lines.
+            -->
+            <xpath expr="//field[@name='budget_line_ids']" position="after">
+                <group name="total_group" col="6" class="mt-2 mt-md-0">
+                    <group class="oe_subtotal_footer oe_right" colspan="2" name="requisition_total"
+                           style="font-weight:bold;font-size:18px">
+                        <!-- Display absolute values (masked fields) -->
+                        Total Planned
+                        <field name="total_planned_amount" colspan="2" readonly="1"/>
+                        Total Practical
+                        <field name="total_practical_amount" colspan="2" readonly="1"/>
+                        Total Theoretical
+                        <field name="total_theoritical_amount" colspan="2" readonly="1"/>
+                    </group>
+                    <div class="clearfix"/>
+                </group>
+            </xpath>
+
+            <!--
+              UX: Renaming the label of the 'user_id' field
+              Original label: "Responsible"
+              New label: "Cost Center Manager"
+              Helps reflect the budgeting hierarchy terminology more clearly
+            -->
+            <xpath expr="//field[@name='user_id']" position="attributes">
+                <attribute name="string">Cost Center Manager</attribute>
+            </xpath>
+
+            <!--
+              Addition: "Expense" boolean flag per budget line
+              Used to determine whether the amount should be displayed/stored as negative (outflow)
+            -->
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='sequence']" position="after">
+                <field name="general_budget_id" string="Budgetary Position"/>
+            </xpath>
+            <!-- Replacement: Practical Amount  -->
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='achieved_amount']"
+                   position="replace"/>
+            <!--
+              Replacement: Masked Planned Amount
+              Purpose: Display absolute (non-negative) values in the UI for user clarity,
+                       while keeping original (possibly negative) value for system use
+              Original field hidden, helper 'change_count' included for analytic autofill logic
+            -->
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='budget_amount']"
+                   position="replace">
+                <field name="date_from" readonly="0"/>
+                <field name="date_to" readonly="0"/>
+                <field name="expense"/>
+<!--                Reserved and committed-->
+                <field name="masked_planned_amount"/>
+                <field name="achieved_amount" string="Practical Amount"/>
+                <field name="budget_amount" column_invisible="1"/>
+                <field name="change_count" column_invisible="1" force_save="1"/>
+            </xpath>
+
+
+
+
+            <!-- Replacement: Theoretical Amount with masked version -->
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='theoritical_amount']"
+                   position="replace">
+                <field name="masked_theoritical_amount"/>
+                <field name="theoritical_amount" column_invisible="1"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!--
+      View Inheritance: Budget Tree (List) View
+      Purpose: Add aggregate columns for masked totals in list view
+      Helps users monitor budget performance across records at a glance
+    -->
+    <record id="budget_tree_inherit_budget_custom" model="ir.ui.view">
+        <field name="name">budget.analytic.view.list.inherit.kaz.budget.custom</field>
+        <field name="model">budget.analytic</field>
+        <field name="inherit_id" ref="account_budget.view_budget_analytic_tree"/>
+        <field name="arch" type="xml">
+
+            <!-- Columns added after 'state' field -->
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="total_planned_amount" sum="Total Planned Amount"/>
+                <field name="total_practical_amount" sum="Total Practical Amount"/>
+                <field name="total_theoritical_amount" sum="Total Theoretical Amount"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

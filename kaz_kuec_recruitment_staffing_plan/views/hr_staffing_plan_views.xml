@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_hr_staffing_plan_views_list" model="ir.ui.view">
+        <field name="name">hr.staffing.plan.views.list</field>
+        <field name="model">hr.staffing.plan</field>
+        <field name="arch" type="xml">
+            <list create="not context.get('hide_create')">
+                <field name="number"/>
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="date_start"
+                       string="Start Date"/>
+                <field name="date" string="End Date"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+
+    <record id="view_hr_staffing_plan_views_form" model="ir.ui.view">
+        <field name="name">hr.staffing.plan.views.form</field>
+        <field name="model">hr.staffing.plan</field>
+        <field name="arch" type="xml">
+            <form string="Staffing Plan">
+                <header>
+                    <button name="action_confirm"
+                            type="object"
+                            string="Confirm"
+                            invisible="status != 'draft'"
+                            class="oe_highlight"/>
+<!--                    <button name="action_job_position_request"-->
+<!--                            type="object"-->
+<!--                            string="Request New Job Position"-->
+<!--                            invisible="status != 'draft'"-->
+<!--                            class="oe_highlight"/>-->
+                    <button name="action_cancel"
+                            type="object"
+                            string="Cancel"
+                            invisible="status != 'draft'"
+                            class="btn btn-secondary"/>
+<!--                    <button name="action_approve"-->
+<!--                            type="object"-->
+<!--                            groups="kaz_kuec_recruitment_staffing_plan.group_staffing_master"-->
+<!--                            invisible="status != 'confirmed'"-->
+<!--                            class="oe_highlight"-->
+<!--                            string="Approve"/>-->
+                    <button name="action_create_recruitment_requests"
+                            type="object"
+                            string="Create Recruitment Requests"
+                            invisible="not (status == 'approved' and not recruitment_request_ids and not job_position_request_ids)"
+                            class="oe_highlight"/>
+                    <button name="action_approve"
+                            type="object"
+                            groups="kaz_kuec_recruitment_staffing_plan.group_staffing_master"
+                            invisible="status != 'confirmed'"
+                            class="oe_highlight"
+                            string="Approve"/>
+                    <button name="action_reject"
+                            type="object"
+                            groups="kaz_kuec_recruitment_staffing_plan.group_staffing_master"
+                            invisible="status != 'confirmed'"
+                            class="btn btn-secondary"
+                            string="Reject"/>
+                    <button name="action_done"
+                            type="object"
+                            groups="kaz_kuec_recruitment_staffing_plan.group_staffing_master"
+                            invisible="status != 'approved'"
+                            class="oe_highlight"
+                            string="Done"/>
+                    <button name="action_reset"
+                            type="object"
+                            invisible="status != 'canceled'"
+                            class="oe_highlight"
+                            string="Reset to Draft"/>
+
+                    <field name="status"
+                           widget="statusbar"
+                           statusbar_visible="draft,confirmed,approved,done"/>
+                </header>
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                name="action_show_recruitment_requests"
+                                invisible="not recruitment_request_ids"
+                                type="object"
+                                string="Recruitment Requests" icon="fa-edit">
+                        </button>
+                        <button class="oe_stat_button"
+                                name="action_show_job_position_requests"
+                                invisible="not job_position_request_ids"
+                                type="object"
+                                string="Job Position Requests" icon="fa-edit">
+                        </button>
+                    </div>
+                    <div class="alert alert-warning" role="alert" invisible="not warning_info">
+                        <field name="warning_info"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="number"
+                                   placeholder="STAFFING/PLAN/XX/XXXXX"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name" readonly="status != 'draft'"/>
+                            <field name="department_id" readonly="status != 'draft'"/>
+                            <field name="budget_line_id" required="1" readonly="status != 'draft'"/>
+                            <field name="department_manager_id"/>
+                            <field name="assigned_to_id"/>
+                            <field name="master_plan_id"
+                                   readonly="status != 'draft'"
+                                   required="1"
+                                   domain="[('status', '=', 'open')]"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                            <field name="master_plan_status" invisible="1"/>
+                            <field name="company_id"/>
+                        </group>
+
+                        <group>
+                            <field name="fiscal_year_id"
+                                   required="1"/>
+                            <field name="date_start" string="Planned Date"
+                                   widget="daterange"
+                                   options="{&quot;end_date_field&quot;: &quot;date&quot;, &quot;always_range&quot;: &quot;1&quot;}"
+                                   />
+                            <field name="date"
+                                   invisible="1"
+                                   />
+                            <field name="create_uid"/>
+                            <field name="created_date"/>
+                            <field name="currency_id"/>
+                            <field name="total_cost_new_old"
+                                   string="Total Cost (New + Existing) Per Month"/>
+                            <field name="total_estimation_per_year"
+                                   widget="monetary"
+                            options="{'currency_field': 'currency_id'}"/>
+
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Existing Staffing Plan">
+                            <field name="existing_plan_ids"
+                                   nolabel="1">
+                                <list editable="bottom">
+                                    <field name="company_id" column_invisible="1"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="position_id"/>
+                                    <field name="no_of_employees"/>
+                                    <field name="avg_salary"/>
+                                    <field name="salaries"
+                                    sum="Total Salary per Month"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="New Staffing Plan">
+                            <field name="staffing_plan_ids"
+                                   nolabel="1">
+                                <list editable="bottom">
+                                    <field name="staffing_plan_id"
+                                           column_invisible="1"/>
+                                    <field name="company_id"
+                                    column_invisible="1"/>
+                                    <field name="currency_id"
+                                           column_invisible="1"/>
+                                    <field name="department_id"
+                                    column_invisible="1"/>
+                                    <field name="position_id"
+                                           invisible="request_new_position"/>
+                                    <field name="request_new_position"/>
+                                    <field name="new_position_name"
+                                           required="request_new_position"
+                                            invisible="not request_new_position"/>
+                                    <field name="priority"
+                                           widget="priority"/>
+                                    <field name="number_of_position"/>
+                                    <field name="vacancies"/>
+                                    <field name="estimated_cost"
+                                            string="Average Cost per Month"/>
+                                    <field name="total_estimated_cost"
+                                           sum="Total Estimate Per Month"/>
+                                    <field name="new_average_cost_per_employee"
+                                            string="Estimated Average Cost per Month/ Employee"/>
+                                    <field name="new_total_cost_per_employee"
+                                            string="Estimated Total Cost per Month/ Employee"
+                                            sum="Estimated Total Cost per Month/ Employee"/>
+
+                                </list>
+
+                            </field>
+                        </page>
+                        <page string="Approval Details">
+                            <group>
+                                <group>
+                                    <field name="confirmed_id" readonly="1"/>
+                                    <field name="approved_id" readonly="1"/>
+                                    <field name="done_id" readonly="1"/>
+                                    <field name="rejected_id" readonly="1"/>
+                                    <field name="canceled_id" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="confirmed_date" readonly="1"/>
+                                    <field name="approved_date" readonly="1"/>
+                                    <field name="done_date" readonly="1"/>
+                                    <field name="rejected_date" readonly="1"/>
+                                    <field name="canceled_date" readonly="1"/>
+                                </group>
+                            </group>
+
+                        </page>
+                        <page string="Description">
+                            <field name="description" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+</odoo>

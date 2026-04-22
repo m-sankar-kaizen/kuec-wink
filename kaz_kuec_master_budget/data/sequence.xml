@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="budget_master_plan_seq" model="ir.sequence">
+        <field name="name">Budget Master Plan Sequence</field>
+        <field name="code">budget.master.plan</field>
+        <field name="prefix">BMP/%(y)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id"/>
+    </record>
+</odoo>

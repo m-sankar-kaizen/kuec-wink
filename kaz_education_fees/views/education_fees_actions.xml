@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record model="ir.actions.server" id="action_reset_to_draft">
+       <field name="name">Reset to Draft</field>
+       <field name="model_id" ref="kaz_education_fees.model_education_fees"/>
+       <field name="binding_model_id" ref="kaz_education_fees.model_education_fees"/>
+       <field name="binding_view_types">form</field>
+       <field name="state">code</field>
+       <field name="code">
+           action = records.action_reset()
+       </field>
+   </record>
+</odoo>

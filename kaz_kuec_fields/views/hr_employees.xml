@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_employee_form_inherit" model="ir.ui.view">
+        <field name="name">view_employee_form_inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="kaz_annual_air_ticket.view_employee_form_inherit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='attachment']" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </xpath>
+            <xpath expr="//page[@name='ticket']" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_employee_form_inherit_material" model="ir.ui.view">
+        <field name="name">view_employee_form_inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="material_purchase_requisitions.purchase_requisition_employee_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='purchase_settings']" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_employee_form_updation" model="ir.ui.view">
+        <field name="name">view_employee_form_inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr_employee_updation.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='identification_id']" position="attributes">
+                <attribute name="invisible">kaz_employee_type == 'local' and company_code == 'KUEC'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='identification_id']" position="attributes">
+                <attribute name="string">Expatriate</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_employee_form" model="ir.ui.view">
+        <field name="name">view_employee_form_inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='emergency']" position="attributes">
+                <attribute name="string">Family Status</attribute>
+            </xpath>
+            <xpath expr="//field[@name='private_car_plate']" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </xpath>
+            <xpath expr="//label[@for='distance_home_work']" position="before">
+                <field name="private_car_plate" invisible="company_code != 'KUEC'"/>
+            </xpath>
+            <xpath expr="///page[@name='personal_information']
+            //group[
+                field[@name='country_id']
+                and field[@name='place_of_birth']
+                and field[@name='country_of_birth']
+            ]" position="attributes">
+                <attribute name="invisible">kaz_employee_type != 'local' and company_code == 'KUEC'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='country_of_birth']" position="after">
+                <field name="attachment" invisible="company_code != 'KUEC'"/>
+            </xpath>
+            <xpath expr="//group[@name='emergency']/separator" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="add_fields_employee_form_inherit" model="ir.ui.view">
+        <field name="name">employee.form.inherit.kaz.kuec.fields</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="kaz_employees.add_fields_employee_form"/>
+        <field name="arch" type="xml">
+            <field name="grade_id" position="before">
+                <field name="company_code" invisible="1"/>
+            </field>
+
+            <field name="grade_id" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </field>
+
+            <field name="scale" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </field>
+            <field name="unit_id" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </field>
+            <field name="section_id" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </field>
+
+            <xpath expr="//field[@name='sequence']" position="replace">
+                <div style="width: 80%;" invisible="company_code != 'KUEC'">
+                    <group>
+                        <field name="sequence" string="KUEC ID" readonly="1"/>
+                    </group>
+                </div>
+                <field name="sequence" readonly="1" invisible="company_code == 'KUEC'"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

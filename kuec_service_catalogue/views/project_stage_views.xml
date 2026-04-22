@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_task_type_form_kuec" model="ir.ui.view">
+        <field name="name">project.task.type.form.kuec</field>
+        <field name="model">project.task.type</field>
+        <field name="inherit_id" ref="project.task_type_edit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group" position="inside">
+                <field name="portal_visible"
+                       widget="boolean_toggle"
+                       string="Visible on Customer Portal"
+                       help="If checked, customers can see this stage in their portal."/>
+                <p class="text-muted small mt-1" invisible="portal_visible">
+                    Internal only — customers cannot see this stage.
+                </p>
+                <p class="text-muted small mt-1" invisible="not portal_visible">
+                    Visible to customers in their portal.
+                </p>
+                <field name="rating_template_id"
+                       domain="[('model', '=', 'project.task')]"
+                       help="Set to 'Project: Rating Request' on your closed/done stage. When a task reaches this stage, the customer receives an email to rate the service — the rating is recorded against the assigned vendor."/>
+                <p class="text-muted small mt-1" invisible="not rating_template_id">
+                    Rating email will be sent to the customer when tasks reach this stage.
+                </p>
+            </xpath>
+        </field>
+    </record>
+</odoo>

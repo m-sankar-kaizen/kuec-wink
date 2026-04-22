@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Lessor Contracts Submenu -->
+    <menuitem id="menu_lease_lessor_contract"
+              name="Lessor Contracts"
+              parent="kaz_kuec_leasing.menu_leasing_management_root"
+              action="action_lease_lessor_contract"
+              sequence="20"/>
+</odoo>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="tender_res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">tender.res.config.settings.view.form.inherit.vendor.management</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Tenders" id="tender"
+                     string="Tenders"
+                     name="tender_management"
+                     logo="/kaz_vendor_management/static/description/menu.png">
+                    <block title="Tender Management" id="kaz_vendor_management">
+                        <setting string="Technical Score Weight">
+                            <div class="text-muted content-group mt16">
+                                <field name="technical_score_weight"
+                                       class="text-center"
+                                       style="width: 10%; min-width: 4rem;"/>
+                                <span>Percentage weight for Technical Evaluation (must total 100 with Commercial)</span>
+                            </div>
+                        </setting>
+
+                        <setting string="Commercial Score Weight">
+                            <div class="text-muted content-group mt16">
+                                <field name="commercial_score_weight"
+                                       class="text-center"
+                                       style="width: 10%; min-width: 4rem;"/>
+                                <span>Percentage weight for Commercial Evaluation (must total 100 with Technical)</span>
+                            </div>
+                        </setting>
+
+                        <setting string="Vendor Evaluation Reminder Days">
+                            <div class="text-muted content-group mt16">
+                                <field name="vendor_evaluation_reminder_days"
+                                       class="text-center"
+                                       style="width: 10%; min-width: 4rem;"/>
+                                <span>Number of days before vendor evaluation is reminded</span>
+                            </div>
+                        </setting>
+
+                        <setting string="Portal Support Email Address">
+                            <div class="text-muted content-group mt16">
+                                <field name="support_email_address"/>
+                            </div>
+                            <span>This email address will be shown as the support email for vendor registration
+                            </span>
+                        </setting>
+
+                        <setting string="Vendor Procurement Policy">
+                            <div class="text-muted content-group mt16">
+                                <field name="vendor_procurement_policy_link" placeholder="https://www.kuec.ae/"/>
+                            </div>
+                            <span>This link will be shown as the Vendor Procurement Policy at vendor registration
+                            </span>
+                        </setting>
+
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="tender_management_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'tender_management', 'bin_size': False}</field>
+    </record>
+
+    <menuitem id="tender_management_config_settings_menu" name="Settings"
+              parent="kaz_vendor_management.menu_tender_rfq_conf_root" sequence="0"
+              action="tender_management_config_settings_action"/>
+</odoo>

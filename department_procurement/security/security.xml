@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="group_procurement_master" model="res.groups">
+        <field name="name">Procurement Master Planner (KUEC)</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.category_material_purchase_requisition"/>
+        <field name="implied_ids"
+               eval="[Command.link(ref('material_purchase_requisitions.group_purchase_requisition_manager'))]"/>
+    </record>
+
+    <record id="group_annual_dept_planner" model="res.groups">
+        <field name="name">Dept. Planner (KUEC)</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.category_material_purchase_requisition"/>
+        <field name="implied_ids"
+               eval="[Command.link(ref('material_purchase_requisitions.group_purchase_requisition_user'))]"/>
+    </record>
+
+    <record id="kaz_procurement_doa_kuec.group_purchase_requisition_admin" model="res.groups">
+        <field name="name">Admin (KUEC)</field>
+        <field name="implied_ids"
+               eval="[
+                    Command.link(ref('department_procurement.group_annual_dept_planner')),
+                    Command.link(ref('department_procurement.group_procurement_master')),
+               ]"/>
+    </record>
+
+
+    <record model="ir.rule" id="department_procurement_dept_manager_rule">
+        <field name="name">Department Procurement: Dept Manager Rule - Own Documents Only</field>
+        <field name="model_id" ref="model_annual_department_procurement_plan"/>
+        <field name="groups" eval="[Command.link(ref('department_procurement.group_annual_dept_planner'))]"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    </record>
+
+    <record model="ir.rule" id="department_procurement_manager_rule">
+        <field name="name">Department Procurement: Manager Rule - All Documents</field>
+        <field name="model_id" ref="model_annual_department_procurement_plan"/>
+        <field name="groups" eval="[Command.link(ref('department_procurement.group_procurement_master'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+</odoo>

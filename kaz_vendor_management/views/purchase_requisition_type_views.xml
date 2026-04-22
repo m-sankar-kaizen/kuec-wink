@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--     LIST VIEW         -->
+    <record id="view_purchase_requisition_type_list" model="ir.ui.view">
+        <field name="name">purchase.requisition.type.list</field>
+        <field name="model">purchase.requisition.type</field>
+        <field name="arch" type="xml">
+            <list string="Requisition Types">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="requisition_type"/>
+                <field name="value_min"/>
+                <field name="value_max"/>
+                <field name="min_bids"/>
+                <field name="max_bids"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!--     FORM VIEW         -->
+    <record id="view_purchase_requisition_type_form" model="ir.ui.view">
+        <field name="name">purchase.requisition.type.form</field>
+        <field name="model">purchase.requisition.type</field>
+        <field name="arch" type="xml">
+            <form string="Requisition Type">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="requisition_type" required="1"/>
+                        </group>
+
+                        <group>
+                            <field name="value_min"/>
+                            <field name="value_max"/>
+                            <field name="is_justification_required" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <!-- Other Info Settings -->
+                        <page string="Other Info" name="other_info">
+                            <group>
+                                <group>
+                                    <field name="allowed_user_ids" widget="many2many_tags" domain="[('share', '=', False)]"/>
+                                    <field name="is_tender" widget="boolean_toggle" invisible="requisition_type != 'standard'"/>
+                                    <field invisible="not is_tender" name="min_bids"/>
+                                    <field invisible="not is_tender" name="max_bids"/>
+                                </group>
+                                <group>
+                                    <field name="repeat_max_days" invisible="requisition_type != 'repeated'"
+                                           required="requisition_type == 'repeated'"/>
+                                    <field name="variation_max_percent" invisible="requisition_type != 'variation'"
+                                           required="requisition_type == 'variation'"/>
+                                </group>
+                            </group>
+
+                        </page>
+
+                        <!-- Attachments -->
+                        <page string="Required Attachments" name="required_attachment_page">
+                            <field name="rq_type_attachment_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="attachment_type"/>
+                                    <field name="attachment_is_required" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_purchase_requisition_type" model="ir.actions.act_window">
+        <field name="name">Requisition Types</field>
+        <field name="res_model">purchase.requisition.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="help">Configure procurement request types and rules.</field>
+    </record>
+
+    <menuitem id="menu_tender_configuration" name="Configuration"
+              parent="material_purchase_requisitions.menu_purchase_requisition"
+              sequence="100"/>
+
+    <menuitem id="menu_purchase_requisition_type"
+              name="Requisition Types"
+              parent="menu_tender_configuration"
+              action="action_purchase_requisition_type"/>
+
+</odoo>

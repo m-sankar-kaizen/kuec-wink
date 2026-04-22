@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Form, Tree, Search Views and Action for the Employee Overtime module.
+        This defines how users interact with employee overtime requests in the UI,
+        including workflows for Line Manager, HR, and Director approvals.
+    -->
+
+    <!-- Employee Overtime Form View -->
+    <record id="employee_overtime_view_form" model="ir.ui.view">
+        <field name="name">employee.overtime.view.form</field>
+        <field name="model">employee.overtime</field>
+        <field name="arch" type="xml">
+            <form string="Employee Overtime">
+                <header>
+                    <!-- Workflow transition buttons for various approval states -->
+
+                    <!-- Send to Line Manager for approval -->
+                    <button name="action_send_for_line_manager_approval"
+                            string="Line Manager Approval" type="object"
+                            invisible="state != 'draft'" class="btn-primary"
+                            groups="base.group_user"/>
+
+                    <!-- Send to HR for approval, visible only to Line Manager -->
+                    <button name="action_send_for_hr_approval"
+                            string="HR Approval" type="object"
+                            invisible="state != 'line_manager_approval'"
+                            class="btn-primary"
+                            groups="kaz_employee_overtime.group_line_manager,!kaz_employee_overtime.group_hr_person,!kaz_employee_overtime.group_director"/>
+
+                    <!-- Send to Director for approval, visible only to HR -->
+                    <button name="action_send_for_director"
+                            string="Director Approval" type="object"
+                            invisible="state != 'hr_approval'"
+                            class="btn-primary"
+                            groups="kaz_employee_overtime.group_hr_person,!kaz_employee_overtime.group_director"/>
+
+                    <!-- Final approval by Director -->
+                    <button name="action_approve" string="Approve" type="object"
+                            invisible="state != 'director_approval'"
+                            class="btn-primary"
+                            groups="kaz_employee_overtime.group_director"/>
+
+                    <!-- Rejection buttons for each responsible group at their stage -->
+                    <button name="action_reject_line_manager" string="Reject" type="object"
+                            invisible="state != 'line_manager_approval'"
+                            class="btn-secondary"
+                            groups="kaz_employee_overtime.group_line_manager,!kaz_employee_overtime.group_hr_person,!kaz_employee_overtime.group_director"/>
+
+                    <button name="action_reject_hr" string="Reject" type="object"
+                            invisible="state != 'hr_approval'"
+                            class="btn-secondary"
+                            groups="kaz_employee_overtime.group_hr_person,!kaz_employee_overtime.group_director"/>
+
+                    <button name="action_reject_director" string="Reject" type="object"
+                            invisible="state != 'director_approval'"
+                            class="btn-secondary"
+                            groups="kaz_employee_overtime.group_director"/>
+
+                    <!-- Allow cancellation of draft requests -->
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state != 'draft'" class="btn-secondary"/>
+
+                    <!-- Status bar to indicate request state -->
+                    <field name="state" widget="statusbar"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <!-- Display employee name based on group and state -->
+                            <field name="employee_id" readonly="1"
+                                   groups="!kaz_employee_overtime.group_line_manager,!kaz_employee_overtime.group_hr_person,!kaz_employee_overtime.group_director"/>
+                            <field name="employee_id" readonly="state != 'draft'"
+                                   groups="kaz_employee_overtime.group_line_manager,kaz_employee_overtime.group_hr_person,kaz_employee_overtime.group_director"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Job Information">
+                            <field name="job_id"/>
+                            <field name="grade_id"/>
+                            <field name="department_id"/>
+                        </group>
+
+                        <group string="Overtime Details">
+                            <field name="purpose_overtime" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                </sheet>
+
+                <!-- Chatter section for activities and message thread -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Employee Overtime Tree View (List View) -->
+    <record id="employee_overtime_view_tree" model="ir.ui.view">
+        <field name="name">employee.overtime.view.list</field>
+        <field name="model">employee.overtime</field>
+        <field name="arch" type="xml">
+            <list string="Employee Overtime Requests">
+                <field name="employee_id"/>
+                <field name="job_id"/>
+                <field name="grade_id"/>
+                <field name="department_id"/>
+                <field name="purpose_overtime"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Employee Overtime Search View -->
+    <record id="employee_overtime_view_search" model="ir.ui.view">
+        <field name="name">employee.overtime.view.search</field>
+        <field name="model">employee.overtime</field>
+        <field name="arch" type="xml">
+            <search string="Search Overtime Requests">
+                <field name="employee_id"/>
+                <field name="job_id"/>
+                <field name="department_id"/>
+                <field name="state"/>
+
+                <!-- Group By filters -->
+                <group expand="1" string="Group By">
+                    <filter string="State" name="state" context="{'group_by': 'state'}"/>
+                    <filter string="Employee" name="employee_id" context="{'group_by': 'employee_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Overtime Requests Action Definition -->
+    <record id="action_employee_overtime" model="ir.actions.act_window">
+        <field name="name">Employee Overtime Request</field>
+        <field name="res_model">employee.overtime</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                No Overtime Requests.
+            </p>
+        </field>
+    </record>
+
+    <!-- Overtime Requests Menu Item -->
+    <menuitem id="menu_employee_overtime"
+              name="Employee Overtime Request"
+              action="action_employee_overtime"
+              parent="hr.menu_hr_root"
+              sequence="20"/>
+</odoo>

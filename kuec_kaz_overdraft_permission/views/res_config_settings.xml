@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="95"/>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='default_accounts']" position="inside">
+                <setting id="company_credit_control_warning_limit"
+                         string="Credit Control Warning (%)"
+                         help="When a user creates a journal entry, a warning should be displayed if the amount exceeds this percentage.">
+                    <field name="company_credit_control_warning_limit"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

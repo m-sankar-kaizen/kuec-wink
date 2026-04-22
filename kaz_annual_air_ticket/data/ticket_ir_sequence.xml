@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+        Sequence definition for Annual Ticket (AT).
+        Used to generate unique ticket identifiers with format like: AT00001, AT00002, etc.
+    -->
+    <record id="annual_ticket_sequence" model="ir.sequence">
+        <field name="name">Ticket</field>
+        <field name="code">ticket.seq</field> <!-- Used in code to fetch the sequence via self.env['ir.sequence'].next_by_code('ticket.seq') -->
+        <field name="prefix">AT</field>       <!-- Prefix for the ticket number -->
+        <field name="padding">5</field>       <!-- Zero-padding for numeric part, e.g., 00001 -->
+        <field name="company_id" eval="False"/> <!-- Shared sequence across all companies -->
+    </record>
+</odoo>

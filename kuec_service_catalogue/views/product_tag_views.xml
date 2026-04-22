@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extend product.tag form: expose is_ribbon and colour for Wink portal ribbons -->
+    <record id="product_tag_form_view_kuec" model="ir.ui.view">
+        <field name="name">product.tag.form.inherit.kuec</field>
+        <field name="model">product.tag</field>
+        <field name="inherit_id" ref="product.product_tag_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group" position="inside">
+                <field name="is_ribbon"
+                       help="Tick to make this tag available as a diagonal ribbon on Wink portal service cards."/>
+                <field name="color_html"
+                       placeholder="#FF5733"
+                       invisible="not is_ribbon"
+                       help="Hex colour for the ribbon background (e.g. #28a745). Leave empty for default colour."/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Extend product.tag list: show is_ribbon and colour columns -->
+    <record id="product_tag_list_view_kuec" model="ir.ui.view">
+        <field name="name">product.tag.list.inherit.kuec</field>
+        <field name="model">product.tag</field>
+        <field name="inherit_id" ref="product.product_tag_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_ribbon" string="Ribbon" optional="show"/>
+                <field name="color_html" string="Colour (Hex)" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

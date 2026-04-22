@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="rule_kuec_user_see_own" model="ir.rule">
+        <field name="name">User can see only their own requisitions</field>
+        <field name="model_id" ref="material_purchase_requisitions.model_material_purchase_requisition"/>
+        <field name="groups" eval="[Command.link(ref('material_purchase_requisitions.group_purchase_requisition_user'))]"/>
+        <field name="domain_force">
+            [('employee_id.user_id','=',user.id)]
+        </field>
+    </record>
+
+    <record id="rule_kuec_hod_see_department" model="ir.rule">
+        <field name="name">KUEC: HOD can see department requisitions</field>
+        <field name="model_id" ref="material_purchase_requisitions.model_material_purchase_requisition"/>
+        <field name="groups" eval="[Command.link(ref('kaz_procurement_doa_kuec.group_kuec_head_department'))]"/>
+        <field name="domain_force">
+            ['|',
+                ('employee_id.user_id','=',user.id),
+                ('employee_hod_id.user_id','=',user.id)
+            ]
+        </field>
+    </record>
+
+    <record id="rule_kuec_finance_and_above_see_all" model="ir.rule">
+        <field name="name">KUEC: Finance/CCOE/CEO/Board can see all requisitions</field>
+        <field name="model_id" ref="material_purchase_requisitions.model_material_purchase_requisition"/>
+        <field name="groups" eval="[
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_head_fin_procurement')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_ccoe')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_ceo')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_board'))
+        ]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+</odoo>

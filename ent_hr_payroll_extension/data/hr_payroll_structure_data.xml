@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Payroll Structure: Regular Pay
+        This record defines a standard payroll structure named "Regular Pay".
+        It is intended for employee contracts using the default employee structure type.
+
+        Key Fields:
+        - name: Human-readable name for the structure.
+        - type_id: Links to the structure type that determines its usage scope (e.g., employee-level, company-level).
+        - unpaid_work_entry_type_ids: Associates unpaid leave entries to prevent double payment (e.g., exclude these from salary computation).
+        - country_id: Set to False to allow use in any country (multi-country compatibility).
+    -->
+    <record id="structure_002" model="hr.payroll.structure">
+        <field name="name">Regular Pay</field>
+
+        <!-- Reference to the default employee structure type -->
+        <field name="type_id" ref="hr_contract.structure_type_employee"/>
+
+        <!-- Link to the unpaid leave work entry type to exclude from worked days computation -->
+        <field name="unpaid_work_entry_type_ids"
+               eval="[Command.link(ref('hr_work_entry_contract.work_entry_type_unpaid_leave'))]"/>
+
+        <!-- Set to False so the structure is usable across multiple countries -->
+        <field name="country_id" eval="False"/>
+    </record>
+</odoo>

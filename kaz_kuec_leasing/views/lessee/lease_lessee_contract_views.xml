@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- List View -->
+    <record id="view_lease_lessee_contract_tree" model="ir.ui.view">
+        <field name="name">lease.lessee.contract.tree</field>
+        <field name="model">lease.lessee.contract</field>
+        <field name="arch" type="xml">
+            <list string="Lessee Contracts" decoration-info="state=='draft'" decoration-success="state=='confirmed'" decoration-muted="state=='cancelled'">
+                <field name="name"/>
+                <field name="asset_description"/>
+                <field name="lessor_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="lease_term_years"/>
+                <field name="payment_amount" widget="monetary"/>
+                <field name="present_value" widget="monetary"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="state" widget="badge" decoration-info="state=='draft'" decoration-success="state=='running'" decoration-danger="state=='cancelled'"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_lease_lessee_contract_form" model="ir.ui.view">
+        <field name="name">lease.lessee.contract.form</field>
+        <field name="model">lease.lessee.contract</field>
+        <field name="arch" type="xml">
+            <form string="Lessee Contract">
+                <header>
+                    <button name="action_compute_schedules" string="Compute Schedules" type="object" class="btn-secondary" 
+                            invisible="state != 'draft'"/>
+                    <button name="action_submit" string="Submit to Approve" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_confirm" string="Confirm" type="object" class="oe_highlight" 
+                            invisible="state != 'pending'" confirm="This will create the ROU asset, lease liability, and generate schedules. Continue?"/>
+                    <button name="action_cancel" string="Cancel" type="object" 
+                            invisible="state in ['cancelled', 'closed', 'pending']" confirm="This will cancel all related journal entries and asset. Continue?"/>
+                    <button name="action_set_to_draft" string="Reset to Draft" type="object" 
+                            invisible="state != 'cancelled'" confirm="This will reset the contract to draft for reconfiguration. Continue?"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,running,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(account.action_account_moves_all)d" type="action" class="oe_stat_button" icon="fa-book" 
+                                invisible="state == 'draft'" context="{'search_default_ref': name}">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Journal Entries</span>
+                            </div>
+                        </button>
+                        <button name="action_view_rou_asset" type="object" class="oe_stat_button" icon="fa-cube" 
+                                invisible="not asset_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">ROU</span>
+                                <span class="o_stat_text">Asset</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="contract_details" string="Contract Details">
+                            <field name="asset_description" placeholder="e.g., Office Space, Equipment" readonly="state != 'draft'"/>
+                            <field name="lessor_id" context="{'default_supplier_rank': 1}" readonly="state != 'draft'"/>
+                            <field name="date_start" readonly="state != 'draft'"/>
+                            <field name="date_end" readonly="state != 'draft'"/>
+                            <field name="lease_term_years" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                        </group>
+                        <group name="payment_details" string="Payment Details">
+                            <field name="payment_frequency" readonly="state != 'draft'"/>
+                            <field name="payment_amount" widget="monetary" readonly="state != 'draft'"/>
+                            <field name="discount_rate" readonly="state != 'draft'"/>
+                            <field name="present_value" widget="monetary" readonly="state != 'draft'"/>
+                            <field name="present_value_manual" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group name="depreciation_details" string="Depreciation Details">
+                            <field name="useful_life_value" readonly="state != 'draft'"/>
+                            <field name="useful_life_unit" readonly="state != 'draft'"/>
+                            <field name="depreciation_method" readonly="state != 'draft'"/>
+                            <field name="declining_factor" readonly="state != 'draft'" 
+                                   invisible="depreciation_method == 'linear'"/>
+                            <field name="asset_id" readonly="1" invisible="not asset_id"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Terms and Conditions" name="terms">
+                            <field name="terms_html" placeholder="Enter lease terms and conditions here..."/>
+                        </page>
+                        
+                        <page string="Accounting Setup" name="accounting">
+                            <group>
+                                <group string="Asset Accounts">
+                                    <field name="account_rou_id" readonly="state != 'draft'"/>
+                                    <field name="account_dep_accum_id" readonly="state != 'draft'"/>
+                                </group>
+                                <group string="Liability &amp; Expense Accounts">
+                                    <field name="account_lease_liability_id" readonly="state != 'draft'"/>
+                                    <field name="account_interest_expense_id" readonly="state != 'draft'"/>
+                                    <field name="account_dep_expense_id" readonly="state != 'draft'"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Journals">
+                                    <field name="journal_rou_id" readonly="state != 'draft'"/>
+                                    <field name="journal_dep_id" readonly="state != 'draft'"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Depreciation Board" name="depreciation_board">
+                            <field name="depreciation_line_ids" readonly="1">
+                                <list string="Depreciation Schedule" editable="bottom" create="false" delete="false">
+                                    <field name="date"/>
+                                    <field name="amount" widget="monetary" sum="Total Depreciation"/>
+                                    <field name="accumulated_amount" widget="monetary"/>
+                                    <field name="remaining_value" widget="monetary"/>
+                                    <field name="move_id"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        
+                        <page string="Payment Board" name="payment_board">
+                            <field name="payment_line_ids" readonly="1">
+                                <list string="Payment Schedule" editable="bottom" create="false" delete="false">
+                                    <field name="payment_date"/>
+                                    <field name="opening_liability" widget="monetary"/>
+                                    <field name="interest_amount" widget="monetary" sum="Total Interest"/>
+                                    <field name="principal_amount" widget="monetary" sum="Total Principal"/>
+                                    <field name="total_payment" widget="monetary" sum="Total Payments"/>
+                                    <field name="closing_liability" widget="monetary"/>
+                                    <field name="vendor_bill_id"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <button name="action_create_vendor_bill" string="Create Bill" type="object" 
+                                            icon="fa-file-text-o" invisible="vendor_bill_id"/>
+                                    <button name="action_view_vendor_bill" string="View Bill" type="object" 
+                                            icon="fa-eye" invisible="not vendor_bill_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_lease_lessee_contract_search" model="ir.ui.view">
+        <field name="name">lease.lessee.contract.search</field>
+        <field name="model">lease.lessee.contract</field>
+        <field name="arch" type="xml">
+            <search string="Search Lessee Contracts">
+                <field name="name"/>
+                <field name="asset_description"/>
+                <field name="lessor_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Running" name="running" domain="[('state', '=', 'running')]"/>
+                <filter string="Closed" name="closed" domain="[('state', '=', 'closed')]"/>
+                <separator/>
+                <filter string="Active Leases" name="active" domain="[('state', '=', 'running')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Lessor" name="group_lessor" context="{'group_by': 'lessor_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Start Date" name="group_start_date" context="{'group_by': 'date_start'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_lease_lessee_contract" model="ir.actions.act_window">
+        <field name="name">Lessee Contracts</field>
+        <field name="res_model">lease.lessee.contract</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Lessee Lease Contract
+            </p>
+            <p>
+                Manage lease contracts where your company is the lessee (renting assets from suppliers/landlords).
+                The system will automatically calculate present value, create ROU assets, and manage lease liability.
+            </p>
+        </field>
+    </record>
+
+</odoo>

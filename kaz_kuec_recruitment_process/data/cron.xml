@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="ir_cron_auto_external" model="ir.cron">
+        <field name="name">Kuec Recruitment: cron</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="model_id" ref="kaz_kuec_recruitment_process.model_hr_job"/>
+        <field name="code">model._cron_auto_external()</field>
+        <field name="state">code</field>
+    </record>
+</odoo>

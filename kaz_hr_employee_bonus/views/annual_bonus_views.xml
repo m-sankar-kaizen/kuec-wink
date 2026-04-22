@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Annual Bonus Actions -->
+    <record id="action_annual_bonus" model="ir.actions.act_window">
+        <field name="name">Annual Bonus</field>
+        <field name="res_model">annual.bonus</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p>Create and manage annual bonuses for employees based on performance.</p>
+        </field>
+    </record>
+
+    <!-- Annual Bonus List View -->
+    <record id="view_annual_bonus_list" model="ir.ui.view">
+        <field name="name">annual.bonus.list</field>
+        <field name="model">annual.bonus</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="bonus_type" widget="badge"/>
+                <field name="months_of_service"/>
+                <field name="is_eligible" widget="boolean"/>
+                <field name="base_amount"/>
+                <field name="total_bonus"/>
+                <field name="bonus_year"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Annual Bonus Form View -->
+    <record id="view_annual_bonus_form" model="ir.ui.view">
+        <field name="name">annual.bonus.form</field>
+        <field name="model">annual.bonus</field>
+        <field name="arch" type="xml">
+            <form string="Annual Bonus">
+                <header>
+                    <button name="action_submit_for_approval" type="object" string="Submit for Approval"
+                            class="btn-primary" invisible="state != 'draft' or not is_eligible"/>
+
+                    <button name="action_department_approve"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_department" type="object"
+                            string="Department Approve"
+                            class="btn-primary" invisible="state != 'pending'"/>
+                    <button name="action_department_reject"
+                            invisible="state != 'pending'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_department_rfc"
+                            invisible="state != 'pending'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_hr_manager_approve" groups="kaz_kuec_overall_doa_approval.group_kuec_employee_hohr"
+                            type="object" string="HR Manager Approve" class="btn-primary"
+                            invisible="state != 'department_approved'"/>
+                    <button name="action_reject_request"
+                            invisible="state != 'department_approved'"
+                            groups="kaz_kuec_overall_doa_approval.group_kuec_employee_hohr"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="state != 'department_approved'"
+                            groups="kaz_kuec_overall_doa_approval.group_kuec_employee_hohr"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_ccoe_approve" groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            type="object" string="CCOE Approve" class="btn-primary"
+                            invisible="state != 'hr_approved'"/>
+                    <button name="action_reject_request"
+                            invisible="state != 'hr_approved'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="state != 'hr_approved'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_ceo_approve" groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            type="object" string="CCOE Approve" class="btn-primary"
+                            invisible="state != 'ccoe_approved'"/>
+                    <button name="action_reject_request"
+                            invisible="state != 'ccoe_approved'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="state != 'ccoe_approved'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_mark_as_paid" type="object" string="Mark as Paid" class="btn-success"
+                            invisible="state != 'ceo_approved'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft"
+                            invisible="state != 'rejected'"
+                            groups="kaz_kuec_overall_doa_approval.group_kuec_employee_hohr,kaz_procurement_doa_kuec.group_kuec_head_department"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,department_approved,hr_approved,ccoe_approved,ceo_approved,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Employee Information">
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="department_id" readonly="1"/>
+                            <field name="job_id" readonly="1"/>
+                        </group>
+                        <group string="Service &amp; Eligibility">
+                            <field name="currency_id" readonly="1"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="hire_date" readonly="1"/>
+                            <field name="months_of_service" readonly="1"/>
+                            <field name="is_eligible" readonly="1" widget="boolean"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Bonus Details">
+                            <field name="bonus_type" readonly="state != 'draft'"/>
+                            <field name="bonus_year" readonly="state != 'draft'"/>
+                            <field name="bonus_period" readonly="state != 'draft'"/>
+                            <field name="base_amount" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Calculation">
+                            <field name="multiplier" readonly="state != 'draft'"/>
+                            <field name="total_bonus" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Performance &amp; Attendance">
+                        <group>
+                            <field name="performance_score" readonly="state != 'draft'"/>
+                            <field name="scorecard_reference" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="min_attendance" readonly="state != 'draft'"/>
+                            <field name="actual_attendance" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <group string="Payment Details" invisible="state != 'paid'">
+                        <field name="payment_date" readonly="1"/>
+                        <field name="payment_status" readonly="1"/>
+                        <field name="payment_reference" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page name="bonus_approval" string="Signed Approval History"
+                              invisible="not bonus_approval_ids">
+                            <field name="bonus_approval_ids">
+                                <list editable="bottom" create="0" edit="0" delete="0">
+                                    <field name="current_display_name" column_invisible="1"/>
+                                    <field name="sequence"/>
+                                    <field name="parent_state_at_request" optional="show"/>
+                                    <field name="request_type"/>
+                                    <field name="create_uid" string="Signed By"/>
+                                    <field name="create_date" string="Signed At" optional="hide"/>
+                                    <field name="signature" widget="signature"
+                                           options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                                    <field name="reason"/>
+                                    <field name="company_id" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Annual Bonus Search View -->
+    <record id="view_annual_bonus_search" model="ir.ui.view">
+        <field name="name">annual.bonus.search</field>
+        <field name="model">annual.bonus</field>
+        <field name="arch" type="xml">
+            <search string="Annual Bonus">
+                <field name="name" string="Reference"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Department Approved" name="dept_approved"
+                        domain="[('state', '=', 'department_approved')]"/>
+                <filter string="Manager Approved" name="mgr_approved"
+                        domain="[('state', '=', 'manager_approved')]"/>
+                <filter string="Paid" name="paid" domain="[('state', '=', 'paid')]"/>
+                <filter string="Rejected" name="rejected" domain="[('state', '=', 'rejected')]"/>
+                <separator/>
+                <filter string="Eligible" name="eligible" domain="[('is_eligible', '=', True)]"/>
+                <filter string="Not Eligible" name="not_eligible" domain="[('is_eligible', '=', False)]"/>
+                <separator/>
+                <filter string="Performance Bonus" name="performance"
+                        domain="[('bonus_type', '=', 'performance')]"/>
+                <filter string="Corporate Bonus" name="corporate" domain="[('bonus_type', '=', 'corporate')]"/>
+                <filter string="Core Business Bonus" name="core_business"
+                        domain="[('bonus_type', '=', 'core_business')]"/>
+                <group expand="1" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_bonus_type" string="Bonus Type" context="{'group_by': 'bonus_type'}"/>
+                    <filter name="group_year" string="Bonus Year" context="{'group_by': 'bonus_year'}"/>
+                    <filter name="group_eligible" string="Eligible" context="{'group_by': 'is_eligible'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

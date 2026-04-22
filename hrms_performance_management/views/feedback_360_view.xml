@@ -1,0 +1,82 @@
+<odoo>
+
+<!-- [Start] List view ##################################################################################################################### -->
+    <record id="view_list_hrms_feedback360" model="ir.ui.view">
+        <field name="name">hrms.feedback360.list</field>
+        <field name="model">hrms.feedback360</field>
+        <field name="arch" type="xml">
+            <list string="360 Feedback" sample="1" expand="1">
+                <field name="name"/>
+                <field name="feedback_provider_id"/>
+                <field name="employee_id"/>
+                <field name="feedback_type"/>
+            </list>
+        </field>
+    </record>
+
+<!-- [End] List view ##################################################################################################################### -->
+
+
+
+<!-- [Start] Form view ##################################################################################################################### -->
+    <record id="view_form_hrms_feedback360" model="ir.ui.view">
+        <field name="name">hrms.feedback360.form</field>
+        <field name="model">hrms.feedback360</field>
+        <field name="arch" type="xml">
+            <form string="360 Feedback">
+            <!-- [Start] Form Content #################################################################################### -->
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" class="oe_inline"/></h1>
+                    </div>
+                    <group>
+                        <field name="evaluation_id" groups="hrms_performance_management.group_performance_manager" invisible="feedback_type in ('peer','subordinate')"/>
+                        <field name="employee_id" required="1"/>
+                        <field name="feedback_type" required="1"/>
+                        <field name="feedback_provider_id" required="1"/>
+                        <field name="rating" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}" required="1"/>
+                        <field name="comment"/>
+                        <field name="suggestion"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            <!-- [End] Form Content #################################################################################### -->
+            </form>
+        </field>
+    </record>
+<!-- [End] Form view ##################################################################################################################### -->
+
+    <record id="view_search_hrms_feedback360" model="ir.ui.view">
+            <field name="name">hrms.feedback360</field>
+            <field name="model">hrms.feedback360</field>
+            <field name="arch" type="xml">
+                <search string="Search">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="feedback_type"/>
+                    <field name="feedback_provider_id"/>                    
+               </search>
+            </field>
+        </record>
+
+
+    <record id="hrms_feedback360_sequence" model="ir.sequence">
+            <field name="name">360 Feedback Sequence</field>
+            <field name="code">hrms.feedback360</field>
+            <field name="prefix">FB</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+
+<!-- [Start] Action ####################################################################################################################### -->
+    <record id="action_hrms_feedback360" model="ir.actions.act_window">
+        <field name="name">360 Feedback</field>
+        <field name="res_model">hrms.feedback360</field>
+        <field name="view_mode">list,form</field>
+    </record>
+<!-- [End] Action ####################################################################################################################### -->
+
+<menuitem name="360 Feedback" id="360_feedback_menu" parent="hrms_performance_management.performance_management_main_menu" action="hrms_performance_management.action_hrms_feedback360" sequence="4"/>
+
+</odoo>

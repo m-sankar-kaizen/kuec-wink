@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- New category for Purchase Agreement Management -->
+    <record id="module_category_purchase_agreement_kuec" model="ir.module.category">
+        <field name="name">Purchase Agreement (KUEC)</field>
+        <field name="sequence" eval="20"/>
+    </record>
+
+    <!-- Group: Purchase Agreement Manager -->
+    <record id="group_purchase_agreement_manager_kuec" model="res.groups">
+        <field name="name">Purchase Agreement Manager (KUEC)</field>
+        <field name="category_id" ref="module_category_purchase_agreement_kuec"/>
+    </record>
+
+</odoo>

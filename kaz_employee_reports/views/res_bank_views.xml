@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    View Inheritance: view_res_bank_form
+    Model: res.bank
+    Purpose:
+        - Inherits the standard bank form view (`base.view_res_bank_form`)
+        - Adds a new field `bank_arabic_name` immediately after the existing `name` field
+
+    Context:
+        - Useful when supporting multilingual banking information, such as displaying the bank name in Arabic.
+    -->
+    <record id="view_res_bank_form" model="ir.ui.view">
+        <field name="name">res.bank.inherit.form.view</field>
+        <field name="model">res.bank</field>
+        <field name="inherit_id" ref="base.view_res_bank_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="bank_arabic_name"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

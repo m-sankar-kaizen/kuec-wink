@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="housing_advance_company_rule" model="ir.rule">
+        <field name="name">Housing Advance: Company</field>
+        <field name="model_id" ref="model_hr_loan"/>
+        <!-- Users can see records if their company is in company_ids -->
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

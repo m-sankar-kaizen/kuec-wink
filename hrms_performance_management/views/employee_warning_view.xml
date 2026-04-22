@@ -1,0 +1,80 @@
+<odoo>
+
+<!-- [Start] List view ##################################################################################################################### -->
+    <record id="view_list_hrms_warning" model="ir.ui.view">
+        <field name="name">hrms.warning.list</field>
+        <field name="model">hrms.warning</field>
+        <field name="arch" type="xml">
+            <list string="Warning" sample="1" expand="1">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="warning"/>
+            </list>
+        </field>
+    </record>
+
+<!-- [End] List view ##################################################################################################################### -->
+
+
+
+<!-- [Start] Form view ##################################################################################################################### -->
+    <record id="view_form_hrms_warning" model="ir.ui.view">
+        <field name="name">hrms.warning.form</field>
+        <field name="model">hrms.warning</field>
+        <field name="arch" type="xml">
+            <form string="Warning">
+
+            <!-- [Start] Form Content #################################################################################### -->
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <field name="employee_id" required="1"/>
+                        <field name="warning" required="1"/>
+                        <field name="document"/>
+                    </group>
+                    
+                </sheet>
+                <chatter/>
+            <!-- [End] Form Content #################################################################################### -->
+            </form>
+        </field>
+    </record>
+<!-- [End] Form view ##################################################################################################################### -->
+
+    <record id="view_search_hrms_warning" model="ir.ui.view">
+            <field name="name">hrms.warning</field>
+            <field name="model">hrms.warning</field>
+            <field name="arch" type="xml">
+                <search string="Search">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+               </search>
+            </field>
+        </record>
+    <record id="hrms_warning_sequence" model="ir.sequence">
+            <field name="name">Employee Warning Sequence</field>
+            <field name="code">hrms.warning</field>
+            <field name="prefix">EW</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+
+<!-- [Start] Action ####################################################################################################################### -->
+    <record id="action_hrms_warning" model="ir.actions.act_window">
+        <field name="name">Employee Warning</field>
+        <field name="res_model">hrms.warning</field>
+        <field name="view_mode">list,form</field>
+    </record>
+<!-- [End] Action ####################################################################################################################### -->
+
+
+<menuitem id="employee_warning_menu"
+            name="Employee Warning"
+            action="hrms_performance_management.action_hrms_warning"
+            parent="hrms_performance_management.configuration_main_menu"
+            groups="hrms_performance_management.group_performance_hr"
+            sequence="5"/>
+</odoo>

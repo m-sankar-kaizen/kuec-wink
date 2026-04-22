@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+    View Inheritance: Extend OAuth Provider Configuration Form
+    Purpose:
+        This view customizes the standard OAuth provider form (`auth.oauth.provider`)
+        to support Microsoft Azure SSO by adding Microsoft-specific fields:
+            • Client Secret for OAuth 2.0 Authorization Code Flow
+            • Redirect URI override for Azure-specific callback
+            • Response Type selector (token or code)
+
+    Use Case:
+        This is particularly relevant for integrating Microsoft login (SSO) using the
+        OAuth 2.0 authorization code flow. These additional fields allow configuring:
+            - The secret key provided by Azure
+            - The redirect URL expected by Azure AD
+            - Whether the app uses Implicit Flow or Authorization Code Flow
+    -->
+
+    <record id="view_oauth_provider_form" model="ir.ui.view">
+        <field name="name">auth.oauth.provider.view.form.inherit.microsoft.azure.sso.integration</field>
+        <field name="model">auth.oauth.provider</field>
+        <field name="inherit_id" ref="auth_oauth.view_oauth_provider_form"/>
+        <field name="arch" type="xml">
+            <field name="client_id" position="after">
+
+                <!-- Field: client_secret_id
+                     Purpose: Secret ID provided by Microsoft Azure (used in Authorization Code flow)
+                     Behavior:
+                        - Hidden if response_type != 'code' (i.e., not using Authorization Code flow)
+                        - Required only when response_type == 'code'
+                        - Password input mask enabled
+                -->
+                <field
+                    name="client_secret_id"
+                    password="True"
+                    invisible="response_type != 'code'"
+                    required="response_type == 'code'"
+                />
+
+                <!-- Field: redirect_uri_microsoft
+                     Purpose: Optional override for redirect URI (used in Azure App Registration)
+                     Example value: https://yourdomain.com/auth_oauth/signin
+                     Helps support multi-environment deployments or dynamic base URLs.
+                -->
+                <field
+                    name="redirect_uri_microsoft"
+                    placeholder="Base URL + /auth_oauth/signin"
+                />
+            </field>
+
+            <!-- Insert response_type field after validation_endpoint
+                 Field: response_type
+                 Purpose: Choose between OAuth 2.0 flows
+                     - 'code': Authorization Code Flow (preferred for Microsoft)
+                     - 'token': Implicit Flow (legacy use, often used in SPA apps)
+            -->
+            <field name="validation_endpoint" position="after">
+                <field name="response_type"/>
+            </field>
+
+        </field>
+    </record>
+</odoo>

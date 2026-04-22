@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="visa_request_letter">
+        <t t-call="web.report_layout">
+            <t t-set="body_classname" t-value="'main_page'"/>
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_kuec_report_base.external_layout">
+                    <t t-set="show_page" t-value="False"/>
+                    <div class="page english-text main_page">
+                        <div class="px-2">
+                            <h1 class="text-center mt-3">VISA Request Form</h1>
+                            <br/>
+                            <h3 class="background-kuec">Visa Details</h3>
+                            <br/>
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">
+                                            <span class="ms-1">Type Of Request :</span>
+                                        </th>
+                                        <td>
+                                            <span t-field="o.visa_type"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            <span class="ms-1">Purpose Of Visa :</span>
+                                        </th>
+                                        <td>
+                                            <span t-field="o.purpose_of_visa"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <table class="table mt-3">
+                                <h3 class="background-kuec">Requester's Information</h3>
+                                <br/>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">
+                                            <span class="ms-1">Date:</span>
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.date"/>
+
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            <span class="ms-1">Request No:</span>
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.sequence"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            <span class="ms-1">Employee Name:</span>
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.employee_id"/>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                            <table class="table mt-3">
+                                <tbody>
+                                    <tr>
+                                        <th>
+                                            <span class="ms-1">Employment Duration :</span>
+                                        </th>
+                                        <td>
+                                            <span t-field="o.employment_duration"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <span class="ms-1">Passport Number :</span>
+                                        </th>
+                                        <td>
+                                            <span t-field="o.passport_number"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <span class="ms-1">Nationality :</span>
+                                        </th>
+                                        <td>
+                                            <span t-field="o.country_id"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            <span class="ms-1">Emirates Id :</span>
+                                        </th>
+                                        <td>
+                                            <span t-field="o.emirates"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="mt-3 ">
+                                <h3 class="background-kuec">
+                                    Signature
+                                </h3>
+                                <br/>
+                            </div>
+                            <div class="mt-5 text-center">
+                                <t t-if="o.hr_signature">
+                                    <img t-att-src="image_data_uri(o.hr_signature)"
+                                         style="height:150px; width:200px; text-align:center; "/>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_visa_request_letter" model="ir.actions.report">
+        <field name="name">Visa Request Letter</field>
+        <field name="model">kuec.visa.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_kuec_letters.visa_request_letter</field>
+        <field name="report_file">kaz_kuec_letters.visa_request_letter</field>
+        <field name="print_report_name">'KUEC Visa Request - %s - %s' % (object.sequence, object.date)</field>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="kaz_kuec_report_base.paperformat_kuec_letters"/>
+    </record>
+
+</odoo>

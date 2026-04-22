@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="KpiCard">
+        <div class="kpi-card" t-attf-class="kpi-{{props.bgColor}}">
+            <span class="kpi-card-value" t-out="props.value"/>
+            <span class="kpi-card-text" t-out="props.text"/>
+            <i class="fa kpi-icon" t-att-class="props.iconClass"/>
+        </div>
+    </t>
+</templates>

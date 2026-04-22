@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ===================================================================================
+         Record ID: service_receipt_category
+         Model:     ir.module.category
+         Purpose:
+             Defines a custom module category under "Settings > Users & Companies > Groups".
+             This category groups all security roles related to Service Receipt Notes (SRNs).
+
+         Fields:
+             - name: The label displayed in the UI.
+             - sequence: Sort order in the dropdown or list of module categories.
+    =================================================================================== -->
+    <record model="ir.module.category" id="service_receipt_category">
+        <field name="name">Service Receipt (ANK/KUEC)</field>
+        <field name="sequence">5</field>
+    </record>
+
+    <!-- ===================================================================================
+         Record ID: srn_end_user
+         Model:     res.groups
+         Group Name: SRN User
+         Purpose:
+             Defines the base-level access group for end-users of the SRN module.
+             These users can view and interact with their own Service Receipt documents.
+
+         Fields:
+             - name: The display name of the group in UI.
+             - category_id: Assigns the group to the "Service Receipt" category.
+             - implied_ids: Inherits from `base.group_user`, meaning:
+                 - Users in this group also gain "Internal User" rights.
+                 - Required for accessing standard menus and model access rights.
+    =================================================================================== -->
+    <record id="srn_end_user" model="res.groups">
+        <field name="name">SRN User</field>
+        <field name="category_id" ref="service_receipt_category"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+    </record>
+
+    <!-- ===================================================================================
+         Record ID: srn_creator
+         Model:     res.groups
+         Group Name: SRN Creator
+         Purpose:
+             Elevated role that allows users to create new SRNs (Service Receipt Notes).
+             Inherits permissions from `srn_end_user`.
+
+         Fields:
+             - name: The UI name of the group.
+             - category_id: Groups it under "Service Receipt".
+             - implied_ids: Inherits rights from `srn_end_user`, which includes:
+                 - Viewing, interacting with own documents.
+                 - Standard user access inherited via transitive chain.
+    =================================================================================== -->
+    <record id="srn_creator" model="res.groups">
+        <field name="name">SRN Creator</field>
+        <field name="category_id" ref="service_receipt_category"/>
+        <field name="implied_ids" eval="[Command.link(ref('skit_srn_receipt.srn_end_user'))]"/>
+    </record>
+
+    <!-- ===================================================================================
+         Record ID: srn_admin
+         Model:     res.groups
+         Group Name: SRN Admin
+         Purpose:
+             Highest privilege level for SRN module.
+             Admins can validate, edit, delete, or manage all SRNs regardless of ownership.
+
+         Fields:
+             - name: UI label for the group.
+             - category_id: Classifies the group under the "Service Receipt" category.
+             - implied_ids: Inherits from `srn_creator`, which in turn implies `srn_end_user` and `base.group_user`.
+                 - Ensures SRN Admins have full access chain.
+    =================================================================================== -->
+    <record id="srn_admin" model="res.groups">
+        <field name="name">SRN Admin</field>
+        <field name="category_id" ref="service_receipt_category"/>
+        <field name="implied_ids" eval="[Command.link(ref('skit_srn_receipt.srn_creator'))]"/>
+    </record>
+
+    <record id="company_rule" model="ir.rule">
+        <field name="name">Company rule SRN</field>
+        <field name="model_id" ref="model_service_receipt"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+</odoo>

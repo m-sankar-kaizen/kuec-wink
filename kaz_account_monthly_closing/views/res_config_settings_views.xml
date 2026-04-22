@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_config_settings_account_monthly_closing" model="ir.ui.view">
+        <field name="name">res.config.settings.account.monthly.closing</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert inside Accounting App Settings -->
+            <xpath expr="//app[@name='account']" position="inside">
+
+                <!-- New Settings Block -->
+                <block title="Monthly Closing" name="monthly_closing_settings" invisible="company_code != 'KUEC'">
+
+                    <setting string="Sales Locked Up To" help="Indicates locked sales invoices period">
+                        <field name="br_sale_lock_day"/>
+                    </setting>
+
+                    <setting string="Lock Mode" help="Determines whether locking is applied on the previous month or the current month">
+                        <field name="br_lock_mode"/>
+                    </setting>
+
+                    <setting string="Purchases Locked Up To" help="Indicates locked purchase invoices period">
+                        <field name="br_purchase_lock_day"/>
+                    </setting>
+
+                    <setting/>
+
+                    <setting string="Full Ledger Locked Up To" help="Indicates fully locked accounting period">
+                        <field name="br_gl_lock_day"/>
+                    </setting>
+
+                </block>
+
+            </xpath>
+        </field>
+    </record>
+</odoo>

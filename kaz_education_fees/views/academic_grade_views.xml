@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ======================================================
+    Form View: academic.grade
+    This view displays a single academic grade record. It shows
+    the grade name in a simple form layout.
+    ======================================================= -->
+    <record id="academic_grade_form_view" model="ir.ui.view">
+        <field name="name">academic.grade.form</field>
+        <field name="model">academic.grade</field>
+        <field name="arch" type="xml">
+            <form string="Academic Grade">
+                <sheet>
+                    <group>
+                        <!-- Field to store the grade name (e.g., Grade 1, KG2) -->
+                        <field name="name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ======================================================
+    Tree View: academic.grade
+    This view lists all academic grades in a tabular format,
+    displaying just the name for simplicity.
+    ======================================================= -->
+    <record id="academic_grade_tree_view" model="ir.ui.view">
+        <field name="name">academic.grade.list</field>
+        <field name="model">academic.grade</field>
+        <field name="arch" type="xml">
+            <list string="Academic Grades">
+                <!-- Column for displaying grade name -->
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ======================================================
+    Search View: academic.grade
+    Enables filtering/searching academic grades based on their
+    name. Used in both list and form views.
+    ======================================================= -->
+    <record id="academic_grade_search_view" model="ir.ui.view">
+        <field name="name">academic.grade.search</field>
+        <field name="model">academic.grade</field>
+        <field name="arch" type="xml">
+            <search string="Search Academic Grades">
+                <!-- Search criteria: name -->
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ======================================================
+    Action Window: academic.grade
+    Action that opens the academic grade model in list/form view.
+    Used in menu items and other navigation components.
+    ======================================================= -->
+    <record id="academic_grade_act_window" model="ir.actions.act_window">
+        <field name="name">Academic Grades</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">academic.grade</field>
+        <field name="view_mode">list,form</field>
+        <!-- Link the default search view for consistency -->
+        <field name="search_view_id" ref="academic_grade_search_view"/>
+    </record>
+
+</odoo>

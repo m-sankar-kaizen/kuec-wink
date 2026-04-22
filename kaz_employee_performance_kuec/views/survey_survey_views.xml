@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="survey_survey_view_form" model="ir.ui.view">
+        <field name="name">survey.survey.view.form.inherit.kaz.employee.performance.kuec</field>
+        <field name="model">survey.survey</field>
+        <field name="inherit_id" ref="survey.survey_survey_view_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                        invisible="not performance_id" class="oe_stat_button" type="object"
+                        name="action_open_goal" icon="fa-file">
+                    <field name="performance_id" invisible="1"/>
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Goal Evaluation</span>
+                    </div>
+                </button>
+            </div>
+        </field>
+    </record>
+
+    <record id="action_survey_form" model="ir.actions.act_window">
+        <field name="name">Surveys</field>
+        <field name="res_model">survey.survey</field>
+        <field name="view_mode">kanban,list,form,activity</field>
+        <field name="domain">[('performance_id', '!=', False), ('survey_type', '=', 'appraisal')]</field>
+    </record>
+
+    <menuitem id="menu_goal_survey"
+              name="Goal Surveys"
+              parent="kaz_employee_performance_kuec.menu_performance_evaluation_root"
+              action="action_survey_form"
+              sequence="2"/>
+
+</odoo>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record model="ir.actions.act_window"
+            id="action_job_position_request">
+        <field name="name">Job Position Request</field>
+        <field name="res_model">hr.job.position.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new record!
+            </p>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window"
+            id="action_hr_recruitment_requests">
+        <field name="name">Recruitment Requests</field>
+        <field name="res_model">hr.recruitment.requests</field>
+        <field name="context">{'default_is_off_cycle_staffing': True}</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new record!
+            </p>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window"
+            id="action_off_cycle_staffing_reason">
+        <field name="name">Off-Cycle Staffing Reason</field>
+        <field name="res_model">off_cycle.staffing.reason</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new record!
+            </p>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window"
+            id="action_hr_staffing_plan">
+        <field name="name">Staffing Plan</field>
+        <field name="res_model">hr.staffing.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new record!
+            </p>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window"
+            id="action_hr_master_staffing_plan">
+        <field name="name">Yearly Manpower Plan</field>
+        <field name="res_model">hr.master.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new record!
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_recruitment_request"
+        name="Recruitment Requests"
+        action="action_hr_recruitment_requests"
+        parent="hr_recruitment.menu_hr_recruitment_root"
+        sequence="4"
+    />
+    <menuitem
+        id="menu_master_staffing_plan"
+        name="Yearly Manpower Plan"
+        action="action_hr_master_staffing_plan"
+        groups="kaz_kuec_recruitment_staffing_plan.group_staffing_master"
+        parent="hr_recruitment.menu_crm_case_categ0_act_job"
+        sequence="49"
+    />
+
+
+    <menuitem
+        id="menu_staffing_plan"
+        name="Staffing Plan"
+        action="action_hr_staffing_plan"
+        parent="hr_recruitment.menu_crm_case_categ0_act_job"
+        sequence="50"
+    />
+
+    <menuitem
+        id="menu_off_cycle_staffing_reason"
+        name="Off-Cycle Staffing Reason"
+        action="action_off_cycle_staffing_reason"
+        parent="hr_recruitment.menu_hr_recruitment_configuration"
+        sequence="50"
+    />
+    <menuitem
+        id="menu_hr_recruitment_request"
+        name="Job Position Request"
+        action="action_job_position_request"
+        parent="hr_recruitment.menu_hr_recruitment_configuration"
+        sequence="50"
+    />
+</odoo>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <block name="work_organization_setting_container" position="before">
+                <field name="company_code" invisible="1"/>
+                <block title="CEO Configuration" name="employee_goal_config" invisible="company_code not in ['KUEC']">
+                    <setting help="Default CEO Job, will be used as reference for offboarding/onboarding approvals"
+                             title="CEO Job">
+                        <field name="ceo_job_id"/>
+                    </setting>
+                </block>
+            </block>
+        </field>
+    </record>
+</odoo>

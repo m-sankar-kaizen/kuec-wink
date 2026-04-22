@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+<!--    TODO: DO THIS HIDE PART AFTER CONSULTING WITH CLIENT-->
+    <!-- Restrict "My Attendances" menu to HR Attendance Users -->
+<!--    <record id="hr_attendance.menu_hr_attendance_my_attendances" model="ir.ui.menu">-->
+<!--        <field name="groups_id" eval="[Command.set([ref('ankabout_attendance_api.group_no_attendance_access')])]"/>-->
+<!--    </record>-->
+
+<!--    &lt;!&ndash; Restrict "Attendances Overview" menu to HR Attendance Users &ndash;&gt;-->
+<!--    <record id="hr_attendance.menu_hr_attendance_attendances_overview" model="ir.ui.menu">-->
+<!--        <field name="groups_id" eval="[Command.set([ref('ankabout_attendance_api.group_no_attendance_access')])]"/>-->
+<!--    </record>-->
+
+    <!-- Restrict "Kiosk Mode" menu to HR Attendance Users -->
+    <record id="hr_attendance.menu_action_open_form" model="ir.ui.menu">
+        <field name="groups_id" eval="[Command.set([ref('ankabout_attendance_api.group_no_attendance_access')])]"/>
+    </record>
+
+</odoo>

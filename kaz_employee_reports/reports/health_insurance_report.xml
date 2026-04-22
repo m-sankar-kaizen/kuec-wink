@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+        QWeb Template: Health Insurance Report
+        Generates a printable report for an employee's Health Insurance Request,
+        including both applicant and dependents' information.
+
+        Uses:
+        - Internal layout: `web.internal_layout` for proper headers/footers
+        - Custom header image (university/company branding)
+        - Tables for structured data
+        - Right-aligned informational notes
+        - Future scope includes image attachments
+
+        Source Model: health.insurance
+    -->
+    <template id="health_insurance_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.internal_layout">
+                    <!--
+                        HEADER IMAGE
+                        Organization banner at the top
+                    -->
+
+                    <header>
+                        <div>
+                            <img t-attf-src="/kaz_employee_reports/static/image/image.png"
+                                 style="height:200px; width:100%; "/>
+                        </div>
+                    </header>
+                    <div class="page">
+                        <div class="container">
+                            <h1 class="text-center">Health Insurance Request</h1>
+                            <br/>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h3>Tips</h3>
+                                    <ul>
+                                        <li>Dependants information are gathered from ADERP system.
+
+
+                                        </li>
+                                        <li>If you need to modify, please update in ADERP system; once approved, it will
+                                            automatically reflect here.
+                                        </li>
+                                        <li>Dependents age should be less than 18 years old ﴾ kids﴿.</li>
+                                        <li>KU is covering up to 4 kids, extra kids will be covered by the employee’s
+                                            salary.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <table class="table">
+
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">
+                                            Date:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.date"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Request No:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.ref"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Employee Name:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.name"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Employee ID:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.emp_id"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Position:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.position"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Department:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.department"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Email:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.email"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Mobile:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.mobile"/>
+                                        </td>
+
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="mt-3">
+                                <h3 class="padding-3">Applicant’s Personal Information</h3>
+                                <table class="table mt-3">
+                                    <tbody>
+                                        <tr>
+                                            <th>
+                                                Full Name:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.full_name"/>
+
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <th>
+                                                Father`s Name:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.father_name"/>
+
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">
+                                                Marital Status:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.marital_status"/>
+
+                                            </td>
+                                            <th scope="row">
+                                                Contact No:
+                                            </th>
+                                            <td>
+
+                                                <span t-field="o.contact_no"/>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">
+                                                Email‐ID:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.email_id"/>
+
+                                            </td>
+                                            <th scope="row">
+                                                Nationality:
+                                            </th>
+                                            <td>
+
+                                                <span t-field="o.nationality"/>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">
+                                                Passport No.:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.passport_num"/>
+
+                                            </td>
+                                            <th scope="row">
+                                                Date of Birth
+                                                ﴾mm/dd/yyyy﴿:
+                                            </th>
+                                            <td>
+
+                                                <span t-field="o.date_of_birth"/>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">
+                                                Type of Request.:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.type_of_request"/>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+
+                                </table>
+                            </div>
+                            <div class="mt-3">
+                                <h3 class="padding-3">Dependants Information</h3>
+                                <table class="table mt-3">
+                                    <tbody>
+                                        <tr>
+                                            <th>
+                                                No. of children:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.num_of_children"/>
+
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <th>
+                                                Children Age﴾Put each
+                                                child age comma﴾,﴿
+                                                separated﴿:
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.children_age"/>
+
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">
+                                                Spouse Name :
+                                            </th>
+
+                                            <td>
+
+                                                <span t-field="o.spouse_name"/>
+
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+
+                                </table>
+                            </div>
+                            <div class="mt-3 text-center">
+                                <h5>No data found
+                                    Add Attachment
+                                    Spouse Name Shazia Anjum
+                                    Note:KU is covering up to 4 kids. Dependents age should be less than 18 years old ﴾
+                                    kids﴿
+                                </h5>
+                            </div>
+<!--                            <div class="mt-3 text-center">-->
+<!--                                <h3>Attachment Information-->
+<!--                                </h3>-->
+<!--                                <img t-att-src="image_data_uri(o.attach)"-->
+<!--                                     style="height:150px; width:200px; text-align:center; "/>-->
+<!--                            </div>-->
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!--
+        Report Action: Health Insurance Report
+        Allows the generation of QWeb PDF report from `health.insurance` model.
+
+        - Report is accessible via button, form view print, or menu if bound.
+        - File is dynamically named using the `object.name` field.
+        - Report visibility restricted to group `group_hr_person`.
+    -->
+
+
+    <record id="action_report_health_insurance_report" model="ir.actions.report">
+        <field name="name">Health Insurance</field>
+        <field name="model">health.insurance</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.health_insurance_report</field>
+        <field name="report_file">kaz_employee_reports.health_insurance_report</field>
+        <field name="print_report_name">'Health Insurance - %s' % object.name.name</field>
+        <field name="binding_model_id" ref="model_health_insurance"/>
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(4, ref('kaz_employee_reports.group_hr_person'))]"/>
+    </record>
+
+</odoo>

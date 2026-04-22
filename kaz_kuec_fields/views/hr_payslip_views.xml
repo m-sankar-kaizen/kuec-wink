@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_hr_payslip_form" model="ir.ui.view">
+        <field name="name">hr.payslip.form</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="ank_payslip_report.view_hr_payslip_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_print_ank_payslip']" position="after">
+                <field name="company_code" invisible="1"/>
+                <field name="employee_bank_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//button[@name='action_print_ank_payslip_ank']" position="replace">
+                <button
+                    string="ANK Payslip"
+                    name="action_print_ank_payslip_ank"
+                    type="object"
+                    invisible="company_code == 'KUEC'"
+                />
+                <button
+                    string="KUEC Payslip"
+                    name="action_print_payslip_kuec"
+                    type="object"
+                    invisible="company_code != 'KUEC'"
+                />
+            </xpath>
+            <xpath expr="//button[@name='action_print_ank_payslip']" position="attributes">
+                <attribute name="invisible">company_code == 'KUEC'</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

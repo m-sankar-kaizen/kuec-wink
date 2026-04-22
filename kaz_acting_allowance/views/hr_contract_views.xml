@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- ========== View Inheritance for HR Contract Form ========== -->
+    <record id="hr_contract_view_form_inherit_acting_allowance" model="ir.ui.view">
+        <field name="name">hr.contract.view.form.inherit.acting.allowance</field>
+        <field name="model">hr.contract</field>
+
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='educational_benefit']" position="after">
+
+                <!-- Readonly field showing allowance amount linked to acting post -->
+                <field name="acting_allowance_amount"
+                       string="Acting allowance"
+                       widget="monetary"/>
+                <!-- Hidden Many2one linking to the allowance record -->
+                <field name="acting_allowance_id" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

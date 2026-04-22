@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Inherit the HR Payslip Form View.
+        This customization adds two custom print buttons after the default "Print Payslip" button.
+        - KU Payslip: Calls `action_print_ank_payslip`
+        - ANK Payslip: Calls `action_print_ank_payslip_ank`
+    -->
+
+    <record id="view_hr_payslip_form" model="ir.ui.view">
+        <field name="name">hr.payslip.form</field> <!-- View name -->
+        <field name="model">hr.payslip</field> <!-- Model the view is for -->
+        <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/> <!-- Inherit original form -->
+        <field name="arch" type="xml">
+            <!-- Add buttons after the existing action_print_payslip button -->
+            <xpath expr="//button[@name='action_print_payslip']" position="after">
+                
+                <!-- Button to print KU Payslip (custom format) -->
+                <button 
+                    string="KU Payslip"
+                    name="action_print_ank_payslip"
+                    type="object"
+                />
+
+                <!-- Button to print ANK Payslip with company logo -->
+                <button 
+                    string="ANK Payslip"
+                    name="action_print_ank_payslip_ank"
+                    type="object"
+                />
+                
+            </xpath>
+            <button name="action_payslip_paid" position="attributes">
+                <attribute name="invisible">state != 'done'</attribute>
+            </button>
+        </field>
+    </record>
+
+</odoo>

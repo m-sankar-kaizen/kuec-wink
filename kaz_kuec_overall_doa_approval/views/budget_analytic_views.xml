@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_budget_analytic_form" model="ir.ui.view">
+        <field name="name">budget.analytic.form.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">budget.analytic</field>
+        <field name="inherit_id" ref="account_budget.view_budget_analytic_form"/>
+        <field name="arch" type="xml">
+
+            <form position="attributes">
+                <attribute name="js_class">readonly_form_view</attribute>
+            </form>
+
+
+            <button name="action_budget_draft" position="before">
+                <field name="master_plan_id" invisible="1"/>
+                <field name="is_readonly" invisible="1"/>
+                <button name="action_lock"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department,account.group_account_basic"
+                        class="btn"
+                        string="Lock"
+                        icon="fa-lock"
+                        invisible="is_readonly or not master_plan_id"
+                        type="object"/>
+                <button name="action_unlock"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department,account.group_account_basic"
+                        class="btn"
+                        string="Unlock"
+                        icon="fa-unlock"
+                        invisible="not is_readonly or not master_plan_id"
+                        type="object"/>
+            </button>
+
+        </field>
+    </record>
+</odoo>

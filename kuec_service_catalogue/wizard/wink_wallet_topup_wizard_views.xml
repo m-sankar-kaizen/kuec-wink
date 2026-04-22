@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Top-Up Wizard views are defined in views/kuec_wallet_views.xml.
+     This file is intentionally minimal — it exists only to satisfy the
+     manifest data list entry for the wizard directory. -->
+<odoo/>

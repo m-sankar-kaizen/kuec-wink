@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- =====================================================================================
+         Record ID: purchase_order_view_form
+         Purpose:    Inherit and extend the standard purchase order form view to add a
+                     service-related stat button.
+         Model:      purchase.order (Purchase Order)
+         Parent View: purchase.purchase_order_form
+
+         Feature Added:
+             - A stat button ("SRN") displayed in the top header (`oe_button_box`)
+               showing the count of linked incoming service receipts (`incoming_service_count`).
+             - Clicking the button invokes the method `action_view_product`.
+             - The button is only visible when `incoming_service_count > 0`.
+             - Visible only to users in group `skit_srn_receipt.srn_end_user`.
+
+         UI Placement:
+             - The button is inserted inside the `div` with class `oe_button_box`,
+               which is used for stat buttons like delivery count, invoices, etc.
+
+         Notes:
+             - The use of `fa-truck` icon implies a logistic/service-related action.
+             - Button uses `statinfo` widget to render numeric value.
+     ===================================================================================== -->
+
+    <record id="purchase_order_view_form" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- =========================================================
+                 XPath Target:
+                     Locate the div element with class 'oe_button_box'.
+                 Position:
+                     Insert the button *inside* this block.
+             ========================================================= -->
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+
+                <!-- =============================
+                     Stat Button: Service Receipts
+                     =============================
+                     - Triggers method `action_view_product`.
+                     - Icon: FontAwesome "truck".
+                     - Conditionally visible:
+                         Shown only if incoming_service_count > 0.
+                     - Group restriction:
+                         Only visible to users in group `srn_end_user`.
+                 -->
+                <button type="object"
+                        name="action_view_product"
+                        class="oe_stat_button"
+                        icon="fa-truck"
+                        invisible="incoming_service_count == 0"
+                        groups="skit_srn_receipt.srn_end_user">
+                    <!-- Stat Info Field: Displays numeric count -->
+                    <field name="incoming_service_count" widget="statinfo" string="SRN"/>
+                </button>
+
+            </xpath>
+        </field>
+    </record>
+</odoo>

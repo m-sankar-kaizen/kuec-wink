@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- eWallet: Transaction list/form, partner balance field, top-up wizard view, coordinator menu -->
+<odoo>
+
+    <!-- ── Wallet Transaction: List View ─────────────────────────────────── -->
+    <record id="kuec_wallet_transaction_list_view" model="ir.ui.view">
+        <field name="name">kuec.wallet.transaction.list</field>
+        <field name="model">kuec.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <list string="eWallet Transactions"
+                  create="0" edit="0" delete="0"
+                  decoration-danger="state == 'cancelled'"
+                  decoration-success="transaction_type == 'topup' and state == 'done'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="transaction_type" string="Type"/>
+                <field name="description"/>
+                <field name="order_id" optional="show"/>
+                <field name="amount" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="move_id" string="Journal Entry" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'cancelled'"/>
+                <field name="created_by" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Wallet Transaction: Form View ─────────────────────────────────── -->
+    <record id="kuec_wallet_transaction_form_view" model="ir.ui.view">
+        <field name="name">kuec.wallet.transaction.form</field>
+        <field name="model">kuec.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <form string="eWallet Transaction" create="0">
+                <header>
+                    <!-- State shown as badge, not workflow arrow -->
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="done"
+                           statusbar_colors='{"cancelled": "danger"}'/>
+                </header>
+                <sheet>
+                    <!-- ── Stat button: Journal Entry ── -->
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-book"
+                                type="object" name="action_view_move"
+                                invisible="not move_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Journal Entry</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- ── Title row: type label + amount badge ── -->
+                    <div class="oe_title d-flex align-items-center justify-content-between mb-3">
+                        <h2 class="mb-0">
+                            <span invisible="transaction_type != 'topup'"
+                                  style="color:#198754;">
+                                <i class="fa fa-arrow-up me-1" title="Top-Up"/> Top-Up
+                            </span>
+                            <span invisible="transaction_type != 'payment'"
+                                  style="color:#dc3545;">
+                                <i class="fa fa-arrow-down me-1" title="Payment"/> Wallet Payment
+                            </span>
+                            <span invisible="transaction_type not in ['refund','adjustment']">
+                                <i class="fa fa-refresh me-1" title="Refund / Adjustment"/> <field name="transaction_type" readonly="1"/>
+                            </span>
+                        </h2>
+                        <!-- Amount badge — green for credit, red for debit -->
+                        <h2 class="mb-0">
+                            <field name="currency_id" invisible="1"/>
+                            <span invisible="amount &lt;= 0"
+                                  class="badge rounded-pill"
+                                  style="background:#e8f5e9;color:#198754;font-size:1.1rem;padding:.4rem .9rem;">
+                                + <field name="amount" readonly="1"/>
+                            </span>
+                            <span invisible="amount &gt;= 0"
+                                  class="badge rounded-pill"
+                                  style="background:#fdecea;color:#dc3545;font-size:1.1rem;padding:.4rem .9rem;">
+                                <field name="amount" readonly="1"/>
+                            </span>
+                        </h2>
+                    </div>
+
+                    <group>
+                        <group string="Transaction Details">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="date" readonly="1"/>
+                            <field name="transaction_type" readonly="1"/>
+                            <field name="description" readonly="1"/>
+                            <field name="order_id" readonly="1"
+                                   domain="[('partner_id', '=', partner_id)]"/>
+                            <field name="created_by" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                        </group>
+                        <group string="Accounting">
+                            <field name="amount" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                            <field name="move_id" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- ── Status alert for cancelled records ── -->
+                    <div class="alert alert-danger mt-3" role="alert"
+                         invisible="state != 'cancelled'">
+                        <i class="fa fa-ban me-2" title="Cancelled"/>
+                        This transaction has been <strong>cancelled</strong>.
+                        The journal entry (if any) must be reversed manually.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Wallet Transaction: Search View ───────────────────────────────── -->
+    <record id="kuec_wallet_transaction_search_view" model="ir.ui.view">
+        <field name="name">kuec.wallet.transaction.search</field>
+        <field name="model">kuec.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <search string="Search Transactions">
+                <field name="partner_id"/>
+                <field name="description"/>
+                <field name="order_id"/>
+                <filter string="Top-Ups" name="filter_topup"
+                        domain="[('transaction_type','=','topup')]"/>
+                <filter string="Payments" name="filter_payment"
+                        domain="[('transaction_type','=','payment')]"/>
+                <filter string="Refunds" name="filter_refund"
+                        domain="[('transaction_type','=','refund')]"/>
+                <filter string="Cancelled" name="filter_cancelled"
+                        domain="[('state','=','cancelled')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Customer" name="group_partner"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="Type" name="group_type"
+                            context="{'group_by': 'transaction_type'}"/>
+                    <filter string="Date" name="group_date"
+                            context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Wallet Transaction: Window Action ─────────────────────────────── -->
+    <record id="action_kuec_wallet_transactions" model="ir.actions.act_window">
+        <field name="name">eWallet Transactions</field>
+        <field name="res_model">kuec.wallet.transaction</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="kuec_wallet_transaction_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No wallet transactions yet.
+            </p>
+            <p>
+                Use the top-up wizard on a customer record to credit their eWallet.
+            </p>
+        </field>
+    </record>
+
+    <!-- ── Top-Up Wizard: Form View ──────────────────────────────────────── -->
+    <record id="wink_wallet_topup_wizard_form_view" model="ir.ui.view">
+        <field name="name">wink.wallet.topup.wizard.form</field>
+        <field name="model">wink.wallet.topup.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Top-Up eWallet">
+                <sheet>
+                    <!-- Top-Up Type selector -->
+                    <group>
+                        <field name="topup_type" widget="radio" options="{'horizontal': True}"/>
+                    </group>
+
+                    <group>
+                        <group string="Customer">
+                            <field name="partner_id"/>
+                            <field name="current_balance" readonly="1"/>
+                        </group>
+                        <group string="Amount">
+                            <field name="amount"/>
+                            <field name="currency_id"/>
+                            <field name="description"
+                                   placeholder="Memo / reason for this top-up"
+                                   help="For Promotional Credit this is also used as the reason on the journal entry."/>
+                        </group>
+                    </group>
+
+                    <!-- Prepaid Credit: payment journal -->
+                    <group string="Payment Source" invisible="topup_type != 'payment'">
+                        <field name="journal_id"
+                               required="topup_type == 'payment'"
+                               domain="[('type','in',['bank','cash']),('is_ewallet_journal','=',False)]"
+                               options="{'no_create': True}"
+                               help="Bank, cash, or payment gateway journal from which funds were received."/>
+                    </group>
+
+                    <!-- Promotional Credit fields -->
+                    <group string="Promotional Credit Details" invisible="topup_type != 'gift'">
+                        <field name="expense_account_id"
+                               required="topup_type == 'gift'"
+                               options="{'no_create': True}"
+                               help="Expense account to debit (e.g. Customer Gifts, Loyalty Rewards, Marketing Expense)."/>
+                        <field name="gift_journal_id"
+                               required="topup_type == 'gift'"
+                               options="{'no_create': True}"
+                               help="General journal for posting the expense entry. Default is set in Settings → WINK → eWallet."/>
+                    </group>
+
+                    <!-- JV preview: Prepaid Credit (positive) -->
+                    <div class="alert alert-info" role="alert" invisible="topup_type != 'payment'">
+                        <strong>Journal Entry (Prepaid Credit):</strong><br/>
+                        Positive amount: DR Bank/Cash &#160;&#160; CR WINK eWallet Liability (WEWL)<br/>
+                        Negative amount (overdraft): DR WINK eWallet Liability &#160;&#160; CR Bank/Cash<br/>
+                        <small class="text-muted">Negative values are allowed — use for wallet deductions / overdraft adjustments.</small>
+                    </div>
+
+                    <!-- JV preview: Promotional Credit -->
+                    <div class="alert alert-warning" role="alert" invisible="topup_type != 'gift'">
+                        <strong>Journal Entry (Promotional Credit):</strong><br/>
+                        DR  Expense Account (selected above)<br/>
+                        &#160;&#160;&#160;CR  WINK eWallet Liability (WEWL)<br/>
+                        <small class="text-muted">No cash or bank movement — cost is recognized as a company expense.</small>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_topup" string="Confirm Top-Up"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Top-Up Wizard: Window Action ──────────────────────────────────── -->
+    <record id="action_wink_wallet_topup_wizard" model="ir.actions.act_window">
+        <field name="name">Top-Up eWallet</field>
+        <field name="res_model">wink.wallet.topup.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="wink_wallet_topup_wizard_form_view"/>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ── res.partner: Inject eWallet tab ───────────────────────────────── -->
+    <record id="res_partner_form_kuec_ewallet" model="ir.ui.view">
+        <field name="name">res.partner.form.kuec.ewallet</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="eWallet" name="kuec_ewallet"
+                      groups="kuec_portal_foundation.group_kuec_coordinator,kuec_portal_foundation.group_kuec_admin">
+                    <group>
+                        <group string="Balance">
+                            <field name="wallet_currency_id" invisible="1"/>
+                            <field name="wink_wallet_balance" readonly="1"/>
+                        </group>
+                        <group string="Actions">
+                            <button name="%(action_wink_wallet_topup_wizard)d"
+                                    string="Top-Up Wallet"
+                                    type="action"
+                                    class="btn-primary"
+                                    context="{'default_partner_id': id}"/>
+                        </group>
+                    </group>
+                    <field name="wallet_transaction_ids" readonly="1" nolabel="1">
+                        <list string="Transactions" decoration-danger="state == 'cancelled'">
+                            <field name="date"/>
+                            <field name="transaction_type"/>
+                            <field name="description"/>
+                            <field name="order_id" optional="show"/>
+                            <field name="amount" sum="Balance"/>
+                            <field name="currency_id" column_invisible="True"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Accounting > Customers: Wallet Payments ────────────────────────── -->
+    <record id="action_kuec_wallet_payments" model="ir.actions.act_window">
+        <field name="name">Wallet Payments</field>
+        <field name="res_model">kuec.wallet.transaction</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('transaction_type','=','payment')]</field>
+        <field name="context">{'default_transaction_type': 'payment'}</field>
+        <field name="search_view_id" ref="kuec_wallet_transaction_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No wallet payments yet.</p>
+            <p>Wallet payments appear here when a customer's eWallet balance is used to settle an invoice.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_account_wallet_payments"
+              name="Wallet Payments"
+              parent="account.menu_finance_receivables"
+              action="action_kuec_wallet_payments"
+              sequence="99"
+              groups="account.group_account_user"/>
+
+    <!-- ── account.journal: eWallet flag field ───────────────────────────────── -->
+    <record id="account_journal_form_kuec_ewallet" model="ir.ui.view">
+        <field name="name">account.journal.form.kuec.ewallet</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <page name="advanced_settings" position="inside">
+                <group string="WINK eWallet">
+                    <field name="is_ewallet_journal"
+                           help="Enable to designate this journal as the WINK eWallet journal. Only one journal per company should have this enabled."/>
+                </group>
+            </page>
+        </field>
+    </record>
+
+    <!-- ── account.move: "Pay with eWallet" button on customer invoice ──────── -->
+    <record id="account_move_form_kuec_wallet_payment" model="ir.ui.view">
+        <field name="name">account.move.form.kuec.wallet.payment</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <button id="account_invoice_payment_btn" position="after">
+                <button name="action_open_wallet_payment"
+                        string="Pay with eWallet"
+                        type="object"
+                        class="btn-primary"
+                        icon="fa-wallet"
+                        invisible="move_type != 'out_invoice' or state != 'posted' or payment_state not in ['not_paid', 'partial']"
+                        groups="kuec_portal_foundation.group_kuec_coordinator,kuec_portal_foundation.group_kuec_admin"
+                        help="Settle this invoice using the customer's eWallet balance."/>
+            </button>
+        </field>
+    </record>
+
+
+</odoo>

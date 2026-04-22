@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<odoo noupdate='1'>
+    <record id="ir_seq_education_fees" model="ir.sequence">
+        <field name="name">Education Fees</field>
+        <field name="code">education.fees.seq</field>
+        <field name="prefix">EDU/</field>
+        <field name="padding">4</field>
+        <field name="number_increment">1</field>
+        <field name="number_next_actual">1</field>
+        <field name="implementation">standard</field>
+    </record>
+</odoo>

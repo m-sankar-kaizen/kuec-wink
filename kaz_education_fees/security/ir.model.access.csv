@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+education_fees_id,education_fees_name,model_education_fees,,1,1,1,1
+academic_grade,academic_grade,model_academic_grade,,1,1,1,1
+academic_year,academic_year,model_academic_year,,1,1,1,1
+res_school,res_school,model_res_school,,1,1,1,1
+supporting_documents_fees,supporting.documents.fees,model_supporting_documents_fees,,1,1,1,1

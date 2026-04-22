@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    View Extension and Action Definition for Planned vs Actual Attendance
+
+    This XML customizes the HR Attendance tree view to display additional fields
+    related to planned working hours and employee lateness. It also introduces
+    a new action and menu item to access this enhanced view.
+
+    Components:
+
+    1. view_attendance_tree:
+       - Inherits the default attendance tree view.
+       - Adds backend-computed fields: planned_check_in, planned_check_out, flexible_check_in.
+       - Displays user-friendly fields: planned_check_in_display, planned_check_out_display.
+       - Adds a 'late_in' field using float_time widget.
+
+    2. hr_attendance_action:
+       - Creates a new window action named "Planned VS Actual Attendances".
+       - Uses the customized tree view.
+       - Applies a context filter to show today's records by default.
+
+    3. menu_hr_attendance_planned_vs_actual_attendances:
+       - Adds a menu item visible only to users in the group_planned_admin group.
+       - Launches the new action for comparing planned and actual attendances.
+    -->
+
+    <record id="view_attendance_tree" model="ir.ui.view">
+        <field name="name">hr.attendance.tree.view.inherit.flexible.working.hours</field>
+        <field name="model">hr.attendance</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="hr_attendance.view_attendance_tree"/>
+        <field name="arch" type="xml">
+            <field name="check_in" position="after">
+                <field name="planned_check_in" column_invisible="1"/>
+                <field name="flexible_check_in" column_invisible="1"/>
+                <field name="planned_check_in_display"/>
+            </field>
+            <field name="check_out" position="after">
+                <field name="planned_check_out" column_invisible="1"/>
+                <field name="planned_check_out_display"/>
+                <field name="late_in" widget="float_time"/>
+                <field name="resource_calendar_id" column_invisible="1"/>
+                <field name="hours_per_day"/>
+            </field>
+            <field name="worked_hours" position="attributes">
+                <attribute name="decoration-danger">check_in and check_out and worked_hours &lt; hours_per_day</attribute>
+            </field>
+        </field>
+    </record>
+
+    <record id="hr_attendance_action" model="ir.actions.act_window">
+        <field name="name">Planned VS Actual Attendances</field>
+        <field name="res_model">hr.attendance</field>
+        <field name="view_mode">list</field>
+        <field name="context">{"search_default_today":1, 'create': False, 'delete': False, 'edit': False}</field>
+        <field name="view_id" ref="view_attendance_tree"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                No attendance records found
+            </p><p>
+                The attendance records of your employees will be displayed here.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="hr_attendance.menu_hr_attendance_view_attendances"
+              name="Attendances"
+              parent="hr_attendance.menu_hr_attendance_root"
+              sequence="1"
+              groups="hr_attendance.group_hr_attendance_own_reader"/>
+
+    <menuitem id="menu_flexi_hr_attendance_view_attendances"
+              name="Attendances"
+              parent="hr_attendance.menu_hr_attendance_view_attendances"
+              sequence="1"
+              groups="hr_attendance.group_hr_attendance_own_reader"
+              action="hr_attendance.hr_attendance_action"/>
+
+    <menuitem id="menu_hr_attendance_planned_vs_actual_attendances"
+              name="Planned VS Actual Attendances"
+              parent="hr_attendance.menu_hr_attendance_view_attendances"
+              sequence="2"
+              groups="hr_attendance.group_hr_attendance_own_reader"
+              action="kaz_flexible_working_hours.hr_attendance_action"/>
+</odoo>

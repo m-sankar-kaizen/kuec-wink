@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="TenderView">
+        <div class="container py-4 px-4">
+            <!-- Header Row -->
+            <div class="row mb-4">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <div class="mb-2">
+                        <div class="mb-2 d-flex gap-2">
+                            <h2 class="fw-bold text-start" t-out="displayName"/>
+                            <span t-if="isExclusive"
+                                  class="badge height-26px bg-warning text-dark d-flex align-items-center">
+                                <i class="fa fa-unlock me-1"/>
+                                Exclusive
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                            <h3 class="fw-bold text-start mb-1" t-out="displayTitle"/>
+                        </div>
+                        <div>
+                            <p class="card-text mb-1">
+                                State:
+                                <span class="fw-bold" t-attf-class="tender-state-{{tender.state}}"
+                                      t-out="getState(tender.state)"/>
+                            </p>
+                            <div class="d-flex gap-4">
+                                <div>
+
+                                    <p class="card-text mb-1">
+                                        Created on:
+                                        <span class="fw-bold" t-out="tender.submission_date.split(' ')[0]"/>
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        Bid Start Date:
+                                        <span class="fw-bold" t-out="tender.bid_start_date.split(' ')[0]"/>
+                                    </p>
+                                    <p class="card-text mb-2">
+                                        Bid End Date:
+                                        <span class="fw-bold" t-out="tender.bid_end_date.split(' ')[0]"/>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="card-text mb-1">
+                                        Submission Date:
+                                        <span class="fw-bold" t-out="tender.submission_date.split(' ')[0]"/>
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        Expected Decision Date:
+                                        <span class="fw-bold" t-out="tender.expected_decision_date.split(' ')[0]"/>
+                                    </p>
+                                    <p class="card-text mb-1">
+                                        Delivery Date:
+                                        <span class="fw-bold" t-out="tender.delivery_date.split(' ')[0]"/>
+                                    </p>
+                                </div>
+                            </div>
+                            <!-- Category badges -->
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                <t t-foreach="tender.partner_category_ids" t-as="cat_id" t-key="cat_id_index">
+                                    <t t-set="category" t-value="state.categories.find(c => c.id === cat_id)"/>
+                                    <t t-if="category">
+                                        <span class="badge bg-secondary" t-out="category.name"/>
+                                    </t>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-9">
+                    <h4 class="fw-semibold mb-3">Description</h4>
+                    <div t-out="portalDescription"/>
+                    <h4 class="fw-semibold mb-3">Evaluation Criteria</h4>
+                    <div t-out="evaluationCriteria"/>
+                </div>
+                <div class="col-3">
+                    <div t-if="activeBid.id" class="mb-2">
+                        <h6 class="fw-bold">Submitted Bid :</h6>
+                        <div class="d-flex gap-2">
+                            <div class="text-primary">&#8226;</div>
+                            <a t-attf-href="/tender/{{props.tender_id}}/bid/{{activeBid.id}}"
+                               class="text-primary text-decoration-underline mb-1"
+                               t-out="activeBid.name"/>
+                        </div>
+                    </div>
+
+                    <div t-if="documents.length" class="mb-2">
+                        <h6 class="fw-bold">Documents :</h6>
+                        <div class="d-flex gap-2">
+                            <div class="text-primary">&#8226;</div>
+                            <a t-foreach="documents"
+                               t-if="document.available_online"
+                               t-as="document"
+                               t-key="document_index"
+                               t-att-href="'/download/tender/attachment/' + document.id"
+                               class="text-primary text-decoration-underline mb-1"
+                               t-out="document.name"/>
+                        </div>
+                    </div>
+
+                    <div t-if="parentTender.length" class="mb-2">
+                        <h6 class="fw-bold">Parent Tender :</h6>
+                        <div class="d-flex gap-2">
+                            <div class="text-primary">&#8226;</div>
+                            <a t-att-href="'/get/tender/' + parentTender[0]"
+                               class="text-primary text-decoration-underline mb-1"
+                               t-out="parentTender[1]"/>
+                        </div>
+                    </div>
+
+                    <div t-if="bafoTenders.length" class="mb-2">
+                        <h6 class="fw-bold">BAFO Tenders :</h6>
+                        <div class="d-flex gap-2">
+                            <div class="text-primary">&#8226;</div>
+                            <a t-foreach="bafoTenders"
+                               t-as="bafo"
+                               t-key="tender_index"
+                               t-att-href="'/get/tender/' + bafo.id"
+                               t-attf-class="tender-state-{{ bafo.state }} text-primary text-decoration-underline mb-1"
+                               t-out="bafo.name"/>
+                        </div>
+                    </div>
+                    <div t-if="!isReadonly" class="my-2">
+                        <a t-attf-href="/tender/{{props.tender_id}}/bid"
+                           class="btn btn-primary mt-auto" target="_blank">
+                            Submit A Bid
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </t>
+</templates>

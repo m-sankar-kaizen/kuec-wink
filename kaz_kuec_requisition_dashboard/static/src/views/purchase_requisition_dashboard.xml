@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="kaz_kuec_requisition_dashboard.PurchaseRequisitionDashboard">
+        <div class="o_purchase_dashboard container-fluid py-4 border-bottom bg-view">
+            <div class="row justify-content-between gap-3 gap-lg-0">
+                <div class="col-12 col-lg-12 flex-grow-1 flex-lg-grow-0 flex-shrink-0">
+                    <div class="grid gap-4">
+                        <div class="g-col-3 g-col-sm-2 d-flex align-items-center py-2 justify-content-end text-end justify-content-lg-start text-lg-start text-break">
+                            All Requisitions
+                        </div>
+                        <div class="g-col-9 g-col-sm-10 grid gap-1">
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Open Prs" filter_name="draft_rfqs">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="purchaseRequisitionData['open_prs']"/>Open Prs
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Waiting for Approval" filter_name="waiting_rfqs">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="purchaseRequisitionData['waiting_approval']"/>Waiting for Approval
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Waiting for PO" filter_name="late_rfqs">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="purchaseRequisitionData['waiting_for_po']"/>Waiting for PO
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Prs Converted PO" filter_name="prs_converted_po">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="purchaseRequisitionData['prs_converted_po']"/>Prs Converted PO
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="o_purchase_dashboard container-fluid py-4 border-bottom bg-view">
+            <div class="row justify-content-between gap-3 gap-lg-0">
+                <div class="col-12 col-lg-12 flex-grow-1 flex-lg-grow-0 flex-shrink-0">
+                    <div class="grid gap-4">
+                        <div class="g-col-3 g-col-sm-2 d-flex align-items-center py-2 justify-content-end text-end justify-content-lg-start text-lg-start text-break">
+                            My Activities
+                        </div>
+                        <div class="g-col-9 g-col-sm-10 grid gap-1">
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Today" filter_name="activity_today">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="purchaseRequisitionData['activity_today']"/>Today
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Due" filter_name="activity_due">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="purchaseRequisitionData['activity_due']"/>Due
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Upcoming" filter_name="activity_upcoming">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="purchaseRequisitionData['activity_upcoming']"/>Upcoming
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </t>
+</templates>

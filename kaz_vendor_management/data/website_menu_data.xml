@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="menu_vendor_signup" model="website.menu">
+        <field name="name">Register As Vendor</field>
+        <field name="url">/vendor/signup</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence" type="int">11</field>
+    </record>
+
+    <record id="menu_tender_view" model="website.menu">
+        <field name="name">Tenders</field>
+        <field name="url">/get/tenders</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence" type="int">12</field>
+    </record>
+</odoo>

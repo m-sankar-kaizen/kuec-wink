@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+        Sequence Definition for Service Receipt Notes (SRNs)
+
+        This sequence is used to auto-generate unique identifiers for Service Receipt records.
+        It ensures consistent, traceable numbering across the system in the format: SRN/IN/00001, SRN/IN/00002, etc.
+    -->
+
+    <record id="service_receipt_sequence" model="ir.sequence">
+        <field name="name">Service Receipt Number</field>
+        <field name="code">service.receipt</field>
+        <field name="active">True</field>
+        <field name="prefix">SRN/IN/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+    </record>
+</odoo>

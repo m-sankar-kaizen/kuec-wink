@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================================================
+         Record ID: service_receipt_line_view
+         Purpose:
+            Defines a custom form view for the `service.receipt.line` model.
+            This is used to view or manually edit individual service line records
+            associated with a Service Receipt Note (SRN).
+
+         Model: service.receipt.line
+
+         Key Notes:
+            - Fields like `additional`, `company_id`, `is_locked`, `service_lines_count`,
+              `state`, and `id` are hidden (used internally for logic/tracking).
+            - Business-facing fields like `product_id`, `product_uom_qty`, `quantity_done`,
+              and `description` are shown to users.
+            - This form is generally accessed through smart buttons or one2many pop-ups
+              from a parent `service.receipt` record.
+
+         XML Structure:
+            <form> - Odoo standard form layout.
+            <group> - Groups fields into a single column layout.
+    ======================================================================================= -->
+
+    <record id="service_receipt_line_view" model="ir.ui.view">
+        <field name="name">service.receipt.line.form</field>
+        <field name="model">service.receipt.line</field>
+        <field name="arch" type="xml">
+            <form string="Service Lines">
+
+                <!-- ================================
+                     Group block: Field layout area
+                     ================================ -->
+                <group>
+
+                    <!-- ========== Hidden Fields ========== -->
+                    <!-- Internal flags for tracking logic, not shown to end-users -->
+                    <field name="additional" invisible="1"/>
+                    <field name="company_id" invisible="1"/>
+                    <field name="is_locked" invisible="1"/>
+                    <field name="service_lines_count" invisible="1"/>
+                    <field name="state" invisible="1" readonly="0"/>
+                    <field name="id" invisible="1"/>
+
+                    <!-- ========== Visible Fields ========== -->
+
+                    <!-- Product/service linked to the line -->
+                    <field name="product_id" string="Product" visible="1"/>
+
+                    <!-- Requested quantity (demand from PO or requisition) -->
+                    <field name="product_uom_qty" string="Demand"/>
+
+                    <!-- Quantity that has been confirmed/received -->
+                    <field name="quantity_done" string="Quantity"/>
+
+                    <!-- Optional text description (inherited from product) -->
+                    <field name="description" string="Description"/>
+
+                </group>
+            </form>
+        </field>
+    </record>
+</odoo>

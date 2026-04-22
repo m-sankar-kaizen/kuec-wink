@@ -1,0 +1,41 @@
+.page-div-14px div {
+    font-size: 14px;
+}
+
+@font-face {
+    font-family: 'Saira English';
+    src: url('https://fonts.googleapis.com/css?family=Saira');
+}
+
+.background-kuec {
+    background: #1E448D !important;
+    color: white !important;
+}
+
+.blue-highlight-color {
+    color: #1E448D !important;
+    text-color: #1E448D !important;
+}
+
+.english-text {
+    font-family: 'Saira English', sans-serif !important;
+}
+
+@font-face {
+    font-family: 'GE Flow';
+    src: url('/kaz_kuec_report_base/static/src/fonts/GE_Flow_Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'GE Flow';
+    src: url('/kaz_kuec_report_base/static/src/fonts/GE_Flow_Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+.arabic-geflow {
+    font-family: 'GE Flow', serif !important;
+    direction: rtl;
+}

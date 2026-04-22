@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Group: Grade Approval
+        Purpose:
+            This security group grants users the permission to review and approve grade-related
+            records (e.g., employee grades, salary scales). It is especially useful in workflows
+            involving HR validations and approvals for grade changes or new grade definitions.
+
+        Notes:
+            - This group is intentionally placed in the "Hidden" module category to keep it out of
+              the standard UI for most users.
+            - Assign this group manually or through rules/groups for HR managers or similar roles.
+    -->
+    <record id="group_grade_approval" model="res.groups">
+        <field name="name">Grade Approval</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="comment">This group allows grade review and approval responsibilities.</field>
+    </record>
+</odoo>

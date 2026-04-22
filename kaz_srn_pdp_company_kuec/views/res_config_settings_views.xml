@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--        Inherited the Res Config Settings to add new field on it-->
+    <record id="res_config_settings_view_form_purchase" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kaz.srn.pdp.company.kuec</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="kaz_purchase_down_payment.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='purchase_down_payment']" position="before">
+                <field name="company_code" invisible="1"/>
+            </xpath>
+            <xpath expr="//div[@id='purchase_down_payment']" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC']</attribute>
+            </xpath>
+            <xpath expr="//div[@id='purchase_down_payment']" position="after">
+                <div id="srn_default_template" class="col-12 col-lg-6 o_setting_box"
+                     invisible="company_code not in ['KUEC']">
+                    <div class="o_setting_left_pane"/>
+                    <div class="o_setting_right_pane">
+                        <span class="o_form_label">Default SRN Template</span>
+                        <div class="text-muted">
+                            This Template will be used to generate the SRN Lines in the POs
+                        </div>
+                        <div class="text-muted">
+                            <field name="srn_report_template_id"/>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

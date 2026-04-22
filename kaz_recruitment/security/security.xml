@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="recruitment_stage_company_rule" model="ir.rule">
+        <field name="name">Recruitment Stage: Company</field>
+        <field name="model_id" ref="model_hr_recruitment_stage"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <record id="recruitment_stage_applicant_company_rule" model="ir.rule">
+        <field name="name">Applicant Recruitment Stage: Company</field>
+        <field name="model_id" ref="model_hr_applicant"/>
+        <field name="domain_force">[('stage_id.company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

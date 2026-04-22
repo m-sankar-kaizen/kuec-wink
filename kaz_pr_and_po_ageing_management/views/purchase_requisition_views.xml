@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_purchase_requisition_form_inherit" model="ir.ui.view">
+        <field name="name">purchase.requisition.form.inherit.kaz.pr.and.po.ageing.management</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="kaz_vendor_management.view_purchase_requisition_form"/>
+        <field name="arch" type="xml">
+            <sheet position="before">
+                <div name="alert_container" invisible="not raise_expiry_warning" class="mb-2">
+                    <div class="alert alert-warning mb-0" role="alert">
+                        <field name="raise_expiry_warning" invisible="1"/>
+                        <field name="expiry_warning_message" readonly="1"/>
+                    </div>
+                </div>
+            </sheet>
+
+            <label for="date_start" position="before">
+                <field name="tracking_state" widget="badge"/>
+            </label>
+
+            <button name="action_done" position="after">
+                <button name="action_extend_agreement" invisible="not raise_expiry_warning"
+                        string="Extend Agreement" type="object" class="btn-secondary"/>
+            </button>
+
+            <field name="date_end" position="replace">
+                <field name="date_end" widget="date" readonly="state != 'draft'"/>
+            </field>
+
+            <page name="products" position="after">
+                <page name="extension_request" string="Extension Requests" invisible="not extend_agreement_ids">
+                    <field name="extend_agreement_ids">
+                        <list editable="bottom" create="0" delete="0">
+                            <field name="new_date_end" readonly="1"/>
+                            <field name="request_user_id" readonly="1"/>
+                            <field name="state" readonly="1"/>
+                            <button name="action_approve" invisible="state != 'draft'"
+                                    string="Approve" type="object" class="btn-primary"
+                                    groups="kaz_pr_and_po_ageing_management.group_purchase_agreement_manager_kuec"
+                            />
+                            <button name="action_reject" invisible="state != 'draft'"
+                                    string="Reject" type="object" class="btn-secondary"
+                                    groups="kaz_pr_and_po_ageing_management.group_purchase_agreement_manager_kuec"
+                            />
+                        </list>
+                    </field>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>

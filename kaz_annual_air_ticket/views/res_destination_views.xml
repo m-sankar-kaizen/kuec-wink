@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+        Tree View Definition for 'res.destination' Model
+        This view presents a list (list) layout of destination records.
+        It is useful for quickly viewing destination entries with minimal info,
+        typically displayed when users open the destination menu or use a search view.
+
+        Fields displayed:
+            - name: Name of the destination (e.g., "Dubai")
+            - code: Short code or reference for the destination (e.g., "DXB")
+    -->
+    <record id="destination_tree_view" model="ir.ui.view">
+        <field name="name">destination.list</field>
+        <field name="model">res.destination</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+        Form View Definition for 'res.destination' Model
+        This view is used for creating or editing a single destination record.
+        It appears when clicking "Create" or opening a destination from the list view.
+
+        Field layout:
+            - name: Editable field for the destination's name.
+            - code: Editable field for its internal reference or abbreviation.
+    -->
+    <record id="destination_form_view" model="ir.ui.view">
+        <field name="name">destination.form</field>
+        <field name="model">res.destination</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        Action Window for Accessing the Destination Views
+        This action enables users to open the destination model with both
+        list and form views available. This is linked to a menu item (defined elsewhere),
+        and controls how the destination module is presented to users in the UI.
+
+        Metadata:
+            - name: Name shown in the UI for this action.
+            - view_mode: Displays both list and form views.
+            - help: Instructional text shown when there are no records yet.
+    -->
+    <record id="action_destination" model="ir.actions.act_window">
+        <field name="name">Destinations</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.destination</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first destination.
+            </p>
+        </field>
+    </record>
+
+</odoo>

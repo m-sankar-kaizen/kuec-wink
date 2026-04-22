@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_vendor_evaluation_list" model="ir.ui.view">
+        <field name="name">vendor.evaluation.list</field>
+        <field name="model">vendor.evaluation</field>
+        <field name="arch" type="xml">
+            <list string="Vendor Evaluation">
+                <field name="sequence"/>
+                <field name="partner_id"/>
+                <field name="vendor_evaluation_conf_id"/>
+                <field name="state"/>
+                <field name="total_score"/>
+                <field name="rating" widget="priority" readonly="1"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_vendor_evaluation_form" model="ir.ui.view">
+        <field name="name">vendor.evaluation.form</field>
+        <field name="model">vendor.evaluation</field>
+        <field name="arch" type="xml">
+            <form string="Vendor Evaluation">
+                <header>
+                    <button name="action_generate_line" invisible="state != 'draft' or vendor_evaluation_line_ids"
+                            class="btn btn-primary" string="Generate Lines" type="object"/>
+                    <button name="action_evaluate" invisible="state != 'draft' or not vendor_evaluation_line_ids"
+                            class="btn btn-primary" string="Evaluate" type="object"/>
+                    <button name="action_reset_to_draft" invisible="state != 'active'"
+                            class="btn btn-secondary" string="Reset to Draft" type="object"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="partner_id" readonly="state != 'draft'"/>
+                            <field name="vendor_evaluation_conf_id" readonly="1"/>
+                            <field name="company_id" readonly="1"/>
+                        </group>
+                        <group>
+
+                            <field string="Evaluated Date" name="write_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Evaluation Lines">
+                            <field name="vendor_evaluation_line_ids" readonly="state != 'draft'">
+                                <list editable="bottom" create="0" delete="0">
+                                    <field name="evaluation_state" column_invisible="1"/>
+                                    <field name="sequence" readonly="1"/>
+                                    <field name="name" readonly="1"/>
+                                    <field name="weight" readonly="1"/>
+                                    <field name="rating" widget="priority" readonly="evaluation_state != 'draft'"/>
+                                    <field name="comment"/>
+                                    <field name="score" optional="show"/>
+                                    <field name="company_id" groups="base.group_multi_company" readonly="1"
+                                           optional="hide"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group>
+
+                                </group>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total_score"/>
+                                    <field name="rating" widget="priority" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_vendor_evaluation" model="ir.actions.act_window">
+        <field name="name">Vendor Evaluation</field>
+        <field name="res_model">vendor.evaluation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_vendor_evaluation"
+              name="Vendor Evaluation"
+              parent="purchase.menu_procurement_management"
+              action="action_vendor_evaluation"
+              sequence="20"/>
+</odoo>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_move_line_reconcile_tree_inherit_custom" model="ir.ui.view">
+        <field name="name">view.move.line.reconcile.tree.inherit.custom</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account_accountant.view_move_line_reconcile_tree"/>
+        <field name="priority" eval="8"/>
+        <field name="arch" type="xml">
+<!--            <xpath expr="//field[@name='date']" position="after">-->
+<!--                <field name="cheque_due_date"/>-->
+<!--                <field name="cheque_number"/>-->
+<!--            </xpath>-->
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="intercompany_move_id"/>
+                <field name="intercompany_cheque_due_date" string="Inter-Company Cheque Due Date" />
+                <field name="intercompany_cheque_number" string="Inter-Company Cheque Number"/>
+                <field name="ico_cheque_due_date"/>
+                <field name="ico_cheque_number"/>
+            </xpath>
+            <xpath expr="//list/field[@name='company_id']" position="attributes">
+                <attribute name="optional">show</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

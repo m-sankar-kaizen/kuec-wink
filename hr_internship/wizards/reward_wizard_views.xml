@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Reward Recommendation Wizard -->
+    <record id="view_hr_internship_reward_wizard_form" model="ir.ui.view">
+        <field name="name">hr.internship.reward.wizard.form</field>
+        <field name="model">hr.internship.reward.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Recommend Reward">
+                <group>
+                    <group>
+                        <field name="internship_id" readonly="True"/>
+                        <field name="reward_type" required="True"/>
+                        <field name="amount" required="True"/>
+                    </group>
+                </group>
+
+                <group string="Gift Information" invisible="reward_type not in ['gift', 'both']">
+                    <field name="gift_description" placeholder="Describe the gift..." nolabel="1"/>
+                </group>
+
+                <group string="Reason">
+                    <field name="reason" nolabel="1" placeholder="Explain why this intern deserves this reward..." required="True"/>
+                </group>
+
+                <footer>
+                    <button name="action_create_reward" string="Create Reward" type="object" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Rejection Wizard -->
+    <record id="view_hr_internship_reward_reject_wizard_form" model="ir.ui.view">
+        <field name="name">hr.internship.reward.reject.wizard.form</field>
+        <field name="model">hr.internship.reward.reject.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject Reward">
+                <group>
+                    <field name="reward_id" readonly="True"/>
+                    <field name="rejection_reason" nolabel="1" placeholder="Explain why this reward is rejected..." required="True"/>
+                </group>
+
+                <footer>
+                    <button name="action_reject" string="Reject" type="object" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

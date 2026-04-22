@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="tender_view_template" name="Tenders">
+        <t t-call="website.layout">
+            <xpath expr="//head" position="inside">
+                <link rel="stylesheet" type="text/css"
+                      href="/kaz_vendor_management/static/src/js/tender/tender.css"/>
+            </xpath>
+            <t t-set="no_footer" t-value="True"/>
+            <div id="tender_view">
+                <owl-component name="Tender" t-att-props="json.dumps(props)"/>
+            </div>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="menu_budget_transfer_request_root_kuec"
+              name="Budget Transfer Requests"
+              sequence="3"
+              groups="kaz_procurement_doa_kuec.group_kuec_budget"
+              parent="department_procurement.department_procurement_menu_root"
+              action="kz_requisition_quintuple_approvals.action_budget_transfer_request"/>
+</odoo>

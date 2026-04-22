@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+        Tree view for HR Assignment Category model.
+        Allows inline editing of assignment categories.
+    -->
+    <record id="hr_assignment_category_view_tree" model="ir.ui.view">
+        <field name="name">hr.assignment.category.view.list</field>
+        <field name="model">hr.assignment.category</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+        Action to open the HR Assignment Category model in list view.
+    -->
+    <record id="action_hr_assignment_category" model="ir.actions.act_window">
+        <field name="name">Assignment Category</field>
+        <field name="res_model">hr.assignment.category</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                No Assignment Categories defined yet. Click to add a new one.
+            </p>
+        </field>
+    </record>
+
+    <!--
+        Menu item under Human Resources > Configuration for Assignment Categories.
+    -->
+    <menuitem name="Assignment Category"
+              id="menu_hr_assignment_category"
+              action="action_hr_assignment_category"
+              parent="hr.menu_human_resources_configuration"
+              sequence="20"/>
+
+</odoo>

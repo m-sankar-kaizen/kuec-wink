@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+
+    <!-- ============================================================
+        Custom Header Template for Sale Invoice Report
+        ============================================================
+        This QWeb template renders the top portion of the PDF report,
+        including the company logo. It is called from the main report.
+   -->
+
+    <template id="custom_header">
+        <style>
+            .header {0
+            margin-bottom: 25px !important
+            }
+        </style>
+        <div class="header mb8" style="margin-top:0 px">
+            <div class="row col-12 mb8" style="padding:0 10px;font-size: 14px">
+                <div class="text-start col-12 text-center">
+                    <img t-if="user.company_id.logo" t-att-src="image_data_uri(user.company_id.logo)"
+                         style="max-height: 100px;margin-top: 15px"
+                         alt="Logo"/>
+                </div>
+            </div>
+        </div>
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <!-- ============================================================
+         Main Sale Invoice Report Template
+         ============================================================
+         This template generates the full Tax Invoice layout in PDF,
+         including billing details, line items, totals, bank details,
+         and special instructions.
+    -->
+
+    <template id="report_sale_invoice">
+
+        <t t-call="web.html_container">
+            <t t-call="sale_inv_report.custom_header">
+                <t t-foreach="docs" t-as="doc">
+                    <style>
+                        .table-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        }
+
+                        .table-wrapper table {
+                        flex: 1;
+                        }
+                        table {
+                        width: 100%;
+                        border: 1px solid black;
+                        border-collapse: collapse;
+                        }
+
+
+                        th, td {
+                        border: 1px solid black;
+                        padding: 8px;
+                        }
+
+                        th {
+                        background-color: #d4d4d7;
+                        border: 1px solid black;
+                        }
+                    </style>
+                    <div class="container">
+                        <div class="body">
+                            <center>
+                                <h4 style="text-decoration: underline;">
+                                    Tax Invoice
+                                </h4>
+                                <h6>
+                                    Registration No. 104113877500003
+                                </h6>
+                                <h6>
+                                    P.O Box 2497
+                                    Abu Dhabi, U.A.E
+                                </h6>
+                            </center>
+
+                            <div class="section row mt-5">
+                                <div class="bill_section col-6">
+                                    <h6>
+                                        <strong>Bill To :</strong>
+                                        <br/>
+                                        <span t-esc="doc.partner_id.name"/>
+                                        ,
+                                        <span t-field="doc.partner_id.city"/>
+                                        <br/>
+                                        <span t-field="doc.partner_id.street"/>
+                                        ,
+                                        <span t-field="doc.partner_id.country_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <strong>Vat Registration No. :</strong>
+                                        <span t-esc="doc.partner_id.vat"/>
+                                    </h6>
+                                </div>
+                                <div class="invoice_section col-6">
+                                    <table class="table">
+                                        <tr>
+                                            <th>Invoice</th>
+                                            <th>Document No.</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <t t-esc="doc.name"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="doc.name"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Invoice Date</th>
+                                            <th>Reference</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <t t-esc="doc.invoice_date.strftime('%d/%m/%Y') if doc.invoice_date else ''"/>
+                                            </td>
+                                            <td>
+                                                <t t-esc="doc.payment_reference"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Customer Number</th>
+                                            <th>Customer Location</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <t t-esc="doc.partner_id.mobile"/>
+                                            </td>
+                                            <td>
+                                                <!-- <t t-esc="doc.customer_location"/> -->
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="container mt-4">
+                        <div class="row">
+                            <div class="col-12">
+                                <table class="table">
+                                    <tr>
+                                        <th>Terms</th>
+                                        <th>Currency</th>
+                                        <th>Rate</th>
+                                        <th>Due Date</th>
+                                        <th>Customer Contact</th>
+                                        <th>Phone</th>
+                                        <th>Fax</th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <!-- <t t-esc="doc.terms"/> -->
+                                        </td>
+                                        <td>
+                                            <t t-esc="doc.currency_id.name"/>
+                                        </td>
+                                        <td>
+                                            <!-- <t t-esc="doc.rate"/> -->
+                                        </td>
+                                        <td>
+                                            <t t-esc="doc.invoice_date_due.strftime('%d/%m/%Y') if doc.invoice_date_due else ''"/>
+
+                                        </td>
+                                        <td>
+                                            <!-- <t t-esc="doc.customer_contact"/> -->
+                                        </td>
+                                        <td>
+                                            <t t-esc="doc.partner_id.phone"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="doc.partner_id.mobile"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container mt-5">
+                        <div class="row">
+                            <table class="table table-sm o_main_table" name="invoice_line_table">
+                                <thead>
+                                    <tr>
+                                        <th name="th_description" class="text-center">
+                                            <span>Description</span>
+                                        </th>
+                                        <th name="th_quantity" class="text-center">
+                                            <span>Quantity</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Unit Price</span>
+                                        </th>
+                                        <th name="th_price_unit" t-if="display_discount"
+                                            t-attf-class="text-center {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                            <span>Disc.%</span>
+                                        </th>
+                                        <th name="th_taxes"
+                                            t-attf-class="text-center {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                            <span>Taxes</span>
+                                        </th>
+                                        <th name="th_subtotal" class="text-center">
+                                            <span groups="account.group_show_line_subtotals_tax_excluded">Amount
+                                            </span>
+                                            <span groups="account.group_show_line_subtotals_tax_included">Total
+                                                Price
+                                            </span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="invoice_tbody">
+                                    <t t-set="current_subtotal" t-value="0"/>
+                                    <t t-set="lines"
+                                       t-value="doc.invoice_line_ids.sorted(key=lambda l: (-l.sequence, l.date, l.move_name, -l.id), reverse=True)"/>
+
+                                    <t t-foreach="lines" t-as="line">
+                                        <t t-set="current_subtotal" t-value="current_subtotal + line.price_subtotal"
+                                           groups="account.group_show_line_subtotals_tax_excluded"/>
+                                        <t t-set="current_subtotal" t-value="current_subtotal + line.price_total"
+                                           groups="account.group_show_line_subtotals_tax_included"/>
+
+                                        <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
+                                            <t t-if="line.display_type == 'product'"
+                                               name="account_invoice_line_accountable">
+                                                <td name="account_invoice_line_name">
+                                                    <span t-field="line.name" t-options="{'widget': 'text'}"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-field="line.quantity"/>
+                                                    <span t-field="line.product_uom_id" groups="uom.group_uom"/>
+                                                </td>
+                                                <td t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                                    <span class="text-nowrap" t-field="line.price_unit"/>
+                                                </td>
+                                                <td t-if="display_discount"
+                                                    t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                                    <span class="text-nowrap" t-field="line.discount"/>
+                                                </td>
+                                                <td t-attf-class="text-start {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                                    <span t-esc="', '.join(map(lambda x: (x.description or x.name), line.tax_ids))"
+                                                          id="line_tax_ids"/>
+                                                </td>
+                                                <td class="text-end o_price_total">
+                                                    <span class="text-nowrap" t-field="line.price_subtotal"
+                                                          groups="account.group_show_line_subtotals_tax_excluded"/>
+                                                    <span class="text-nowrap" t-field="line.price_total"
+                                                          groups="account.group_show_line_subtotals_tax_included"/>
+                                                </td>
+                                            </t>
+                                            <t t-if="line.display_type == 'line_section'">
+                                                <td colspan="99">
+                                                    <span t-field="line.name" t-options="{'widget': 'text'}"/>
+                                                </td>
+                                                <t t-set="current_section" t-value="line"/>
+                                                <t t-set="current_subtotal" t-value="0"/>
+                                            </t>
+                                            <t t-if="line.display_type == 'line_note'">
+                                                <td colspan="99">
+                                                    <span t-field="line.name" t-options="{'widget': 'text'}"/>
+                                                </td>
+                                            </t>
+                                        </tr>
+
+                                        <t t-if="current_section and (line_last or lines[line_index+1].display_type == 'line_section')">
+                                            <tr class="is-subtotal text-end">
+                                                <td colspan="99">
+                                                    <strong class="mr16">Subtotal</strong>
+                                                    <span t-esc="current_subtotal"
+                                                          t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: doc.currency_id}"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="container mt-5">
+                        <div vlass="row">
+                            <table class="table table-sm o_main_table" name="bank_details">
+                                <tr>
+                                    <td style="width: 66%;">
+                                        <div style="border:0px text-align: center; font-size: 18px">
+                                            <div colspan="2">
+                                                <span>
+                                                    <strong>Bank Details</strong>
+                                                </span>
+
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div>
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <span>
+                                                            <strong>Bank Name</strong>
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-8">
+                                                        <span>FIRST ABU DHABI BANK</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <span>
+                                                            <strong>Branch Name</strong>
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-8">
+                                                        <span>ABU DHABI KHALIFA ST</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <span>
+                                                            <strong>A/C No.</strong>
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-8">
+                                                        <span>4031005702912001</span>
+                                                        <br/>
+                                                        <span>ANKABUT INFO TECH SOLE PROP LLC</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <span>
+                                                            <strong>IBAN</strong>
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-8">
+                                                        <span>AE930354031005702912001</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <span>
+                                                            <strong>Swift Code</strong>
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-8">
+                                                        <span>NBADAEAAXXX</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 34%;">
+                                        <div>
+                                            <div class="row mt-4">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Subtotal</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>
+                                                        <!--                                                    <span t-esc="'%.2f' % doc.amount_untaxed"/>-->
+                                                        <span t-field="doc.amount_untaxed"/>
+                                                        <!--                                                    <t t-esc="doc.amount_untaxed"/>-->
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <br/>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Tax</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>
+                                                        <!--                                                    <span t-esc="'%.2f' % doc.amount_tax"/>-->
+                                                        <span t-field="doc.amount_tax"/>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <br/>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Shipping</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>
+                                                        <t t-esc="doc.partner_id.mobile"/>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <br/>
+                                            <div class="row mb-4">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Total</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8 mb-2 ">
+                                                    <span>
+
+                                                        <!--                                                    <span t-esc="'%.2f' % doc.amount_total"/>-->
+                                                        <span t-field="doc.amount_total"/>
+
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <div class="col-12">
+                                        <table>
+                                            <tr>
+                                                <td style="width:15%">
+                                                    <strong>Total</strong>
+                                                </td>
+                                                <td style="width:85%;">
+                                                    <span t-esc="doc.currency_id.with_context(lang='es_AR').amount_to_text(doc.amount_total)"/>
+                                                    *****
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </tr>
+                            </table>
+                        </div>
+
+                    </div>
+                    <div class="container mt-5">
+                        <div vlass="row">
+                            <table class="table table-sm o_main_table" name="bank_details">
+                                <thead>
+                                    <tr>
+                                        <td class="text-center" style="background-color:#d4d4d7">
+                                            <strong>Special Instructions</strong>
+                                        </td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <p>
+                                                Please quote the invoice number and the customer name with your
+                                                payment / bank transfer to ensure proper credit to your
+                                                account.
+                                            </p>
+                                            <span t-field="doc.narration"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="container mt-5">
+                        <div class="mt-3">
+                            <div style="width:20%;float:left;" class="text-center">
+                                <p>...........................................</p>
+                                <p style="border-top:1px solid;">Authorized Signatory</p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================================
+             Report Action Record Definition for Sale Invoice PDF Report
+             ============================================================
+             This record registers a new PDF report in Odoo, linked to the
+             `account.move` model, using QWeb rendering engine. The report
+             is named "Sale Invoice" and will be available from the Invoice
+             (account.move) model print options.
+        -->
+
+    <record id="sale_invoice_report" model="ir.actions.report">
+        <field name="name">Sales Invoice</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sale_inv_report.report_sale_invoice</field>
+        <field name="report_file">sale_inv_report.report_sale_invoice</field>
+        <field name="print_report_name">(object._get_report_base_filename())</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>
+

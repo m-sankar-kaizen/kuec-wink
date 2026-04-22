@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    XML View Extension: res.config.settings - SRN Notification Email Field
+
+    Purpose:
+    This XML view extension customizes the Odoo system settings interface to introduce
+    a new configuration option under the "Purchases" tab. The new option allows users to
+    define an SRN (System Resource Notification) email address, which will be stored on
+    the company (res.company) record and can be used across business logic to send alerts.
+
+    View Details:
+    Target Model: res.config.settings
+    Inherits From: purchase.res_config_settings_view_form_purchase
+    Adds a new section inside the <div data-key='purchase'> container.
+
+    UI Structure:
+    The new field is displayed in a settings box with the following elements:
+    - Label: "Notifications Email"
+    - Description: "Email Used for Notifications"
+    - Field: srn_notification_email (Char, related to res.company.srn_notification_email)
+
+    Field Location:
+    Appears under Purchases tab in Settings (Settings → Purchases)
+    Rendered within a Bootstrap-styled o_setting_box for visual consistency
+
+    Technical Notes:
+    Field srn_notification_email must be declared in the Python model
+    (res.config.settings) as a non-readonly related field pointing to res.company.
+    This layout is responsive and styled with Bootstrap grid classes (col-12 col-lg-6).
+
+    Usage:
+    This email address can be used in automated processes (e.g., SRN creation,
+    vendor communications, procurement alerts) to notify the right team or person.
+
+    Author:
+    Kaizen Team
+-->
+<odoo>
+    <!-- Inherit Form View to Modify it -->
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.notification.base</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//setting[@id='restrict_template_rendering_setting']" position="after">
+                <setting id="srn_notification_email" help="Email Used for Notifications.">
+                    <field name="srn_notification_email"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

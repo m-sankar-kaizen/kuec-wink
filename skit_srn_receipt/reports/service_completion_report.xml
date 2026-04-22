@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="0">
+
+    <!-- ===================================================================================
+         Template: service_completion_custom_header
+         Purpose:  Defines a reusable QWeb header layout for service completion reports.
+                   This header includes the company logo (if present) and some spacing styles.
+
+         Usage:    This template is used as the header layout in the service completion form
+                   by being called inside the main report template.
+
+         Dependencies: Relies on `user.company_id.logo` for logo rendering.
+     =================================================================================== -->
+    <template id="service_completion_custom_header">
+        <style>
+            .header {
+            margin-bottom: 25px !important; /* Ensure visual spacing after the header */
+            }
+        </style>
+        <div class="header mb8" style="margin-top:0px">
+            <div class="row col-12 mb8" style="padding:0 10px; font-size: 14px">
+                <div class="text-start col-12">
+                    <!-- Dynamically render the company logo if available on the current user’s company -->
+                    <img t-if="user.company_id.logo"
+                         t-att-src="image_data_uri(user.company_id.logo)"
+                         style="max-height: 100px; margin-top: 15px"
+                         alt="Logo"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placeholder to embed the body of the calling report -->
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <!-- ===========================================================================================
+         Template: service_completion_report_temp
+         Purpose:  Main template for rendering the Service Completion PDF report.
+
+         Inherits:
+             - web.html_container: Wraps the HTML content inside a printable document.
+             - skit_srn_receipt.service_completion_custom_header: Includes the logo header.
+
+         Functionality:
+             - Displays PO-related summary data.
+             - Confirms service completion.
+             - Includes signature lines for Initiator, Procurement, and Department Head.
+
+         Iterates:
+             - `docs`: The report recordset, typically one or multiple `service.receipt` records.
+     =========================================================================================== -->
+    <template id="service_completion_report_temp">
+        <t t-call="web.html_container">
+            <t t-call="skit_srn_receipt.service_completion_custom_header">
+                <t t-foreach="docs" t-as="doc">
+
+                    <!-- =========================
+                         Embedded styling for the report
+                         Includes layout, color, and table formatting
+                    ========================= -->
+                    <style>
+                        .table-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        }
+
+                        .table-wrapper table {
+                        flex: 1;
+                        }
+
+                        table {
+                        width: 100%;
+                        border: 1px solid #7F8C8D;
+                        border-collapse: collapse;
+                        }
+
+                        th, td {
+                        border: 1px solid #7F8C8D;
+                        padding: 12px;
+                        text-align: center;
+                        vertical-align: middle;
+                        }
+
+                        th {
+                        background-color: #BCD4E6;
+                        }
+                        .bg-blue {
+                            background-color: #BCD4E6 !important;
+                            background: #BCD4E6;
+                        }
+
+                        td {
+                        color: #2C3E50;
+                        }
+
+                        .text-center {
+                        text-align: center;
+                        }
+
+                        .approval-table td {
+                        height: 150px; /* Reserves space for signatures */
+                        vertical-align: bottom;
+                        }
+
+                        .approval-table .signature-line {
+                        text-decoration: underline;
+                        color: #34495E;
+                        }
+
+                        .approval-header {
+                        font-family: sans-serif;
+                        font-weight: bold;
+                        text-align: center;
+                        margin-top: 20px;
+                        margin-bottom: 10px;
+                        color: #2C3E50;
+                        }
+
+                        .body-text h2 {
+                        margin-bottom: 15px;
+                        }
+
+                        .container {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        text-align: center;
+                        }
+                    </style>
+
+                    <!-- ======================
+                         Report Header Section
+                         ====================== -->
+                    <div class="container">
+                        <div class="body-text">
+                            <h2>Service Completion Form</h2>
+                        </div>
+
+                        <!-- ============================
+                             Display Key Purchase Metadata
+                             ============================ -->
+                        <br/>
+                        <div class="row data-table">
+                            <table>
+                                <tr>
+                                    <th><strong>PO #</strong></th>
+                                    <td>
+                                        <!-- Purchase Order reference name -->
+                                        <t t-if="doc.po_order_id">
+                                            <t t-esc="doc.po_order_id.name"/>
+                                        </t>
+                                    </td>
+                                    <th><strong>Ref #</strong></th>
+                                    <td>
+                                        <!-- Internal reference (service receipt number) -->
+                                        <t t-esc="doc.name"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Date</strong></th>
+                                    <td>
+                                        <!-- Scheduled receipt date -->
+                                        <t t-esc="doc.scheduled_date"/>
+                                    </td>
+                                    <th><strong>P.O Amount</strong></th>
+                                    <td>
+                                        <!-- Total PO amount in company currency -->
+                                        <t t-if="doc.po_order_id">
+                                            <t t-esc="doc.po_order_id.amount_total"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Date of Completion</strong></th>
+                                    <td>
+                                        <!-- Actual date the service was completed -->
+                                        <t t-esc="doc.date_done"/>
+                                    </td>
+                                    <th><strong>Invoiced Amount</strong></th>
+                                    <td>
+                                        <!-- Amount already invoiced against PO -->
+                                        <t t-if="doc.po_order_id">
+                                            <t t-esc="doc.po_order_id.get_billed_amount()"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><strong>Vendor Name</strong></th>
+                                    <td colspan="3">
+                                        <!-- Vendor/partner name -->
+                                        <t t-esc="doc.partner_id.name"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><strong>PO Line Description</strong></th>
+                                    <td colspan="3">
+                                        <!-- Product description from PO line (if available) -->
+                                        <t t-if="doc.po_order_id">
+                                            <t t-esc="doc.po_order_id and doc.po_order_id.product_id.name or ''"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- ==============================
+                             Service Confirmation Statement
+                             ============================== -->
+                        <br/>
+                        <div>
+                            <strong>
+                                I confirm that the service has been completed against the attached PO/Invoice.
+                            </strong>
+                        </div>
+
+                        <!-- =======================
+                             Approval Signatures Grid
+                             ======================= -->
+                        <br/>
+                        <div class="approval-header">Approvals</div>
+                        <div class="row">
+                            <table class="table table-sm o_main_table approval-table">
+                                <tr class="text-center">
+                                    <th class="bg-blue text-center" width="15%"><strong>Initiated by:</strong></th>
+                                    <td class="align-middle" width="25%">
+                                        <!-- Name of the person initiating the receipt -->
+                                        <t t-esc="doc.end_user_id.name"/>
+                                    </td>
+                                    <td width="60%" class="signature-line">
+                                        <!-- Signature image for Initiator -->
+                                        <t t-if="doc.end_user_signature">
+                                            <img t-att-src="'data:image/png;base64,' + doc.end_user_signature.decode('utf-8')"
+                                                 alt="Initiated by Signature" class="img-fluid"
+                                                 style="max-height: 100px;"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-blue text-center"><strong>Endorsed by:</strong></th>
+                                    <td class="align-middle">
+                                        <!-- Name of Procurement Officer -->
+                                        <t t-esc="doc.procurement_department_user_id.name"/>
+                                    </td>
+                                    <td class="signature-line">
+                                        <!-- Signature image for Procurement Officer -->
+                                        <t t-if="doc.procurement_department_signature">
+                                            <img t-att-src="'data:image/png;base64,' + doc.procurement_department_signature.decode('utf-8')"
+                                                 alt="Endorsed by Signature" class="img-fluid"
+                                                 style="max-height: 100px;"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-blue text-center"><strong>Approved By:</strong></th>
+                                    <td class="align-middle">
+                                        <!-- Name of the Department Head -->
+                                        <t t-esc="doc.department_head_user_id.name"/>
+                                    </td>
+                                    <td class="signature-line">
+                                        <!-- Signature image for Department Head -->
+                                        <t t-if="doc.department_head_signature">
+                                            <img t-att-src="'data:image/png;base64,' + doc.department_head_signature.decode('utf-8')"
+                                                 alt="Approved by Signature" class="img-fluid"
+                                                 style="max-height: 100px;"/>
+                                        </t>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ===========================================================================================
+         Report Action: service_completion_receipt_report_temp_report
+
+         Purpose:
+             Registers the QWeb report template with the `ir.actions.report` model.
+
+         Report Configuration:
+             - Binds the template to the `service.receipt` model
+             - Uses the template named `skit_srn_receipt.service_completion_report_temp`
+             - Report Type: PDF
+             - Sets default printed filename: "Service Completion Form"
+
+         Output:
+             This report is available via the Print menu or via code using `report_action()`.
+     =========================================================================================== -->
+    <record id="service_completion_receipt_report_temp_report" model="ir.actions.report">
+        <field name="name">Service Completion</field>
+        <field name="model">service.receipt</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">skit_srn_receipt.service_completion_report_temp</field>
+        <field name="report_file">skit_srn_receipt.service_completion_report_temp</field>
+        <field name="print_report_name">'Service Completion Form'</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

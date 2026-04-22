@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record model="ir.actions.act_window"
+            id="action_interview_feedback_master">
+        <field name="name">Interview Feedback</field>
+        <field name="res_model">interview.feedback</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">
+            {'search_default_group_by_candidate': 1,
+            'create': False, 'edit': False, 'delete': False, 'copy': False}
+        </field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new record!
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_interview_feedback"
+        name="Interview Feedback Master"
+        action="action_interview_feedback_master"
+        parent="hr_recruitment.menu_hr_recruitment_configuration"
+        sequence="50"
+    />
+</odoo>

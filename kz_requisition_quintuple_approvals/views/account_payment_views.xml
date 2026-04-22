@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    Inherited view for account.payment form to add custom buttons and fields
+    for a multi-step approval process and conditional behavior.
+    -->
+    <record id="payment_form_inherit" model="ir.ui.view">
+        <field name="name">account.payment.form.view.inherit.quintuple.approvals</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+
+            <!-- ===============================
+                 Header Buttons: Submit / Approve / Reset
+                 =============================== -->
+            <xpath expr="//header" position="inside">
+
+                <!-- Show "Reset to Draft" only when not in draft, and when it's an advance payment -->
+                <button name="return_to_draft"
+                        type="object"
+                        string="Reset to Draft"
+                        class="btn-primary"
+                        invisible="approvement_state == 'draft' or is_advance_payment != 'yes' or state == 'posted'"/>
+
+                <button name="submit_to_approve"
+                        type="object"
+                        string="Submit for Approval"
+                        class="btn-primary"
+                        invisible="approvement_state != 'draft' or is_advance_payment != 'yes'"/>
+
+
+                <!-- Show "Approve" button only if user belongs to group and final approval is not done -->
+                <button name="button_approve"
+                        type="object"
+                        string="Approve"
+                        class="btn-primary"
+                        invisible="final_approve or approvement_state == 'draft' or is_advance_payment != 'yes'"
+                        groups="kz_requisition_quintuple_approvals.requisition_main_group"/>
+
+                <field name="approvement_state"
+                       widget="statusbar"
+                       string="state"
+                       statusbar_visible="draft"
+                       invisible="is_advance_payment != 'yes'"/>
+
+                <!-- Hidden field to track final approval -->
+                <field name="final_approve" invisible="1"/>
+            </xpath>
+
+
+            <!-- ===============================
+                 Confirm Button Override
+                 =============================== -->
+            <xpath expr="//button[@name='action_post']" position="replace">
+                <field name="show_confirm" invisible="1"/>
+                <button name="action_post"
+                        string="Confirm"
+                        type="object"
+                        class="oe_highlight"
+                        data-hotkey="v"
+                        invisible="not show_confirm"/>
+            </xpath>
+
+
+            <!-- ===============================
+                 Replace Group1 Fields
+                 =============================== -->
+            <xpath expr="//group[@name='group1']" position="replace">
+                <group name="group1">
+
+                    <!-- Internal Transfer toggle -->
+<!--                    <field name="is_internal_transfer"-->
+<!--                           readonly="state != 'draft' or approvement_state != 'draft'"/>-->
+
+                    <field name="company_code"
+                           invisible="1"/>
+                    <field name="payment_type"
+                           widget="radio"
+                           options="{'horizontal': True}"
+                           readonly="state != 'draft' or approvement_state != 'draft'"/>
+
+                    <field name="is_advance_payment"
+                           widget="radio"
+                           options="{'horizontal': True}"
+                           readonly="approvement_state != 'draft'"
+                           invisible="payment_type != 'outbound' or company_code != 'ANK'"/>
+
+                    <!-- Purchase ID, required only for advance payments -->
+                    <field name="purchase_id"
+                           readonly="approvement_state != 'draft'"
+                           required="is_advance_payment == 'yes'"
+                           invisible="is_advance_payment != 'yes'"/>
+
+                    <field name="partner_id"
+                           string="Customer"
+                           context="{'default_is_company': True}"
+                           options="{'no_quick_create': True}"
+                           readonly="state != 'draft' or approvement_state != 'draft'"
+                           invisible="partner_type != 'customer'"/>
+
+                    <field name="partner_id"
+                           string="Vendor"
+                           context="{'default_is_company': True}"
+                           options="{'no_quick_create': True}"
+                           readonly="state != 'draft' or approvement_state != 'draft'"
+                           invisible="partner_type != 'supplier'"/>
+
+
+                    <!-- Amount and Currency (inline layout) -->
+                    <label for="amount"/>
+                    <div name="amount_div" class="o_row">
+                        <field name="amount"
+                               readonly="state != 'draft' or approvement_state != 'draft'"/>
+                        <field name="currency_id"
+                               required="1"
+                               options="{'no_create': True, 'no_open': True}"
+                               readonly="state != 'draft'"/>
+                    </div>
+
+                    <!-- Payment date -->
+                    <field name="date"
+                           options="{'no_quick_create': True}"
+                           readonly="state != 'draft' or approvement_state != 'draft'"/>
+
+                    <field name="memo"
+                           string="Memo"
+                           readonly="state != 'draft' or approvement_state != 'draft'"/>
+
+                </group>
+            </xpath>
+
+
+            <!-- ===============================
+                 Replace State Statusbar
+                 (Hidden for advance payment records)
+                 =============================== -->
+            <xpath expr="//field[@name='state']" position="replace">
+                <field name="state"
+                       widget="statusbar"
+                       statusbar_visible="draft,posted"
+                       invisible="is_advance_payment == 'yes'"/>
+            </xpath>
+
+
+            <!-- ===============================
+                 Replace Journal Field
+                 =============================== -->
+            <xpath expr="//field[@name='journal_id']" position="replace">
+                <field name="journal_id"
+                       domain="[('id', 'in', available_journal_ids)]"
+                       readonly="state != 'draft' or approvement_state != 'draft'"/>
+            </xpath>
+
+
+            <!-- ===============================
+                 Replace Payment Method Field
+                 =============================== -->
+            <xpath expr="//field[@name='payment_method_line_id']" position="replace">
+                <field name="payment_method_line_id"
+                       required="1"
+                       options="{'no_create': True, 'no_open': True}"
+                       readonly="state != 'draft' or approvement_state != 'draft'"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

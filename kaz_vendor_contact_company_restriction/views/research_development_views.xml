@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="kaz_research_and_development.menu_research_root"
+              name="Research &amp; Development"
+              parent="kaz_vendor_contact_company_restriction.menu_material_purchase_requisition_kuec_root"
+              sequence="3"/>
+</odoo>

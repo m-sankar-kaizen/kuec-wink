@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Tree View: List of all Bank Transfer requests
+        Shows current and new bank details, employee, and status
+    -->
+    <record id="bank_transfer_view_tree" model="ir.ui.view">
+        <field name="name">bank.transfer.view.list</field>
+        <field name="model">bank.transfer</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="current_bank_id" string="Current Bank"/>
+                <field name="branch_id" string="Current Branch"/>
+                <field name="iban_no" string="Current IBAN No"
+                       force_save="1"/>
+                <field name="new_bank_id" string="New Bank"/>
+                <field name="new_branch_id" string="New Branch"/>
+                <field name="new_iban_no" string="New IBAN No"/>
+                <!-- State field uses badge colors for visual distinction -->
+                <field name="state" string="State" widget="badge"
+                       decoration-muted="state == 'draft' or state == 'canceled'"
+                       decoration-info="state == 'hr_approval' or state == 'director_approval'"
+                       decoration-danger="state == 'rejected'"
+                       decoration-success="state == 'approved'"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+        Form View: Bank Transfer form with header actions, grouped fields,
+        and notebook for attachments and chatter.
+    -->
+    <record id="bank_transfer_view_form" model="ir.ui.view">
+        <field name="name">bank.transfer.view.form</field>
+        <field name="model">bank.transfer</field>
+        <field name="arch" type="xml">
+            <form string="Bank Transfer">
+                <header>
+                    <!-- Workflow Buttons based on current state and group -->
+                    <button name="action_send_for_hr_approval"
+                            string="HR Team" type="object"
+                            invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <button name="action_send_for_director_approval"
+                            string="Payroll Officer" type="object"
+                            invisible="state != 'hr_approval'"
+                            class="btn-primary"
+                            groups="kaz_bank_transfer.group_hr_person"/>
+                    <button name="action_approve" string="Approve" type="object"
+                            invisible="state not in ['hr_approval', 'director_approval']"
+                            class="btn-primary"
+                            groups="kaz_bank_transfer.group_director"/>
+                    <button name="action_reject_director" string="Reject"
+                            type="object"
+                            invisible="state != 'director_approval'"
+                            groups="kaz_bank_transfer.group_director"
+                            class="btn-secondary"/>
+                    <button name="action_reject_hr" string="Reject"
+                            type="object"
+                            invisible="state != 'hr_approval'"
+                            groups="kaz_bank_transfer.group_hr_person"
+                            class="btn-secondary"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state != 'draft'"
+                            class="btn-secondary"/>
+                    <!-- State bar showing progression -->
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,hr_approval,director_approval,approved,rejected"/>
+                </header>
+
+                <sheet>
+                    <!-- Record title -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <!-- Employee & Company Information -->
+                    <group>
+                        <!-- Editable for HR, Readonly for employees -->
+                        <field name="employee_id"
+                               groups="kaz_bank_transfer.group_hr_person"
+                               readonly="state != 'draft'"/>
+                        <field name="employee_id"
+                               groups="base.group_user,!kaz_bank_transfer.group_hr_person"
+                               readonly="1"/>
+                        <field name="company_id"/>
+                        <field name="transfer_date"
+                               readonly="1"
+                               invisible="not transfer_date"/>
+                    </group>
+
+                    <!-- Current & New Bank Information -->
+                    <group>
+                        <group string="Current Bank Details">
+                            <field name="current_bank_id" string="Name" readonly="1"/>
+                            <field name="branch_id" string="Branch" readonly="1"/>
+                            <field name="iban_no" string="IBAN No" readonly="1"/>
+                        </group>
+
+                        <group string="New Bank Details">
+                            <field name="new_bank_id" string="Name"
+                                   readonly="state != 'draft'"/>
+                            <field name="new_branch_id" string="Branch"
+                                   readonly="state != 'draft'"/>
+                            <field name="new_iban_no" string="IBAN No"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <!-- Attachments Tab -->
+                    <notebook>
+                        <page string="Supporting Documents">
+                            <field name="supporting_document_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="attachment" widget="binary"
+                                           filename="attachment_name"/>
+                                    <field name="attachment_name" invisible="1"/>
+                                    <field name="description"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Chatter -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        Window Action: Enables access to the Bank Transfer model via the UI
+    -->
+    <record id="action_bank_transfer" model="ir.actions.act_window">
+        <field name="name">Employee Bank Transfer</field>
+        <field name="res_model">bank.transfer</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_no content_create">
+                No Bank Transfer Requests.
+            </p>
+        </field>
+    </record>
+
+    <!--
+        Menu Item: Adds the Bank Transfer under HR root menu
+    -->
+    <menuitem id="bank_transfer_menu"
+              name="Bank Transfer"
+              action="action_bank_transfer"
+              parent="hr.menu_hr_root"
+              sequence="21"/>
+</odoo>

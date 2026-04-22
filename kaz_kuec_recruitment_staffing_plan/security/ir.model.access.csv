@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_staffing_plan,hr.staffing.plan,model_hr_staffing_plan,,1,1,1,1
+access_staffing_plan_details,staffing.plan.details,model_staffing_plan_details,,1,1,1,1
+access_off_cycle_staffing_reason,off_cycle.staffing.reason,model_off_cycle_staffing_reason,,1,1,1,1
+access_hr_recruitment_requests,hr.recruitment.requests,model_hr_recruitment_requests,,1,1,1,1
+access_hr_job_position_request,hr.job.position.request,model_hr_job_position_request,,1,1,1,1
+access_hr_master_plan,hr.master.plan,model_hr_master_plan,,1,1,1,1
+access_existing_staffing_plan,existing.staffing.plan,model_existing_staffing_plan,,1,1,1,1

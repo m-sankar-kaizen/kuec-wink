@@ -1,0 +1,33 @@
+{
+    'name': "KUEC Recruitment Process",
+    'version': '18.0.1.0.0',
+    'category': 'Hr',
+    'summary': 'KUEC Recruitment Process',
+    'description': """KUEC Recruitment Process""",
+    'author': 'Kaizen Principles',
+    'company': 'Kaizen Principles',
+    'maintainer': 'Kaizen Principles',
+    'website': 'https://www.kaizenae.com',
+    'depends': [
+        'kaz_employees',
+        'kaz_kuec_recruitment_staffing_plan',
+        'kaz_company_restriction_base',
+        'hr_linkedin_recruitment',
+        'website_hr_recruitment',
+        'kaz_contact_approval',
+        'hr_recruitment'
+    ],
+    'data': [
+        'data/cron.xml',
+        'data/external_recruiters_notify.xml',
+        'views/hr_job_views.xml',
+        'views/hr_stage_views.xml',
+        'views/res_partner_views.xml',
+        'views/partner_checklist_conf_views.xml',
+        'views/attachment_attachment_views.xml',
+    ],
+    'license': 'AGPL-3',
+    'installable': True,
+    'auto_install': False,
+    'application': False,
+}

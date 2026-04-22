@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    =========================================================================================
+    Tree View: exit_clearance_tree_view
+    Displays exit clearance records in a tabular format, useful for quick overview and search.
+    Fields shown:
+        - name: Employee
+        - date: Exit clearance submission date
+        - position: Job title
+        - department: Department
+        - company_id: Company
+        - state: Approval state
+    =========================================================================================
+    -->
+    <record id="exit_clearance_tree_view" model="ir.ui.view">
+        <field name="name">exit clearance list</field>
+        <field name="model">exit.clearance</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="position"/>
+                <field name="department"/>
+                <field name="company_id"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    =========================================================================================
+    Form View: exit_clearance_form_view
+    A comprehensive form view for managing an employee's exit clearance.
+
+    Header Buttons:
+        - Submit for Approval: Moves record to "waiting_approval"
+        - Approve: For HR to approve the clearance
+        - Reject: Rejects the clearance process
+        - Cancel: Cancels the draft or in-process record
+        - Reset to Draft: Moves cancelled records back to draft
+        - Print: Generates PDF report (available after approval)
+
+    Tabs/Groups include:
+        - Basic info: Employee & job details
+        - Communication, IT, HR, Passport details
+        - Attachments and confirmation
+        - Integrated chatter (for mail.thread)
+    =========================================================================================
+    -->
+    <record id="exit_clearance_form_view" model="ir.ui.view">
+        <field name="name">exit clearance form</field>
+        <field name="model">exit.clearance</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <!-- Transition buttons depending on record state -->
+                    <button name="submit_for_approval"
+                            type="object"
+                            invisible="state != 'draft'"
+                            string="Submit for Approval"
+                            class="oe_highlight"/>
+
+                    <!-- Print button shows only once approved -->
+                    <button type="action"
+                            invisible="state != 'approved'"
+                            name="%(kaz_employee_reports.action_report_exit_clearance_report)d"
+                            string="Print"
+                            class="oe_highlight"/>
+
+                    <!-- HR-only approval & rejection -->
+                    <button name="approve"
+                            type="object"
+                            invisible="state != 'waiting_approval'"
+                            groups="kaz_employee_reports.group_letter_manager"
+                            string="Approve"
+                            class="oe_highlight"/>
+
+                    <button name="rejected"
+                            type="object"
+                            groups="kaz_employee_reports.group_letter_manager"
+                            invisible="state not in ['waiting_approval', 'approved']"
+                            string="Reject"
+                            class="btn-default"/>
+
+                    <button name="canceled"
+                            type="object"
+                            invisible="state not in ['draft', 'waiting_approval', 'rejected']"
+                            string="Cancel"
+                            class="btn-default"/>
+
+                    <button name="reset_to_draft"
+                            type="object"
+                            invisible="state != 'cancel'"
+                            string="Reset to Draft"
+                            class="btn-default"/>
+
+                    <!-- Statusbar for tracking current state -->
+                    <field name="state" widget="statusbar"/>
+                </header>
+
+                <sheet>
+                    <!-- Title reference (human-readable ID) -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="ref"/>
+                        </h1>
+                    </div>
+
+                    <!-- General Employee Info -->
+                    <group>
+                        <group>
+                            <!-- HR can edit name -->
+                            <field name="name"
+                                   readonly="state != 'draft'"
+                                   groups="kaz_employee_reports.group_letter_manager"/>
+                            <!-- Other users see readonly -->
+                            <field name="name"
+                                   groups="base.group_user,!kaz_employee_reports.group_letter_manager"
+                                   readonly="1"/>
+                            <field name="emp_id"/>
+                            <field name="email"/>
+                            <field name="mobile"/>
+                        </group>
+
+                        <group>
+                            <field name="date" required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="position"/>
+                            <field name="department"/>
+                            <field name="company_id"/>
+                            <field name="exit"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <!-- Communication & HR Info -->
+                    <group>
+                        <group string="Communications">
+                            <field name="communication_email"
+                                   readonly="state != 'draft'"/>
+                            <field name="communication_Mobile"
+                                   readonly="state != 'draft'"/>
+                        </group>
+
+                        <group string="Human Resource">
+                            <field name="personal_telephone"
+                                   readonly="state != 'draft'"/>
+                            <field name="personal_email"
+                                   readonly="state != 'draft'"/>
+                            <field name="personal_address"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <!-- Passport & IT Info -->
+                    <group>
+                        <group string="passport">
+                            <field name="passport_name"
+                                   readonly="state != 'draft'"/>
+                            <field name="passport_date"
+                                   readonly="state != 'draft'"/>
+                        </group>
+
+                        <group string="it information">
+                            <field name="email_it"
+                                   readonly="state != 'draft'"/>
+                            <field name="equipment_it"
+                                   readonly="state != 'draft'"/>
+                            <field name="request_it"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <!-- Research Services & Final Confirmation -->
+                    <group>
+                        <group string="research services">
+                            <field name="ehss_facilites"
+                                   readonly="state != 'draft'"/>
+                            <field name="principle_service"
+                                   readonly="state != 'draft'"/>
+                            <field name="responsible_service"
+                                   readonly="state != 'draft'"/>
+                            <field name="research_service"
+                                   readonly="state != 'draft'"/>
+                        </group>
+
+                        <group string="confirm data">
+                            <field name="attach"
+                                   readonly="state != 'draft'"/>
+                            <field name="confirm_data"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                </sheet>
+
+                <!-- Chatter support for thread, activities, followers -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    =========================================================================================
+    Window Action: action_ank_exit_clearance
+    Allows access to the exit clearance form/list view.
+    Appears under Off-Boarding menu via menu item below.
+    =========================================================================================
+    -->
+    <record id="action_ank_exit_clearance" model="ir.actions.act_window">
+        <field name="name">Exit Clearance</field>
+        <field name="res_model">exit.clearance</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new exit clearance
+            </p>
+        </field>
+    </record>
+
+    <!--
+    =========================================================================================
+    Menu: exit_clearance_menu
+    Adds the Exit Clearance menu under the employee_off_boarding_menu
+    which should already exist in your kaz_employee_reports module.
+    =========================================================================================
+    -->
+    <menuitem id="exit_clearance_menu"
+              name="Exit Clearance"
+              parent="kaz_employee_reports.employee_off_boarding_menu"
+              action="action_ank_exit_clearance"/>
+
+</odoo>

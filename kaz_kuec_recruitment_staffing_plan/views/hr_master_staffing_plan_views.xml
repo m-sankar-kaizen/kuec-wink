@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="hr_master_plan_view_tree" model="ir.ui.view">
+        <field name="name">hr.master.plan.view.tree</field>
+        <field name="model">hr.master.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date_start"/>
+                <field name="date"/>
+                <field name="department_ids"
+                       widget="many2many_tags"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="hr_master_plan_view_form" model="ir.ui.view">
+        <field name="name">hr.master.plan.view.form</field>
+        <field name="model">hr.master.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_request"
+                            class="oe_highlight"
+                            string="Request"
+                            invisible="status not in ['draft']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_close"
+                            class="oe_highlight"
+                            string="Close Plan"
+                            invisible="status not in ['open']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_active"
+                            class="oe_highlight"
+                            string="Active"
+                            invisible="status not in ['close']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_done"
+                            class="oe_highlight"
+                            string="Done"
+                            invisible="status not in ['active']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_cancel"
+                            class="btn btn-secondary"
+                            string="Cancel"
+                            invisible="status not in ['draft']"
+                            type="object"
+                            help="Cancel"/>
+                    <field name="status" widget='statusbar'/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="view_master_staffing_plans"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-pencil-square-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">HR Plans</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"
+                                   placeholder="Staffing 25 - 26"
+                                   readonly="status != 'draft'"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+<!--                            <field name="active" invisible="1"/>-->
+                            <field name="deadline" required="1"/>
+                            <field name="department_ids"
+                                   widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <field name="fiscal_year_id"
+                                   required="1"/>
+                            <field name="date_start" string="Planned Date"
+                                   widget="daterange"
+                                   options="{&quot;end_date_field&quot;: &quot;date&quot;, &quot;always_range&quot;: &quot;1&quot;}"
+                                   />
+                            <field name="date" invisible="1"/>
+                            <field name="company_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description"
+                                   readonly="status != 'draft'"/>
+                        </page>
+                        <page string="Staffing Plan Details">
+                            <field name="staffing_plan_details_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="staffing_plan_id"
+                                           column_invisible="1"/>
+                                    <field name="company_id"
+                                    column_invisible="1"/>
+                                    <field name="currency_id"
+                                           column_invisible="1"/>
+                                    <field name="department_id"
+                                    column_invisible="1"/>
+                                    <field name="position_id"
+                                           invisible="request_new_position"/>
+                                    <field name="request_new_position"/>
+                                    <field name="new_position_name"
+                                           required="request_new_position"
+                                            invisible="not request_new_position"/>
+                                    <field name="priority"
+                                           widget="priority"/>
+                                    <field name="number_of_position"/>
+                                    <field name="vacancies"/>
+                                    <field name="estimated_cost"/>
+                                    <field name="total_estimated_cost"
+                                           sum="Total Estimate"/>
+                                </list>
+
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+</odoo>

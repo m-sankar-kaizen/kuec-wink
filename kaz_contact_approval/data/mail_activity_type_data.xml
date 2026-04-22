@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+
+    <!-- Contact Approval Activity Type -->
+    <record id="mail_activity_type_contact_approval" model="mail.activity.type">
+        <field name="name">Contact Approval</field>
+        <field name="res_model">res.partner</field>
+        <field name="icon">fa-check-circle</field>
+        <field name="summary">Review and approve contact details</field>
+    </record>
+
+</odoo>

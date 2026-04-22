@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bank_transfer,bank.transfer,model_bank_transfer,base.group_user,1,1,1,1
+access_bank_support_documents,bank.support.documents,model_bank_support_documents,base.group_user,1,1,1,1

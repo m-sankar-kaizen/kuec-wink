@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Inherit Account Asset Form to show ROU flag -->
+    <record id="view_account_asset_form_inherit_rou" model="ir.ui.view">
+        <field name="name">account.asset.form.inherit.rou</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_rou_asset" invisible="1"/>
+                <field name="lease_contract_id" readonly="1" invisible="not is_rou_asset"/>
+                <field name="is_leased" invisible="1"/>
+            </xpath>
+            <xpath expr="//widget[@name='web_ribbon']" position="after">
+                <widget name="web_ribbon" title="ROU Asset" bg_color="text-bg-info" invisible="not is_rou_asset"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Inherit Account Asset Tree to show ROU indicator -->
+    <record id="view_account_asset_tree_inherit_rou" model="ir.ui.view">
+        <field name="name">account.asset.tree.inherit.rou</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="is_rou_asset" string="ROU" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Search View with ROU filter -->
+    <record id="view_account_asset_search_inherit_rou" model="ir.ui.view">
+        <field name="name">account.asset.search.inherit.rou</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <filter string="ROU Assets" name="rou_assets" domain="[('is_rou_asset', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

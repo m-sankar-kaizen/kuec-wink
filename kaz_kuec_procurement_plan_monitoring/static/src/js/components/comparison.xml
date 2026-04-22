@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="Comparison">
+        <div class="card p-3 border-0" style="background-color: transparent;">
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item" t-foreach="props.tabs" t-as="tab" t-key="tab_index">
+                    <a href="javascript:void(0)" class="nav-link"
+                       t-attf-class="nav-link {{tab.key === state.activeTab ? 'active' : ''}}"
+                       t-on-click="() => this.switchTab(tab.key)">
+                        <t t-out="tab.label"/>
+                    </a>
+                </li>
+            </ul>
+            <div>
+                <Chart t-props="chartProps"/>
+            </div>
+        </div>
+    </t>
+</templates>

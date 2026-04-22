@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <!--
+        This XML file creates a default Analytic Plan named 'Departments'
+        for use in analytic accounting. The `default_applicability` field
+        is set to 'optional', allowing but not requiring this plan to be applied
+        to accounting entries.
+
+        `noupdate="1"` means this record will not be updated if the module is upgraded,
+        preserving any user modifications to this record.
+    -->
+    <!-- Create a new Analytic Plan for departments -->
+    <record id="analytic_department" model="account.analytic.plan">
+        <field name="name">Departments</field>
+        <field name="default_applicability">optional</field>
+    </record>
+</odoo>

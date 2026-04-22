@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+    <!--
+    ============================================================================
+    Module      : kz_requisition_quintuple_approvals
+    File        : security/groups.xml (recommended filename)
+    Description : This XML file defines the user groups and access roles required
+                  for implementing a five-level requisition approval workflow in Odoo.
+                  It introduces security groups for each approval tier including:
+                      - Department Head Replacement
+                      - Department Head
+                      - Budget Controller
+                      - Head of Unit
+                      - CFO (Chief Financial Officer)
+                      - CEO (Chief Executive Officer)
+
+                  These groups can be referenced in Python business logic, record rules,
+                  or views to control access, trigger state transitions, or filter visibility.
+
+    Components  :
+        - ir.module.category: Registers a new module security category for grouping related roles.
+        - res.groups: Defines each approval group with implied access for internal users.
+
+    Usage Notes:
+        - Each group implies 'base.group_user' so only internal users can hold these roles.
+        - `module_category_requisition_approval` is used to logically categorize these groups
+           under the Requisition Approval section in Settings > Users & Companies > Groups.
+        - These groups can be used in Python (`@groups`, `has_group`) or XML `groups="..."`.
+
+    Author      : Your Company
+    License     : AGPL-3.0 or Odoo Proprietary (as applicable)
+    ============================================================================
+-->
+
+    <record model="ir.module.category" id="module_category_reaiosotion_approval">
+        <field name="name">Requisition Approval</field>
+    </record>
+
+    <record id="department_head_backup" model="res.groups">
+        <field name="name">Department Head Replacement</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+    </record>
+
+    <record id="department_head" model="res.groups">
+        <field name="name">Department Head</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_reaiosotion_approval"/>
+    </record>
+
+    <record id="budget_controller" model="res.groups">
+        <field name="name">Budget Controller</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_reaiosotion_approval"/>
+    </record>
+
+    <record id="re_head_of_unit" model="res.groups">
+        <field name="name">Head of Unit</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_reaiosotion_approval"/>
+    </record>
+    <record id="cfo" model="res.groups">
+        <field name="name">CFO</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_reaiosotion_approval"/>
+    </record>
+
+    <record id="re_ceo" model="res.groups">
+        <field name="name">CEO</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_reaiosotion_approval"/>
+    </record>
+
+    <record id="group_requisition_vendor_extend" model="res.groups">
+        <field name="name">Requisition Extend</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+    </record>
+
+</odoo>

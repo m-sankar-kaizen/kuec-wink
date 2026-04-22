@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Certificate Report Definition -->
+    <record id="action_report_internship_certificate" model="ir.actions.report">
+        <field name="name">Internship Certificate</field>
+        <field name="model">hr.internship</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">hr_internship.report_internship_certificate</field>
+        <field name="report_file">hr_internship.report_internship_certificate</field>
+        <field name="binding_model_id" ref="model_hr_internship"/>
+        <field name="binding_type">report</field>
+        <field name="print_report_name">'Certificate - %s' % (object.certificate_number or object.name)</field>
+    </record>
+
+    <!-- Certificate Template -->
+    <template id="report_internship_certificate">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: 'Arial', sans-serif;">
+                        <!-- Certificate Container with Border -->
+                        <div style="border: 8px solid #003366; padding: 40px; margin: 20px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
+                            
+                            <!-- Header Section with KUEC-Inspired Colors -->
+                            <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(90deg, #003366 0%, #0066cc 100%); color: white; border-radius: 5px;">
+                                <h1 style="font-size: 42px; margin: 0; letter-spacing: 2px; font-weight: bold; text-transform: uppercase;">
+                                    Certificate of Completion
+                                </h1>
+                                <div style="font-size: 16px; margin-top: 10px; letter-spacing: 1px;">
+                                    Internship Program
+                                </div>
+                            </div>
+
+                            <!-- Decorative Line -->
+                            <div style="text-align: center; margin: 30px 0;">
+                                <div style="display: inline-block; width: 60%; height: 3px; background: linear-gradient(90deg, transparent 0%, #003366 50%, transparent 100%);"></div>
+                            </div>
+
+                            <!-- Main Content -->
+                            <div style="text-align: center; padding: 20px 40px;">
+                                <p style="font-size: 18px; color: #333; margin: 20px 0; line-height: 1.8;">
+                                    This is to certify that
+                                </p>
+
+                                <h2 style="font-size: 36px; color: #003366; margin: 25px 0; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-bottom: 3px solid #0066cc; display: inline-block; padding-bottom: 10px;">
+                                    <t t-esc="o.intern_id.name"/>
+                                </h2>
+
+                                <p style="font-size: 18px; color: #333; margin: 25px 0; line-height: 1.8;">
+                                    has successfully completed an internship program in the
+                                </p>
+
+                                <h3 style="font-size: 28px; color: #0066cc; margin: 20px 0; font-weight: bold;">
+                                    <t t-esc="o.department_id.name"/> Department
+                                </h3>
+
+                                <p style="font-size: 18px; color: #333; margin: 25px 0; line-height: 1.8;">
+                                    From <strong><t t-esc="o.date_start.strftime('%B %d, %Y')"/></strong> to <strong><t t-esc="o.date_end.strftime('%B %d, %Y')"/></strong>
+                                </p>
+
+                                <p style="font-size: 16px; color: #666; margin: 30px 0; line-height: 1.8; font-style: italic;">
+                                    This internship program was designed to provide practical experience, professional development,
+                                    and hands-on learning in a real-world business environment.
+                                </p>
+                            </div>
+
+                            <!-- Decorative Line -->
+                            <div style="text-align: center; margin: 30px 0;">
+                                <div style="display: inline-block; width: 60%; height: 3px; background: linear-gradient(90deg, transparent 0%, #003366 50%, transparent 100%);"></div>
+                            </div>
+
+                            <!-- Certificate Details and Signatures -->
+                            <div style="margin-top: 50px; padding: 0 40px;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 50%; padding: 20px; vertical-align: top;">
+                                            <div style="text-align: left;">
+                                                <p style="font-size: 14px; color: #666; margin: 5px 0;">
+                                                    <strong>Certificate Number:</strong>
+                                                </p>
+                                                <p style="font-size: 16px; color: #003366; font-weight: bold; margin: 5px 0;">
+                                                    <t t-esc="o.certificate_number or 'N/A'"/>
+                                                </p>
+                                                <p style="font-size: 14px; color: #666; margin: 15px 0 5px 0;">
+                                                    <strong>Issue Date:</strong>
+                                                </p>
+                                                <p style="font-size: 16px; color: #003366; font-weight: bold; margin: 5px 0;">
+                                                    <t t-esc="o.certificate_date.strftime('%B %d, %Y') if o.certificate_date else 'N/A'"/>
+                                                </p>
+                                            </div>
+                                        </td>
+                                        <td style="width: 50%; padding: 20px; vertical-align: bottom;">
+                                            <div style="text-align: center; border-top: 2px solid #003366; padding-top: 10px; margin-top: 40px;">
+                                                <p style="font-size: 16px; color: #003366; font-weight: bold; margin: 5px 0;">
+                                                    <t t-esc="o.mentor_id.name"/>
+                                                </p>
+                                                <p style="font-size: 14px; color: #666; margin: 5px 0;">
+                                                    Mentor / Supervisor
+                                                </p>
+                                                <p style="font-size: 12px; color: #999; margin: 5px 0;">
+                                                    <t t-esc="o.department_id.name"/> Department
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Footer with Inspirational Message -->
+                            <div style="text-align: center; margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-radius: 5px; border-left: 5px solid #0066cc;">
+                                <p style="font-size: 14px; color: #003366; margin: 0; font-style: italic; line-height: 1.6;">
+                                    "Advancing Innovation. Empowering the Future."
+                                </p>
+                                <p style="font-size: 12px; color: #666; margin: 10px 0 0 0;">
+                                    We recognize your dedication, hard work, and commitment to excellence throughout this internship program.
+                                </p>
+                            </div>
+
+                            <!-- Decorative Corner Elements -->
+                            <div style="position: absolute; top: 30px; left: 30px; width: 60px; height: 60px; border-top: 5px solid #0066cc; border-left: 5px solid #0066cc;"></div>
+                            <div style="position: absolute; top: 30px; right: 30px; width: 60px; height: 60px; border-top: 5px solid #0066cc; border-right: 5px solid #0066cc;"></div>
+                            <div style="position: absolute; bottom: 30px; left: 30px; width: 60px; height: 60px; border-bottom: 5px solid #0066cc; border-left: 5px solid #0066cc;"></div>
+                            <div style="position: absolute; bottom: 30px; right: 30px; width: 60px; height: 60px; border-bottom: 5px solid #0066cc; border-right: 5px solid #0066cc;"></div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

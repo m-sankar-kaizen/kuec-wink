@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="group_kuec_employee_user" model="res.groups">
+        <field name="name">Employee User</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.module_category_kuec_doa"/>
+    </record>
+
+    <record id="group_kuec_employee_hr" model="res.groups">
+        <field name="name">HR User</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.module_category_kuec_doa"/>
+    </record>
+
+    <record id="group_kuec_employee_hohr" model="res.groups">
+        <field name="name">Head of HR</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.module_category_kuec_doa"/>
+    </record>
+
+    <record id="group_cio_kuec" model="res.groups">
+        <field name="name">Chief Investment Officer</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.module_category_kuec_doa"/>
+    </record>
+
+    <record id="group_coe_kuec" model="res.groups">
+        <field name="name">COE</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.module_category_kuec_doa"/>
+    </record>
+
+    <record id="group_reset_draft_kuec" model="res.groups">
+        <field name="name">Reset to Draft</field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.module_category_kuec_doa"/>
+    </record>
+
+    <record id="group_purchase_own_doc" model="res.groups">
+        <field name="name">Purchase: Own Document Only</field>
+        <field name="implied_ids" eval="[Command.link(ref('purchase.group_purchase_user'))]"/>
+        <field name="comment">KUEC - Purchase Own Documents only Access right</field>
+    </record>
+</odoo>

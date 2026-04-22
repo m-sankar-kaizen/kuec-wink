@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Add Employees column to task list view -->
+    <record id="project_task_list_wink" model="ir.ui.view">
+        <field name="name">project.task.list.wink</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <field name="wink_employee_ids" widget="many2many_tags" optional="show" string="Employees"/>
+                <field name="wink_vendor_id" optional="show" string="Vendor"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_task_form_wink" model="ir.ui.view">
+        <field name="name">project.task.form.wink</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+
+            <!-- ── Assign Vendor button in header ────────────────────────── -->
+            <xpath expr="//header" position="inside">
+                <button name="action_open_assign_vendor_wizard"
+                        string="Assign Vendor"
+                        type="object"
+                        class="btn-primary"
+                        invisible="not sale_order_id or not sale_order_id.wink_is_portal_request or wink_vendor_id"
+                        help="Opens the Assign Vendor dialog to select a vendor and auto-create a draft RFQ."/>
+                <button name="action_create_vendor_subtask"
+                        string="Create Vendor Subtask"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="not sale_order_id or not sale_order_id.wink_is_portal_request or not wink_vendor_id or wink_is_vendor_subtask"
+                        help="Create a subtask for the vendor. The vendor will be a follower; the customer will not."/>
+            </xpath>
+
+            <!-- ── Smart buttons ──────────────────────────────────────────── -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_rfq_po"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-shopping-cart"
+                        invisible="not wink_purchase_order_id"
+                        help="View the linked Purchase Order / RFQ for this task.">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="wink_purchase_order_count"/>
+                        </span>
+                        <span class="o_stat_text">RFQ / PO</span>
+                    </div>
+                </button>
+                <button name="action_view_vendor_subtasks"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-tasks"
+                        invisible="not wink_vendor_subtask_count"
+                        help="View vendor subtasks linked to this task.">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="wink_vendor_subtask_count"/>
+                        </span>
+                        <span class="o_stat_text">Vendor Subtask(s)</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- ── WINK / Portal tab ──────────────────────────────────────── -->
+            <xpath expr="//notebook" position="inside">
+                <page string="WINK / Portal" name="wink_portal" invisible="not sale_order_id or not sale_order_id.wink_is_portal_request">
+
+                    <!-- Vendor Assignment -->
+                    <group string="Vendor Assignment">
+                        <group>
+                            <field name="wink_vendor_id"
+                                   options="{'no_create': True}"
+                                   placeholder="Search vendor…"/>
+                            <field name="wink_purchase_order_id" readonly="1"/>
+                            <field name="wink_is_vendor_subtask" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Employees" invisible="wink_is_vendor_subtask">
+                        <field name="wink_customer_partner_id" invisible="1"/>
+                        <field name="wink_employee_ids" widget="many2many_tags" nolabel="1"
+                               domain="[('partner_id', '=', wink_customer_partner_id)] if wink_customer_partner_id else []"/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

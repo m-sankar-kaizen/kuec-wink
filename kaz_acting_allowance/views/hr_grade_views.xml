@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================================================
+         Inherit HR Grade Form View to Add "Allow Acting Allowance"
+         ============================================================ -->
+    <record id="hr_grade_view_form_inherit_acting_allowance" model="ir.ui.view">
+        <field name="name">hr.grade.view.form.inherit.acting.allowance</field>
+        <field name="model">hr.grade</field>
+        <field name="inherit_id" ref="kaz_employees.action_hr_grade_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[2]" position="after">
+                <group>
+                    <!-- Sub-group for Acting Allowance settings -->
+                    <group name="acting_allowance" string="Acting Allowance">
+                        <!-- Field to toggle eligibility for acting allowance.
+                             Only editable in 'draft' state -->
+                        <field name="is_allow_acting_allowance"
+                               readonly="state != 'draft'"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

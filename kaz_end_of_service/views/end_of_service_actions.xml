@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Define a window action for the 'hr.employee.settlements' model.
+        This action opens a list (list) and form view for managing employee end-of-service settlements.
+    -->
+    <record id="action_hr_employee_settlements" model="ir.actions.act_window">
+        <field name="name">Employee Settlements</field>
+        <field name="res_model">hr.employee.settlements</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!--
+        Add a menu item for navigating to the Employee Settlements screen.
+        This entry appears under the 'Employee Offboarding' menu (defined in another module).
+    -->
+    <menuitem id="menu_employee_settlements"
+              name="Employee Settlements"
+              parent="kaz_employee_reports.employee_off_boarding_menu"
+              action="action_hr_employee_settlements"/>
+</odoo>

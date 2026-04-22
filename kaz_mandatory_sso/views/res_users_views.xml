@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Inheritance: res.users form
+        Purpose:
+            Extend the standard user form view to support Single Sign-On (SSO) configuration.
+            This enables admin users to assign SSO credentials and identify the provider
+            (SAML or OAuth) per user account.
+
+        Fields Added:
+            - sso_type (Selection): Defines the type of SSO ('saml' or 'oauth') enabled for the user.
+            - saml_id (Many2one): References the SAML provider to use, visible only if sso_type == 'saml'.
+            - oauth_id (Many2one): References the OAuth provider, visible only if sso_type == 'oauth'.
+
+        Behavior:
+            - Required and visible fields dynamically adapt based on selected `sso_type`.
+            - This prevents configuration errors and ensures clarity during user creation or edit.
+    -->
+    <record id="view_users_form" model="ir.ui.view">
+        <field name="name">res.users.form</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[contains(@class, 'oe_title')]/group" position="inside">
+
+                <!-- Select SSO type (e.g., SAML or OAuth) -->
+                <field name="show_sso_type"
+                       invisible="1"/>
+                <field name="sso_type"
+                       required="show_sso_type"
+                       invisible="not show_sso_type"
+                       string="Single Sign-On Type"
+                       help="Choose the method of SSO authentication for this user." />
+
+                <!-- Show SAML provider field if SSO type is 'saml' -->
+                <field name="saml_id"
+                       string="SAML Provider"
+                       invisible="sso_type != 'saml'"
+                       required="sso_type == 'saml'"
+                       help="Select the SAML provider to use for authenticating this user." />
+
+                <!-- Show OAuth provider field if SSO type is 'oauth' -->
+                <field name="oauth_id"
+                       string="OAuth Provider"
+                       invisible="sso_type != 'oauth'"
+                       required="sso_type == 'oauth'"
+                       help="Select the OAuth provider to use for authenticating this user." />
+            </xpath>
+        </field>
+    </record>
+</odoo>

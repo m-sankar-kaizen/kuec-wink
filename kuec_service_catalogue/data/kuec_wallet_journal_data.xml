@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="kuec_ewallet_journal" model="account.journal">
+            <field name="name">WINK eWallet</field>
+            <field name="type">bank</field>
+            <field name="code">WEWL</field>
+            <field name="is_ewallet_journal" eval="True"/>
+        </record>
+    </data>
+</odoo>

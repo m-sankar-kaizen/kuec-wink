@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- ========================================================
+         Record Rule: Material Purchase Requisition (Multi-Company)
+         - Grants users access to Purchase Requisitions where:
+             • The company is unset (company_id = False)
+             • OR the company_id is within their accessible company_ids
+         - Applied globally (all users), but filtered by company context
+    ======================================================== -->
+    <record model="ir.rule" id="material_purchase_requisition_comp_rule">
+        <field name="name">Material Purchase Requisition multi-company</field>
+        <field name="model_id" ref="model_material_purchase_requisition"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">
+            ['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]
+        </field>
+    </record>
+
+    <!-- ========================================================
+         Record Rule: Requisition Lines (Multi-Company)
+         - Grants access to requisition lines linked to a requisition
+           belonging to one of the user's companies (or no company).
+    ======================================================== -->
+    <record model="ir.rule" id="material_purchase_requisition_line_comp_rule">
+        <field name="name">Material Purchase Requisition Line multi-company</field>
+        <field name="model_id" ref="model_material_purchase_requisition_line"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">
+            ['|', ('requisition_id.company_id', '=', False), ('requisition_id.company_id', 'in', company_ids)]
+        </field>
+    </record>
+
+</odoo>

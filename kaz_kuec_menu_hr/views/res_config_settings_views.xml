@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="performance_res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kaz.kuec.menu.hr</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Performance and Reward" string="Performance &amp; Reward" name="performance_reward"
+                     logo="/kaz_kuec_menu_hr/static/description/emp_perf_rew.png">
+                    <field name="company_code" invisible="1"/>
+                    <block title="Goal Configuration" name="employee_goal_config"
+                           invisible="company_code not in ['KUEC']">
+                        <setting
+                                help="Default Goal Template, will be selected by default while creating a Goal Evaluation"
+                                title="Default Goal Template.">
+                            <field name="goal_template_id"/>
+                        </setting>
+                        <setting
+                                help="Number of days before the final evaluation date when the system should automatically trigger the final evaluation state and notify the HOD. Used by the performance evaluation cron job."
+                                title="Days Before Final Evaluation.">
+                            <field name="final_eval_trigger_days_before"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="performance_res_config_settings_view_form_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_id" ref="performance_res_config_settings_view_form"/>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'performance_reward', 'bin_size': False}</field>
+    </record>
+</odoo>

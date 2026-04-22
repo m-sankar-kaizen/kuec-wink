@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Vendor Portal Home: My Ratings entry ──────────────────────────── -->
+    <template id="portal_my_home_wink_vendor_ratings" inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-if="vendor_rating_count">
+                <t t-call="portal.portal_docs_entry">
+                    <t t-set="title">My Service Ratings</t>
+                    <t t-set="url">/my/vendor-ratings</t>
+                    <t t-set="count" t-value="vendor_rating_count"/>
+                    <t t-set="placeholder_count">ratings</t>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- ── Vendor Portal: My Service Ratings page ────────────────────────── -->
+    <template id="wink_vendor_ratings_page" name="WINK: My Service Ratings">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">My Service Ratings</t>
+            </t>
+
+            <t t-if="not rating_rows">
+                <div role="status" class="alert alert-info mt-3">
+                    No ratings received yet. Ratings appear here once a customer submits feedback on a completed service.
+                </div>
+            </t>
+
+            <t t-if="rating_rows">
+                <!-- Summary bar -->
+                <div class="d-flex align-items-center gap-4 mb-4 p-3 bg-light rounded-3 border">
+                    <div>
+                        <div class="fw-bold fs-5">
+                            <t t-esc="'%.1f' % avg_rating"/> / 5
+                        </div>
+                        <div class="text-muted small">Average Score</div>
+                    </div>
+                    <div class="vr"/>
+                    <div>
+                        <div class="fw-bold fs-5"><t t-esc="total"/></div>
+                        <div class="text-muted small">Total Ratings</div>
+                    </div>
+                    <!-- Star bar -->
+                    <div class="ms-auto">
+                        <t t-set="full_stars" t-value="int(avg_rating)"/>
+                        <t t-set="half_star" t-value="(avg_rating - full_stars) >= 0.5"/>
+                        <t t-foreach="range(1, 6)" t-as="s">
+                            <i t-attf-class="fa #{s &lt;= full_stars and 'fa-star text-warning' or (s == full_stars + 1 and half_star and 'fa-star-half-o text-warning') or 'fa-star-o text-muted'} fa-lg"/>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Ratings table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Service</th>
+                                <th>PO Reference</th>
+                                <th>Score</th>
+                                <th>Feedback</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="rating_rows" t-as="row">
+                                <tr>
+                                    <!-- Service name -->
+                                    <td class="fw-semibold">
+                                        <t t-esc="row['task'].name if row['task'] else row['rating'].res_name or '—'"/>
+                                    </td>
+                                    <!-- PO reference -->
+                                    <td>
+                                        <t t-if="row['po_name']">
+                                            <a t-attf-href="/my/purchase/#{row['po_id']}" class="text-decoration-none">
+                                                <t t-esc="row['po_name']"/>
+                                            </a>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="text-muted">—</span>
+                                        </t>
+                                    </td>
+                                    <!-- Score: face image + label -->
+                                    <td>
+                                        <t t-set="score" t-value="int(row['rating'].rating)"/>
+                                        <img t-attf-src="/kuec_service_catalogue/static/src/img/wink_face_#{score}.svg"
+                                             width="32" height="32"
+                                             t-attf-alt="#{row['rating'].rating_text}"/>
+                                        <span t-attf-class="ms-2 badge #{score >= 4 and 'bg-success' or score == 3 and 'bg-warning text-dark' or 'bg-danger'}">
+                                            <t t-esc="score"/> / 5
+                                        </span>
+                                    </td>
+                                    <!-- Feedback -->
+                                    <td class="text-muted small" style="max-width:280px;">
+                                        <t t-if="row['rating'].feedback">
+                                            <span t-esc="row['rating'].feedback"/>
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </td>
+                                    <!-- Date -->
+                                    <td class="text-nowrap text-muted small">
+                                        <t t-esc="row['rating'].write_date.strftime('%b %d, %Y')"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+
+                <t t-if="pager['page_count'] > 1">
+                    <t t-call="portal.pager"/>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ── I-5: WINK branded thank-you page after rating submission ─────── -->
+    <template id="wink_rating_thankyou" name="WINK: Rating Thank You">
+        <t t-call="web.frontend_layout">
+            <div class="container mb-5 mt-5 text-center">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-lg-5">
+                        <t t-set="score" t-value="int(rating.rating)"/>
+                        <img t-attf-src="/kuec_service_catalogue/static/src/img/wink_face_#{score}.svg"
+                             width="100" height="100" class="mb-4"
+                             t-attf-alt="#{rating.rating_text}"/>
+                        <h2 class="fw-bold mb-2">Thank you for your feedback!</h2>
+                        <p class="text-muted mb-1">
+                            You rated <strong t-esc="record.name or 'this service'"/> as
+                            <strong t-attf-class="#{score >= 4 and 'text-success' or score == 3 and 'text-warning' or 'text-danger'}">
+                                <t t-esc="rating.rating_text"/>
+                            </strong>
+                            (<t t-esc="score"/>/5).
+                        </p>
+                        <t t-if="rating.feedback">
+                            <p class="text-muted small fst-italic mt-2 mb-3">
+                                "&#8203;<t t-esc="rating.feedback"/>"
+                            </p>
+                        </t>
+                        <p class="text-muted small mb-4">Your feedback helps us continuously improve our services.</p>
+                        <a href="/my/requests" class="btn btn-primary rounded-pill px-4">
+                            <i class="fa fa-arrow-left me-2"/>Back to My Requests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- WINK 5-face rating submission page — overrides rating.rating_external_page_submit -->
+    <template id="wink_rating_page_submit" name="WINK: Rate our Services">
+        <t t-call="web.frontend_layout">
+            <div class="container mb-5 mt-4 o_rating_page_submit">
+                <div class="row text-center justify-content-center">
+                    <h1 class="col-12 mt-5">Thank you for rating our services!</h1>
+                    <form class="col-md-10 col-lg-8" t-attf-action="/rate/#{token}/submit_feedback" method="post">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                        <div class="d-flex justify-content-center gap-3 mt-5 flex-wrap">
+                            <!-- 1 — Very Bad -->
+                            <label class="d-flex flex-column align-items-center cursor-pointer" style="width:90px;">
+                                <input type="radio" name="rate" value="1" class="d-none wink-rate-input" t-att-checked="rate == 1 and 'checked' or None"/>
+                                <img src="/kuec_service_catalogue/static/src/img/wink_face_1.svg"
+                                     width="70" height="70"
+                                     class="wink-face-btn rounded-circle p-1"
+                                     t-attf-style="opacity:#{1.0 if rate == 1 else 0.45};cursor:pointer;transition:all 0.2s;"
+                                     data-rate="1" alt="Very Bad"/>
+                                <div class="mt-2" style="font-size:12px;color:#555;">Very Bad</div>
+                            </label>
+                            <!-- 2 — Poor -->
+                            <label class="d-flex flex-column align-items-center cursor-pointer" style="width:90px;">
+                                <input type="radio" name="rate" value="2" class="d-none wink-rate-input" t-att-checked="rate == 2 and 'checked' or None"/>
+                                <img src="/kuec_service_catalogue/static/src/img/wink_face_2.svg"
+                                     width="70" height="70"
+                                     class="wink-face-btn rounded-circle p-1"
+                                     t-attf-style="opacity:#{1.0 if rate == 2 else 0.45};cursor:pointer;transition:all 0.2s;"
+                                     data-rate="2" alt="Poor"/>
+                                <div class="mt-2" style="font-size:12px;color:#555;">Poor</div>
+                            </label>
+                            <!-- 3 — Medium -->
+                            <label class="d-flex flex-column align-items-center cursor-pointer" style="width:90px;">
+                                <input type="radio" name="rate" value="3" class="d-none wink-rate-input" t-att-checked="rate == 3 and 'checked' or None"/>
+                                <img src="/kuec_service_catalogue/static/src/img/wink_face_3.svg"
+                                     width="70" height="70"
+                                     class="wink-face-btn rounded-circle p-1"
+                                     t-attf-style="opacity:#{1.0 if rate == 3 else 0.45};cursor:pointer;transition:all 0.2s;"
+                                     data-rate="3" alt="Medium"/>
+                                <div class="mt-2" style="font-size:12px;color:#555;">Medium</div>
+                            </label>
+                            <!-- 4 — Good -->
+                            <label class="d-flex flex-column align-items-center cursor-pointer" style="width:90px;">
+                                <input type="radio" name="rate" value="4" class="d-none wink-rate-input" t-att-checked="rate == 4 and 'checked' or None"/>
+                                <img src="/kuec_service_catalogue/static/src/img/wink_face_4.svg"
+                                     width="70" height="70"
+                                     class="wink-face-btn rounded-circle p-1"
+                                     t-attf-style="opacity:#{1.0 if rate == 4 else 0.45};cursor:pointer;transition:all 0.2s;"
+                                     data-rate="4" alt="Good"/>
+                                <div class="mt-2" style="font-size:12px;color:#555;">Good</div>
+                            </label>
+                            <!-- 5 — Excellent -->
+                            <label class="d-flex flex-column align-items-center cursor-pointer" style="width:90px;">
+                                <input type="radio" name="rate" value="5" class="d-none wink-rate-input" t-att-checked="rate == 5 and 'checked' or None"/>
+                                <img src="/kuec_service_catalogue/static/src/img/wink_face_5.svg"
+                                     width="70" height="70"
+                                     class="wink-face-btn rounded-circle p-1"
+                                     t-attf-style="opacity:#{1.0 if rate == 5 else 0.45};cursor:pointer;transition:all 0.2s;"
+                                     data-rate="5" alt="Excellent"/>
+                                <div class="mt-2" style="font-size:12px;color:#555;">Excellent</div>
+                            </label>
+                        </div>
+
+                        <p class="mt-5">Feel free to share feedback on your experience:</p>
+                        <textarea class="form-control" name="feedback" rows="6" t-att-value="rating.feedback"/>
+                        <button type="submit" class="btn btn-primary mt-4">Send Feedback</button>
+                    </form>
+                </div>
+            </div>
+            <script>
+                document.querySelectorAll('.wink-face-btn').forEach(function(img) {
+                    img.addEventListener('click', function() {
+                        var rate = this.dataset.rate;
+                        document.querySelectorAll('.wink-face-btn').forEach(function(i) {
+                            i.style.opacity = '0.45';
+                            i.style.transform = 'scale(1)';
+                        });
+                        this.style.opacity = '1';
+                        this.style.transform = 'scale(1.15)';
+                        document.querySelector('.wink-rate-input[value="' + rate + '"]').checked = true;
+                    });
+                });
+                // Highlight the pre-selected face on load
+                var checked = document.querySelector('.wink-rate-input:checked');
+                if (checked) {
+                    var face = document.querySelector('.wink-face-btn[data-rate="' + checked.value + '"]');
+                    if (face) { face.style.opacity = '1'; face.style.transform = 'scale(1.15)'; }
+                }
+            </script>
+        </t>
+    </template>
+</odoo>

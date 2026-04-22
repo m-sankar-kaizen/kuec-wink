@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="staffing_plan_seq" model="ir.sequence">
+        <field name="name">Staffing Plan Sequence</field>
+        <field name="code">hr.staffing.plan</field>
+        <field name="prefix">STAFFING/PLAN/%(y)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id"/>
+    </record>
+    <record id="recruitment_request_seq" model="ir.sequence">
+        <field name="name">Recruitment Sequence</field>
+        <field name="code">hr.recruitment.requests</field>
+        <field name="prefix">RECRUITMENT/%(y)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id"/>
+    </record>
+    <record id="job_position_request_seq" model="ir.sequence">
+        <field name="name">Job Position Request Sequence</field>
+        <field name="code">hr.job.position.request</field>
+        <field name="prefix">JOB/REQ/%(y)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id"/>
+    </record>
+</odoo>

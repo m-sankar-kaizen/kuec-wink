@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="action_hr_employee_probation" model="ir.actions.act_window">
+        <field name="name">Employees Under Probation</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('employee_employment_status', '=', 'probation'),('company_id', 'in', allowed_company_ids)]</field>
+        <field name="context">{'create': False,
+            'edit': True,
+            'delete': False}
+        </field>
+        <field name="view_id" ref="kaz_kuec_employee_probation.view_employee_form_primary"/>
+        <field name="view_ids" eval="[Command.clear(),
+                          (0,0,{'view_mode':'list', 'view_id': ref('hr.view_employee_tree')}),
+                          (0,0,{'view_mode':'form', 'view_id': ref('kaz_kuec_employee_probation.view_employee_form_primary')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Employment Letter
+            </p>
+        </field>
+    </record>
+
+    <menuitem name="Employee Probation"
+              id="menu_hr_probation"
+              parent="hr.menu_hr_root"
+              action="action_hr_employee_probation"
+              sequence="20"/>
+</odoo>

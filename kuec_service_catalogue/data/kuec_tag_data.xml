@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Tags mapping standard ribbons for Wink services -->
+        <record id="kuec_ribbon_tag_new" model="product.tag">
+            <field name="name">New</field>
+            <field name="is_ribbon" eval="True"/>
+        </record>
+        <record id="kuec_ribbon_tag_startup" model="product.tag">
+            <field name="name">For Startups</field>
+            <field name="is_ribbon" eval="True"/>
+        </record>
+        <record id="kuec_ribbon_tag_best_seller" model="product.tag">
+            <field name="name">Best Seller</field>
+            <field name="is_ribbon" eval="True"/>
+        </record>
+    </data>
+</odoo>

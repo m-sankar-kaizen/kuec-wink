@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_performance_improvement_plan_form" model="ir.ui.view">
+        <field name="name">performance.improvement.plan.form</field>
+        <field name="model">performance.improvement.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_done" type="object" string="Confirm"
+                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_draft" type="object" string="Reset to Draft"
+                            invisible="state != 'done'" class="btn-secondary"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div name="button_box" class="oe_button_box">
+                        <button groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                                invisible="not performance_id" class="oe_stat_button" type="object"
+                                name="action_open_performance_goal" icon="fa-file">
+                            <field name="performance_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Goal Evaluation</span>
+                            </div>
+                        </button>
+                    </div>
+                    <h1>
+                        <field name="name" required="1" readonly="state != 'draft'"/>
+                    </h1>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="performance_id or state != 'draft'"/>
+                            <field name="job_id" readonly="1"/>
+                            <field name="employee_hod_id" readonly="1"/>
+                            <field name="hr_user_id" readonly="state != 'draft'"/>
+                        </group>
+
+                        <group>
+                            <field name="start_date" readonly="state != 'draft'"/>
+                            <field name="end_date" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Performance Improvement Lines" name="performance_improvement_line">
+                            <field name="performance_improvement_line_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="name" required="1"/>
+                                    <field name="expected_standard" required="1"/>
+                                    <field name="evaluation_method" required="1"/>
+                                    <field name="due_date" required="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Performance Concern" name="performance_concern">
+                            <field name="performance_concern" widget="html" readonly="state != 'draft'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_performance_improvement_plan_list" model="ir.ui.view">
+        <field name="name">performance.improvement.plan.list</field>
+        <field name="model">performance.improvement.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="job_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_performance_improvement_plan_search" model="ir.ui.view">
+        <field name="name">performance.improvement.plan.search</field>
+        <field name="model">performance.improvement.plan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Plan Name"/>
+                <field name="employee_id"/>
+                <field name="job_id"/>
+                <field name="state"/>
+
+                <filter name="state_draft" string="Draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="state_done" string="Done"
+                        domain="[('state', '=', 'done')]"/>
+                <filter name="my_employee" string="My Employee"
+                        domain="[('employee_hod_id.user_id', '=', uid)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_performance_improvement_plan" model="ir.actions.act_window">
+        <field name="name">Performance Improvement Plans</field>
+        <field name="res_model">performance.improvement.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_performance_improvement_plan_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Manage Performance Improvement Plans for employees.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_performance_improvement_plan"
+              name="Performance Improvement Plans"
+              parent="kaz_employee_performance_kuec.menu_performance_evaluation_root"
+              action="action_performance_improvement_plan"
+              sequence="3"/>
+
+</odoo>

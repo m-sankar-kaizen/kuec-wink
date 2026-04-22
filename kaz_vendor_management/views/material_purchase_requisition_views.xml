@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="requisition_form_inherit" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.form.view.inherit.kaz.vendor.management</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="inherit_id" ref="kz_requisition_quintuple_approvals.requisition_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="object" icon="fa-file"
+                        name="action_open_tender" string="Tender"
+                        invisible="not tender_rfq_id">
+                </button>
+            </xpath>
+
+            <field name="purchase_id" position="attributes">
+                <attribute name="domain">[('state', '=', 'purchase')]</attribute>
+            </field>
+
+            <button name="send_mail_to_vendor" position="replace">
+                <button name="send_mail_to_vendor" type="object" string="Send Email" class="btn-secondary"
+                        invisible="approvement_state not in ['completed', 'approved'] or is_tender or req_type in ['repeated']"/>
+            </button>
+
+            <button name="request_stock" position="replace">
+                <field name="show_secondary_repeated_rfq" invisible="1"/>
+                <button name="action_create_rfq_primary" type="object" string="Create RFQ" class="btn-primary"
+                        invisible="approvement_state != 'approved' or po_count != 0 or is_tender or req_type not in ['repeated']"/>
+                <button name="action_create_rfq_secondary" type="object" string="Create Secondary RFQ"
+                        class="btn-primary"
+                        invisible="not show_secondary_repeated_rfq"/>
+                <button name="request_stock" type="object" string="Create RFQs" class="btn-primary"
+                        invisible="approvement_state != 'approved' or po_count != 0 or is_tender or req_type in ['repeated']"/>
+                <field name="tender_rfq_id" invisible="1"/>
+                <button name="action_create_tender" type="object" icon="fa-file" string="Create Tender"
+                        class="btn-primary"
+                        invisible="not show_tender_action"/>
+            </button>
+            <button name="send_mail_to_vendor" position="replace">
+                <button name="send_mail_to_vendor" type="object" string="Send Email" class="btn-secondary"
+                        invisible="approvement_state not in ['completed', 'approved'] or is_tender or po_count >= 2"/>
+            </button>
+
+            <header position="after">
+                <div invisible="not warning_message" class="mb-2">
+                    <div class="alert alert-warning mb-0" role="alert">
+                        <field name="warning_message"/>
+                    </div>
+                </div>
+            </header>
+
+            <button name="submit_to_approve" position="replace">
+                <button name="action_generate_attachment_lines"
+                        type="object"
+                        invisible="attachment_line_generated"
+                        string="Validate Request"
+                        class="btn-primary"
+                />
+                <button name="submit_to_approve" type="object" string="Submit for Approval" class="btn-primary"
+                        invisible="approvement_state != 'draft' or not attachment_line_generated"/>
+            </button>
+
+            <field name="type" position="replace">
+                <field name="attachment_line_generated" invisible="1"/>
+                <field name="type" invisible="not type" readonly="1" string="Deprecated Type"/>
+                <div class="o_row">
+                    <label class="fw-bold" for="requisition_type_id" string="Type"/>
+                    <field name="requisition_type_id"
+                           required="1"
+                           readonly="approvement_state != 'draft'"
+                           class="o_force_ltr ms-4"
+                    />
+                </div>
+                <field name="req_type" invisible="1"/>
+                <field name="order_type" readonly="approvement_state != 'draft'"/>
+            </field>
+
+            <field name="vendor_id" position="replace">
+                <field name="is_tender" widget="boolean_toggle" invisible="not is_tender"/>
+                <field name="vendor_id" required="req_type in ['variation', 'repeated']"
+                       invisible="req_type not in ['variation', 'repeated']"
+                       readonly="approvement_state != 'draft'"/>
+            </field>
+
+            <xpath expr="//page[last()]" position="after">
+                <page name="attachment_line" string="Attachment Requirement"
+                      invisible="not material_attachment_line_ids">
+                    <field name="material_attachment_line_ids">
+                        <list create="0" delete="0" editable="bottom" default_order="sequence">
+                            <field name="sequence" width="10px;" readonly="1" optional="hidden"/>
+                            <field name="name" width="300px;" readonly="1"/>
+                            <field name="attachment_type" width="50px;" readonly="1"/>
+                            <field name="attachment_is_required" width="80px;" widget="boolean_toggle" readonly="1"/>
+                            <field name="ir_attachment_ids" width="80px;" widget="many2many_binary"
+                                   invisible="attachment_type != 'attachment'"/>
+                            <field name="attachment_link" width="80px;" invisible="attachment_type != 'link'"/>
+                        </list>
+                    </field>
+                </page>
+                <page name="warning_tab" string="Warnings">
+                    <field name="warning_message_html" widget="html"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

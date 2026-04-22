@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="ir_cron_notify_contract_end" model="ir.cron">
+        <field name='name'>Notify Contact End</field>
+        <field name='interval_number'>1</field>
+        <field name='interval_type'>days</field>
+        <field name="model_id" ref="model_hr_contract"/>
+        <field name="state">code</field>
+        <field name="code">model.notify_contact_end()</field>
+    </record>
+</odoo>

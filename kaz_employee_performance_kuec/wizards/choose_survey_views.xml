@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_choose_survey_form" model="ir.ui.view">
+        <field name="name">choose.survey.form</field>
+        <field name="model">choose.survey</field>
+        <field name="arch" type="xml">
+            <form string="Select Survey">
+                <group>
+                    <field name="survey_id"
+                           help="Select a survey to link with this performance evaluation. A new survey with the same settings will be created automatically."
+                           domain="[('survey_type', '=', 'appraisal')]"/>
+                </group>
+                <footer>
+                    <button string="Create Survey"
+                            type="object"
+                            name="action_create_survey"
+                            class="btn-primary"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    ============================================================
+    FORM VIEW: Budget Transfer Request
+    ============================================================
+    Purpose:
+        This view provides a form interface for users to review and approve
+        budget transfer requests. It supports a two-level approval workflow
+        and restricts editing based on the current state of the document.
+    -->
+    <record id="view_budget_transfer_request_form" model="ir.ui.view">
+        <field name="name">budget.transfer.request.form.view</field>
+        <field name="model">budget.transfer.request</field>
+        <field name="arch" type="xml">
+            <form string="Budget Transfer Request">
+
+                <!--
+                Header:
+                    Contains buttons for state transitions:
+                    - First Approve (only in 'draft')
+                    - Second Approve (only in 'first_approve')
+                    - Reject (not in 'rejected')
+                    - Reset to Draft (in any approved state except already draft/rejected)
+                    Also shows a statusbar for visual tracking of request state.
+                -->
+                <header>
+                    <button name="button_first_approve" type="object" string="First Approve"
+                            invisible="state != 'draft'"/>
+                    <button name="button_second_approve" type="object" string="Second Approve"
+                            invisible="state != 'first_approve'"/>
+                    <button name="reject" type="object" string="Reject"
+                            invisible="state != 'rejected'"/>
+                    <button name="reset_to_draft" type="object" string="Reset to Draft"
+                            invisible="state in ['second_approve','draft', 'rejected']"/>
+
+                    <!-- Statusbar shows current progress in approval flow -->
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,first_approve,second_approve"/>
+                </header>
+
+                <sheet>
+
+                    <!--
+                    Grouped Fields:
+                        Read-only details of the transfer request, for traceability.
+                        Includes:
+                        - Name
+                        - Linked Requisition
+                        - Submission date
+                        - Requester
+                        - Justification
+                    -->
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="requisition_id" readonly="1"/>
+                            <field name="date" readonly="1"/>
+                            <field name="requister_id" readonly="1"/>
+                            <field name="justification" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!--
+                    Notebook: Contains pages (tabs)
+                    In this case, one tab for the budget transfer lines.
+                    -->
+                    <notebook>
+                        <page name="lines" string="Budget Transfer Lines">
+                            <!--
+                            One2many Field: line_ids
+                                Represents individual budget transfer line items.
+                                Each line transfers amount from one budget line to another.
+                                No new creation allowed here.
+                            -->
+                            <field name="line_ids" widget="one2many_list" nolabel="1"
+                                   create="false" options="{'no_create': True}">
+                                <list string="Lines" editable="bottom" create="false"
+                                      options="{'no_create': True}">
+                                    <!-- Read-only increase budget line (receiving) -->
+                                    <field name="increase_budget_id" readonly="1"/>
+                                    <!-- Editable amount only in 'draft' state -->
+                                    <field name="amount" readonly="parent.state != 'draft'"/>
+                                    <!-- Editable decrease budget line (fund source) -->
+                                    <field name="decrease_budget_id" readonly="parent.state != 'draft'"/>
+                                    <!-- Computed remaining amount on the source budget -->
+                                    <field name="remaining_amount"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    ============================================================
+    TREE VIEW: Budget Transfer Request
+    ============================================================
+    Purpose:
+        Provides a list view for all budget transfer requests.
+        Shows request summary: name, requisition, date, and status.
+    -->
+    <record id="view_budget_transfer_request_tree" model="ir.ui.view">
+        <field name="name">budget.transfer.request.list.view</field>
+        <field name="model">budget.transfer.request</field>
+        <field name="arch" type="xml">
+            <list string="Budget Transfer Request">
+                <field name="name"/>
+                <field name="requisition_id"/>
+                <field name="date"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    ============================================================
+    ACTION WINDOW: budget.transfer.request
+    ============================================================
+    Purpose:
+        Enables navigation to the budget transfer screen.
+        Opens the list view by default, with form view fallback.
+    -->
+    <record id="action_budget_transfer_request" model="ir.actions.act_window">
+        <field name="name">Budget Transfer Requests</field>
+        <field name="res_model">budget.transfer.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!--
+    ============================================================
+    MENU ITEM: Budget Transfer Requests
+    ============================================================
+    Purpose:
+        Adds a menu under the Purchase Requisition menu to access the
+        budget transfer request action.
+    -->
+    <menuitem id="menu_budget_transfer_request_root"
+              name="Budget Transfer Requests"
+              parent="material_purchase_requisitions.menu_purchase_requisition"
+              action="action_budget_transfer_request"/>
+
+</odoo>

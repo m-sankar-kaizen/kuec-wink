@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================ -->
+    <!-- Tree View: Ticket Grant List -->
+    <!-- ============================ -->
+    <record id="ticket_grant_tree_view" model="ir.ui.view">
+        <field name="name">ticket grant</field>
+        <field name="model">ticket.grant</field>
+        <field name="arch" type="xml">
+            <list>
+                <!-- Date of Ticket Grant -->
+                <field name="date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================ -->
+    <!-- Form View: Ticket Grant Form -->
+    <!-- ============================ -->
+    <record id="ticket_grant_form_view" model="ir.ui.view">
+        <field name="name">ticket grant</field>
+        <field name="model">ticket.grant</field>
+        <field name="arch" type="xml">
+            <form>
+                <!-- Workflow Header Buttons -->
+                <header>
+                    <!-- Fetch eligible employees for the grant -->
+                    <button name="get_employees" string="Get Employees" invisible="state != 'draft'" type="object"
+                            groups="hr.group_hr_user"/>
+                    <!-- Calculate ticket amount based on pricing and employees -->
+                    <button name="calculate_amount" string="Calculate Amount" invisible="state != 'draft'" type="object"
+                            groups="hr.group_hr_user"/>
+                    <!-- Confirm the ticket grant -->
+                    <button name="btn_confirm" string="Confirm" invisible="state != 'draft'" class="oe_highlight"
+                            type="object"
+                            groups="hr.group_hr_user"/>
+                    <!-- Cancel the ticket grant -->
+                    <button name="btn_cancel" string="Cancel" invisible="state != 'draft'" type="object"
+                            groups="hr.group_hr_user"/>
+                    <!-- Statusbar to show state (draft/confirmed/cancel) -->
+                    <field name="state" widget="statusbar" nolabel="1" readonly="1"/>
+                </header>
+
+                <sheet>
+                    <!-- Basic Info -->
+                    <group>
+                        <field name="date"/>
+                    </group>
+
+                    <!-- Lines of Employee Tickets -->
+                    <notebook>
+                        <page string="Ticket Lines">
+                            <field name="ticket_grant_line_ids">
+                                <list create="0" editable="bottom" readonly="ticket_grant_state == 'confirmed'">
+                                    <!-- Employee who will receive the ticket -->
+                                    <field name="ticket_grant_state" column_invisible="1"/>
+                                    <field name="employee_id"/>
+                                    <!-- Grade is used for ticket type resolution -->
+                                    <field name="grade_id" invisible="1"/>
+                                    <!-- Destination chosen for the employee -->
+                                    <field name="destination_id"/>
+                                    <!-- Type of ticket as per grade -->
+                                    <field name="ticket_type_id"/>
+                                    <!-- Whether the ticket has been paid -->
+                                    <field name="paid"/>
+                                    <!-- Number of adults, children, and infants -->
+                                    <field name="no_adults"/>
+                                    <field name="no_children"/>
+                                    <field name="no_infant"/>
+                                    <!-- Total calculated cost for all tickets for this line -->
+                                    <field name="total_air_tickets"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================ -->
+    <!-- Action Window: Open Ticket Grant -->
+    <!-- ============================ -->
+    <record id="action_ticket_grant" model="ir.actions.act_window">
+        <field name="name">ticket grant</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">ticket.grant</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first ticket grant
+            </p>
+        </field>
+    </record>
+
+</odoo>

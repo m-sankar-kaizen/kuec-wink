@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_goal_modified_reason_wizard_form" model="ir.ui.view">
+        <field name="name">goal.modified.reason.wizard.form</field>
+        <field name="model">goal.modified.reason</field>
+        <field name="arch" type="xml">
+            <form string="Provide Reason">
+                <sheet>
+                    <h6>
+                        Are you sure you want to perform
+                        "<field name="action_type" readonly="1"/>"
+                        action to this goal
+                    </h6>
+                    <group>
+                        <field name="name" requrired="1"/>
+                    </group>
+                    <footer>
+                        <button string="Confirm" type="object" name="action_confirm"
+                                class="btn btn-primary"/>
+                        <button string="Cancel" class="btn btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

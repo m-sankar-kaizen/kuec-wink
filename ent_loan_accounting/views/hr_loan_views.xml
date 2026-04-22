@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Inherited View: Loan Form View Extension (Header Buttons)
+
+        Kaizen Principles Applied:
+        - Standardization: Ensures consistent workflow buttons across user groups.
+        - Continuous Improvement: Enhances existing HR Loan UI with role-based approvals.
+        - Respect for People: Clear button access and transitions empower users with correct actions.
+
+        Purpose:
+        This view overrides the default `<header>` of the loan form to define a structured approval
+        workflow including:
+            - Installment computation
+            - Submission
+            - HR and Accounting (ACC) approvals
+            - Refusal
+            - Cancelation
+
+        Buttons are conditionally visible based on:
+            - Loan state (`state`)
+            - User groups (`groups`)
+    -->
+
+    <record id="hr_loan_inherited" model="ir.ui.view">
+        <field name="name">HR LOAN</field>
+        <field name="model">hr.loan</field>
+        <field name="inherit_id" ref="ent_ohrms_loan.hr_loan_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Replace the entire header to inject customized buttons -->
+            <xpath expr="//header" position="replace">
+                <header>
+
+                    <!-- Button: Compute Installment -->
+                    <!-- Visible in any state except done, refused, or cancelled -->
+                    <button name="compute_installment"
+                            type="object"
+                            string="Compute Installment"
+                            class="oe_highlight"
+                            invisible="state in ['done', 'refuse','cancel']"/>
+
+                    <!-- Button: Submit for HR Approval -->
+                    <!-- Only visible when the loan is in draft -->
+                    <button name="action_submit"
+                            type="object"
+                            string="Submit"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+
+                    <!-- Button: Cancel the request -->
+                    <!-- Hidden if already cancelled -->
+                    <button name="action_cancel"
+                            type="object"
+                            string="Cancel"
+                            invisible="state == 'cancel'"/>
+
+                    <!-- Button: HR Approve -->
+                    <!-- Only visible when state is 'waiting_approval_1' -->
+                    <!-- Restricted to HR users and managers -->
+                    <button name="action_approve"
+                            type="object"
+                            string="HR Approve"
+                            class="oe_highlight"
+                            invisible="state != 'waiting_approval_1'"
+                            groups="hr.group_hr_manager,hr.group_hr_user"/>
+
+                    <!-- Button: ACC Approve (Final Approval) -->
+                    <!-- Only visible after HR approval (state = approve) -->
+                    <!-- Restricted to accounting users -->
+                    <button name="action_double_approve"
+                            type="object"
+                            string="ACC Approve"
+                            class="oe_highlight"
+                            invisible="state != 'approve'"
+                            groups="account.group_account_user,account.group_account_manager"/>
+
+                    <!-- Button: Refuse Loan -->
+                    <!-- Available only in states: submitted or approve -->
+                    <!-- Restricted to HR managers and users -->
+                    <button name="action_refuse"
+                            type="object"
+                            string="Refuse"
+                            invisible="state not in ['submitted', 'approve']"
+                            class="oe_highlight"
+                            groups="hr.group_hr_manager,hr.group_hr_user"/>
+
+                    <!-- Statusbar widget to visualize the loan state -->
+                    <field name="state" widget="statusbar"/>
+
+                </header>
+            </xpath>
+        </field>
+    </record>
+</odoo>

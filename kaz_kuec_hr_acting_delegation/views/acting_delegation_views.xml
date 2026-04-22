@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_acting_delegation_list" model="ir.ui.view">
+        <field name="name">acting.delegation.list</field>
+        <field name="model">acting.delegation</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="acting_user_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="state"/>
+                <button name="action_revoke" string="Revoke" type="object" class="btn-secondary" invisible="state != 'active'"/>
+                <button name="action_reactivate" string="Reactivate" type="object" class="btn-success" invisible="state != 'revoked'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_acting_delegation_form" model="ir.ui.view">
+        <field name="name">acting.delegation.form</field>
+        <field name="model">acting.delegation</field>
+        <field name="arch" type="xml">
+            <form string="Acting Delegation">
+                <sheet>
+                    <group>
+                        <field name="state" readonly="1"/>
+                        <field name="leave_id" readonly="1"/>
+                        <field name="employee_id" readonly="1"/>
+                        <field name="acting_user_id" domain="[('share','=', False)]"/>
+                    <button name="action_activate" string="Activate" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_reactivate" string="Reactivate" type="object" class="btn-success" invisible="state != 'revoked'"/>
+                        <field name="group_ids" widget="many2many_tags" invisible="delegation_type == 'notify'" domain="[('id','in', allowed_group_ids)]"/>
+                        <field name="state" readonly="1"/>
+                        <field name="justification"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_activate" string="Activate" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_reactivate" string="Reactivate" type="object" class="btn-success" invisible="state != 'revoked'"/>
+                    <button name="action_revoke" string="Revoke" type="object" class="btn-secondary" invisible="state != 'active'"/>
+                    <button name="action_cancel" string="Cancel" type="object" class="btn-secondary" invisible="state not in ('draft','active')"/>
+                    <button string="Close" class="btn-link" special="cancel"/>
+                </footer>
+                <chatter>
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </chatter>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_acting_delegation" model="ir.actions.act_window">
+        <field name="name">Acting Delegations</field>
+        <field name="res_model">acting.delegation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_acting_delegation_search" model="ir.ui.view">
+        <field name="name">acting.delegation.search</field>
+        <field name="model">acting.delegation</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="acting_user_id"/>
+                <filter name="active" string="Active" domain="[('state','=','active')]"/>
+                <filter name="upcoming" string="Upcoming" domain="[('state','=','draft')]"/>
+                <filter name="expired" string="Expired" domain="[('state','=','expired')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_employee" string="Employee" context="{'group_by':'employee_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    This XML file defines two user groups used for the multi-level time-off approval workflow.
+
+    Group Definitions:
+    1. time_of_hr_director_group:
+        - Label: "Hr Director"
+        - Purpose: Used to identify users who are allowed to approve leave requests at the HR Director level.
+
+    2. time_of_hr_ceo_group:
+        - Label: "Hr CEO"
+        - Purpose: Used to identify users who are allowed to approve leave requests at the CEO level.
+
+    These groups are referenced in the `hr.leave` model to control and trigger validation steps
+    through the `send_notify2_group` method during the leave approval cycle.
+-->
+<odoo>
+    <record id="time_of_hr_director_group" model="res.groups">
+        <field name="name">HR Director</field>
+    </record>
+    <record id="time_of_hr_ceo_group" model="res.groups">
+        <field name="name">HR CEO</field>
+    </record>
+</odoo>

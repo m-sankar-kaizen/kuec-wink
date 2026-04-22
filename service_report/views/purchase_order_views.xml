@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+        Record ID: service_order_form_view
+        Purpose:
+            This view inherits the default Purchase Order form view (purchase.purchase_order_form)
+            to introduce additional fields related to service order tracking such as:
+            - confirm_uid: user confirming the order
+            - so_title: title of the service order
+            - contract_ref: reference to the base contract
+            - effective_date: service start date
+            - end_date: service end date
+
+        Model: purchase.order
+        Inheritance: Extends the standard purchase order form view
+    -->
+    <record id="service_order_form_view" model="ir.ui.view">
+        <field name="name">service.order.form.view.inherit.service.report</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!--
+                Inserting fields after 'partner_ref' (Vendor Reference)
+                - confirm_uid: Stores the user confirming the SO (invisible)
+                - so_title: Editable in draft/sent/to approve/purchase states
+                - contract_ref: Editable in same states as so_title
+            -->
+            <xpath expr="//field[@name='partner_ref']" position="after">
+                <!-- User who confirmed the Service Order (invisible to UI) -->
+                <field name="confirm_uid" invisible="1"/>
+                <field name="so_title" readonly="state not in ['draft', 'sent', 'to approve', 'purchase']"/>
+                <field name="contract_ref" readonly="state not in ['draft', 'sent', 'to approve', 'purchase']"/>
+            </xpath>
+
+            <!--
+                Insert two date fields after the 'date_planned_div' block:
+                - effective_date: Start date of the service
+                - end_date: End date of the service
+                Both are editable only in draft/sent/to approve/purchase states.
+            -->
+            <xpath expr="//div[@name='date_planned_div']" position="after">
+
+                <!-- Label and field for Effective Date -->
+                <label for="effective_date"/>
+                <div name="effective_date" class="o_row">
+                    <field name="effective_date" readonly="state not in ['draft', 'sent', 'to approve', 'purchase']"/>
+                </div>
+
+                <!-- Label and field for End Date -->
+                <label for="end_date"/>
+                <div name="end_date" class="o_row">
+                    <field name="end_date" readonly="state not in ['draft', 'sent', 'to approve', 'purchase']"/>
+                </div>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

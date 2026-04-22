@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kaz.vendor.contact.company.restriction</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="kaz_pr_and_po_ageing_management.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='kaz_rd_fiscal_year_end_notify']" position="inside">
+                <field name="company_code" invisible="1"/>
+            </xpath>
+            <xpath expr="//block[@id='kaz_rd_fiscal_year_end_notify']" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC']</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

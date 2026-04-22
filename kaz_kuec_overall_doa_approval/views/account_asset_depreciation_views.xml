@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_account_asset_depreciation_list" model="ir.ui.view">
+        <field name="name">account.asset.depreciation.list</field>
+        <field name="model">account.asset.depreciation</field>
+        <field name="arch" type="xml">
+            <list string="Asset Modification Request">
+                <field name="name"/>
+                <field name="asset_id"/>
+                <field name="modify_action"/>
+                <field name="date"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_account_asset_depreciation_form" model="ir.ui.view">
+        <field name="name">account.asset.depreciation.form</field>
+        <field name="model">account.asset.depreciation</field>
+        <field name="arch" type="xml">
+            <form string="Asset Modification Request">
+                <field name="gain_or_loss" invisible="1"/>
+                <field name="is_readonly" invisible="1"/>
+                <header>
+                    <button name="submit_to_approve" string="Submit for Approval" type="object" class="oe_highlight"
+                            invisible="kuec_approval_state != 'draft'"/>
+                    <button name="action_cancel" string="Cancel" type="object" class="btn"
+                            invisible="kuec_approval_state != 'draft'"/>
+
+                    <button name="action_hod_approval"
+                            string="HOD Approve" type="object" class="oe_highlight"
+                            groups="account.group_account_basic,kaz_procurement_doa_kuec.group_kuec_head_department"
+                            invisible="kuec_approval_state != 'department_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'department_approval'"
+                            groups="account.group_account_basic,kaz_procurement_doa_kuec.group_kuec_head_department"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'department_approval'"
+                            groups="account.group_account_basic,kaz_procurement_doa_kuec.group_kuec_head_department"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_head_fin_approval"
+                            string="Head of Finance &amp; Procurement Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                            invisible="kuec_approval_state != 'finance_procurement_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'finance_procurement_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'finance_procurement_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_ccoe_approval"
+                            string="CCOE Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            invisible="kuec_approval_state != 'ccoe_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'ccoe_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'ccoe_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_ceo_approval"
+                            string="CEO Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            invisible="kuec_approval_state != 'ceo_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'ceo_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'ceo_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_board_approval"
+                            invisible="kuec_approval_state != 'board_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_board"
+                            class="btn btn-primary" string="Board Approve" type="object"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'board_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_board"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'board_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_board"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_asset_modify"
+                            invisible="kuec_approval_state != 'approved'"
+                            class="btn btn-primary" string="Modify Depreciation" type="object"/>
+
+
+                    <field name="kuec_approval_state" widget="statusbar" statusbar_visible="draft,approved"/>
+                </header>
+
+                <sheet>
+                    <widget name="web_ribbon"
+                            title="Approved"
+                            bg_color="text-bg-success"
+                            invisible="kuec_approval_state != 'approved'"/>
+                    <h1>
+                        <field name="name" readonly="1"/>
+                    </h1>
+                    <group>
+                        <group string="General Information">
+                            <field name="asset_id" required="1"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="asset_investment_type" required="1"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="currency_id" readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="original_value"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="modify_action" widget="radio" required="1" options="{'horizontal': true}"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                        </group>
+
+                        <group string="Accounting">
+                            <field name="date" required="1" readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="invoice_ids" invisible="modify_action != 'sell'"
+                                   required="modify_action == 'sell'" widget="many2many_tags"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="invoice_line_ids" invisible="modify_action != 'sell'"
+                                   widget="many2many_tags"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="loss_account_id" invisible="gain_or_loss != 'loss'"
+                                   required="gain_or_loss == 'loss'"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <label for="method_number" invisible="modify_action != 'modify'"/>
+                            <div class="o_row" invisible="modify_action != 'modify'">
+                                <field name="method_number" required="modify_action == 'modify'"
+                                       readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                                <field name="method_period" required="modify_action == 'modify'" nolabel="1"
+                                       readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            </div>
+                            <field name="value_residual" required="modify_action == 'modify'"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="salvage_value" required="modify_action == 'modify'"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="account_asset_id" required="modify_action == 'modify'"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="account_depreciation_id" required="modify_action == 'modify'"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                            <field name="account_depreciation_expense_id" required="modify_action == 'modify'"
+                                   readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                        </group>
+                    </group>
+
+                    <group string="Notes">
+                        <field name="note" readonly="kuec_approval_state != 'draft' or is_readonly"/>
+                    </group>
+                    <notebook>
+                        <page name="depreciation_approval" string="Signed Approval History"
+                              invisible="not depreciation_approval_ids">
+                            <field name="depreciation_approval_ids">
+                                <list editable="bottom" create="0" edit="0" delete="0">
+                                    <field name="current_display_name" column_invisible="1"/>
+                                    <field name="sequence"/>
+                                    <field name="parent_state_at_request" optional="show"/>
+                                    <field name="request_type"/>
+                                    <field name="create_uid" string="Signed By"/>
+                                    <field name="create_date" string="Signed At" optional="hide"/>
+                                    <field name="signature" widget="signature"
+                                           options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                                    <field name="reason"/>
+                                    <field name="company_id" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="kuec_board_attachment" string="KUEC Board Approval Attachment"
+                              invisible="hide_board_approval_attachment">
+                            <field name="hide_board_approval_attachment" invisible="1"/>
+                            <group>
+                                <group>
+                                    <field name="kuec_board_attachment"
+                                           readonly="kuec_approval_state != 'board_approval'"
+                                           widget="binary"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_account_asset_depreciation" model="ir.actions.act_window">
+        <field name="name">Asset Modification Request</field>
+        <field name="res_model">account.asset.depreciation</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'create': 0}</field>
+    </record>
+
+    <menuitem id="menu_account_asset_depreciation_root"
+              name="Asset Modification Request"
+              parent="account.menu_finance_entries"
+              action="action_account_asset_depreciation"
+              sequence="45"/>
+
+</odoo>

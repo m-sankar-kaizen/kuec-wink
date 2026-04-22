@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Define a new Salary Rule Category in Payroll:
+        This record adds a new salary rule category labeled "Bonus" to
+        categorize salary rules related to employee bonuses.
+
+        - 'name': Human-readable label shown in payroll rules.
+        - 'code': Unique identifier used in rule computations.
+
+        Usage:
+        Attach this category to salary rules like "Performance Bonus",
+        "Annual Bonus", etc., for better reporting and classification.
+    -->
+    <record id="BONUS" model="hr.salary.rule.category">
+        <field name="name">Bonus</field>
+        <field name="code">BONUS</field>
+    </record>
+</odoo>

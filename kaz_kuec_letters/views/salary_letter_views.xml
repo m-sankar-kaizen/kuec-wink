@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="kuec_salary_letter_tree_view" model="ir.ui.view">
+        <field name="name">kuec salary letter list</field>
+        <field name="model">kuec.salary.letter</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="name"/>
+                <field name="address_type"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="kuec_salary_letter_form_view" model="ir.ui.view">
+        <field name="name">kuec salary letter form</field>
+        <field name="model">kuec.salary.letter</field>
+        <field name="arch" type="xml">
+            <form>
+
+                    <header>
+                    <button string="Submit" name="action_submit"
+                            invisible="state != 'draft'" type="object"
+                            class="oe_highlight"/>
+                    <button string="Reset to Draft" name="action_reset"
+                            invisible="state != 'submitted'" type="object"
+                            class="btn btn_secondary"/>
+                    <button string="Print Salary Letter" name="action_print_salary_letter"
+                            invisible="state != 'submitted'" type="object"
+                            class="oe_highlight"/>
+                    <button string="Print Detailed Salary Letter" name="action_print_detailed_salary_letter"
+                            invisible="state != 'submitted'" type="object"
+                            class="oe_highlight"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                 <sheet>
+                     <div class="oe_title">
+                        <h1>
+                            <field name="sequence"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+
+                            <!-- General Information -->
+                            <field name="date" readonly="1"/>
+                            <field name="address_type"/>
+
+                            <!-- Entity-related letter template (visible only when address_type is 'entity') -->
+                            <field name="letter_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   invisible="address_type != 'entity'" required="address_type == 'entity'"/>
+
+                            <!-- Employee field (editable only by manager group) -->
+                            <field name="name"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   groups="kaz_employee_reports.group_letter_manager"/>
+
+                            <!-- Readonly for non-managers -->
+                            <field name="name"
+                                   groups="base.group_user,!kaz_employee_reports.group_letter_manager"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   readonly="1"/>
+
+                        </group>
+                        <group>
+                            <!-- Employee Details -->
+                            <field name="employee_no"/>
+                            <field name="job_title"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="join_date"/>
+                            <field name="nationality"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="id_no"/>
+
+                            <!-- Hidden Currency used for gross salary -->
+                            <field name="currency_id" invisible="1"/>
+
+                            <!-- Salary Details -->
+                            <field name="total_deduction"/>
+                            <field name="gross_salary" widget="monetary" force_save="1"/>
+
+                            <!-- Company reference -->
+                            <field name="company_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="justification"
+                              string="Justification">
+                            <field name="justification"
+                                   readonly="state != 'draft'"
+                                   placeholder="Add a justification..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            <chatter/>
+            </form>
+        </field>
+    </record>
+
+</odoo>

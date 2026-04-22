@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="credit_card_pdf_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h3 class="text-center">
+                        <strong>
+                        Credit Card Report
+                        </strong>
+                    </h3>
+
+                    <p>
+                        <strong>Date From:</strong>
+                        <span t-esc="date_from or '-'"/>
+                        <strong>Date To:</strong>
+                        <span t-esc="date_to or '-'"/>
+                    </p>
+
+                    <table class="table table-sm table-bordered o_main_table mt16">
+                        <thead>
+                            <tr>
+                                <th>From : To </th>
+                                <th>Credit Card / Number</th>
+                                <th>Holder</th>
+                                <th>Total Spent</th>
+                                <th>Settled Amount</th>
+                                <th>Unsettled Spent</th>
+                                <th>Credit card limit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="data" t-as="card">
+                                <tr>
+                                    <td>
+                                        <t t-esc="card.approve_date"/> to <t t-esc="card.card_return_date"/>
+                                    </td>
+                                    <td t-esc="card.journal_id.credit_card"/>
+                                    <td t-esc="card.requester_emp_id.name"/>
+                                    <td t-esc="card.amount"/>
+                                    <td t-esc="sum(card.settlement_ids.filtered(lambda x: x.is_reconciled).mapped('amount'))"/>
+                                    <td t-esc="sum(card.settlement_ids.filtered(lambda x: not x.is_reconciled).mapped('amount'))"/>
+                                    <td t-esc="card.journal_id.maximum_credit_card"/>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_credit_card_pdf_report" model="ir.actions.report">
+        <field name="name">Credit Card Report</field>
+        <field name="model">credit.card.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_kuec_credit_card_reports.credit_card_pdf_template</field>
+        <field name="report_file">kaz_kuec_credit_card_reports.credit_card_pdf_template</field>
+        <field name="print_report_name">'Credit Card Report - %s' % (context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d'))</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherit the Employee Form View (hr.employee) to Add Ticket-Related Fields
+        This customization adds a new tab called "Ticket" to the employee form view.
+        It also adds a binary field for attachments to the public info tab (for HR visibility).
+    -->
+    <record id="view_employee_form_inherit" model="ir.ui.view">
+        <field name="name">view_employee_form_inherit</field>
+        <field name="model">hr.employee</field>
+        <!-- Reference to the original employee form view from the HR module -->
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+
+            <!--
+                Add a new page/tab named "Ticket" after the last existing tab
+                This page will hold ticket-related fields used for annual air travel eligibility.
+            -->
+            <xpath expr="//page[last()]" position="after">
+                <page string="Ticket" name="ticket">
+                    <group string="Ticket Information">
+                        <!-- Destination linked to res.destination model -->
+                        <field name="destination_id"/>
+                        <!-- Number of eligible family members -->
+                        <field name="adults"/>
+                        <field name="children"/>
+                        <field name="infant"/>
+                        <!-- Ticket type (e.g., economy, business), based on employee's grade -->
+                        <field name="ticket_type_id"/>
+                    </group>
+                </page>
+            </xpath>
+
+            <!--
+                Add a field for file attachment inside the "Public Information" tab
+                Only visible to HR; used to upload documents like passport copies, visa, etc.
+            -->
+            <xpath expr="//page[@name='public']" position="inside">
+                <group string="Attachment" name="attachment">
+                    <field name="attachment"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

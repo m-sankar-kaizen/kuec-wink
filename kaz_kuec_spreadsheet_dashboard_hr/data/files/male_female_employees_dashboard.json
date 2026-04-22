@@ -1,0 +1,652 @@
+{
+  "version": 22,
+  "odooVersion": 18,
+
+  "pivots": {
+    "1": {
+      "id": "1",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Male Employees",
+      "domain": [["gender", "=", "male"]],
+      "context": {},
+      "measures": [{ "id": "__count", "fieldName": "__count" }],
+      "rows": [],
+      "columns": [],
+      "fieldMatching": {
+        "filter_department": { "chain": "department_id", "type": "many2one" },
+        "filter_company": { "chain": "company_id", "type": "many2one" }
+      }
+    },
+
+    "2": {
+      "id": "2",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Female Employees",
+      "domain": [["gender", "=", "female"]],
+      "context": {},
+      "measures": [{ "id": "__count", "fieldName": "__count" }],
+      "rows": [],
+      "columns": [],
+      "fieldMatching": {
+        "filter_department": { "chain": "department_id", "type": "many2one" },
+        "filter_company": { "chain": "company_id", "type": "many2one" }
+      }
+    },
+
+    "3": {
+      "id": "3",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Other Employees",
+      "domain": [["gender", "=", "other"]],
+      "context": {},
+      "measures": [{ "id": "__count", "fieldName": "__count" }],
+      "rows": [],
+      "columns": [],
+      "fieldMatching": {
+        "filter_department": { "chain": "department_id", "type": "many2one" },
+        "filter_company": { "chain": "company_id", "type": "many2one" }
+      }
+    },
+
+    "4": {
+      "id": "4",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Gender Not Mentioned",
+      "domain": [["gender", "=", false]],
+      "context": {},
+      "measures": [{ "id": "__count", "fieldName": "__count" }],
+      "rows": [],
+      "columns": [],
+      "fieldMatching": {
+        "filter_department": { "chain": "department_id", "type": "many2one" },
+        "filter_company": { "chain": "company_id", "type": "many2one" }
+      }
+    },
+
+    "5": {
+        "id": "5",
+        "type": "ODOO",
+        "model": "hr.employee",
+        "name": "Expat Employees",
+        "domain": [["kaz_employee_type", "=", "expat"]],
+        "context": {},
+        "measures": [{ "id": "__count", "fieldName": "__count" }],
+        "rows": [],
+        "columns": [],
+        "fieldMatching": {
+          "filter_department": { "chain": "department_id", "type": "many2one" },
+          "filter_company": { "chain": "company_id", "type": "many2one" }
+        }
+      },
+
+    "6": {
+      "id": "6",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Local Employees",
+      "domain": [["kaz_employee_type", "=", "local"]],
+      "context": {},
+      "measures": [{ "id": "__count", "fieldName": "__count" }],
+      "rows": [],
+      "columns": [],
+      "fieldMatching": {
+        "filter_department": { "chain": "department_id", "type": "many2one" },
+        "filter_company": { "chain": "company_id", "type": "many2one" }
+      }
+    },
+
+    "7": {
+      "id": "7",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Nationality Not Selected",
+      "domain": [["kaz_employee_type", "=", false]],
+      "context": {},
+      "measures": [{ "id": "__count", "fieldName": "__count" }],
+      "rows": [],
+      "columns": [],
+      "fieldMatching": {
+        "filter_department": { "chain": "department_id", "type": "many2one" },
+        "filter_company": { "chain": "company_id", "type": "many2one" }
+      }
+    },
+    "8": {
+      "id": "8",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Average Age",
+      "domain": [["birthday", "!=", false]],
+      "context": {},
+      "measures": [
+        { "id": "__sum_age", "fieldName": "age" },
+        { "id": "__count", "fieldName": "__count" }
+      ],
+      "rows": [],
+      "columns": [],
+      "fieldMatching": {
+        "filter_department": { "chain": "department_id", "type": "many2one" },
+        "filter_company": { "chain": "company_id", "type": "many2one" }
+      }
+    },
+    "9": {
+        "id": "9",
+        "type": "ODOO",
+        "model": "hr.employee",
+        "name": "Employees Count (Age)",
+        "domain": [["birthday", "!=", false]],
+        "measures": [
+          {
+            "id": "__count",
+            "fieldName": "__count"
+          }
+        ]
+      },
+    "10": {
+        "id": "10",
+        "type": "ODOO",
+        "model": "hr.employee",
+        "name": "Average Age by Department",
+        "domain": [["birthday", "!=", false]],
+        "context": {},
+        "measures": [
+          { "id": "__sum_age", "fieldName": "age" },
+          { "id": "__count", "fieldName": "__count" }
+        ],
+        "rows": [
+          { "fieldName": "department_id" }
+        ],
+        "columns": [],
+        "fieldMatching": {
+          "filter_department": { "chain": "department_id", "type": "many2one" },
+          "filter_company": { "chain": "company_id", "type": "many2one" }
+        }
+      },
+    "11": {
+        "id": "11",
+        "type": "ODOO",
+        "model": "hr.department",
+        "name": "Average Age by Department",
+        "domain": [],
+        "context": {},
+        "measures": [
+          {
+            "id": "average_age",
+            "fieldName": "average_age",
+            "aggregator": "avg"
+          }
+        ],
+        "rows": [
+          {
+            "fieldName": "id"
+          }
+        ],
+        "columns": [],
+        "fieldMatching": {
+          "filter_company": {
+            "chain": "company_id",
+            "type": "many2one"
+          }
+        }
+      },
+
+    "12": {
+      "id": "12",
+      "type": "ODOO",
+      "model": "hr.department",
+      "name": "All Departments",
+      "domain": [["average_age", ">", 0]],
+      "context": {},
+      "columnTotals": false,
+      "rowTotals": false,
+      "sortedColumn": {
+                "groupId": [
+                    [],
+                    []
+                ],
+                "measure": "average_age",
+                "order": "desc"
+            },
+      "measures": [
+        {
+          "id": "average_age",
+          "fieldName": "average_age"
+        }
+      ],
+      "rows": [
+        {
+          "fieldName": "name"
+        }
+      ],
+      "columns": []
+    },
+
+    "13": {
+      "id": "13",
+      "type": "ODOO",
+      "model": "hr.employee",
+      "name": "Employees by Department & Nationality",
+      "domain": [["active", "=", true], ["country_id", "!=", false]],
+      "context": {},
+      "measures": [
+        {
+          "id": "__count",
+          "fieldName": "__count"
+        }
+      ],
+      "rows": [
+        { "fieldName": "department_id" }
+      ],
+      "columns": [
+        { "fieldName": "country_id" }
+      ]
+      }
+  },
+
+  "sheets": [
+    {
+      "id": "Data",
+      "name": "Data",
+      "colNumber": 30,
+      "rowNumber": 300,
+      "isVisible": false,
+      "cells": {
+        "A1": { "content": "Gender" },
+        "B1": { "content": "Count" },
+
+        "A2": { "content": "Male" },
+        "B2": { "content": "=IFERROR(PIVOT.VALUE(1,\"__count\"),0)" },
+
+        "A3": { "content": "Female" },
+        "B3": { "content": "=IFERROR(PIVOT.VALUE(2,\"__count\"),0)" },
+
+        "A4": { "content": "Other" },
+        "B4": { "content": "=IFERROR(PIVOT.VALUE(3,\"__count\"),0)" },
+
+        "A5": { "content": "Not Mentioned" },
+        "B5": { "content": "=IFERROR(PIVOT.VALUE(4,\"__count\"),0)" },
+
+        "A6": { "content": "Total" },
+        "B6": { "content": "=B2+B3+B4+B5" },
+
+        "C2": { "content": "=IFERROR(TEXT(B2/(B6), \"0%\"), \"0%\")" },
+        "C3": { "content": "=IFERROR(TEXT(B3/(B6), \"0%\"), \"0%\")"  },
+        "C4": { "content": "=IFERROR(TEXT(B4/(B6), \"0%\"), \"0%\")" },
+        "C5": { "content": "=IFERROR(TEXT(B5/(B6), \"0%\"), \"0%\")" },
+
+
+        "A8": { "content": "Nationality" },
+        "A9": { "content": "Expat" },
+        "B9": { "content": "=IFERROR(PIVOT.VALUE(5,\"__count\"),0)" },
+
+        "A10": { "content": "Local" },
+        "B10": { "content": "=IFERROR(PIVOT.VALUE(6,\"__count\"),0)" },
+
+        "A11": { "content": "Not Selected" },
+        "B11": { "content": "=IFERROR(PIVOT.VALUE(7,\"__count\"),0)" },
+
+        "A12": { "content": "Total" },
+        "B12": { "content": "=B9+B10+B11" },
+
+        "C9": { "content": "=IFERROR(TEXT(B9/(B12), \"0%\"), \"0%\")" },
+        "C10": { "content": "=IFERROR(TEXT(B10/(B12), \"0%\"), \"0%\")"  },
+        "C11": { "content": "=IFERROR(TEXT(B11/(B12), \"0%\"), \"0%\")" },
+
+        "A14": { "content": "Average Age" },
+        "B14": {
+          "content": "=IFERROR(\n  ROUND(\n    PIVOT.VALUE(8,\"__sum_age\") / PIVOT.VALUE(8,\"__count\"),\n    1\n  ),\n  0\n)\n"
+        },
+          "A20": {
+            "content": "[Age of Employees by Department (Top 10)](odoo://view/{\"viewType\":\"graph\",\"action\":{\"domain\":[[\"birthday\",\"!=\",false]],\"context\":{\"graph_groupbys\":[\"department_id\"],\"graph_measure\":\"age\",\"graph_mode\":\"bar\"},\"modelName\":\"hr.employee\",\"views\":[[false,\"pivot\"],[false,\"graph\"],[false,\"search\"]]},\"threshold\":0,\"name\":\"Employees Analysis\"})"
+          },
+          "A25": {
+            "content": "=PIVOT(12, 10, FALSE())"
+          },
+          "D25": {
+            "content": "=PIVOT(13, 10, FALSE())"
+          }
+        }
+
+    },
+
+    {
+      "id": "sheet_dashboard",
+      "name": "KUEC Charts Dashboard",
+      "colNumber": 20,
+      "rowNumber": 120,
+      "areGridLinesVisible": false,
+      "figures": [
+            {
+              "id": "heading_gender",
+              "tag": "chart",
+              "x": 12,
+              "y": 0,
+              "width": 600,
+              "height": 30,
+              "data": {
+                "type": "scorecard",
+                "title": { "text": "Gender", "bold": true },
+                "background": "#FFFFFF"
+              }
+            },
+        {
+          "id": "kpi_male",
+          "tag": "chart",
+          "x": 12,
+          "y": 36,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Male Employees", "bold": true },
+            "keyValue": "Data!B2",
+            "baseline": "Data!C2",
+            "baselineMode": "text",
+            "background": "#EFF6FF"
+          }
+        },
+
+        {
+          "id": "kpi_female",
+          "tag": "chart",
+          "x": 322,
+          "y": 36,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Female Employees", "bold": true },
+            "keyValue": "Data!B3",
+            "baseline": "Data!C3",
+            "baselineMode": "text",
+            "background": "#EFF6FF"
+          }
+        },
+        {
+          "id": "kpi_other",
+          "tag": "chart",
+          "x": 632,
+          "y": 36,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Other Employees", "bold": true },
+            "keyValue": "Data!B4",
+            "baseline": "Data!C4",
+            "baselineMode": "text",
+            "background": "#EFF6FF"
+          }
+        },
+        {
+          "id": "kpi_not_mentioned",
+          "tag": "chart",
+          "x": 942,
+          "y": 36,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Gender Not Mentioned", "bold": true },
+            "keyValue": "Data!B5",
+            "baseline": "Data!C5",
+            "baselineMode": "text",
+            "background": "#FEF3C7"
+          }
+        },
+        {
+          "id": "kpi_total",
+          "tag": "chart",
+          "x": 1252,
+          "y": 36,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Total Employees", "bold": true },
+            "keyValue": "Data!B6",
+            "background": "#F3F4F6"
+          }
+        },
+
+        {
+            "id": "heading_nationality",
+            "tag": "chart",
+            "x": 12,
+            "y": 170,
+            "width": 600,
+            "height": 30,
+            "data": {
+              "type": "scorecard",
+              "title": { "text": "Nationality", "bold": true },
+              "background": "#FFFFFF"
+            }
+          },
+        {
+          "id": "kpi_expat",
+          "tag": "chart",
+          "x": 12,
+          "y": 200,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Expat Employees", "bold": true },
+            "keyValue": "Data!B9",
+            "baseline": "Data!C9",
+            "baselineMode": "text",
+            "background": "#ECFEFF"
+          }
+        },
+        {
+          "id": "kpi_local",
+          "tag": "chart",
+          "x": 322,
+          "y": 200,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Local Employees", "bold": true },
+            "keyValue": "Data!B10",
+            "baseline": "Data!C10",
+            "baselineMode": "text",
+            "background": "#F0FDF4"
+          }
+        },
+        {
+          "id": "kpi_nationality_na",
+          "tag": "chart",
+          "x": 632,
+          "y": 200,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Nationality Not Selected", "bold": true },
+            "keyValue": "Data!B11",
+            "baseline": "Data!C11",
+            "baselineMode": "text",
+            "background": "#FEF3C7"
+          }
+        },
+        {
+          "id": "kpi_nationality_total",
+          "tag": "chart",
+          "x": 942,
+          "y": 200,
+          "width": 300,
+          "height": 120,
+          "data": {
+            "type": "scorecard",
+            "title": { "text": "Total", "bold": true },
+            "keyValue": "Data!B12",
+            "background": "#FBF3C7"
+          }
+        },
+        {
+            "id": "heading_age",
+            "tag": "chart",
+            "x": 1252,
+            "y": 170,
+            "width": 300,
+            "height": 30,
+            "data": {
+              "type": "scorecard",
+              "title": { "text": "Average Age", "bold": true },
+              "background": "#FFFFFF"
+            }
+          },
+        {
+            "id": "kpi_avg_age",
+            "tag": "chart",
+            "x": 1252,
+            "y": 200,
+            "width": 300,
+            "height": 120,
+            "data": {
+              "type": "scorecard",
+              "title": { "text": "Average Age", "bold": true },
+              "keyValue": "Data!B14",
+              "numberFormat": "0.0",
+              "background": "#EEF2FF"
+            }
+          },
+        {
+          "id": "gender_pie_chart",
+          "tag": "chart",
+          "x": 12,
+          "y": 370,
+          "width": 400,
+          "height": 400,
+          "data": {
+            "type": "odoo_pie",
+            "title": {
+              "text": "Employees by Gender",
+              "align": "center"
+            },
+            "background": "#FFFFFF",
+            "legendPosition": "top",
+
+            "metaData": {
+              "resModel": "hr.employee",
+              "groupBy": ["gender"],
+              "measure": "__count",
+              "order": null,
+              "mode": "pie"
+            },
+
+            "searchParams": {
+              "domain": [["active", "=", true]],
+              "context": {},
+              "groupBy": ["gender"],
+              "orderBy": []
+            }
+          }
+        },
+        {
+            "id": "avg_age_by_department_bar",
+            "tag": "chart",
+            "x": 450,
+            "y": 370,
+            "width": 800,
+            "height": 400,
+
+            "data": {
+                "type": "bar",
+                "dataSetsHaveTitle": true,
+                "dataSets": [
+                    {
+                        "dataRange": "Data!B26:B36"
+                    }
+                ],
+                "legendPosition": "top",
+                "labelRange": "Data!A26:A36",
+                "title": {
+                    "text": "Average Age by Department"
+                },
+                "stacked": false,
+                "aggregated": false
+            }
+          },
+        {
+          "id": "nationality_by_department_bar",
+          "tag": "chart",
+          "x": 12,
+          "y": 820,
+          "width": 1200,
+          "height": 450,
+
+          "data": {
+            "type": "bar",
+            "stacked": true,
+            "dataSetsHaveTitle": true,
+
+            "labelRange": "Data!D26:D50",
+
+            "dataSets": [
+              { "dataRange": "Data!E25:E50" },
+              { "dataRange": "Data!F25:F50" },
+              { "dataRange": "Data!G25:G50" },
+              { "dataRange": "Data!H25:H50" },
+              { "dataRange": "Data!I25:I50" },
+              { "dataRange": "Data!J25:J50" },
+              { "dataRange": "Data!K25:K50" },
+              { "dataRange": "Data!L25:L50" },
+              { "dataRange": "Data!M25:M50" },
+              { "dataRange": "Data!N25:N50" },
+              { "dataRange": "Data!O25:O50" },
+              { "dataRange": "Data!P25:P50" },
+              { "dataRange": "Data!Q25:Q50" },
+              { "dataRange": "Data!R25:R50" },
+              { "dataRange": "Data!S25:S50" },
+              { "dataRange": "Data!T25:T50" },
+              { "dataRange": "Data!U25:U50" },
+              { "dataRange": "Data!V25:V50" },
+              { "dataRange": "Data!W25:W50" },
+              { "dataRange": "Data!X25:X50" },
+              { "dataRange": "Data!Y25:Y50" },
+              { "dataRange": "Data!Z25:Z50" }
+            ],
+
+            "legendPosition": "top",
+            "title": {
+              "text": "Employees by Department & Nationality"
+            }
+          }
+        }
+      ],
+      "borders": {
+        "A39:C39": 1
+      },
+      "styles": {
+          "A39": 1
+        }
+      }
+  ],
+
+  "globalFilters": [
+    {
+      "id": "filter_department",
+      "type": "relation",
+      "label": "Department",
+      "modelName": "hr.department",
+      "defaultValue": []
+    },
+    {
+      "id": "filter_company",
+      "type": "relation",
+      "label": "Company",
+      "modelName": "res.company",
+      "defaultValue": []
+    }
+  ],
+
+  "pivotNextId": 14,
+  "listNextId": 1,
+  "lists": {},
+  "customTableStyles": {}
+}

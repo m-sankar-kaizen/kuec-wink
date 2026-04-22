@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_employment_letter_base,access_employment_letter_name,model_employment_letter,,1,1,1,1
+access_salary_transfer_letter_base,access_salary_transfer_letter_name,model_salary_transfer_letter,,1,1,1,1
+access_salary_letter_base,access_salary_letter_name,model_salary_letter,,1,1,1,1
+access_exit_interview_id,access_exit_interview_name,model_exit_interview,,1,1,1,1
+access_exit_clearance_id,access_exit_clearance_name,model_exit_clearance,,1,1,1,1
+access_register_form_id,access_register_form_name,model_register_form,,1,1,1,1
+access_health_insurance_id,access_health_insurance_name,model_health_insurance,kaz_employee_reports.group_health_insurance_user,1,1,1,1
+access_visa_request_id,access_visa_request_name,model_visa_request,kaz_employee_reports.group_base_user_visa_request,1,1,1,1
+access_address_to_id,address_to_name,model_address_to,,1,1,1,1
+access_departure_reason,hr.departure.reason,hr.model_hr_departure_reason,,1,1,0,0

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_kick_off_meeting_wizard_form" model="ir.ui.view">
+        <field name="name">kick.off.meeting.wizard.form</field>
+        <field name="model">kick.off.meeting</field>
+        <field name="arch" type="xml">
+            <form string="Kick off Meeting">
+                <group>
+                    <field name="kick_off_meeting_date"
+                           required="1"/>
+                </group>
+
+                <footer>
+                    <button string="Select" type="object" name="action_choose_date" class="btn-primary"
+                            confirm="Are you sure you want to Select this date as Kick off Meeting Date?"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

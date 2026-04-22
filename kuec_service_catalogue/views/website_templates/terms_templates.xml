@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Portal eWallet Page ──────────────────────────────────────────── -->
+    <template id="wink_portal_wallet" name="WINK Portal eWallet">
+        <t t-call="website.layout">
+            <div class="container mt-5 mb-5">
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb bg-transparent p-0">
+                        <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                        <li class="breadcrumb-item active">My eWallet</li>
+                    </ol>
+                </nav>
+
+                <!-- Banners -->
+                <t t-if="topup_success">
+                    <div role="status" class="alert alert-success alert-dismissible fade show mb-4">
+                        <i class="fa fa-check-circle me-2"/>
+                        Top-up successful! Your eWallet balance has been credited.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                </t>
+                <t t-if="topup_pending">
+                    <div role="alert" class="alert alert-warning alert-dismissible fade show mb-4">
+                        <i class="fa fa-clock-o me-2"/>
+                        Payment is being processed. Your balance will update shortly.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                </t>
+                <t t-if="request.params.get('error') == 'invalid_amount'">
+                    <div role="alert" class="alert alert-danger alert-dismissible fade show mb-4">
+                        <i class="fa fa-exclamation-circle me-2"/>
+                        Please enter a valid amount greater than zero.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+                </t>
+
+                <div class="row g-4">
+                    <!-- Left: Balance + Top-Up -->
+                    <div class="col-lg-4">
+                        <!-- Balance card -->
+                        <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
+                            <div class="card-header border-0 py-3 px-4" style="background:#059669;color:#fff;">
+                                <h5 class="mb-0"><i class="fa fa-credit-card me-2"/>eWallet Balance</h5>
+                            </div>
+                            <div class="card-body text-center py-4">
+                                <div class="fw-bold" style="font-size:2.5rem;color:#059669;">
+                                    <t t-esc="wallet_balance" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                </div>
+                                <p class="text-muted small mt-1 mb-0">Available Credit</p>
+                            </div>
+                        </div>
+
+                        <!-- Top-Up form — real payment via Odoo payment providers -->
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-header border-0 py-3 px-4" style="background:var(--wink-primary,#1F4E79);color:#fff;">
+                                <h5 class="mb-0"><i class="fa fa-plus-circle me-2"/>Top-Up Wallet</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <p class="text-muted small mb-3">
+                                    Enter an amount and pay using your preferred payment method. Your balance will be credited immediately after payment.
+                                </p>
+                                <form method="post" action="/my/wallet/topup">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold small">Amount (<t t-esc="currency.symbol"/>)</label>
+                                        <input type="number" name="amount" class="form-control form-control-lg"
+                                               min="1" step="any" placeholder="e.g. 5000" required="1"/>
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold">
+                                        <i class="fa fa-credit-card me-2"/>Proceed to Payment
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Transaction History -->
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-header bg-light py-3 px-4">
+                                <h5 class="mb-0"><i class="fa fa-history me-2"/>Transaction History</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <t t-if="transactions">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="ps-4">Date</th>
+                                                    <th>Type</th>
+                                                    <th>Description</th>
+                                                    <th class="text-end pe-4">Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="transactions" t-as="txn">
+                                                    <tr>
+                                                        <td class="ps-4 small text-muted"><t t-esc="txn.date"/></td>
+                                                        <td>
+                                                            <span t-if="txn.transaction_type == 'topup'" class="badge bg-success">Top-Up</span>
+                                                            <span t-elif="txn.transaction_type == 'payment'" class="badge bg-primary">Payment</span>
+                                                            <span t-elif="txn.transaction_type == 'refund'" class="badge bg-info">Refund</span>
+                                                            <span t-else="" class="badge bg-secondary">Adjustment</span>
+                                                        </td>
+                                                        <td class="small"><t t-esc="txn.description"/></td>
+                                                        <td class="text-end pe-4 fw-semibold">
+                                                            <span t-if="txn.amount >= 0" class="text-success">
+                                                                +<t t-esc="txn.amount" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                                            </span>
+                                                            <span t-else="" class="text-danger">
+                                                                <t t-esc="txn.amount" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="fa fa-inbox fa-3x mb-3 d-block opacity-50"/>
+                                        <p>No transactions yet.</p>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ── Wallet Top-Up Payment Page ──────────────────────────────────── -->
+    <template id="wink_wallet_pay_page" name="WINK Wallet Top-Up Payment">
+        <t t-call="website.layout">
+            <div class="container mt-5 mb-5">
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb bg-transparent p-0">
+                        <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                        <li class="breadcrumb-item"><a href="/my/wallet">My eWallet</a></li>
+                        <li class="breadcrumb-item active">Top-Up Payment</li>
+                    </ol>
+                </nav>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-7">
+
+                        <!-- Amount summary -->
+                        <div class="card border-0 shadow-sm rounded-3 mb-4">
+                            <div class="card-header border-0 py-3 px-4" style="background:#059669;color:#fff;">
+                                <h5 class="mb-0"><i class="fa fa-credit-card me-2"/>Top-Up Amount</h5>
+                            </div>
+                            <div class="card-body text-center py-4">
+                                <div class="fw-bold" style="font-size:2.5rem;color:#059669;">
+                                    <t t-esc="amount" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                </div>
+                                <p class="text-muted small mt-1 mb-0">Will be credited to your eWallet after payment</p>
+                            </div>
+                        </div>
+
+                        <!-- Payment form -->
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-header bg-light py-3 px-4">
+                                <h5 class="mb-0">Select Payment Method</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <t t-call="payment.form">
+                                    <t t-set="default_payment_provider_id" t-value="default_payment_provider_id"/>
+                                    <t t-set="amount" t-value="amount"/>
+                                    <t t-set="currency" t-value="currency"/>
+                                    <t t-set="partner_id" t-value="partner_id"/>
+                                    <t t-set="access_token" t-value="access_token"/>
+                                    <t t-set="transaction_route" t-value="transaction_route"/>
+                                    <t t-set="landing_route" t-value="landing_route"/>
+                                </t>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <a href="/my/wallet" class="text-decoration-none">
+                                <i class="fa fa-arrow-left me-1"/> Cancel &amp; return to wallet
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="wink_terms_and_conditions" name="WINK Terms and Conditions">
+        <t t-call="website.layout">
+            <div class="container mt-5 mb-5">
+                <!-- Breadcrumbs -->
+                <nav aria-label="breadcrumb" class="mb-4">
+                    <ol class="breadcrumb bg-transparent p-0">
+                        <li class="breadcrumb-item"><a href="/my/home">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Terms &amp; Conditions</li>
+                    </ol>
+                </nav>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-9">
+
+                        <!-- Header -->
+                        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                            <div class="card-header border-0 py-4 px-4" style="background:var(--wink-primary, #1F4E79); color:#fff;">
+                                <h2 class="mb-1 fw-bold"><i class="fa fa-file-text-o me-2 opacity-75"/> Terms &amp; Conditions</h2>
+                                <p class="mb-0 opacity-75 small"><t t-esc="company.name"/> — WINK Business Services Portal</p>
+                            </div>
+                        </div>
+
+                        <!-- Content block -->
+                        <div class="card border-0 shadow-sm rounded-3 p-4 p-lg-5">
+                            <t t-if="terms_html">
+                                <div class="wink-terms-body" t-out="terms_html"/>
+                            </t>
+                            <t t-else="">
+                                <div class="text-center py-5 text-muted">
+                                    <i class="fa fa-file-o fa-3x mb-3 d-block opacity-50"/>
+                                    <p>Terms &amp; Conditions have not been configured yet.</p>
+                                    <p class="small">Please contact your administrator to set up the portal terms.</p>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Footer note -->
+                        <p class="text-muted small text-center mt-4">
+                            <i class="fa fa-info-circle me-1"/>
+                            By subscribing to any WINK service, you confirm that you have read and accepted these Terms &amp; Conditions.
+                        </p>
+
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Category: KUEC Procurement -->
+    <record id="module_category_kuec_doa" model="ir.module.category">
+        <field name="name">KUEC DOA/Access Rights</field>
+        <field name="sequence" eval="30"/>
+    </record>
+
+    <!-- Group: KUEC Procurement User -->
+<!--    <record id="group_kuec_procurement_user" model="res.groups">-->
+<!--        <field name="name">Procurement User</field>-->
+<!--        <field name="category_id" ref="module_category_kuec_doa"/>-->
+<!--    </record>-->
+
+    <!-- Group: Head of Department (KUEC) -->
+    <record id="group_kuec_head_department" model="res.groups">
+        <field name="name">Head of Department</field>
+        <field name="category_id" ref="module_category_kuec_doa"/>
+    </record>
+
+    <!-- Group: Budget Controller (KUEC) -->
+    <record id="group_kuec_budget" model="res.groups">
+        <field name="name">Budget Controller</field>
+        <field name="comment">This group grants access to Budget Transfer Requests in Requisition and relevant approval
+            cycles for KUEC company.
+        </field>
+        <field name="category_id" ref="module_category_kuec_doa"/>
+    </record>
+
+    <!-- Group: Head of Finance & Procurement (KUEC) -->
+    <record id="group_kuec_head_fin_procurement" model="res.groups">
+        <field name="name">Head of Finance &amp; Procurement</field>
+        <field name="category_id" ref="module_category_kuec_doa"/>
+    </record>
+
+    <!-- Group: CCOE (KUEC) -->
+    <record id="group_kuec_ccoe" model="res.groups">
+        <field name="name">CCOE</field>
+        <field name="category_id" ref="module_category_kuec_doa"/>
+    </record>
+
+    <!-- Group: CEO (KUEC) -->
+    <record id="group_kuec_ceo" model="res.groups">
+        <field name="name">CEO</field>
+        <field name="category_id" ref="module_category_kuec_doa"/>
+    </record>
+
+    <record id="group_kuec_chairman" model="res.groups">
+        <field name="name">Chairman</field>
+        <field name="category_id" ref="module_category_kuec_doa"/>
+    </record>
+
+    <!-- Group: KUEC Board -->
+    <record id="group_kuec_board" model="res.groups">
+        <field name="name">KUEC Board</field>
+        <field name="category_id" ref="module_category_kuec_doa"/>
+    </record>
+
+</odoo>

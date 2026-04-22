@@ -1,0 +1,35 @@
+<odoo>
+
+<!-- [Start] Hidden group for hiding "Recruitment group" ################################################################ -->
+    <record id="root_group_hiresmart" model="ir.module.category">
+        <field name="name">HireSmart [Recruitment] </field>
+        <field name="description">Used for recruitment/employee roles</field>
+        <field name="sequence">1000</field>
+    </record>
+<!-- [End] Hidden group for hiding "Recruitment group" ################################################################ -->
+
+
+<!-- [Start] Security group for Recruitment - Department Head ###########################################################-->
+    <record id="group_recruitment_dept_head" model="res.groups">
+        <field name="name">Recruitment - Department Head</field>
+        <field name="category_id" ref="hiresmart.root_group_hiresmart"/>
+    </record>
+<!-- [End] Security group for Recruitment - Department Head ###########################################################-->
+
+
+<!-- [Start] Security group for Recruitment - HR ########################################################################-->
+    <record id="group_recruitment_hr" model="res.groups">
+        <field name="name">Recruitment - HR</field>
+        <field name="category_id" ref="hiresmart.root_group_hiresmart"/>
+    </record>
+<!-- [End] Security group for Recruitment - HR ########################################################################-->
+
+
+<!-- [Start] Security group for Recruitment - Employee ########################################################################-->
+    <record id="group_recruitment_employee" model="res.groups">
+        <field name="name">Recruitment - Employee</field>
+        <field name="category_id" ref="hiresmart.root_group_hiresmart"/>
+    </record>
+<!-- [End] Security group for Recruitment - Employee ########################################################################-->
+
+</odoo>

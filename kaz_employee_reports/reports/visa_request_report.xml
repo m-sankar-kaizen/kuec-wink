@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    =============================
+    Template: visa_request_report
+    Description: UAE Visa Request Form Report
+    Model: visa.request
+    Notes: Bilingual fields and formatted information grouped into sections.
+    =============================
+    -->
+    <template id="visa_request_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.internal_layout">
+                    <header>
+                        <div>
+                            <img t-attf-src="/kaz_employee_reports/static/image/image.png"
+                                 style="height:200px; width:100%; "/>
+                        </div>
+                    </header>
+                    <div class="page">
+                        <div class="container">
+                            <h1 class="text-center mt-3">UAE-VISA Request Form</h1>
+                            <br/>
+                            <div class="row mt-5">
+                                <h3 style="background-color:MediumSeaGreen;">Visa Details</h3>
+                                <dic class="col-2"/>
+                                <div class="col-8">
+                                    <div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <table class="table">
+                                                    <tbody>
+                                                        <tr>
+                                                            <th scope="row">
+                                                                Type Of Request :
+                                                            </th>
+                                                            <td>
+                                                                <span t-field="o.type_of_request"/>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th scope="row">
+                                                                Type Of Action :
+                                                            </th>
+                                                            <td>
+                                                                <span t-field="o.type_of_action"/>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <th scope="row">
+                                                                Are you raising this request on
+                                                                behalf of other employee? :
+                                                            </th>
+                                                            <td>
+                                                                <span t-field="o.check"/>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <dic class="col-2"/>
+                            </div>
+                            <table class="table mt-3">
+                                <h3 style="background-color:MediumSeaGreen;">Requester's Information</h3>
+                                <br/>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">
+                                            Date:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.date"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Request No:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.ref"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Employee Name:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.name"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Employee ID:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.emp_id"/>
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                            <table class="table mt-3">
+                                <h5 style="background-color:MediumSeaGreen;">Applicant’s Personal Information ﴾Fill as
+                                    per the Passport/ Official Records﴿
+                                </h5>
+                                <tbody>
+                                    <tr>
+                                        <th>
+                                            Full Name of Applicant :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.full_name"/>
+                                        </td>
+                                        <th>
+                                            <span t-field="o.full_name"/>
+                                        </th>
+                                        <td>
+                                            الاسم بالكامل
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Full Father’s Name :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.father_name"/>
+                                        </td>
+                                        <th>
+                                            <span t-field="o.father_name"/>
+                                        </th>
+                                        <td>
+                                            اسم الاب بالكامل
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Full Mother’s Name :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.mother_name"/>
+                                        </td>
+                                        <th>
+                                            <span t-field="o.mother_name"/>
+                                        </th>
+                                        <td>
+                                            اسم الام بالكامل
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Applicant's Position :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.position"/>
+                                        </td>
+                                        <th>
+                                            Marital Status
+                                        </th>
+                                        <td>
+                                            <span t-field="o.military_status"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Sect :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.sect"/>
+                                        </td>
+                                        <th>
+                                            Contact number ‐ Home country
+                                        </th>
+                                        <td>
+                                            <span t-field="o.country_num"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Contact number ‐ UAE
+                                        </th>
+                                        <td>
+                                            <span t-field="o.uae_num"/>
+                                        </td>
+                                        <th>
+                                            Personal Email Address :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.personal_email"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            PO Box
+                                        </th>
+                                        <td>
+                                            <span t-field="o.po_box"/>
+                                        </td>
+                                        <th>
+                                            Nationality :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.nationality"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Passport Number
+                                        </th>
+                                        <td>
+                                            <span t-field="o.passport_num"/>
+                                        </td>
+                                        <th>
+                                            Country of passport issued :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.passport_country"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Passport Expiry Date *
+                                            ﴾mm/dd/yyyy﴿
+                                        </th>
+                                        <td>
+                                            <span t-field="o.passport_expired_date"/>
+                                        </td>
+                                        <th>
+                                            Currently living in :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.country_live_in"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Country of Birth
+                                        </th>
+                                        <td>
+                                            <span t-field="o.country_of_birth"/>
+                                        </td>
+                                        <th>
+                                            Place of Birth :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.place_of_birth"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Education Qualification
+                                        </th>
+                                        <td>
+                                            <span t-field="o.education_qualify"/>
+                                        </td>
+                                        <th>
+                                            Major :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.major"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Religion
+                                        </th>
+                                        <td>
+                                            <span t-field="o.religion"/>
+
+                                        </td>
+                                        <th>
+                                            Additional comments :
+                                        </th>
+                                        <td>
+                                            <span t-field="o.comment"/>
+                                        </td>
+
+                                    </tr>
+
+
+                                </tbody>
+                            </table>
+
+                            <div class="mt-3">
+                                <h3 style="background-color:MediumSeaGreen;">Attachment Information
+                                </h3>
+                                <br/>
+                                <p style="color:red;">Please make sure to upload all the required documents.</p>
+                                <p>Attach the National ID ﴾both sides﴿ if you are from Afghanistan or Iraq or Pakistan
+                                </p>
+                            </div>
+                            <div class="mt-5 text-center">
+                                <t t-if="o.attach">
+                                    <img t-att-src="image_data_uri(o.attach)"
+                                         style="height:150px; width:200px; text-align:center; "/>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+
+    </template>
+    <!--      <template id="report_custom_header_template" inherit_id="web.internal_layout">-->
+    <!--        <xpath expr="//div[hasclass('header')]" position="inside">-->
+    <!--            <div>-->
+    <!--                <div class="row">-->
+    <!--                    <div>-->
+    <!--                        <img t-att-src="image_data_uri(o.attach)" style="height:130px; width:100%; "/>-->
+    <!--                    </div>-->
+    <!--                </div>-->
+    <!--            </div>-->
+    <!--        </xpath>-->
+    <!--    </template>-->
+
+    <!--
+    Report Action: action_report_visa_request_report
+    Description: PDF report action for the visa.request model
+    Access Restriction: Limited to users in group_hr_team_visa_request
+    -->
+
+
+    <record id="action_report_visa_request_report" model="ir.actions.report">
+        <field name="name">Visa Request</field>
+        <field name="model">visa.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.visa_request_report</field>
+        <field name="report_file">kaz_employee_reports.visa_request_report</field>
+        <field name="print_report_name">'Project Task - %s' % object.name.name</field>
+        <field name="binding_model_id" ref="model_visa_request"/>
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(4, ref('kaz_employee_reports.group_hr_team_visa_request'))]"/>
+    </record>
+
+</odoo>

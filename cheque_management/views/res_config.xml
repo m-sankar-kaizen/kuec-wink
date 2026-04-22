@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_form" model="ir.ui.view">
+        <field name="name">res.config.settings.form</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="72"/>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='bank_cash']" position="after">
+
+                <h2>Cheque Management</h2>
+                <div class="row mt16 o_settings_container">
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane"/>
+                        <div class="o_setting_right_pane">
+                            <span class="o_form_label">Incoming checks</span>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="in_journal_id"
+                                           class="col-lg-4 o_light_label"/>
+                                    <field name="in_journal_id"/>
+                                    <label for="checks_received_in_treasury_id"
+                                           class="col-lg-4 o_light_label"/>
+                                    <field name="checks_received_in_treasury_id"/>
+                                    <label for="checks_under_collection_by_bank_id"
+                                           class="col-lg-4 o_light_label"/>
+                                    <field name="checks_under_collection_by_bank_id"/>
+<!--                                    <label for="incoming_bounced_checks_id"-->
+<!--                                           class="col-lg-4 o_light_label"/>-->
+<!--                                    <field name="incoming_bounced_checks_id"/>-->
+<!--                                    <label for="intermediate_account"-->
+<!--                                           class="col-lg-4 o_light_label"/>-->
+<!--                                    <field name="intermediate_account"/>-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane"/>
+                        <div class="o_setting_right_pane">
+                            <span class="o_form_label">Outgoing checks</span>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="out_journal_id"
+                                           class="col-lg-4 o_light_label"/>
+                                    <field name="out_journal_id"/>
+                                    <label for="checks_issued_id"
+                                           class="col-lg-4 o_light_label"/>
+                                    <field name="checks_issued_id"/>
+<!--                                    <label for="outgoing_bounced_checks_id"-->
+<!--                                           class="col-lg-4 o_light_label"/>-->
+<!--                                    <field name="outgoing_bounced_checks_id"/>-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_left_pane"/>
+                        <div class="o_setting_right_pane">
+                            <span class="o_form_label">Reminder Configuration</span>
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="cheque_reminder_days_before_due"
+                                           class="col-lg-4 o_light_label"/>
+                                    <field name="cheque_reminder_days_before_due"/>
+                                    <label for="cheque_overdue_reminder_days"
+                                           class="col-lg-4 o_light_label"/>
+                                    <field name="cheque_overdue_reminder_days"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

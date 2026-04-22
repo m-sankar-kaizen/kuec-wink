@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Tender RFQs Form View -->
+    <record id="purchase_contract_agreement_form" model="ir.ui.view">
+        <field name="name">purchase.contract.agreement.form</field>
+        <field name="model">purchase.contract.agreement</field>
+        <field name="arch" type="xml">
+            <form string="Purchase Contract Agreement">
+                <header>
+                    <button name="submit_to_approve"
+                            invisible="state != 'draft'"
+                            class="btn btn-primary" string="Submit for Approval" type="object"/>
+                    <button name="action_approve"
+                            invisible="state != 'pending'"
+                            class="btn btn-primary" string="Approve" type="object"/>
+                    <button name="action_reject"
+                            invisible="state != 'pending'"
+                            class="btn btn-secondary" string="Reject" type="object"/>
+                    <button name="action_create_purchase" icon="fa-trophy"
+                            invisible="state != 'approved' or purchase_id"
+                            class="btn btn-primary" string="Create PO" type="object"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved"/>
+                </header>
+                <sheet>
+                    <div name="button_box" class="oe_button_box">
+                        <button invisible="not purchase_id" class="oe_stat_button" type="object"
+                                name="action_open_purchase" icon="fa-pencil-square-o">
+                            <field name="purchase_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Purchase Order</span>
+                            </div>
+                        </button>
+                        <button invisible="not tender_rfq_id" class="oe_stat_button" type="object"
+                                name="action_open_tender" icon="fa-file">
+                            <field name="tender_rfq_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Tender</span>
+                            </div>
+                        </button>
+                        <button invisible="not tender_bid_id" class="oe_stat_button" type="object"
+                                name="action_open_tender_bid" icon="fa-gavel">
+                            <field name="tender_bid_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Tender Bid</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title d-flex gap-1">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Date Information">
+                            <field name="start_date" readonly="state != 'draft'"/>
+                            <field name="end_date" readonly="state != 'draft'"/>
+                            <field name="order_type" required="1" readonly="state != 'draft' or tender_rfq_id"/>
+                        </group>
+                        <group string="General Information">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="user_id" invisible="1"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="contract_agreement_line_ids" string="Requisition Lines">
+                            <field name="contract_agreement_line_ids" readonly="1">
+                                <list editable="bottom">
+                                    <field name="product_id" force_save="1" readonly="1"/>
+                                    <field name="name" force_save="1" optional="show" readonly="1"/>
+                                    <field name="account_id" force_save="1" readonly="1"/>
+                                    <field name="analytic_distribution" force_save="1" widget="analytic_distribution"
+                                           readonly="1"/>
+                                    <field name="required_qty" force_save="1" optional="show" readonly="1"/>
+                                    <field name="qty" force_save="1" readonly="1"/>
+                                    <field name="expected_price_unit" force_save="1" optional="show" readonly="1"/>
+                                    <field name="price_unit" force_save="1" readonly="1"/>
+                                    <field name="amount_in_currency" force_save="1" readonly="1"/>
+                                    <field name="uom_id" readonly="1" force_save="1"/>
+                                    <field name="currency_id" optional="hide" readonly="1"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group>
+                                </group>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total_amount" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page name="terms_and_condition" string="Terms &amp; Conditions">
+                            <field name="terms_and_condition" widget="html" required="1" readonly="state != 'draft'"/>
+                        </page>
+                        <page name="contract_attachment" string="Contract Attachment">
+                            <field name="contract_attachment" widget="binary" readonly="state != 'draft'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="purchase_contract_agreement_view_tree" model="ir.ui.view">
+        <field name="name">purchase.contract.agreement.view.list</field>
+        <field name="model">purchase.contract.agreement</field>
+        <field name="arch" type="xml">
+            <list string="Purchase Contract Agreements" sample="1" multi_edit="1">
+                <field name="name" decoration-bf="1"/>
+                <field name="partner_id"/>
+                <field name="start_date"/>
+                <field name="end_date" widget="remaining_days"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="hide"/>
+                <field name="company_id" optional="hide"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="total_amount" sum="Total" decoration-bf="1"/>
+            </list>
+        </field>
+    </record>
+</odoo>

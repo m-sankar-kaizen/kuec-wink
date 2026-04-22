@@ -1,0 +1,30 @@
+<odoo>
+
+<!-- [Start] (Model: hr.job) To add new field & button on the form view ######################################### -->
+    <record id="view_hr_job_form_inherit_custom" model="ir.ui.view">
+        <field name="name">hr.job.form.inherit.custom</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="hr.view_hr_job_form"/>
+        <field name="arch" type="xml">
+
+        <!-- [Start] To add button in header #########################-->
+            <xpath expr="//form/header" position="inside">
+                <button name="action_generate_job_summary"
+                    type="object"
+                    string="Generate Job Summary"
+                    class="btn-primary"
+                    invisible="id == 'False'"
+                />
+            </xpath>
+        <!-- [End] To add button in header #########################-->
+
+        <!-- [Start] To add experience field ####################### -->
+            <xpath expr="//field[@name='user_id']" position="before">
+                <field name="experience"/>
+            </xpath>
+        <!-- [End] To add experience field ####################### -->
+        </field>
+    </record>
+<!-- [End] (Model: hr.job) To add new field & button on the form view ######################################### -->
+
+</odoo>

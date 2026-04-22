@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="asset_modify_form" model="ir.ui.view">
+        <field name="name">asset.modify.form.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">asset.modify</field>
+        <field name="inherit_id" ref="account_asset.asset_modify_form"/>
+        <field name="arch" type="xml">
+
+            <footer position="attributes">
+                <attribute name="js_class">readonly_form_view</attribute>
+            </footer>
+
+            <field name="asset_id" position="before">
+                <field name="company_code" invisible="1"/>
+                <field name="is_readonly" invisible="1"/>
+                <field name="is_approved" invisible="1"/>
+            </field>
+
+            <footer position="attributes">
+                <attribute name="invisible">company_code in ['KUEC'] and not is_approved</attribute>
+            </footer>
+
+            <footer position="after">
+                <footer name="kuec_footer" invisible="company_code not in ['KUEC'] or is_approved">
+                    <button name="action_submit_for_approval" string="Submit Request" type="object" class="btn-primary"
+                            data-hotkey="t"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="x"/>
+                </footer>
+            </footer>
+
+        </field>
+    </record>
+</odoo>

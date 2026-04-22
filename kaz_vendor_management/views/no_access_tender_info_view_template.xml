@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="no_access_tender_info_view_template" name="No Access Tender Info">
+        <t t-call="website.layout">
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 text-center">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h3 class="card-title text-danger mb-3">Access Denied</h3>
+                                <p class="card-text mb-2">
+                                    You do not have the necessary permissions to view this tender.
+                                </p>
+                                <p class="card-text">
+                                    If you believe this is a mistake, please contact the procurement team.
+                                </p>
+                                <a href="/" class="btn btn-primary mt-3">Return to Home</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

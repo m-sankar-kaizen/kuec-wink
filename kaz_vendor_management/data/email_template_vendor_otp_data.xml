@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="0">
+
+    <record id="email_template_vendor_otp" model="mail.template">
+        <field name="name">Vendor OTP Notification</field>
+        <field name="model_id" ref="kaz_vendor_management.model_vendor_otp"/>
+        <field name="subject">Vendor OTP</field>
+        <field name="email_to">{{ object.email }}</field>
+        <field name="description">Verify Vendor Email address</field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear<span class="ms-1" t-esc="object.name"/>,
+                    <br/>
+                </p>
+                <p>Your OTP for vendor registration is:
+                    <b t-esc="object.otp"/>
+                </p>
+                <p>This OTP is valid for 5 minutes.</p>
+            </div>
+        </field>
+    </record>
+</odoo>

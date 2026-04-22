@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit HR Job Form View: Add Arabic translation for job position -->
+    <record id="view_hr_job_form" model="ir.ui.view">
+        <field name="name">job.code.inherit.translation</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="hr.view_hr_job_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert Arabic job position field after job title header -->
+            <xpath expr="//div[hasclass('oe_title')]" position="after">
+                <group>
+                    <field name="employee_arabic_job_position"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

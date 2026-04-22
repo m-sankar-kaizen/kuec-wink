@@ -1,0 +1,1061 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="vendor_signup" name="Register As A Vendor">
+        <t t-call="website.layout">
+
+            <style type="text/css">
+
+                /* Style the container for the '?' */
+                .tooltip-container {
+                display: inline-block;
+                background-color: #ccc; /* Gray circle */
+                color: #fff;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                line-height: 18px;
+                text-align: center;
+                font-size: 12px;
+                cursor: pointer;
+                margin-left: 5px;
+                position: relative; /* Essential for positioning the tooltip text */
+                }
+
+                /* Style the hidden text */
+                .tooltip-container .tooltip-text {
+                visibility: hidden;
+                width: 220px;
+                background-color: #333; /* Dark background */
+                color: #fff;
+                text-align: center;
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 12px;
+                font-weight: normal;
+
+                /* Position the tooltip */
+                position: absolute;
+                z-index: 1;
+                bottom: 125%; /* Show above the question mark */
+                left: 50%;
+
+
+                /* Arrow for the tooltip (optional, makes it look nicer) */
+                .tooltip-container .tooltip-text::after {
+                content: "";
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                margin-left: -5px;
+                border-width: 5px;
+                border-style: solid;
+                border-color: #333 transparent transparent transparent;
+                }
+
+                /* Show the text on hover */
+                .tooltip-container:hover .tooltip-text {
+                visibility: visible;
+                opacity: 1;
+                }
+            </style>
+
+            <div class="container py-4" id="vendor_signup_form">
+                <t t-if="not is_public">
+                    <div class="alert alert-success text-center secondary-text" role="alert">
+                        <div>
+                            You’re already registered with us. Thanks for checking in!
+                        </div>
+                    </div>
+                </t>
+                <t t-else="">
+                    <t t-if="error_message">
+                        <div class="card">
+                            <div class="alert alert-danger text-center" role="alert">
+                                <t t-esc="error_message"/>
+                            </div>
+                        </div>
+                    </t>
+
+                    <h4 class="text-left fw-bold kuec-header-text">
+                        Vendor Registration
+                    </h4>
+                    <div class="d-flex align-items-center">
+                        <p class="small secondary-text">Please complete the vendor registration form. Our procurement
+                            team will review
+                            your
+                            application and contact you if additional information is required.
+                        </p>
+                    </div>
+                    <form id="vendor-portal-registration" class="row g-3" action="/vendor/register" method="POST"
+                          enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <div class="card p-0">
+                            <div class="card-header secondary-text text-left fw-bold secondary-text border-rtl background-kuec">
+                                Vendor Information
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="company_type">Company Type
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <select required="required" class="form-control" id="company_type"
+                                                    name="company_type" placeholder="Company Type">
+                                                <option value="">Company Type</option>
+                                                <option value="person">Individual</option>
+                                                <option value="company">Company</option>
+                                            </select>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">Name
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input type="text" class="form-control" id="name" placeholder="Name"
+                                                   required="required" name="name"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <div class="col-lg-12 col-sm-12">
+                                            <div>
+                                                <img src="/kaz_vendor_management/static/src/img/default_user.png"
+                                                     id="preview" class="img-thumbnail default_user"/>
+                                                <br/>
+                                                <i class="fa fa-upload upload_image cursor-pointer" aria-hidden="true"/>
+                                            </div>
+                                            <input type="file" name="image_1920" class="image_1920 d-none"
+                                                   accept="image/*"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-0">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Registered Address
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="street">Street</span>
+                                            <input type="text" class="form-control" id="street"
+                                                   placeholder="Street" name="street"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="city">City</span>
+                                            <input type="text" class="form-control" id="city" placeholder="City"
+                                                   name="city"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" title="Country of Registration">
+                                                Country
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <select required="required" class="form-control" id="country_id"
+                                                    name="country_id" placeholder="Select Country">
+                                                <option value="">Select Country</option>
+                                                <option t-if="country" t-foreach="country" t-as="c"
+                                                        t-esc="c.name"
+                                                        t-att-value="c.id"/>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="street2">Street2</span>
+                                            <input type="text" class="form-control" id="street2"
+                                                   placeholder="Street2" name="street2"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="zip">Zip</span>
+                                            <input type="text" class="form-control" id="zip" placeholder="Zip"
+                                                   name="zip"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" title="State of Registration">
+                                                State
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <select required="required" class="form-control" id="state_id"
+                                                    name="state_id"
+                                                    placeholder="Select State">
+                                                <option value="">Select State</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-0">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Company Contact Details
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="phone">Phone
+                                                <span class="field-required phone-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input type="text" class="form-control" id="phone" placeholder="Phone"
+                                                   required="required" name="phone"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">
+                                                Email
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input type="email" class="form-control" id="email"
+                                                   placeholder="Email" required="required" name="email"/>
+                                        </div>
+                                        <div class="otp-section mb-3 d-none">
+                                            <div class="secondary-text">An OTP will be sent to
+                                                "<span id="otp_email_placeholder" class="secondary-text"/>"
+                                            </div>
+                                            <div class="mb-1 secondary-text">
+                                                This step is required to continue your registration.
+                                            </div>
+                                            <button id="sendOtpBtn" class="btn btn-primary secondary-text" type="button"
+                                                    disabled="true">
+                                                Send
+                                                OTP
+                                            </button>
+                                            <div id="otpSection" class="my-3 d-none">
+                                                <div class="mb-1 secondary-text">OTP has been successfully sent to your
+                                                    email
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <input name="otp" type="text" id="otpInput"
+                                                               class="form-control mb-2 secondary-text"
+                                                               placeholder="Enter OTP"/>
+                                                        <button id="verifyOtpBtn" class="btn btn-success secondary-text"
+                                                                disabled="true"
+                                                                type="button">
+                                                            Verify OTP
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="mobile">Mobile</span>
+                                            <input type="text" class="form-control" id="mobile" placeholder="Mobile"
+                                                   name="mobile"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="website_text">Website
+                                                <span class="field-required website-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input required="required" type="text" class="form-control" id="website"
+                                                   placeholder="Website" name="website"/>
+                                        </div>
+                                        <div class="mb-3 secondary-text">
+                                            <input type="checkbox" class="form-check-input cursor-pointer"
+                                                   id="na_website"
+                                                   name="na_website"/>
+                                            No Company Website? Tick this box to continue.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-0">
+                            <div id="company_name_label"
+                                 class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Company Profile
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" title="Logistics &amp; Capacity">
+                                                Delivery Capabilities
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <select required="required" class="form-control"
+                                                    id="delivery_capacity"
+                                                    name="delivery_capacity" placeholder="Delivery Capabilities">
+                                                <option value="">Select Delivery Capabilities</option>
+                                                <option value="local">Local Only</option>
+                                                <option value="regional">Regional Only (GCC or MENA)</option>
+                                                <option value="international">International</option>
+                                            </select>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">
+                                                VAT
+                                                <span class="field-required vat-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input required="required" type="text" class="form-control" id="vat"
+                                                   placeholder="VAT" name="vat"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" title="Company Size">
+                                                Company Size
+                                                <span class="field-required size-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <select required="required" class="form-control" id="company_size_id"
+                                                    name="company_size_id" placeholder="Select Company Size">
+                                                <option value="">Select Company Size</option>
+                                                <option t-if="company_size" t-foreach="company_size" t-as="c"
+                                                        t-esc="c.name"
+                                                        t-att-value="c.id"/>
+                                            </select>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" title="Years of Experience">
+                                                Years of Experience
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <select required="required" class="form-control"
+                                                    id="years_of_experience"
+                                                    name="years_of_experience" placeholder="Years of Experience">
+                                                <option value="">Select Years of Experience</option>
+                                                <option value="lt_2">Less than 2 Years</option>
+                                                <option value="2_to_5">2-5 Years</option>
+                                                <option value="6_to_10">6-10 Years</option>
+                                                <option value="10_plus">10+ Years</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="partner_category">
+                                                Type of Business
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <div class="form-control" style="height:auto;">
+                                                <t t-if="partner_category">
+                                                    <div class="row">
+                                                        <t t-foreach="partner_category" t-as="cat">
+                                                            <div class="col-md-6 mb-2">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input category-checkbox"
+                                                                           type="checkbox"
+                                                                           t-attf-id="cat_{{cat.id}}"
+                                                                           name="partner_category_ids"
+                                                                           t-att-value="cat.id"
+                                                                           required="required"/>
+                                                                    <label class="form-check-label"
+                                                                           t-attf-for="cat_{{cat.id}}">
+                                                                        <t t-esc="cat.name"/>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </t>
+                                                        <div class="col-md-6 mb-2">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input"
+                                                                       type="checkbox"
+                                                                       id="other_category"
+                                                                       name="other_pc"
+                                                                />
+                                                                <label class="form-check-label"
+                                                                       for="other_pc">
+                                                                    Other
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                                <t t-else="">
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-2">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input"
+                                                                       type="checkbox"
+                                                                       id="other_category"
+                                                                       name="other_pc"/>
+                                                                <label class="form-check-label"
+                                                                       for="other_pc">
+                                                                    Other
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                                <div class="col-12 other_partner_category_container d-none">
+                                                    <div class="input-group mb-3">
+                                                        <input type="text" class="form-control"
+                                                               id="other_partner_category"
+                                                               placeholder="Contractor,Consultant"
+                                                               name="other_partner_category"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text"
+                                                  title="Preferred Currency For Transaction">
+                                                Preferred Currency For Transaction
+                                                <span class="field-required size-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <select required="required" class="form-control"
+                                                    id="property_purchase_currency_id"
+                                                    name="property_purchase_currency_id"
+                                                    placeholder="Select Preferred Currency">
+                                                <option value="">Select Preferred Currency</option>
+                                                <option t-if="currency" t-foreach="currency" t-as="cur"
+                                                        t-att-value="cur.id">
+                                                    (<span t-esc="cur.symbol"/>)
+                                                    <span class="ms-1" t-esc="cur.name"/>
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-0">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Work Experience
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <input class="form-check-input cursor-pointer" type="checkbox"
+                                                   id="has_worked_for_govt"
+                                                   name="has_worked_for_govt"/>
+                                            <label class="form-check-label ms-2" for="has_worked_for_govt">
+                                                Has Worked For Govt. or Large Enterprise?
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                    </div>
+                                </div>
+                                <div class="row d-none" id="companies_worked_for_container">
+                                    <div class="col-12">
+                                        <table class="table table-bordered" id="companies_worked_for_table">
+                                            <thead>
+                                                <tr>
+                                                    <th>SL</th>
+                                                    <th>Company Name</th>
+                                                    <th>
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-primary secondary-text"
+                                                                id="add_company_row">Add Company
+                                                        </button>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Rows will be added dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-0">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Offered Products &amp; Services
+                            </div>
+                            <div class="card-body border-rtlb">
+
+                                <!-- ── Scoped styles ────────────────────────────────────────── -->
+                                <style>
+                                    /* ── Container ────────────────────────────────────── */
+                                    .m2m-widget {
+                                    display: flex;
+                                    gap: 16px;
+                                    align-items: flex-start;
+                                    flex-wrap: wrap;
+                                    }
+
+                                    /* ── Left panel (search + chips) ──────────────────── */
+                                    .m2m-left {
+                                    flex: 0 0 340px;
+                                    min-width: 260px;
+                                    background: #fff;
+                                    border: 1.5px solid #d0d7e2;
+                                    border-radius: 10px;
+                                    overflow: hidden;
+                                    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+                                    display: flex;
+                                    flex-direction: column;
+                                    }
+
+                                    /* search bar */
+                                    .m2m-search-wrap {
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    padding: 10px 12px;
+                                    border-bottom: 1px solid #eaeef4;
+                                    background: #f7f9fc;
+                                    }
+                                    .m2m-search-wrap .m2m-search-icon {
+                                    color: #8a98aa;
+                                    font-size: 13px;
+                                    flex-shrink: 0;
+                                    }
+                                    .m2m-search-input {
+                                    border: none;
+                                    background: transparent;
+                                    outline: none;
+                                    width: 100%;
+                                    font-size: 13px;
+                                    color: #2c3e50;
+                                    }
+                                    .m2m-search-input::placeholder { color: #aab2bd; }
+
+                                    /* chips list */
+                                    .m2m-options-list {
+                                    list-style: none;
+                                    margin: 0;
+                                    padding: 6px 8px;
+                                    max-height: 220px;
+                                    overflow-y: auto;
+                                    }
+                                    .m2m-options-list::-webkit-scrollbar { width: 5px; }
+                                    .m2m-options-list::-webkit-scrollbar-thumb {
+                                    background: #d0d7e2;
+                                    border-radius: 4px;
+                                    }
+
+                                    .m2m-option-chip {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                    padding: 7px 10px;
+                                    margin: 3px 0;
+                                    border-radius: 7px;
+                                    font-size: 13px;
+                                    cursor: pointer;
+                                    user-select: none;
+                                    transition: background .15s, color .15s;
+                                    color: #374151;
+                                    border: 1.5px solid transparent;
+                                    }
+                                    .m2m-option-chip:hover {
+                                    background: #eef3ff;
+                                    border-color: #c7d7fc;
+                                    color: #1a56db;
+                                    }
+                                    .m2m-option-chip.selected {
+                                    background: #1a56db;
+                                    color: #fff;
+                                    border-color: #1a56db;
+                                    }
+                                    .m2m-option-chip.selected .m2m-chip-check {
+                                    display: flex;
+                                    }
+                                    .m2m-chip-check {
+                                    display: none;
+                                    align-items: center;
+                                    justify-content: center;
+                                    width: 16px;
+                                    height: 16px;
+                                    background: rgba(255,255,255,.25);
+                                    border-radius: 50%;
+                                    font-size: 10px;
+                                    }
+
+                                    /* show-more toggle */
+                                    .m2m-show-more {
+                                    text-align: center;
+                                    padding: 6px 0 10px;
+                                    }
+                                    .m2m-show-more button {
+                                    background: none;
+                                    border: none;
+                                    font-size: 12px;
+                                    color: #1a56db;
+                                    cursor: pointer;
+                                    font-weight: 500;
+                                    padding: 0;
+                                    }
+                                    .m2m-show-more button:hover { text-decoration: underline; }
+
+                                    /* empty state */
+                                    .m2m-empty {
+                                    padding: 20px 12px;
+                                    text-align: center;
+                                    font-size: 13px;
+                                    color: #8a98aa;
+                                    }
+
+                                    /* ── Right panel (selected pills) ─────────────────── */
+                                    .m2m-right {
+                                    flex: 1;
+                                    min-width: 200px;
+                                    }
+                                    .m2m-right-label {
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                    color: #6b7280;
+                                    letter-spacing: .5px;
+                                    text-transform: uppercase;
+                                    margin-bottom: 8px;
+                                    }
+                                    .m2m-pills-wrap {
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 8px;
+                                    min-height: 48px;
+                                    padding: 10px;
+                                    border: 1.5px dashed #d0d7e2;
+                                    border-radius: 10px;
+                                    background: #f9fafb;
+                                    transition: border-color .2s;
+                                    }
+                                    .m2m-pills-wrap.has-items {
+                                    border-style: solid;
+                                    border-color: #c7d7fc;
+                                    background: #fff;
+                                    }
+                                    .m2m-pills-empty-hint {
+                                    font-size: 12px;
+                                    color: #aab2bd;
+                                    margin: auto;
+                                    }
+
+                                    .m2m-pill {
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    background: #eef3ff;
+                                    border: 1px solid #c7d7fc;
+                                    color: #1a56db;
+                                    border-radius: 20px;
+                                    padding: 4px 10px 4px 12px;
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    animation: pillIn .2s ease;
+                                    }
+                                    @keyframes pillIn {
+                                    from { opacity: 0; transform: scale(.85); }
+                                    to { opacity: 1; transform: scale(1); }
+                                    }
+                                    .m2m-pill-remove {
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    width: 16px;
+                                    height: 16px;
+                                    border-radius: 50%;
+                                    background: #c7d7fc;
+                                    color: #1a56db;
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    cursor: pointer;
+                                    border: none;
+                                    padding: 0;
+                                    line-height: 1;
+                                    transition: background .15s, color .15s;
+                                    }
+                                    .m2m-pill-remove:hover {
+                                    background: #1a56db;
+                                    color: #fff;
+                                    }
+
+                                    /* ── "Other" row ──────────────────────────────────── */
+                                    .m2m-other-row {
+                                    margin-top: 12px;
+                                    }
+                                </style>
+
+                                <!-- Hidden native select kept for Odoo form compatibility -->
+                                <select id="products_tag"
+                                        class="d-none s_website_form_input"
+                                        name="products"
+                                        multiple="multiple"
+                                        t-att-required="'required'">
+                                    <t t-foreach="products" t-as="product">
+                                        <option t-att-value="product.id">
+                                            <t t-esc="product.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+
+                                <div class="m2m_container s_website_form_field s_website_form_custom"
+                                     data-type="many2many" data-name="products">
+
+                                    <div class="m2m-widget">
+
+                                        <!-- ── Left: search + option chips ── -->
+                                        <div class="m2m-left">
+                                            <div class="m2m-search-wrap">
+                                                <i class="fa fa-search m2m-search-icon"/>
+                                                <input type="text"
+                                                       class="m2m-search-input"
+                                                       id="m2m_search_input"
+                                                       placeholder="Search products…"
+                                                       autocomplete="off"/>
+                                            </div>
+
+                                            <ul class="m2m-options-list" id="m2m_options_list">
+                                                <!-- JS renders chips here -->
+                                            </ul>
+
+                                            <div class="m2m-show-more" id="m2m_show_more_wrap">
+                                                <button type="button" id="m2m_show_more_btn">Show more</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- ── Right: selected pills ── -->
+                                        <div class="m2m-right">
+                                            <div class="m2m-right-label">Selected</div>
+                                            <div class="m2m-pills-wrap" id="tag-pills-container">
+                                                <span class="m2m-pills-empty-hint" id="m2m_empty_hint">
+                                                    No products selected yet
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                    </div><!-- /.m2m-widget -->
+
+                                    <!-- "Other" checkbox row -->
+                                    <div class="m2m-other-row">
+                                        <label class="ms-1 small" for="other_op">
+                                            Can't find your products? Enable "Other" and enter them separated by commas.
+                                        </label>
+                                        <div class="form-check ms-1 mt-1">
+                                            <input class="form-check-input" type="checkbox" id="other_op"
+                                                   name="other_op"/>
+                                            <label class="form-check-label" for="other_op">Other</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12 other_offered_product_container d-none mt-2">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control"
+                                                   id="other_offered_product"
+                                                   placeholder="Security, Training, …"
+                                                   name="other_offered_product"/>
+                                        </div>
+                                    </div>
+
+                                </div><!-- /.m2m_container -->
+                            </div>
+                        </div>
+
+                        <div class="card p-0">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Certifications
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="iso_certification">
+                                                Certifications
+                                            </span>
+                                            <div class="form-control" style="height:auto;">
+                                                <t t-if="iso_certification">
+                                                    <div class="row">
+                                                        <t t-foreach="iso_certification" t-as="cer">
+                                                            <div class="col-md-6 mb-2">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input"
+                                                                           type="checkbox"
+                                                                           t-attf-id="cer_{{cer.id}}"
+                                                                           name="iso_certification_ids"
+                                                                           t-att-value="cer.id"/>
+                                                                    <label class="form-check-label"
+                                                                           t-attf-for="cer_{{cer.id}}">
+                                                                        <t t-esc="cer.name"/>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </t>
+                                                        <div class="col-md-6 mb-2">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input"
+                                                                       type="checkbox"
+                                                                       id="other_certificate"
+                                                                       name="other_certificates"
+                                                                />
+                                                                <label class="form-check-label"
+                                                                       for="other_certificates">
+                                                                    Other
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+
+                                                <t t-else="">
+                                                    <div class="col-md-6 mb-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input"
+                                                                   type="checkbox"
+                                                                   id="other_certificate"
+                                                                   name="other_certificates"
+                                                            />
+                                                            <label class="form-check-label"
+                                                                   for="other_certificates">
+                                                                Other
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                                <div class="col-12 other_partner_certificates_container d-none">
+                                                    <div class="input-group mb-3">
+                                                        <input type="text" class="form-control"
+                                                               id="other_partner_certificates"
+                                                               placeholder="ISO 14011, ISO 9001"
+                                                               name="other_partner_certificates"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="icv_label">ICV Certificate Score %
+                                                <span class="field-required icv-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input type="number" class="form-control" id="icv_score" placeholder="80"
+                                                   required="required" min="1" max="100" name="icv_score"/>
+                                        </div>
+                                        <div class="mb-3 secondary-text">
+                                            <input type="checkbox" class="form-check-input cursor-pointer"
+                                                   id="na_icv"
+                                                   name="na_icv"/>
+                                            No ICV Certificate Score? Tick this box to continue.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-0" id="contact_person_detail">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Contact Person Details
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="contact_name">
+                                                Name
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input required="required" type="text" class="form-control"
+                                                   id="contact_name"
+                                                   placeholder="Name" name="contact_name"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="contact_email">
+                                                Email
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input required="required" type="text" class="form-control"
+                                                   id="contact_email"
+                                                   placeholder="Email" name="contact_email"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="contact_function">
+                                                Position
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input required="required" type="text" class="form-control"
+                                                   id="contact_function"
+                                                   placeholder="Procurement Manager" name="contact_function"/>
+                                        </div>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="contact_phone">
+                                                Phone
+                                                <span class="field-required">
+                                                    *
+                                                </span>
+                                            </span>
+                                            <input required="required" type="text" class="form-control"
+                                                   id="contact_phone"
+                                                   placeholder="Phone" name="contact_phone"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-0">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Banking Details
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <table class="table table-bordered" id="bank_ids_table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 5%;">SL</th>
+
+                                            <th style="width: 15%;">Banking Currency
+                                                <span class="field-required">*</span>
+                                            </th>
+
+                                            <th style="width: 30%;">Account/IBAN Number
+                                                <span class="field-required">*</span>
+                                            </th>
+
+                                            <th style="width: 20%;">Bank</th>
+
+                                            <th style="width: 20%;">
+                                                Other Bank
+                                                <span class="tooltip-container">?
+                                                    <span class="tooltip-text">add your bank account name if your bank
+                                                        account is not found from the dropdown
+                                                    </span>
+                                                </span>
+                                            </th>
+
+                                            <th style="width: 10%;">
+                                                <button type="button" class="btn btn-sm btn-primary secondary-text"
+                                                        id="add_bank_row">
+                                                    Add Bank
+                                                </button>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="sl_no">1</td>
+                                            <td>
+                                                <select required="required" class="form-control"
+                                                        id="bank_currency_id"
+                                                        name="bank_currency_ids"
+                                                        placeholder="Banking Currency">
+                                                    <option value="">Banking Currency</option>
+                                                    <option t-if="currency" t-foreach="currency" t-as="cur"
+                                                            t-att-value="cur.id">
+                                                        (<span t-esc="cur.symbol"/>)
+                                                        <span class="ms-1" t-esc="cur.name"/>
+                                                    </option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input required="required" type="text" class="form-control"
+                                                       id="acc_number"
+                                                       placeholder="Account/IBAN Number"
+                                                       name="acc_numbers"/>
+                                            </td>
+                                            <td>
+                                                <select class="form-control"
+                                                        id="bank_id"
+                                                        name="bank_ids"
+                                                        placeholder="Select Your Bank">
+                                                    <option value="0">Select Your Bank</option>
+                                                    <option t-if="bank_ids" t-foreach="bank_ids" t-as="bank"
+                                                            t-att-value="bank.id">
+                                                        <span class="me-1" t-esc="bank.name"/>
+                                                        <t t-if="bank.bic">[<span t-esc="bank.bic"/>]
+                                                        </t>
+                                                    </option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control bank_name"
+                                                       id="bank_name"
+                                                       placeholder="Your Bank Name..."
+                                                       name="bank_name"/>
+                                            </td>
+                                            <td class="remove-action">
+                                            </td>
+                                        </tr>
+                                        <!-- New Line will autoload-->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card p-0 d-none attachment_container">
+                            <div class="card-header secondary-text text-left fw-bold border-rtl background-kuec">
+                                Required Attachments
+                            </div>
+                            <div class="card-body border-rtlb">
+                                <table class="table table-bordered" id="vendor_attachments_table">
+                                    <thead>
+                                        <tr>
+                                            <th>SL</th>
+                                            <th>Attachment Name</th>
+                                            <th>Upload File</th>
+                                            <th>Expiry Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Attachment Line will auto load-->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <button id="registerBtn" class="btn btn-primary secondary-text" type="submit"
+                                    disabled="true">
+                                Register
+                            </button>
+                        </div>
+                        <div class="d-flex flex-column justify-content-center align-items-center">
+                            <p class="small secondary-text">By submitting this form, you confirm that the information
+                                provided is
+                                accurate and agree to
+                                <t t-if="company_id.vendor_procurement_policy_link">
+                                    <a t-att-href="company_id.vendor_procurement_policy_link" target="_blank">
+                                        KUEC’s Vendor &amp; Procurement Policy
+                                    </a>
+                                </t>
+                                <t t-else="">
+                                    KUEC’s Vendor &amp; Procurement Policy
+                                </t>
+                            </p>
+                            <p class="small secondary-text">If you experience any difficulties while completing the
+                                registration,
+                                please contact us
+                                at
+                                <span class="fw-bold secondary-text" t-out="company_id.support_email_address"/>
+                            </p>
+                        </div>
+                    </form>
+                </t>
+            </div>
+        </t>
+    </template>
+</odoo>

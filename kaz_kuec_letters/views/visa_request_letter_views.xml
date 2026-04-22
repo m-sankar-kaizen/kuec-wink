@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="kuec_visa_request_tree_view" model="ir.ui.view">
+        <field name="name">kuec.visa.request.list</field>
+        <field name="model">kuec.visa.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence"/>
+                <field name="employee_id"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="kuec_visa_request_form_view" model="ir.ui.view">
+        <field name="name">kuec.visa.request.form</field>
+        <field name="model">kuec.visa.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button string="Submit" name="action_submit"
+                            invisible="state != 'draft'" type="object"
+                            class="oe_highlight"/>
+                    <button string="Reset to Draft" name="action_reset"
+                            invisible="state != 'submitted'" type="object"
+                            class="btn btn_secondary"/>
+                    <button string="Print" name="action_print"
+                            invisible="state != 'submitted'" type="object"
+                            class="oe_highlight"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="sequence"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date" readonly="1"/>
+                            <field name="employee_id"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   readonly="state != 'draft'"/>
+                            <field name="employee_id"
+                                   groups="base.group_user,!kaz_employee_reports.group_hr_team_visa_request,!kaz_employee_reports.group_hr_manager_visa_request"
+                                   readonly="1"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <!-- Request Details -->
+                            <field name="visa_type" required="1" readonly="state != 'draft'"/>
+                            <field name="purpose_of_visa" required="1" readonly="state != 'draft'"/>
+                            <field name="employment_duration" required="1" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <group string="personal information">
+                        <group>
+                            <field name="passport_number"/>
+                            <field name="country_id"/>
+                            <field name="emirates" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="justification"
+                              string="Justification">
+                            <field name="justification"
+                                   readonly="state != 'draft'"
+                                   placeholder="Add a justification..."/>
+                        </page>
+                        <page name="hr_signature"
+                              string="Signature">
+                            <field name="hr_signature"
+                                   readonly="state != 'draft'"
+                                   widget="signature"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+</odoo>

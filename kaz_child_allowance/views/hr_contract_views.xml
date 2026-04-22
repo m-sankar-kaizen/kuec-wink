@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================================================================
+         FORM VIEW EXTENSION: hr.contract
+         Purpose:
+             Add the "Child Allowance" computed monetary field (`kaz_child_allowance`)
+             to the employee contract form under the "Information" tab.
+
+         Assumptions:
+             - This field is computed based on eligible children from approved
+               child allowance requests (as defined in your custom model logic).
+             - The field is informational (not editable) and used primarily for
+               payroll or HR reporting purposes.
+
+         Placement:
+             - Inserted *inside* the <page name="information"> section of the
+               contract form (`hr.contract`) inherited from the `hr_contract` module.
+         ============================================================================ -->
+    <record id="hr_contract_form_inherit" model="ir.ui.view">
+        <field name="name">hr.contract.view.form.inherit</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert new field inside the "Information" tab -->
+            <page name="information" position="inside">
+                <group>
+                    <!-- Monetary field showing computed child allowance -->
+                    <field name="kaz_child_allowance"/>
+                </group>
+            </page>
+        </field>
+    </record>
+</odoo>

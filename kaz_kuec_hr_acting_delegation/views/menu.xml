@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_hr_acting_root"
+              name="Acting Delegation"
+              parent="hr_holidays.menu_hr_holidays_root" sequence="90"/>
+    <menuitem id="menu_acting_delegations"
+              name="Delegations"
+              parent="menu_hr_acting_root"
+              action="kaz_kuec_hr_acting_delegation.action_acting_delegation"/>
+</odoo>

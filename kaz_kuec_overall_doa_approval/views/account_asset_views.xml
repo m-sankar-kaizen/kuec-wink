@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_account_asset_form" model="ir.ui.view">
+        <field name="name">account.asset.view.form.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+
+            <div name="button_box" position="inside">
+                <button name="action_asset_depreciation" class="oe_stat_button" icon="fa-list" type="object"
+                        invisible="not asset_depreciation_ids">
+                    <field name="asset_depreciation_ids" invisible="1"/>
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Asset Modification Request</span>
+                    </div>
+                </button>
+            </div>
+
+            <field name="model_id" position="after">
+                <field name="company_code" invisible="1"/>
+                <field name="asset_investment_type" invisible="company_code not in ['KUEC']"
+                       required="company_code in ['KUEC'] and state != 'model'" readonly="state != 'draft'"/>
+            </field>
+
+            <xpath expr="//label[@for='salvage_value_pct']" position="before">
+                <field name="asset_investment_type" invisible="company_code not in ['KUEC']" required="0"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

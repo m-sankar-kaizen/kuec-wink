@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="requisition_form_inherit" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.form.view.inherit.kaz.pr.and.po.ageing.management</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="inherit_id" ref="kz_requisition_quintuple_approvals.requisition_form"/>
+        <field name="arch" type="xml">
+            <sheet position="before">
+                <div invisible="not raise_expiry_warning" class="mb-2">
+                    <div class="alert alert-warning mb-0" role="alert">
+                        <field name="raise_expiry_warning" invisible="1"/>
+                        <field name="expiry_warning_message" readonly="1"/>
+                    </div>
+                </div>
+            </sheet>
+        </field>
+    </record>
+</odoo>

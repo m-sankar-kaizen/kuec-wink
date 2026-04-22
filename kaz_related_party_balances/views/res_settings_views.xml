@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.related.party</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="40"/>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='default_accounts']" position="inside">
+                <setting string="Related Party Journal:">
+                    <div class="content-group">
+                        <div class="row mt8">
+                            <label for="related_party_journal_id"
+                                   class="col-lg-5 o_light_label"/>
+                            <field name="related_party_journal_id"/>
+                        </div>
+
+                    </div>
+                </setting>
+
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

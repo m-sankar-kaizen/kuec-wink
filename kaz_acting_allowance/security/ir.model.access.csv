@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_employee_acting_allowance_department_head,employee.acting.allowance,model_employee_acting_allowance,group_department_head,1,1,1,1
+access_employee_acting_allowance_hr,employee.acting.allowance,model_employee_acting_allowance,group_hr,1,1,1,1
+access_employee_acting_allowance_ceo,employee.acting.allowance,model_employee_acting_allowance,group_ceo,1,1,1,1

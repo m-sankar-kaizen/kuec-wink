@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="financial_award_comp_rule" model="ir.rule">
+        <field name="name">Resignation multi-company</field>
+        <field name="model_id" ref="model_financial_award"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

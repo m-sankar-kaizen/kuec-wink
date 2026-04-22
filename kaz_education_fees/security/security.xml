@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================================================
+    Module Category: Education Fee
+    This defines a logical category used to group access rights
+    and menus related to Education Fees functionality.
+    ============================================================ -->
+    <record id="module_education_fees" model="ir.module.category">
+        <field name="name">Education Fee</field>
+        <field name="sequence" eval="1"/>
+    </record>
+
+    <!-- ============================================================
+    User Group: Base User
+    General users who can create/view their own Education Fee requests.
+    Inherits from base Odoo internal user group.
+    ============================================================ -->
+    <record id="group_base_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="kaz_education_fees.module_education_fees"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="comment">Base User</field>
+    </record>
+
+    <!-- ============================================================
+    User Group: HR Team
+    Members of HR who can approve requests before final confirmation.
+    Inherits from Base User group.
+    ============================================================ -->
+    <record id="group_hr_team" model="res.groups">
+        <field name="name">HR Team</field>
+        <field name="category_id" ref="kaz_education_fees.module_education_fees"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_education_fees.group_base_user'))]"/>
+        <field name="comment">HR Team</field>
+    </record>
+
+    <!-- ============================================================
+    User Group: HR Manager
+    Highest approval level for education fee requests.
+    Inherits from HR Team group.
+    ============================================================ -->
+    <record id="group_hr_manager" model="res.groups">
+        <field name="name">HR Manager</field>
+        <field name="category_id" ref="kaz_education_fees.module_education_fees"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_education_fees.group_hr_team'))]"/>
+        <field name="comment">HR Manager</field>
+    </record>
+
+    <!-- ============================================================
+    Access Rule: Admin - Full Access
+    Grants full access to HR Team users (can see all requests).
+    ============================================================ -->
+    <record id="admin_education_fees" model="ir.rule">
+        <field name="name">Admin Education</field>
+        <field ref="model_education_fees" name="model_id"/>
+        <field name="domain_force">[(1,'=', 1)]</field>
+        <field name="groups" eval="[Command.link(ref('kaz_education_fees.group_hr_team'))]"/>
+    </record>
+
+    <!-- ============================================================
+    Access Rule: Base Users - Personal Records Only
+    Limits education fee access to the employee's own requests.
+    ============================================================ -->
+    <record id="personal_education_fees" model="ir.rule">
+        <field name="name">Base Education</field>
+        <field ref="model_education_fees" name="model_id"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[Command.link(ref('kaz_education_fees.group_base_user'))]"/>
+    </record>
+
+    <!-- ============================================================
+    Access Rule: Company Scope
+    Allows record visibility based on company. Useful for multi-company setups.
+    (Used implicitly by Odoo's default access control)
+    ============================================================ -->
+    <record id="company_education_fees" model="ir.rule">
+        <field name="name">Company Education Fees</field>
+        <field ref="model_education_fees" name="model_id"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+</odoo>

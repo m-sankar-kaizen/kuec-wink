@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="budget_form_inherit_budget_custom" model="ir.ui.view">
+        <field name="name">budget.analytic.form.inherit.budget.custom.line.progress</field>
+        <field name="model">budget.analytic</field>
+        <field name="inherit_id" ref="kz_budget_custom.budget_form_inherit_budget_custom"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='general_budget_id']" position="before">
+                <field name="ref" readonly="1"/>
+            </xpath>
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='general_budget_id']" position="after">
+                <field name="budget_line_tag_id" string="BP Tag" optional="hide"/>
+            </xpath>
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='masked_theoritical_amount']" position="after">
+                <field name="progress" string="Progress (%)" widget="percentage" />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="budget_line_view_tree" model="ir.ui.view">
+        <field name="name">budget.line.list.view</field>
+        <field name="model">budget.line</field>
+        <field name="inherit_id" ref="kz_requisition_quintuple_approvals.budget_line_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='display_name']" position="before">
+                <field name="ref" readonly="1"/>
+                <field name="budget_short_code" column_invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='masked_theoritical_amount']" position="after">
+                <field name="progress" string="Progress (%)" widget="percentage"/>
+            </xpath>
+            <xpath expr="//field[@name='general_budget_id']" position="after">
+                <field name="budget_line_tag_id" string="BP Tag" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

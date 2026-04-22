@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Main Menu -->
+    <menuitem id="menu_leasing_management_root"
+              name="Leasing Management"
+              sequence="60"
+              parent="account.menu_finance_entries"
+              groups="account.group_account_invoice"/>
+    
+    <!-- Lessee Contracts Submenu -->
+    <menuitem id="menu_lease_lessee_contract"
+              name="Lessee Contracts"
+              parent="menu_leasing_management_root"
+              action="action_lease_lessee_contract"
+              sequence="10"/>
+    
+    <!-- Lessor Contracts Submenu (Placeholder) -->
+    <menuitem id="menu_lease_lessor_contract"
+              name="Lessor Contracts"
+              parent="menu_leasing_management_root"
+              sequence="20"/>
+
+</odoo>

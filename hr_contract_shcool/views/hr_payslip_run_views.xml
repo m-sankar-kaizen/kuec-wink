@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherit hr.payslip.run form view to add custom action buttons
+        for printing reports related to Educational Fees and Annual Ticket.
+
+        Adds two buttons inside the form header:
+        - "Print Educational Fees" calls the method `print_educational_fees`
+        - "Print Annual Ticket" calls the method `print_annual_ticket`
+
+        These buttons trigger server actions to generate and download
+        corresponding Excel reports from the payslip run.
+    -->
+    <record id="payslip_run_form_inherit" model="ir.ui.view">
+        <field name="name">payslip_run_form_inherit</field>
+        <field name="model">hr.payslip.run</field>
+        <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="print_educational_fees" type="object" string="Print Educational Fees"/>
+                <button name="print_annual_ticket" type="object" string="Print Annual Ticket"/>
+                <!--
+                Uncomment the below buttons if you implement these reports:
+                <button name="print_xlsx_report" type="object" string="Print WPS Report"/>
+                <button name="print_registration_report" type="object" string="Print Payroll Register"/>
+                -->
+            </xpath>
+        </field>
+    </record>
+</odoo>

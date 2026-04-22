@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="kaz_budget_forecast_settings_form" model="ir.ui.view">
+            <field name="name">kaz.budget.forecast.settings.form</field>
+            <field name="model">kaz.budget.forecast.settings</field>
+            <field name="arch" type="xml">
+                <form string="kaz Budget Forecast Settings" create="false" delete="false">
+                    <sheet string="Budget Forecast Settings">
+                        <div class="app_settings_block" data-string="Cash Forecast" string="Cash Forecast"
+                             data-key="kaz_cash_flow_forecasting">
+                            <h2>Cash Flow Forecasting</h2>
+                            <div name="budget_forecast_setting_container">
+                                <div>
+                                    <div>
+                                        <field name="module_kaz_budget_forecasting"
+                                               invisible="1"/>
+                                        <div invisible="module_kaz_budget_forecasting">
+                                            <strong>
+                                                Install kaz Budget Forecasting
+                                            </strong>
+                                        </div>
+                                        <div class="text-muted" invisible="module_kaz_budget_forecasting">
+                                            Enable To Include Budget Forecast.
+                                        </div>
+                                        <div invisible="not module_kaz_budget_forecasting">
+                                            <strong>
+                                                kaz Budget Forecasting is enabled now.
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    <br></br>
+                                    <div>
+                                        <div>
+                                            <button name="action_install_budget_forecast" type="object" string="Install"
+                                                    class="btn-primary"
+                                                    invisible="module_kaz_budget_forecasting or not include_budget_forecast"/>
+                                            <button name="action_open_budget_forecast_wizard" type="object"
+                                                    string="Extract Budget Forecast"
+                                                    class="btn-primary"
+                                                    invisible="include_budget_forecast"/>
+                                        </div>
+                                        <field name="include_budget_forecast" invisible="1"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="action_kaz_budget_forecast_settings" model="ir.actions.server">
+            <field name="name">Settings - Budget Forecast</field>
+            <field name="model_id" ref="model_kaz_budget_forecast_settings"/>
+            <field name="binding_view_types">form</field>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.open_record_action()
+            </field>
+        </record>
+
+        <menuitem id="kaz_budget_forecasting_settings"
+                  parent="kaz_cash_flow_forecasting.menu_sub_kaz_cash_forecast_configuration"
+                  action="kaz_cash_flow_forecasting.action_kaz_budget_forecast_settings" sequence="1"/>
+    </data>
+</odoo>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="interview_feedback_views_list" model="ir.ui.view">
+        <field name="name">interview.feedback.views.list</field>
+        <field name="model">interview.feedback</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="candidate_id"/>
+                <field name="rating" widget="priority"/>
+                <field name="job_id"/>
+                <field name="user_id"/>
+                <field name="interview_date"/>
+                <field name="feedback"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="interview_feedback_view_search" model="ir.ui.view">
+        <field name="name">interview.feedback.view.search</field>
+        <field name="model">interview.feedback</field>
+        <field name="arch" type="xml">
+            <search string="Interview Feedback">
+                <field name="candidate_id"/>
+                <group expand="1" string="Group By">
+                    <filter
+                        string="Candidate"
+                        name="group_by_candidate"
+                        context="{'group_by': 'candidate_id'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="interview_feedback_view_form" model="ir.ui.view">
+        <field name="name">interview.feedback.view.form</field>
+        <field name="model">interview.feedback</field>
+        <field name="arch" type="xml">
+            <form string="Interview Feedback">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="candidate_id" required="1"/>
+                            <field name="job_id"/>
+                            <field name="rating" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}"/>
+                        </group>
+                        <group>
+                            <field name="interview_date"/>
+                            <field name="user_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Feedback">
+                            <field name="feedback" widget="html"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+    <record id="interview_feedback_view_form_popup" model="ir.ui.view">
+        <field name="name">interview.feedback.view.form</field>
+        <field name="model">interview.feedback</field>
+        <field name="arch" type="xml">
+            <form string="Interview Feedback">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="candidate_id" readonly="1"/>
+                            <field name="job_id" readonly="1"/>
+                            <field name="rating" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}" required="1"/>
+                        </group>
+                        <group>
+                            <field name="interview_date"/>
+                            <field name="user_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Feedback">
+                            <field name="feedback" widget="html"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button special="cancel" data-hotkey="x" string="Cancel" class="btn-secondary"/>
+                    <button name="submit" string="Submit" type="object" class="btn-primary" data-hotkey="q"/>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="hr_rule_settlement_KUEC" model="hr.salary.rule">
+        <field name="code">KUECSET</field>
+        <field name="name">KUEC Settlement</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">result = payslip.end_of_service_id.kuec_settlement_amount</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="180"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+</odoo>

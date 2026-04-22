@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_account_payment_register_form_inter_company_payment" model="ir.ui.view">
+        <field name="name">account.payment.register.form.inter.company.payment</field>
+        <field name="model">account.payment.register</field>
+        <field name="inherit_id" ref="account.view_account_payment_register_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='partner_bank_id']" position="after">
+                <field name="is_intercompany_payment" invisible="1"/>
+                <field name="intercompany_id" invisible="1"/>
+<!--                <field name="is_cheque" invisible="1"/>-->
+<!--                <field name="cheque_number" invisible="not is_cheque"/>-->
+                <field name="payment_type"/>
+                <field name="intercompany_account_ids" widget="many2many_tags" invisible="1"/>
+                <field name="intercompany_journal_id"
+                       required="is_intercompany_payment"
+                       invisible="not is_intercompany_payment"
+                       domain="[('type', 'in', ['cash', 'bank']), ('company_id', '=', intercompany_id)]"/>
+                <field name="intercompany_account_id"
+                       required="is_intercompany_payment"
+                       invisible="not is_intercompany_payment"
+                       domain="[('id', 'in', intercompany_account_ids)]"/>
+
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

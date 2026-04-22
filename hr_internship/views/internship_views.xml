@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_internship_form" model="ir.ui.view">
+        <field name="name">hr.internship.form</field>
+        <field name="model">hr.internship</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" string="Start Internship" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_add_feedback" string="Add Feedback" type="object" class="oe_highlight"
+                            invisible="state != 'active'"/>
+                    <button name="action_add_orientation" string="Add Orientation" type="object"
+                            invisible="state != 'active'"/>
+                    <button name="action_complete" string="Complete" type="object" class="oe_highlight"
+                            invisible="state != 'active'"/>
+                    <button name="action_add_reward" string="Recommend Reward" type="object" class="oe_highlight"
+                            invisible="state != 'completed'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ['completed', 'cancelled']"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_feedback" type="object" class="oe_stat_button" icon="fa-comments">
+                            <field name="total_feedback_count" widget="statinfo" string="Feedback"/>
+                        </button>
+                        <button name="action_view_rewards" type="object" class="oe_stat_button" icon="fa-gift">
+                            <field name="total_reward_count" widget="statinfo" string="Rewards"/>
+                        </button>
+                        <button name="action_view_deliverables" type="object" class="oe_stat_button" icon="fa-tasks">
+                            <field name="total_deliverable_count" widget="statinfo" string="Deliverables"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"
+                                   help="Unique reference number auto-generated for this internship"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Intern Information">
+                            <field name="intern_id" required="1"
+                                   help="Select the intern (partner/contact) undertaking this internship"/>
+                            <field name="department_id" required="1"
+                                   help="Department where the intern will be working"/>
+                        </group>
+                        <group string="Mentor &amp; Supervision">
+                            <field name="mentor_id" required="1"
+                                   help="HR employee assigned as mentor to supervise and guide the intern"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Duration &amp; Type">
+                            <field name="date_start" required="1" help="Internship start date"/>
+                            <field name="date_end" required="1" help="Internship end date. Must be after start date"/>
+                            <field name="internship_type" required="1"
+                                   help="Type of internship: Part-Time (flexible hours), Temporary (fixed duration), or Freelance (project-based)"/>
+                            <field name="payment_status" required="1" help="Is this internship paid or unpaid?"/>
+                            <field name="part_time_hours_per_week" invisible="not show_part_time_fields"
+                                   help="Expected weekly hours for part-time internships"/>
+                            <field name="is_academic_credit" invisible="not show_academic_credit_field"
+                                   help="Check if this internship is part of an academic credit program (shown only for unpaid internships)"/>
+                        </group>
+                        <group string="Compensation" invisible="not show_freelance_fields">
+                            <field name="freelance_compensation_type" invisible="not show_freelance_fields"
+                                   help="Compensation structure for freelance contracts (fixed or hourly)"/>
+                            <field name="freelance_fixed_fee"
+                                   invisible="not show_freelance_fields or freelance_compensation_type != 'fixed'"
+                                   help="Total fixed fee for freelance contract"/>
+                            <field name="freelance_hourly_rate"
+                                   invisible="not show_freelance_fields or freelance_compensation_type != 'hourly'"
+                                   help="Hourly rate for freelance contract"/>
+                            <field name="freelance_contract_reference" invisible="not show_freelance_fields"
+                                   help="Reference or link to the freelance contract"/>
+                            <field name="freelance_contract_confirmed" invisible="not show_freelance_fields"
+                                   help="Indicates the freelance contract has been created/validated"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Reward Summary">
+                            <field name="total_reward_count" readonly="1"/>
+                            <field name="approved_reward_amount" readonly="1" string="Total Approved Rewards (AED)"/>
+                        </group>
+                    </group>
+
+                    <field name="notes" placeholder="Additional notes..."
+                           help="Any additional information about this internship"/>
+                    <notebook>
+                        <page string="Orientation &amp; Onboarding">
+                            <field name="orientation_ids" widget="one2many_list"/>
+                        </page>
+                        <page string="Deliverables">
+                            <field name="freelance_deliverable_ids" widget="one2many_list"/>
+                        </page>
+                        <page string="Performance Management">
+                            <field name="total_feedback_count" readonly="1"/>
+                        </page>
+                        <page string="Feedback Summary">
+                            <field name="feedback_ids" widget="one2many_list"/>
+                        </page>
+                        <page string="Reward Requests" name="reward_request">
+                            <field name="reward_ids" widget="one2many_list"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_internship_list" model="ir.ui.view">
+        <field name="name">hr.internship.list</field>
+        <field name="model">hr.internship</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="intern_id"/>
+                <field name="department_id"/>
+                <field name="internship_type" widget="badge"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="is_paid"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_internship_search" model="ir.ui.view">
+        <field name="name">hr.internship.search</field>
+        <field name="model">hr.internship</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Reference"/>
+                <field name="intern_id"/>
+                <field name="department_id"/>
+                <field name="mentor_id"/>
+                <separator/>
+                <filter name="active" string="Active" domain="[('state', '=', 'active')]"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="completed" string="Completed" domain="[('state', '=', 'completed')]"/>
+                <filter name="paid" string="Paid Internships" domain="[('payment_status', '=', 'paid')]"/>
+                <filter name="unpaid" string="Unpaid Internships" domain="[('payment_status', '=', 'unpaid')]"/>
+                <separator/>
+                <filter name="part_time" string="Part-Time" domain="[('internship_type', '=', 'part_time')]"/>
+                <filter name="temporary" string="Temporary" domain="[('internship_type', '=', 'temporary')]"/>
+                <filter name="freelance" string="Freelance" domain="[('internship_type', '=', 'freelance')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_internship" model="ir.actions.act_window">
+        <field name="name">Internships</field>
+        <field name="res_model">hr.internship</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

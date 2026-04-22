@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="Bidding">
+        <div class="container py-4 px-4">
+            <div class="row mb-4">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="fw-bold text-start" t-out="displayName"/>
+                        <h6 t-attf-class="tender-state-{{bidState}}">
+                            State:
+                            <t t-out="bidState"/>
+                        </h6>
+                        <div t-if="state.tenderBid?.create_date" class="d-flex gap-4 mt-2">
+                            <div>
+                                <p class="card-text mb-1">
+                                    Created on:
+                                    <span class="fw-bold" t-out="state.tenderBid.create_date.split(' ')[0]"/>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div t-if="props.tender_id" class="mb-2">
+                        <h6 class="fw-bold">Tender :</h6>
+                        <div class="d-flex gap-2">
+                            <div class="text-primary">&#8226;</div>
+                            <a t-att-href="'/get/tender/' + props.tender_id"
+                               class="text-primary text-decoration-underline mb-1"
+                               t-out="props.tender_name"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div t-if="!isReadOnly">
+                        <h5>Submit Your Bid</h5>
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>SL</th>
+                                    <th>Product</th>
+                                    <th>Description</th>
+                                    <th>Expected Qty</th>
+                                    <th>Qty</th>
+                                    <th>UOM</th>
+                                    <th>Unit Price (<t t-out="props.currency_id.symbol"/>)
+                                    </th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="writeRFQLines" t-as="line" t-key="line.id">
+                                    <td t-out="line_index + 1"/>
+                                    <td t-att-data-id="line.product_id[0]" t-out="line.product_id[1]"/>
+                                    <td t-out="line.name"/>
+                                    <td t-out="line.qty"/>
+                                    <td>
+                                        <input type="number"
+                                               t-att-name="'qty_' + line.id"
+                                               t-att-value="line.user_qty"
+                                               class="form-control"
+                                               t-att-class="line.show_qty_warning ? 'form-control is-invalid' : 'form-control'"
+                                               min="0"
+                                               t-on-blur="(ev) => this.updateQty(line.id, ev.target.value)"/>
+                                    </td>
+                                    <td t-out="line.uom_id[1]"/>
+                                    <td>
+                                        <input type="number"
+                                               t-att-name="'price_' + line.id"
+                                               t-att-value="line.user_price_unit"
+                                               class="form-control"
+                                               t-att-class="line.show_price_warning ? 'form-control is-invalid' : 'form-control'"
+                                               min="0"
+                                               t-on-blur="(ev) => this.updatePrice(line.id, ev.target.value)"/>
+                                    </td>
+                                    <td>
+                                        <t t-out="props.currency_id.symbol"/>
+                                        <span class="ms-1" t-out="line.total"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="mt-2 d-flex justify-content-end">
+                            <div class="fw-bold me-2">
+                                Total:
+                                <span t-out="props.currency_id.symbol"/>
+                                <span class="ms-1" t-out="totalValue"/>
+                            </div>
+                        </div>
+                        <t t-if="state.writeAttachmentLines.length">
+                            <h5 class="mt-4">Required Attachments</h5>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>SL</th>
+                                        <th>Attachment Name</th>
+                                        <th>Upload File</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.writeAttachmentLines" t-as="attach" t-key="attach.id">
+                                        <td t-out="attach_index + 1"/>
+                                        <td t-out="attach.name"/>
+                                        <td>
+                                            <input type="file"
+                                                   accept="*/*"
+                                                   t-att-name="'file_' + attach.id"
+                                                   t-on-change="(ev) => this.onFileChange(attach.id, ev)"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                        <div class="mt-2">
+                            <div class="mb-2 text-danger fw-bold">
+                                <t t-if="state.warningMessage" t-out="state.warningMessage"/>
+                            </div>
+                            <div class="mb-2 text-danger fw-bold">
+                                <t t-if="state.details" t-out="state.details"/>
+                            </div>
+                            <button type="button" class="btn btn-primary" t-on-click="submitForm" t-att-disabled="state.disableSubmit">
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                    <div t-else="">
+                        <h5>Your Bidding</h5>
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>SL</th>
+                                    <th>Product</th>
+                                    <th>Description</th>
+                                    <th>Expected Qty</th>
+                                    <th>Qty</th>
+                                    <th>UOM</th>
+                                    <th>Unit Price (<t t-out="props.currency_id.symbol"/>)
+                                    </th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="tenderBid" t-as="line" t-key="line.id">
+                                    <td t-out="line_index + 1"/>
+                                    <td t-att-data-id="line.product_id[0]" t-out="line.product_id[1]"/>
+                                    <td t-out="line.name"/>
+                                    <td t-out="line.required_qty"/>
+                                    <td t-out="line.qty"/>
+                                    <td t-out="line.uom_id[1]"/>
+                                    <td t-out="line.price_unit"/>
+                                    <td>
+                                        <t t-out="props.currency_id.symbol"/>
+                                        <span class="ms-1" t-out="line.total"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="mt-2 d-flex justify-content-end">
+                            <div class="fw-bold me-2">
+                                Total:
+                                <span t-out="props.currency_id.symbol"/>
+                                <span class="ms-1" t-out="totalValue"/>
+                            </div>
+                        </div>
+                        <t t-if="tenderBidAttachment.length">
+                            <h5 class="mt-4">Attachments</h5>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>SL</th>
+                                        <th>Attachment Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="tenderBidAttachment" t-as="attach" t-key="attach.id">
+                                        <td t-out="attach_index + 1"/>
+                                        <td>
+                                            <a t-att-href="'/download/bid/attachment/' + attach.id"
+                                               class="text-primary text-decoration-underline mb-1"
+                                               t-out="attach.name"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

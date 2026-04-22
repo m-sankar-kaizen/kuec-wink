@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================================================================
+         FORM VIEW EXTENSION: hr.payslip
+         Purpose:
+             Extend the `hr.payslip` form view (already inherited by
+             kaz_annual_air_ticket module) to show the computed field
+             `child_allowance_kaz`, which displays the child allowance amount
+             calculated for the employee within this payslip.
+
+         Context:
+             - The field is computed in the custom logic (based on approved,
+               unpaid child allowance requests).
+             - This field is displayed next to housing advance grant field
+               for financial transparency.
+
+         Technical Details:
+             - Inherits from `kaz_annual_air_ticket.view_hr_payslip_form_inherit`
+               to maintain modular layering and avoid direct conflicts with
+               the base view.
+             - Uses XPath to insert the new field after
+               `<field name="housing_advance_grant"/>` for contextual clarity.
+
+         Attributes:
+             - `readonly="True"` ensures this field is not editable by users.
+         ============================================================================ -->
+    <record id="view_hr_payslip_form_inherit" model="ir.ui.view">
+        <field name="name">view_hr_payslip_form_inherit</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="kaz_annual_air_ticket.view_hr_payslip_form_inherit"/>
+        <field name="arch" type="xml">
+            <!-- Insert the computed child allowance field right after housing advance -->
+            <xpath expr="//field[@name='housing_advance_grant']" position="after">
+                <field name="child_allowance_kaz" readonly="True"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

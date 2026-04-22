@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Create a new category for R&D -->
+    <record id="module_category_rd_kuec" model="ir.module.category">
+        <field name="name">Research &amp; Development (KUEC)</field>
+        <field name="sequence" eval="10"/>
+    </record>
+
+    <!-- Employee Group for R&D -->
+    <record id="group_research_employee_kuec" model="res.groups">
+        <field name="name">R&amp;D Employee</field>
+        <field name="category_id" ref="module_category_rd_kuec"/>
+    </record>
+
+    <!-- Department Head Group -->
+    <record id="group_research_dep_head_kuec" model="res.groups">
+        <field name="name">R&amp;D Department Head</field>
+        <field name="category_id" ref="module_category_rd_kuec"/>
+        <field name="implied_ids" eval="[Command.link(ref('group_research_employee_kuec'))]"/>
+    </record>
+
+    <!-- Chief Investment Officer Group -->
+    <record id="group_research_cio_kuec" model="res.groups">
+        <field name="name">R&amp;D Chief Investment Officer</field>
+        <field name="category_id" ref="module_category_rd_kuec"/>
+        <field name="implied_ids" eval="[Command.link(ref('group_research_dep_head_kuec'))]"/>
+    </record>
+
+    <!-- Chief Commercialization Officer Group -->
+    <record id="group_research_cco_kuec" model="res.groups">
+        <field name="name">R&amp;D Chief Commercialization Officer</field>
+        <field name="category_id" ref="module_category_rd_kuec"/>
+        <field name="implied_ids" eval="[Command.link(ref('group_research_cio_kuec'))]"/>
+    </record>
+
+</odoo>

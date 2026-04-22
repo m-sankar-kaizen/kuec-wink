@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_config_settings_acting_general" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.acting.general</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.view_res_config_settings"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[contains(@class,'settings')]/div" position="inside">
+                <div class="app_settings_block" data-string="Acting Delegation" string="Acting Delegation">
+                    <h2>Acting Delegation</h2>
+                    <group>
+                        <field name="acting_threshold_days"/>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

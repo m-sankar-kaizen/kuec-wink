@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="budget_form_inherit_budget_custom" model="ir.ui.view">
+        <field name="name">budget.analytic.form.inherit.budget.custom.extension</field>
+        <field name="model">budget.analytic</field>
+        <field name="inherit_id" ref="kaz_budget_line_progress.budget_form_inherit_budget_custom"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='budget_line_ids']/list/field[@name='budget_line_tag_id']" position="after">
+                <field name="tag_type" column_invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

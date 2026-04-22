@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_kuec_employment_letter,access_kuec_employment_letter,model_kuec_employment_letter,,1,1,1,1
+access_kuec_golden_visa_request,access_kuec_golden_visa_request,model_kuec_golden_visa_request,,1,1,1,1
+access_kuec_health_insurance,access_kuec_health_insurance,model_kuec_health_insurance,,1,1,1,1
+access_kuec_salary_letter,access_kuec_salary_letter,model_kuec_salary_letter,,1,1,1,1
+access_kuec_salary_transfer_letter,access_kuec_salary_transfer_letter,model_kuec_salary_transfer_letter,,1,1,1,1
+access_kuec_visa_request,access_kuec_visa_request,model_kuec_visa_request,,1,1,1,1

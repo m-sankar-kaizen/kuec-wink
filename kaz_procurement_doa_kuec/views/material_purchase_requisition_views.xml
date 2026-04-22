@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="requisition_form_inherit" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.form.view.inherit.kaz.procurement.doa.kuec</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="inherit_id" ref="kaz_research_and_development.requisition_form_inherit"/>
+        <field name="arch" type="xml">
+<!--   ____________________________________TODO: DO this later__________________________________________________________         -->
+<!--            <xpath expr="//field[@name='requisition_line_ids']/list/field[@name='uom']"-->
+<!--                   position="before">-->
+<!--                <field name="company_id" column_invisible="0"/>-->
+<!--                <field name="company_code" column_invisible="0"/>-->
+<!--                <field name="requisition_id" column_invisible="0"/>-->
+<!--                <field name="partner_id" string="Vendor 2" widget="many2many_tags" column_invisible="requisition_id.company_code in ['KUEC']"/>-->
+<!--            </xpath>-->
+
+<!--            <xpath expr="//field[@name='requisition_line_ids']/list/field[@name='partner_id']"-->
+<!--                   position="attributes">-->
+<!--                <attribute name="column_invisible">company_code in ['KUEC']</attribute>-->
+<!--            </xpath>-->
+<!--   ______________________________________________________________________________________________         -->
+
+            <field name="department_ids" position="attributes">
+                <attribute name="invisible">company_code in ['KUEC']</attribute>
+            </field>
+
+            <field name="employee_id" position="after">
+                <field name="department_id" readonly="1" invisible="company_code not in ['KUEC']"/>
+            </field>
+
+            <field name="attacchment_ids" position="attributes">
+                <attribute name="invisible">company_code in ['KUEC']</attribute>
+            </field>
+
+            <field name="attacchment_ids" position="after">
+                <field name="purchase_requisition_type" invisible="company_code not in ['KUEC']"
+                       required="company_code in ['KUEC']" readonly="kuec_approval_state != 'draft'"/>
+            </field>
+
+            <field name="purchase_vendor_ids" position="before">
+                <field name="purchase_vendor_active" invisible="1"/>
+            </field>
+            <field name="purchase_vendor_ids" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name="order_type" position="before">
+                <field name="purchase_vendor_ids"
+                       string="Suggested Supplier"
+                       invisible="not purchase_vendor_active or not requisition_type_id"
+                       required="purchase_vendor_active"
+                       readonly="approvement_state != 'draft' or research_development_id"
+                       widget="many2many_tags"/>
+            </field>
+
+            <page name="Attachments" position="attributes">
+                <attribute name="invisible">company_code in ['KUEC']</attribute>
+            </page>
+
+            <page name="approval_line" position="attributes">
+                <attribute name="invisible">company_code in ['KUEC']</attribute>
+            </page>
+
+            <page name="Attachments" position="after">
+                <page name="material_purchase_requisition_approval" string="Signed Approval History"
+                      invisible="not material_purchase_requisition_approval_ids or company_code not in ['KUEC']">
+                    <field name="material_purchase_requisition_approval_ids">
+                        <list editable="bottom" create="0" edit="0" delete="0">
+                            <field name="current_display_name" column_invisible="1"/>
+                            <field name="sequence"/>
+                            <field name="parent_state_at_request" optional="show"/>
+                            <field name="request_type"/>
+                            <field name="create_uid" string="Signed By"/>
+                            <field name="create_date" string="Signed At" optional="hide"/>
+                            <field name="signature" widget="signature"
+                                   options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                            <field name="reason"/>
+                            <field name="company_id" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+                <page name="board_approval_attachment" string="Board Approval Attachment"
+                      invisible="hide_board_approval_attachment or company_code not in ['KUEC']">
+                    <field name="hide_board_approval_attachment" invisible="1"/>
+                    <group>
+                        <group>
+                            <field name="board_approval_attachment" readonly="kuec_approval_state == 'approved'"
+                                   widget="binary"/>
+                        </group>
+                    </group>
+                </page>
+            </page>
+
+            <field name="company_id" position="attributes">
+                <attribute name="readonly">1</attribute>
+            </field>
+
+            <button name="submit_to_approve" position="after">
+                <button name="action_cancel_requisition"
+                        type="object" class="btn-secondary"
+                        string="Cancel"
+                        invisible="kuec_approval_state != 'draft' or company_code not in ['KUEC']"/>
+            </button>
+
+            <field name="approvement_state" position="after">
+                <field name="company_code" invisible="1"/>
+<!--                <field name="approvement_state" widget="statusbar" string="state"-->
+<!--                       statusbar_visible="draft,approved,confirmed"-->
+<!--                       invisible="company_code not in ['KUEC']"/>-->
+                <field name="kuec_approval_state" widget="statusbar"
+                       statusbar_visible="draft,approved"
+                       invisible="company_code not in ['KUEC']"/>
+            </field>
+
+            <button name="button_approve" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </button>
+            <button name="button_approve" position="after">
+                <button name="action_hod_approve"
+                        type="object" class="oe_highlight"
+                        string="Head of Business Line Approval"
+                        invisible="kuec_approval_state != 'department_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department"/>
+                <button name="action_reject_requisition"
+                        type="object" class="btn-danger"
+                        string="Reject"
+                        invisible="kuec_approval_state != 'department_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department"/>
+                <button name="requisition_rfc"
+                        type="object" class="btn-secondary"
+                        string="Return for Correction"
+                        invisible="kuec_approval_state != 'department_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department"/>
+
+                <button name="action_budget_transfer_request"
+                        type="object" class="oe_highlight"
+                        string="Budget Control Approval"
+                        invisible="kuec_approval_state != 'budget_control' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_budget"/>
+                <button name="action_reject_requisition"
+                        type="object" class="btn-danger"
+                        string="Reject"
+                        invisible="kuec_approval_state != 'budget_control' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_budget"/>
+                <button name="requisition_rfc"
+                        type="object" class="btn-secondary"
+                        string="Return for Correction"
+                        invisible="kuec_approval_state != 'budget_control' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_budget"/>
+
+                <button name="action_finance_procurement_approve"
+                        type="object" class="oe_highlight"
+                        string="Finance &amp; Procurement Approval"
+                        invisible="kuec_approval_state != 'finance_procurement_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"/>
+                <button name="action_reject_requisition"
+                        type="object" class="btn-danger"
+                        string="Reject"
+                        invisible="kuec_approval_state != 'finance_procurement_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"/>
+                <button name="requisition_rfc"
+                        type="object" class="btn-secondary"
+                        string="Return for Correction"
+                        invisible="kuec_approval_state != 'finance_procurement_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"/>
+
+                <button name="action_kuec_ccoe_approve"
+                        type="object" class="oe_highlight"
+                        string="CCOE Approval"
+                        invisible="kuec_approval_state != 'ccoe_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ccoe"/>
+                <button name="action_reject_requisition"
+                        type="object" class="btn-danger"
+                        string="Reject"
+                        invisible="kuec_approval_state != 'ccoe_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ccoe"/>
+                <button name="requisition_rfc"
+                        type="object" class="btn-secondary"
+                        string="Return for Correction"
+                        invisible="kuec_approval_state != 'ccoe_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ccoe"/>
+
+                <button name="action_kuec_ceo_approve"
+                        type="object" class="oe_highlight"
+                        string="CEO Approval"
+                        invisible="kuec_approval_state != 'ceo_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"/>
+                <button name="action_reject_requisition"
+                        type="object" class="btn-danger"
+                        string="Reject"
+                        invisible="kuec_approval_state != 'ceo_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"/>
+                <button name="requisition_rfc"
+                        type="object" class="btn-secondary"
+                        string="Return for Correction"
+                        invisible="kuec_approval_state != 'ceo_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"/>
+
+                <button name="action_approve_kuec_pr"
+                        type="object" class="oe_highlight"
+                        string="Board Approval"
+                        invisible="kuec_approval_state != 'board_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_board"/>
+                <button name="action_reject_requisition"
+                        type="object" class="btn-danger"
+                        string="Reject"
+                        invisible="kuec_approval_state != 'board_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_board"/>
+                <button name="requisition_rfc"
+                        type="object" class="btn-secondary"
+                        string="Return for Correction"
+                        invisible="kuec_approval_state != 'board_approval' or company_code not in ['KUEC']"
+                        groups="kaz_procurement_doa_kuec.group_kuec_board"/>
+            </button>
+
+            <field name="approvement_state" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </field>
+
+             <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button type="object"
+                        name="action_view_product"
+                        class="oe_stat_button"
+                        icon="fa-truck"
+                        invisible="incoming_service_count == 0">
+<!--                        groups="skit_srn_receipt.srn_end_user">-->
+                    <!-- Stat Info Field: Displays numeric count -->
+                    <field name="incoming_service_count" widget="statinfo" string="SRN"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_purchase_requisition_form" model="ir.ui.view">
+        <field name="name">purchase.requisition.form.inherit.kaz.vendor.contact.company.restriction</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="kaz_pr_and_po_ageing_management.view_purchase_requisition_form_inherit"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='company_id' and @groups='base.group_multi_company']" position="attributes">
+                <attribute name="readonly">1</attribute>
+            </xpath>
+
+            <field name="order_type" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC']</attribute>
+                <attribute name="required">company_code in ['KUEC']</attribute>
+            </field>
+
+            <div name="alert_container" position="before">
+                <field name="company_code" invisible="1"/>
+            </div>
+
+            <div name="alert_container" position="attributes">
+                <attribute name="invisible" add="company_code not in ['KUEC']" separator="or"/>
+            </div>
+
+            <field name="tracking_state" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC']</attribute>
+            </field>
+
+            <button name="action_extend_agreement" position="attributes">
+                <attribute name="invisible" add="company_code not in ['KUEC']" separator="or"/>
+            </button>
+
+            <field name="tracking_state" position="attributes">
+                <attribute name="readonly" add="company_code in ['KUEC']" separator="and"/>
+            </field>
+
+            <page name="extension_request" position="attributes">
+                <attribute name="invisible" add="company_code not in ['KUEC']" separator="or"/>
+            </page>
+
+        </field>
+    </record>
+</odoo>

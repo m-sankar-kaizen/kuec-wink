@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    Inherited Form View: `purchase.order`
+    View ID: purchase_order_restrictions_form
+    Purpose:
+        Extends the standard purchase order form with the following custom features:
+
+    Key Customizations:
+
+    1. **Partial PO Boolean Field:**
+       - Field: `partial_po`
+       - Inserted after `currency_id` field.
+       - Shown as a toggle button to indicate whether this is a partial PO (for partial invoicing or delivery).
+
+    2. **Custom Tab - "KU PO Details":**
+       - Inserted after the standard "Delivery & Invoicing" tab.
+       - Conditional display: Only shown if `partial_po = True`.
+       - Displays the following fields:
+           • `total_amount`: Total approved amount from the original PO.
+           • `remaining_amount`: Remaining amount yet to be invoiced.
+           • `purchase_order_attach`: Upload field for attaching signed PO documents.
+           • `goods_received_note`: Upload field for GRN or delivery evidence.
+
+    3. **Approval State Statusbar:**
+       - Field: `approval_state` added before `state` field.
+       - Displays current approval stage (`waiting_approval`, `first_approval`, `second_approval`) as a status bar.
+
+    4. **Confirm Button Override:**
+       - The default `button_confirm` is removed using `<xpath position="replace">`.
+       - A custom replacement button is added *after* the "Print RFQ" button:
+         • Button Label: "Approve"
+         • Visible only when `state` is in `sent` or `draft`
+         • Calls a custom Python method `button_confirm` with context `{'validate_analytic': True}`
+         • Appears with `oe_highlight` class (green button)
+         • Activatable via hotkey `v`
+
+    Use Case:
+    - This customization supports multi-stage PO approvals, document uploads for audits, and visibility of total/remaining values for partial purchasing workflows.
+    - Approvers can clearly see financial info and act accordingly before approval.
+
+    -->
+
+    <record model="ir.ui.view" id="purchase_order_restrictions_form">
+        <field name="name">purchase.order.form.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add partial_po toggle after currency_id -->
+            <xpath expr="//field[@name='currency_id']" position="after">
+                <field name="partial_po" widget="boolean_toggle" readonly="1"/>
+            </xpath>
+
+            <!-- Add KU PO Details Tab only if partial_po is True -->
+            <xpath expr="//page[@name='purchase_delivery_invoice']" position="after">
+                <page string="KUEC PO Details" invisible="not partial_po">
+                    <group colspan="2">
+                        <group>
+                            <field name="total_amount"/>
+                            <field name="remaining_amount"/>
+                        </group>
+                        <group>
+                            <field name="purchase_order_attach"/>
+                            <field name="goods_received_note"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- Add approval_state statusbar before state -->
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="approval_state" widget="statusbar"/>
+            </xpath>
+
+            <!-- Remove default Confirm Button -->
+            <xpath expr="//button[@id='bid_confirm']" position="replace"/>
+            <xpath expr="//button[@id='draft_confirm']" position="replace"/>
+
+            <!-- Add customized Approve button next to Print RFQ -->
+            <xpath expr="//button[@name='print_quotation']" position="after">
+                <button name="button_confirm"
+                        invisible="state not in ['sent', 'draft']"
+                        type="object"
+                        string="Approve"
+                        context="{'validate_analytic': True}"
+                        class="oe_highlight"
+                        id="bid_confirm"
+                        data-hotkey="v"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

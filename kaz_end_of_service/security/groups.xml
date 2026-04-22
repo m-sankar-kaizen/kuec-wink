@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="module_employee_settlements_parent" model="ir.module.category">
+        <field name="name">End of Service</field>
+        <field name="sequence" eval="11"/>
+    </record>
+    <record id="module_employee_settlements" model="ir.module.category">
+        <field name="name">End of Service</field>
+        <field name="parent_id" eval="module_employee_settlements_parent"/>
+        <field name="sequence" eval="1"/>
+    </record>
+    <record id="group_hr" model="res.groups">
+        <field name="name">HR</field>
+        <field name="category_id" ref="kaz_end_of_service.module_employee_settlements"/>
+        <field name="comment">Shared Group: Hr access for KUEC and Ankabut. In Ankabut this user group can access Employee Settlements menu. In KUEC this user group can create/access Employee Settlement from resignation form in KUEC off-boarding</field>
+        <field name="implied_ids" eval="[Command.link(ref('hr_payroll.group_hr_payroll_manager'))]"/>
+    </record>
+    <record id="settlement_company_rule" model="ir.rule">
+        <field name="name">Settlement: Company</field>
+        <field name="model_id" ref="model_hr_employee_settlements"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+
+</odoo>

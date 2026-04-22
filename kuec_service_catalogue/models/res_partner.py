@@ -1,0 +1,140 @@
+# -*- coding: utf-8 -*-
+
+from odoo import models, fields, api
+
+
+class ResPartner(models.Model):
+    _inherit = 'res.partner'
+
+    employee_directory_enabled = fields.Boolean(
+        string='Enable Employee Directory Portal',
+        default=False,
+        help='If checked, this partner will have access to the Employee Directory /my/employees app in the portal.'
+    )
+
+    legal_entity_type = fields.Selection(
+        [
+            ('llc', 'Limited Liability Company (LLC / Ltd.)'),
+            ('corp', 'Corporation (Inc. / Corp.)'),
+            ('plc', 'Public Listed Company'),
+            ('partnership', 'Partnership'),
+            ('lp', 'Limited Partnership (LP / LLP)'),
+            ('gov', 'Government Entity'),
+            ('soe', 'State-Owned Enterprise'),
+            ('non_profit', 'Non-Profit Organization'),
+            ('other', 'Other (Specify)'),
+        ],
+        string='Legal Entity Type',
+    )
+
+    trade_license_number = fields.Char(
+        string="Trade License No.",
+        copy=False
+    )
+
+    tax_license_number = fields.Char(
+        string="Tax Registration No.",
+        copy=False
+    )
+
+    wink_company_type = fields.Selection([
+        ('ku', 'KU'),
+        ('kuec', 'KUEC'),
+        ('uae', 'UAE Company'),
+        ('outside', 'Outside UAE'),
+    ], string='Company Classification',
+       help="This helps us serve you better.")
+
+    # EPIC-11: Vendor performance rating aggregated from customer evaluations on WINK tasks
+    wink_avg_rating = fields.Float(
+        compute='_compute_wink_avg_rating',
+        string='Avg. Service Rating',
+        digits=(4, 2),
+        help='Average customer rating (1–5) across all WINK service tasks where this partner is the assigned vendor.',
+    )
+    wink_rating_count = fields.Integer(
+        compute='_compute_wink_avg_rating',
+        string='Rating Count',
+        help='Total number of consumed customer ratings linked to this vendor.',
+    )
+
+    def action_view_wink_ratings(self):
+        """Open the CX ratings list filtered to this vendor."""
+        self.ensure_one()
+        action = self.env['ir.actions.act_window']._for_xml_id(
+            'kuec_service_catalogue.action_wink_cx_report'
+        )
+        action['domain'] = [
+            ('rated_partner_id', 'child_of', self.id),
+            ('consumed', '=', True),
+            ('res_model', '=', 'project.task'),
+        ]
+        action['display_name'] = 'Ratings — %s' % self.name
+        return action
+
+    def _compute_wink_avg_rating(self):
+        """Aggregate rating.rating records where rated_partner_id = this vendor."""
+        ratings = self.env['rating.rating'].search([
+            ('rated_partner_id', 'in', self.ids),
+            ('consumed', '=', True),
+            ('res_model', '=', 'project.task'),
+        ])
+        from collections import defaultdict
+        score_map = defaultdict(list)
+        for r in ratings:
+            score_map[r.rated_partner_id.id].append(r.rating)
+        for partner in self:
+            scores = score_map.get(partner.id, [])
+            partner.wink_rating_count = len(scores)
+            partner.wink_avg_rating = sum(scores) / len(scores) if scores else 0.0
+
+    wallet_transaction_ids = fields.One2many(
+        'kuec.wallet.transaction',
+        'partner_id',
+        string='Wallet Transactions',
+        help='All eWallet transactions for this customer.',
+    )
+
+    wallet_currency_id = fields.Many2one(
+        'res.currency',
+        string='Wallet Currency',
+        compute='_compute_wallet_currency_id',
+        help='Currency used for the eWallet balance (always the company currency).',
+    )
+
+    wink_wallet_balance = fields.Monetary(
+        string='Wallet Balance',
+        compute='_compute_wink_wallet_balance',
+        currency_field='wallet_currency_id',
+        help='Current eWallet balance: sum of all done transactions (positive = credit, negative = debit).',
+    )
+
+    @api.depends_context('company')
+    def _compute_wallet_currency_id(self):
+        """Return the current company currency as the wallet display currency."""
+        currency = self.env.company.currency_id
+        for partner in self:
+            partner.wallet_currency_id = currency
+
+    @api.depends('wallet_transaction_ids.amount', 'wallet_transaction_ids.state')
+    @api.depends_context('company')
+    def _compute_wink_wallet_balance(self):
+        """Sum all done wallet transaction amounts for the current company only.
+
+        Scoped by company_id to prevent cross-company balance contamination in
+        multi-company setups.
+        """
+        if not self.ids:
+            return
+        result = self.env['kuec.wallet.transaction'].read_group(
+            domain=[
+                ('partner_id', 'in', self.ids),
+                ('state', '=', 'done'),
+                ('company_id', '=', self.env.company.id),
+            ],
+            fields=['partner_id', 'amount:sum'],
+            groupby=['partner_id'],
+        )
+        balance_map = {row['partner_id'][0]: row['amount'] for row in result}
+        for partner in self:
+            partner.wink_wallet_balance = balance_map.get(partner.id, 0.0)

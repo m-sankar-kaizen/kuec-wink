@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_company_form_inter_company_payment" model="ir.ui.view">
+        <field name="name">res.company.form.inter.company.payment</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='general_info']" position="after">
+                <page name="Inter Company Payment">
+                    <field name="inter_company_payment_ids">
+                        <list editable="bottom">
+                            <field name="company_id" required="1"/>
+
+                            <field name="account_id"
+                                   required="1"
+                                   options="{'no_quick_create': True}"
+                                   domain="[('deprecated', '=', False),
+                                    ('account_type', '!=', False),
+                                     ('company_ids', 'in', [company_id])]"/>
+
+                            <field name="journal_id"
+                                   required="1"
+                                   options="{'no_quick_create': True}"
+                                   domain="[('company_id', '=', company_id)]"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

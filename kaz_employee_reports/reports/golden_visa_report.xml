@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+        QWeb Template: Golden Visa Report
+        Purpose: Generates an Arabic formal letter recommending an employee
+        for the UAE Golden Visa program.
+
+        Template layout: Uses `kaz_employee_reports.external_layout` for standard letterhead,
+        followed by RTL Arabic content with embedded employee and company info.
+        Model fields from `user.employee_id` and `res_company` are dynamically inserted.
+
+        Common use-case: Accessed via button/menu from employee documents (e.g. salary letter),
+        printed/submitted to Federal Authority for Identity and Citizenship.
+
+        Note: Ensure `user` and `res_company` are passed in the rendering context.
+    -->
+
+    <template id="golden_visa_report">
+        <t t-call="web.html_container">
+                <t t-call="kaz_employee_reports.external_layout">
+                    <!--
+                    Inline styling applied to control font size globally.
+                -->
+                    <style>
+                        div {
+                            font-size: 16px;
+                        }
+                    </style>
+                    <div class="page">
+                         <!-- ======== HEADER SECTION ======== -->
+                        <!--
+                            Current Date (Hijri or Gregorian), right-aligned.
+                        -->
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div style="text-align : right; ">
+                                        التاريخ :
+                                        <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                             <!--
+                            Salutation and Subject
+                        -->
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                            <strong>,السادة / الهيئة الاتحادية للهوية والجنسية وأمن المنافذ المحترمين</strong>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <strong>,تحية طيبة وبعد</strong>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <br/>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-10" style="direction: rtl;">
+                                    <div class="text-right" style="text-align: right !important;">
+                                        <u><strong>الموضوع: <span t-field="user.sudo().employee_id.employee_arabic_name"/></strong></u>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                            تهديكم شركة عنكبوت لتقنية المعلومات أطيب التحيات متمنين لكم دوام التوفيق والنجاح.
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                            بالإشارة إلى الموضوع أعلاه، تود شركة عنكبوت لتقنية المعلومات الإفادة بأن السيد/ة
+                                            <span t-esc="user_id.employee_id.employee_arabic_name"/>,
+                                            جواز رقم
+                                            <span t-esc="user_id.employee_id.sudo().passport_id"/>،
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                            يشغل حالياً وظيفة <span t-esc="user.employee_id.employee_arabic_job_position"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                            نود إعلامكم بعدم ممانعتنا من منح الموظف الإقامة الذهبية، وذلك تقديراً لما يمتلكه من مؤهلات وخبرات تسهم بشكل فعال في دعم أهداف الشركة وتحقيق تطورها ونموها. وذلك، بما يتماشي مع السياسات والضوابط المعتمدة لدى هيئتكم الموقرة.
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        للاستفسار والتنسيق، يرجى التواصل مع السيد / محمد العبيدلي – أخصائي العلاقات العامة
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                           <strong><span t-field="user.employee_id.work_phone"/></strong>
+                                            : هاتف رقم
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right;">
+                                            <span t-field="user.employee_id.work_email" style="text-decoration: underline;"/>
+                                            : البريد الالكتروني
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-10">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                            <strong>,وتفضلوا بقبول فائق الاحترام والتقدير</strong>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="text-center">
+                                    <div>
+                                        <img t-if="res_company.signature"
+                                             style="max-width: 150px;"
+                                             t-att-src="image_data_uri(res_company.signature)"
+                                             alt="Signature"/>
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>
+                                            <t t-esc="res_company.employee_arabic_name"/>
+                                        <br/>
+                                            <t t-esc="res_company.employee_id.name"/>
+                                        <br/>
+                                            <t t-esc="res_company.employee_arabic_job_position"/>
+                                        <br/>
+                                            <t t-esc="res_company.job_id.name"/>
+                                        <br/>
+                                        </strong>
+                                    </div>
+                                    <div class="mt-1">
+                                        <img t-if="res_company.stamp"
+                                             style="max-width: 150px;"
+                                             t-att-src="image_data_uri(res_company.stamp)"
+                                             alt="Stamp"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-10 mr-2" style="font-size: 12px;">
+                                    <ul style="direction:rtl;">
+                                        <li style="direction:rtl;"><p style="text-align : right; margin-bottom: 0px;">
+                                           هذه الرسالة صالحة لمدة 30 يوما من تاريخ الاصدار
+                                        </p>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                        <p style="text-align : right; margin-bottom: 0px;">
+                                            حررت هذه الرسالة بناء على طلب المذكور أعلاه دون تحمل الشركة أى مسؤولية تجاه الغير
+                                        </p>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                        <p style="text-align : right; margin-bottom: 0px;">
+                                            أي تغيير فى هذه الرسالة يجعلها لاغيه
+                                        </p>
+                                        </li>
+
+                                    </ul>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                        </div>
+                    </div>
+                </t>
+            </t>
+    </template>
+
+     <!--
+        Report Action: Golden Visa Report
+        Connects the `golden_visa_report` template to the `salary.letter` model.
+        Allows generating a PDF report dynamically using the current user context.
+
+        `print_report_name` formats the filename as:
+        Golden Visa - <Employee Name> - <YYYY-MM-DD>
+    -->
+
+    <record id="action_report_golden_visa_report" model="ir.actions.report">
+        <field name="name">Golden Visa</field>
+        <field name="model">salary.letter</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.golden_visa_report</field>
+        <field name="report_file">kaz_employee_reports.golden_visa_report</field>
+        <field name="print_report_name">'Golden Visa - %s - %s' % (user.employee_id.name, context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d'))</field>
+    </record>
+
+    <!--
+        Menu Item: Golden Visa Letter
+        Adds a menu entry under `kaz_employee_reports.ankbot_letter_menu`
+        to trigger the Golden Visa report.
+    -->
+
+    <menuitem id="golden_visa_report_menu"
+              name="Golden Visa Letter"
+              parent="kaz_employee_reports.ankbot_letter_menu"
+              action="action_report_golden_visa_report"/>
+
+</odoo>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="ir_cron_employee_probation" model="ir.cron">
+        <field name="name">(KUEC) - Notify Employee Probation: cron</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="model_id" ref="base.model_res_company"/>
+        <field name="code">model._cron_notify_employee_probation()</field>
+        <field name="state">code</field>
+    </record>
+</odoo>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================================================
+         Module Category: Used to group access rights in the UI
+         ============================================================ -->
+    <record id="module_category_employee_acting_allowance"
+            model="ir.module.category">
+        <field name="name">Acting Allowance</field> <!-- Displayed name -->
+        <field name="sequence" eval="2"/> <!-- Order in access rights page -->
+    </record>
+
+    <!-- ============================================================
+         User Group: Department Head
+         - Has limited approval rights
+         ============================================================ -->
+    <record id="group_department_head" model="res.groups">
+        <field name="name">Department Head</field> <!-- Group name shown in UI -->
+        <field name="category_id"
+               ref="kaz_acting_allowance.module_category_employee_acting_allowance"/>
+        <field name="comment">Department Head</field> <!-- Tooltip or description -->
+    </record>
+
+    <!-- ============================================================
+         User Group: HR
+         - Inherits permissions from Department Head
+         ============================================================ -->
+    <record id="group_hr" model="res.groups">
+        <field name="name">HR</field>
+        <field name="category_id"
+               ref="kaz_acting_allowance.module_category_employee_acting_allowance"/>
+        <!-- Implies access to Department Head group -->
+        <field name="implied_ids"
+               eval="[Command.link(ref('kaz_acting_allowance.group_department_head'))]"/>
+        <field name="comment">HR</field>
+    </record>
+
+    <!-- ============================================================
+         User Group: CEO
+         - Inherits from HR and Department Head
+         ============================================================ -->
+    <record id="group_ceo" model="res.groups">
+        <field name="name">CEO</field>
+        <field name="category_id"
+               ref="kaz_acting_allowance.module_category_employee_acting_allowance"/>
+        <!-- Implies access to HR and Department Head -->
+        <field name="implied_ids"
+               eval="[Command.link(ref('kaz_acting_allowance.group_hr'))]"/>
+        <field name="comment">CEO</field>
+    </record>
+</odoo>

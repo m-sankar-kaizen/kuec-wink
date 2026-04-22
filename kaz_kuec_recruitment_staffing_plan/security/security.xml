@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="module_category_KUEC_recruitment_parent" model="ir.module.category">
+        <field name="name">KUEC Recruitment</field>
+        <field name="sequence" eval="100"/>
+        <field name="parent_id" eval="False"/>
+    </record>
+
+    <record id="module_category_KUEC_recruitment" model="ir.module.category">
+        <field name="name">KUEC Recruitment</field>
+        <field name="sequence" eval="100"/>
+        <field name="parent_id" eval="module_category_KUEC_recruitment_parent"/>
+    </record>
+
+    <record id="group_staffing_master" model="res.groups">
+        <field name="name">Staffing Master</field>
+        <field name="category_id" ref="kaz_kuec_recruitment_staffing_plan.module_category_KUEC_recruitment"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">KUEC Group: Access to menu : Yearly Manpower Plan, Approving, Rejecting and Finalizing staffing plan</field>
+    </record>
+
+    <record model="ir.rule" id="staffing_department_manager_rule">
+        <field name="name">Staffing: Dept Manager Rule - Own Documents Only</field>
+        <field name="model_id" ref="model_hr_staffing_plan"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('department_manager_id.user_id', '=', user.id)]</field>
+    </record>
+
+    <record model="ir.rule" id="recruitment_requests_rule">
+        <field name="name">Recruitment Request: Own Documents Only</field>
+        <field name="model_id" ref="model_hr_recruitment_requests"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('requested_by', '=', user.id)]</field>
+    </record>
+
+    <record model="ir.rule" id="staffing_master_rule">
+        <field name="name">Staffing: Staffing Master - All Documents</field>
+        <field name="model_id" ref="model_hr_staffing_plan"/>
+        <field name="groups" eval="[Command.link(ref('kaz_kuec_recruitment_staffing_plan.group_staffing_master'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record model="ir.rule" id="recruitment_requests_manager_rule">
+        <field name="name">Recruitment Request: Manager</field>
+        <field name="model_id" ref="model_hr_recruitment_requests"/>
+        <field name="groups" eval="[Command.link(ref('kaz_kuec_recruitment_staffing_plan.group_staffing_master'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="staffing_plan_company_rule" model="ir.rule">
+        <field name="name">Staffing Plan: Multi-Company</field>
+        <field name="model_id" ref="model_hr_recruitment_requests"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <record id="recruitment_requests_company_rule" model="ir.rule">
+        <field name="name">Recruitment Requests: Multi-Company</field>
+        <field name="model_id" ref="model_hr_staffing_plan"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <record id="master_staffing_plan_company_rule" model="ir.rule">
+        <field name="name">Master Staffing Plan: Multi-Company</field>
+        <field name="model_id" ref="model_hr_master_plan"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Form view definition for the transient model 'purchase.confirmation.wizard'.
+
+        This wizard form is used to show a confirmation or rejection warning message
+        during the purchase requisition confirmation workflow.
+
+        Fields:
+          - mode: Hidden field storing the action mode (approve/reject).
+          - message: Read-only text field displaying the warning or info message.
+          - requisition_id: Hidden field referencing the related requisition.
+
+        Footer Buttons:
+          - "Resubmit for Approval": Calls the 'confirm' method on the wizard.
+          - "Cancel": Closes the wizard dialog without action.
+
+        The wizard is launched as a modal (target="new") window.
+    -->
+    <record id="view_purchase_confirmation_wizard" model="ir.ui.view">
+        <field name="name">purchase.confirmation.wizard.form</field>
+        <field name="model">purchase.confirmation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject Warning">
+                <group>
+                    <field name="mode" invisible="1"/>
+                    <field name="message" readonly="1"/>
+                    <field name="requisition_id" invisible="1"/>
+                </group>
+                <footer>
+                    <button string="Resubmit for Approval" type="object" name="confirm" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        Action window to open the purchase confirmation wizard as a modal form.
+
+        - Name: Confirmation Warning
+        - Model: purchase.confirmation.wizard
+        - View Mode: form only
+        - Uses the above form view by reference
+        - Opens in a modal dialog (target="new")
+    -->
+    <record id="action_purchase_confirmation_wizard" model="ir.actions.act_window">
+        <field name="name">Confirmation Warning</field>
+        <field name="res_model">purchase.confirmation.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_purchase_confirmation_wizard"/>
+        <field name="target">new</field>
+    </record>
+</odoo>

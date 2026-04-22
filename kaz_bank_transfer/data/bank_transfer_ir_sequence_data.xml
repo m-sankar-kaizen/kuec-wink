@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="0">
+    <!--
+        Record: ir.sequence (Sequence Configuration)
+        ID: sequence_bank_transfer
+
+        Purpose:
+        This sequence is used to automatically generate unique and readable
+        identifiers for 'bank.transfer' records in the system.
+
+        Field Definitions:
+        - name: Human-readable name of the sequence.
+        - code: Technical code used to fetch the sequence in Python or XML (e.g., via self.env['ir.sequence'].next_by_code()).
+        - prefix: A prefix added before the sequence number. 'BNTR/' means generated numbers will look like BNTR/00001.
+        - padding: The number of digits in the numeric part. With padding=5, the number 1 becomes 00001.
+        - number_next: The next number to be used in the sequence. It will increment with each use.
+    -->
+    <record id="sequence_bank_transfer" model="ir.sequence">
+        <field name="name">Bank Transfer Sequence</field>
+        <field name="code">bank.transfer</field>
+        <field name="prefix">BNTR/</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="company_id"/>
+    </record>
+</odoo>

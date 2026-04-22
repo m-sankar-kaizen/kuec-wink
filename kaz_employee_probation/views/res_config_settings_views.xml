@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    File: res_config_settings_view_form_inherit_probation_period.xml
+    Module: kaz_employee_probation
+    Purpose:
+        This view extension adds configurable fields in the system settings
+        (`res.config.settings`) to define default probation periods in months
+        for Expat and Local employees at the company level.
+
+    Fields Introduced:
+        - period_x_no_of_month_expat: Integer field to configure Expat probation period (in months)
+        - period_x_no_of_month_local: Integer field to configure Local probation period (in months)
+
+    Placement:
+        The configuration section is injected after the 'enrich_employee_setting' div
+        in the inherited HR settings form view (`hr.res_config_settings_view_form`).
+
+    User Visibility:
+        - This setting is visible to users with access to system settings.
+        - It controls backend behavior such as automatic probation completion tracking via cron.
+
+    Related Models:
+        - res.company (stores the actual values per company)
+        - res.config.settings (editable interface for system settings)
+
+    Related Features:
+        - A scheduled action (cron) uses these values to evaluate whether an employee’s probation period has ended.
+        - Values set here influence computed fields on the `hr.employee` model.
+
+    Developer Notes:
+        - Ensure company_id is correctly set on `res.config.settings` to sync values.
+        - These fields are editable from the settings UI and automatically saved on config update.
+
+    Author: Kaizen Tech
+    Version: 1.0.0
+    License: Odoo Proprietary / Custom License
+-->
+    <record id="res_config_settings_view_form_inherit_probation_period" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.probation.period</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+
+            <!--
+                Insert our custom configuration section after the 'enrich_employee_setting' block
+                in the system settings view. This ensures proper placement among other HR settings.
+            -->
+            <xpath expr="//setting[@id='enrich_employee_setting']" position="after">
+
+                <!-- Custom setting box for employee probation configuration -->
+                <setting id="period_x_no_of_month_expat"
+                         help="Probation period for Expat employee for this Company">
+                    <field name="period_x_no_of_month_expat"/>
+                    <div class="text-muted">
+                        Number of months for Expat employee probation period
+                    </div>
+                </setting>
+                <setting id="period_x_no_of_month_local"
+                         help="Probation period for Local employee for this Company">
+                    <field name="period_x_no_of_month_expat"/>
+                    <div class="text-muted">
+                        Number of months for Local employee probation period
+                    </div>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

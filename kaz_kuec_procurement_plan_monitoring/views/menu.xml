@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="action_purchase_requisition_dashboard" model="ir.actions.client">
+        <field name="name">Annual Procurement Plan Monitoring Dashboard</field>
+        <field name="tag">kaz_kuec_procurement_plan_monitoring.action_purchase_requisition_dashboard</field>
+    </record>
+
+    <menuitem id="reporting" name="Reporting"
+              parent="material_purchase_requisitions.menu_purchase_requisition">
+        <menuitem id="menu_action_purchase_requisition_dashboard_root"
+                  name="Annual Procurement Plan Monitoring Dashboard"
+                  action="action_purchase_requisition_dashboard"/>
+    </menuitem>
+</odoo>

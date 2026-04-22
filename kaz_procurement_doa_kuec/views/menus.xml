@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="kaz_vendor_management.menu_tender_configuration" name="Configuration"
+              parent="material_purchase_requisitions.menu_purchase_requisition"
+              sequence="100"
+              groups="kaz_procurement_doa_kuec.group_purchase_requisition_admin"/>
+</odoo>

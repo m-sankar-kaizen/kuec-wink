@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_employee_bonus_root" name="Employee Bonus" parent="hr.menu_hr_root" sequence="80"/>
+
+    <menuitem id="menu_financial_award" name="Financial Awards" parent="menu_employee_bonus_root"
+              action="kaz_hr_employee_bonus.action_financial_award" sequence="10"/>
+    <menuitem id="menu_annual_bonus" name="Annual Bonus" parent="menu_employee_bonus_root"
+              action="kaz_hr_employee_bonus.action_annual_bonus" sequence="20"/>
+</odoo>

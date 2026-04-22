@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    ===========================================================================
+    INHERIT Res Config Settings FORM VIEW
+    ===========================================================================
+    Purpose:
+        Extend the Purchase configuration settings form to add a new setting
+        field "Notification Reminder" for requisition days reminder.
+    -->
+    <record id="res_setting_form_inherit" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kz.requisition.quintuple.approvals</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <!--
+            Target the purchase settings container div using its data-key attribute.
+            Insert the new setting field inside it.
+            -->
+            <setting id="auto_receipt_reminder" position="after">
+                <setting id="requisition_days_reminder" help="Notification Reminder in days">
+                    <field name="requisition_days_reminder" string="Notification Reminder"/>
+                </setting>
+            </setting>
+        </field>
+    </record>
+</odoo>

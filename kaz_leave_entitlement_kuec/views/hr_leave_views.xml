@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="hr_leave_view_form_inherit" model="ir.ui.view">
+        <field name="name">hr.leave.view.form.kaz.leave.entitlement.kuec</field>
+        <field name="model">hr.leave</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_view_form_manager"/>
+        <field name="arch" type="xml">
+
+            <sheet position="inside">
+                <div name="button_box" class="oe_button_box">
+                    <button invisible="not parent_leave_id" class="oe_stat_button" type="object"
+                            name="action_parent_leave_request" icon="fa-file">
+                        <field name="parent_leave_id" invisible="1"/>
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Parent Leave Request</span>
+                        </div>
+                    </button>
+                    <button invisible="not child_leave_ids" class="oe_stat_button" type="object"
+                            name="action_child_leave_request" icon="fa-list">
+                        <field name="child_leave_ids" invisible="1"/>
+                        <div class="o_stat_info">
+                            <span class="o_stat_text">Child Leave Request</span>
+                        </div>
+                    </button>
+                </div>
+            </sheet>
+
+            <field name="holiday_status_id" position="attributes">
+                <attribute name="readonly" add="parent_leave_id" separator="or"/>
+            </field>
+
+            <button name="action_approve" position="attributes">
+                <attribute name="invisible" add="leave_validation_type == 'escalate_to_x'" separator="or"/>
+            </button>
+
+            <header position="inside">
+                <field name="company_code" invisible="1"/>
+                <field name="allow_leave_extension" invisible="1"/>
+                <field name="leave_validation_type" invisible="1"/>
+                <button string="Request Again" icon="fa-refresh" name="action_repeat_request" type="object"
+                        class="oe_highlight"
+                        invisible="state not in ['validate', 'validate1'] or child_leave_ids or not allow_leave_extension or company_code not in ['KUEC']"/>
+
+                <button string="Submit to Manager" name="submit_to_manager" type="object"
+                        class="oe_highlight"
+                        invisible="kuec_approval_state != 'draft' or leave_validation_type != 'escalate_to_x' or company_code not in ['KUEC']"/>
+                <button string="Manager Approve" name="action_manager_approve" type="object"
+                        class="oe_highlight"
+                        invisible="kuec_approval_state != 'manager' or company_code not in ['KUEC']"/>
+                <button string="Time Off Officer Approve" name="action_time_off_manager_approve" type="object"
+                        class="oe_highlight"
+                        invisible="kuec_approval_state != 'time_off' or company_code not in ['KUEC']"/>
+                <button string="CEO Approve" name="approve_kuec_request" type="object"
+                        class="oe_highlight"
+                        invisible="kuec_approval_state != 'admin' or company_code not in ['KUEC']"/>
+                <field name="kuec_approval_state" widget="statusbar" statusbar_visible="draft,manager,time_off,approved"
+                       invisible="company_code not in ['KUEC'] or leave_validation_type != 'escalate_to_x'"/>
+            </header>
+
+            <field name="supported_attachment_ids" position="after">
+                <field name="support_document" invisible="1"/>
+                <field name="is_attachment_mandatory" invisible="1"/>
+                <div invisible="not attachment_warning or not is_attachment_mandatory or supported_attachment_ids"
+                     class="my-2">
+                    <div class="alert alert-warning mb-0" role="alert">
+                        <field name="attachment_warning" readonly="1"/>
+                    </div>
+                </div>
+            </field>
+            <field name="supported_attachment_ids" position="attributes">
+                <attribute name="required">company_code not in ['KUEC'] and support_document or company_code in ['KUEC'] and support_document and is_attachment_mandatory</attribute>
+            </field>
+
+        </field>
+    </record>
+
+    <record id="hr_leave_view_form_inherit_wfh" model="ir.ui.view">
+        <field name="name">hr.leave.view.form.kaz.leave.entitlement.kuec.wfh</field>
+        <field name="model">hr.leave</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="kaz_leave_entitlement_kuec.hr_leave_view_form_inherit"/>
+        <field name="arch" type="xml">
+            <field name="holiday_status_id" position="replace">
+                <field name="parent_leave_id" invisible="1"/>
+                <field string="WFH Types" name="holiday_status_id" force_save="1"
+                       domain="['&amp;',
+                ('is_wfh', '=', True),
+                '|',
+                    ('requires_allocation', '=', 'no'),
+                    '&amp;',
+                        ('has_valid_allocation', '=', True),
+                        '|',
+                            ('allows_negative', '=', True),
+                            '&amp;',
+                                ('virtual_remaining_leaves', '>', 0),
+                                ('allows_negative', '=', False)
+             ]"
+                       context="{'employee_id': employee_id, 'default_date_from': date_from, 'default_date_to': date_to}"
+                       options="{'no_create': True, 'no_open': True, 'request_type': 'leave'}"
+                       readonly="state in ['cancel', 'refuse', 'validate', 'validate1'] or parent_leave_id"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="action_hr_leave_wfh" model="ir.actions.act_window">
+        <field name="name">WFH Requests</field>
+        <field name="res_model">hr.leave</field>
+        <field name="view_mode">list,kanban,gantt,form,calendar,activity</field>
+        <field name="domain">[('is_wfh','=',True), ('employee_id.company_id', 'in', allowed_company_ids)]</field>
+        <field name="context">{ 'search_default_waiting_for_me': 1, 'search_default_waiting_for_me_manager': 2, 'search_default_current_year': 3, 'hide_employee_name': 1}</field>
+    </record>
+
+    <record id="action_hr_leave_wfh_view_list" model="ir.actions.act_window.view">
+        <field name="sequence">1</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="hr_holidays.hr_leave_view_tree"/>
+        <field name="act_window_id" ref="action_hr_leave_wfh"/>
+    </record>
+
+    <record id="action_hr_leave_wfh_view_form" model="ir.actions.act_window.view">
+        <field name="sequence">2</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="hr_leave_view_form_inherit_wfh"/>
+        <field name="act_window_id" ref="action_hr_leave_wfh"/>
+    </record>
+
+    <!-- Menu item under the Employee Leaves menu -->
+    <menuitem id="menu_hr_leave_wfh"
+              name="WFH Requests"
+              parent="hr_holidays.menu_hr_holidays_management"
+              action="action_hr_leave_wfh"
+              sequence="10"/>
+</odoo>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+    <!--Adding a salary rule for loan-->
+
+    <!--
+    Module Component: Loan Deduction Salary Rule
+
+    Description:
+    This XML defines a payroll salary rule and corresponding payslip input type
+    for processing **loan deductions** in the employee payslip. This rule is applied
+    under the extended payroll structure (`structure_002`), typically used for regular employee pay.
+
+    SALARY RULE:
+    ID: hr_rule_loan
+    Name: Loan
+    Code: LO
+    Category: DED (Deduction)
+    Payroll Structure: ent_hr_payroll_extension.structure_002
+    Sequence: 190
+    Appears on Payslip: Yes
+
+    Logic:
+    - Condition: Activate if `inputs.LO` is provided in the payslip
+    - Calculation: Deducts the exact amount specified by `inputs.LO.amount`
+    - Result: Negative deduction (i.e., subtracted from net salary)
+
+    Python Logic:
+        Condition:
+            result = inputs.LO
+        Amount:
+            result = inputs.LO and - (inputs.LO.amount)
+
+    PAYSLIP INPUT TYPE:
+    ID: hr_rule_input_loan
+    Code: LO
+    Name: Loan
+    Linked Rule: hr_rule_loan
+
+    Purpose:
+    - Allows external modules (such as loan repayment modules) to inject loan repayment amounts
+      into the payslip via this code `LO`.
+
+    Kaizen Principles Applied:
+    - **Clarity**: Rule names and codes follow standard naming conventions.
+    - **Maintainability**: Modular design supports multiple loan rules for future extensions.
+    - **Efficiency**: Executes logic only when relevant inputs are available.
+    - **Documentation**: Fully documented for functional and technical users.
+
+    Author: Kaizenae
+    License: OPL-1
+    Created for: ent_ohrms_loan
+-->
+
+
+    <record id="hr_rule_loan" model="hr.salary.rule">
+        <field name="code">LO</field>
+        <field name="name">Loan</field>
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = inputs.LO</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">result = inputs.LO and - (inputs.LO.amount)</field>
+        <field name="appears_on_payslip" eval="True"/>
+        <field name="sequence" eval="190"/>
+        <field name="struct_id" ref="ent_hr_payroll_extension.structure_002"/>
+    </record>
+
+    <record id="hr_rule_input_loan" model="hr.payslip.input.type">
+        <field name="code">LO</field>
+        <field name="name">Loan</field>
+        <field name="input_id" ref="hr_rule_loan"/>
+    </record>
+</odoo>

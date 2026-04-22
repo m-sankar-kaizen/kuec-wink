@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit Form View to Modify it -->
+    <record id="view_account_journal_form_inter_company_payment" model="ir.ui.view">
+        <field name="name">account.journal.form.inter.company.payment</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//page[@name='advanced_settings']" position="after">
+                <page string="Inter Company">
+                    <group>
+                        <field name="is_intercompany_payment" widget="boolean_toggle"/>
+                        <field name="intercompany_id" invisible="not is_intercompany_payment"/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

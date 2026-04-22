@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+    <!--
+        Scheduled Action: Send Requisition Approval Line Notification
+        This cron job triggers the `_send_notification` method on the `requisition.approval.line` model
+        every 1 day, indefinitely (-1). It is active by default.
+
+        Notes:
+        - `model_id` references the model 'requisition.approval.line'
+        - `state="code"` indicates that we use raw Python code in the `code` field
+        - `doall="False"` means missed executions will not be backfilled
+    -->
+    <record id="ir_cron_send_notification" model="ir.cron">
+        <field name="name">Send Requisition Approval Line Notification</field>
+        <field name="model_id" ref="model_requisition_approval_line"/>
+        <field name="state">code</field>
+        <field name="code">model._send_notification()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

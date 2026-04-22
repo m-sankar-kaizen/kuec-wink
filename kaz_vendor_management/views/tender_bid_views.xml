@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Form View for Tender Bid -->
+    <record id="view_tender_bid_form" model="ir.ui.view">
+        <field name="name">tender.bid.form</field>
+        <field name="model">tender.bid</field>
+        <field name="arch" type="xml">
+            <form string="Tender Bid">
+                <header>
+                    <field name="tender_state" invisible="1"/>
+                    <button name="action_rfq_and_attachment_lines"
+                            invisible="state != 'draft' or tender_bid_rfq_line_ids"
+                            class="btn btn-primary" string="Generate Lines" type="object"/>
+                    <button name="action_pre_qualify" invisible="state != 'draft' or not tender_bid_rfq_line_ids"
+                            class="btn btn-primary" string="Pre-Qualify" type="object"/>
+                    <button name="action_move_to_evaluate"
+                            invisible="state != 'pre_qualify'"
+                            class="btn btn-primary"
+                            string="Qualify"
+                            type="object"
+                            confirm="Are you sure you want to qualify this bid?"/>
+
+                    <button name="action_reject"
+                            invisible="state != 'pre_qualify'"
+                            class="btn btn-secondary"
+                            string="Reject"
+                            type="object"
+                            confirm="Are you sure you want to reject this bid?"/>
+
+                    <button name="action_bid_evaluated"
+                            invisible="state != 'evaluation'"
+                            class="btn btn-primary"
+                            icon="fa-check"
+                            string="Evaluated"
+                            type="object"
+                            confirm="Are you sure you want to mark this bid as evaluated?"/>
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,pre_qualify,evaluation,bid_evaluated,awarded"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Awarded" bg_color="text-bg-success"
+                            invisible="state != 'awarded'"/>
+                    <widget name="web_ribbon" title="Rejected" bg_color="text-bg-danger"
+                            invisible="state != 'rejected'"/>
+                    <div name="button_box" class="oe_button_box">
+                        <button invisible="not purchase_id" class="oe_stat_button" type="object"
+                                name="action_open_purchase" icon="fa-pencil-square-o">
+                            <field name="purchase_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Purchase Order</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Bid Information">
+                            <field name="title" readonly="1"/>
+                            <field name="rank" string="Rank#" readonly="1"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="tender_rfq_id" options="{'no_create': True, 'no_create_edit': True}"
+                                   domain="[('state', 'in', ['active'])]" required="1"
+                                   readonly="state != 'draft' or tender_state != 'active' or is_portal"/>
+                            <field name="partner_ids" invisible="1"/>
+                            <field name="bid_user_id" invisible="1"/>
+                            <field name="partner_id"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   readonly="state != 'draft' or is_portal"/>
+                            <field name="is_vendor" invisible="1"/>
+                            <field invisible="not is_vendor" name="vendor_score" readonly="1"/>
+                            <field invisible="not is_vendor" name="evaluation_rating" widget="priority" readonly="1"/>
+                            <field name="is_portal" widget="boolean_toggle" readonly="1" invisible="not is_portal"/>
+                            <label for="currency_id" groups="base.group_multi_currency"/>
+                            <div name="journal_div" class="d-flex">
+                                <div name="in_and_refresh_button_div" groups="base.group_multi_currency"
+                                     class="d-flex flex-column mx-3 text-center" style="width: 6ch;">
+                                    <field name="expected_currency_rate" invisible="1"/>
+                                    <div class="d-flex flex-column justify-content-center flex-grow-1"
+                                         invisible="state != 'draft' or manual_currency_rate == expected_currency_rate">
+                                        <button type="object" name="refresh_currency_rate" icon="fa-refresh"
+                                                title="Refresh currency rate to the invoice date"
+                                                class="btn btn-link p-0"/>
+                                    </div>
+                                </div>
+                                <div name="currency_div" groups="base.group_multi_currency" class="w-100">
+                                    <div class="d-flex gap-1">
+                                        <field name="currency_id" readonly="state != 'draft'"
+                                               class="oe_inline"
+                                               options="{'no_create': True}"
+                                               context="{'search_default_active': 1, 'search_default_inactive': 1}"/>
+                                        <widget name="pick_currency_date" update_field="manual_currency_rate"
+                                                invisible="state != 'draft' or currency_id == company_currency_id"/>
+                                    </div>
+                                    <div name="currency_conversion_div" class="d-flex gap-1 text-muted"
+                                         invisible="currency_id == company_currency_id">
+                                        <span>1</span>
+                                        <field name="company_currency_id" readonly="True" options="{'no_open': True}"
+                                               class="w-auto"/>
+                                        <span>=</span>
+                                        <field name="manual_currency_rate" digits="[12,6]"
+                                               readonly="state != 'draft'"/>
+                                        <field name="currency_id" readonly="True" options="{'no_open': True}"
+                                               class="w-auto"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </group>
+                        <group string="Evaluation Details">
+                            <field name="technical_score_weight" readonly="1"/>
+                            <field name="commercial_score_weight" readonly="1"/>
+                            <field name="technical_user_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="commercial_user_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="technical_evaluation_checklist_id" readonly="1"/>
+                            <field name="commercial_evaluation_checklist_id" readonly="1"/>
+                        </group>
+                        <group invisible="not (technical_evaluation_checklist_ids or commercial_evaluation_checklist_ids)"
+                               name="evaluation_score"
+                               string="Evaluation Score">
+                            <field name="total_technical_score" readonly="1"/>
+                            <field name="total_commercial_score" readonly="1"/>
+                            <field name="total_score" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="tender_bid_rfq_line" string="RFQ Lines">
+                            <field name="tender_bid_rfq_line_ids"
+                                   readonly="state not in ['draft'] or is_portal" force_save="1">
+                                <list editable="bottom" delete="0" create="0"
+                                      decoration-danger="qty &lt; required_qty">
+                                    <field name="product_id" force_save="1" readonly="1"/>
+                                    <field name="name" force_save="1" optional="show" readonly="1"/>
+                                    <field name="account_id" force_save="1" readonly="1"/>
+                                    <field name="analytic_distribution" force_save="1" widget="analytic_distribution"
+                                           readonly="1"/>
+                                    <field name="required_qty" force_save="1" optional="show" readonly="1"/>
+                                    <field name="qty"/>
+                                    <field name="expected_price_unit" force_save="1" optional="show" readonly="1"/>
+                                    <field name="price_unit"/>
+                                    <field name="amount_in_currency" force_save="1" readonly="1"/>
+                                    <field name="uom_id" readonly="1" force_save="1"/>
+                                    <field name="currency_id" optional="hide" readonly="1"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group>
+                                </group>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total_amount" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Required Documents" name="tender_bid_required_attachment"
+                              invisible="not tender_bid_required_attachment_ids">
+                            <field name="tender_bid_required_attachment_ids" readonly="state != 'draft'" force_save="1">
+                                <list editable="bottom" create="0" delete="0">
+                                    <field name="tender_bid_id" column_invisible="1"/>
+                                    <field name="sequence" readonly="1" force_save="1"/>
+                                    <field name="name" readonly="1" force_save="1"/>
+                                    <field name="attachment_id" widget="binary" filename="file_name"/>
+                                    <field name="file_name" readonly="1" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page invisible="not tender_checklist_ids" string="Tender Checklists" name="tender_checklist">
+                            <field name="tender_checklist_ids" readonly="state not in ['draft', 'pre_qualify']">
+                                <list editable="bottom" create="0" delete="0">
+                                    <field name="sequence" readonly="1"/>
+                                    <field name="name" readonly="1"/>
+                                    <field name="is_checked"/>
+                                </list>
+                            </field>
+                        </page>
+                        <!-- Technical Evaluation -->
+                        <page invisible="not technical_evaluation_checklist_ids" string="Technical Evaluation"
+                              name="technical_evaluation_checklist">
+                            <field name="technical_evaluation_checklist_ids" readonly="state not in ['evaluation']">
+                                <list create="0" delete="0" editable="bottom">
+                                    <field name="tender_bid_technical_id" column_invisible="1"/>
+                                    <field name="technical_state" column_invisible="1"/>
+                                    <field name="sequence" readonly="1"/>
+                                    <field name="name" readonly="1"/>
+                                    <field name="rating_score" widget="rating_bar"
+                                           readonly="technical_state != 'evaluation'"/>
+                                    <field name="comment"/>
+                                    <field name="score" readonly="1" optional="hide"/>
+                                    <field name="weight" readonly="1" optional="hide"/>
+                                    <field name="evaluation_type" readonly="1" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- Commercial Evaluation -->
+                        <page invisible="not commercial_evaluation_checklist_ids" string="Commercial Evaluation"
+                              name="commercial_evaluation_checklist">
+                            <field name="commercial_evaluation_checklist_ids" readonly="state not in ['evaluation']">
+                                <list create="0" delete="0" editable="bottom">
+                                    <field name="tender_bid_commercial_id" column_invisible="1"/>
+                                    <field name="commercial_state" column_invisible="1"/>
+                                    <field name="sequence" readonly="1"/>
+                                    <field name="name" readonly="1"/>
+                                    <field name="rating_score" widget="rating_bar"
+                                           readonly="commercial_state != 'evaluation'"/>
+                                    <field name="comment"/>
+                                    <field name="score" readonly="1" optional="hide"/>
+                                    <field name="weight" readonly="1" optional="hide"/>
+                                    <field name="evaluation_type" readonly="1" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page invisible="not tender_bid_approval_ids" string="Signed Approval History"
+                              name="tender_bid_approval">
+                            <field name="tender_bid_approval_ids" readonly="state not in ['evaluation']">
+                                <list editable="bottom" create="0" edit="0" delete="0">
+                                    <field name="current_display_name" column_invisible="1"/>
+                                    <field name="sequence"/>
+                                    <field name="parent_state_at_request" optional="show"/>
+                                    <field name="request_type"/>
+                                    <field name="evaluation_type" optional="show"/>
+                                    <field name="user_id" string="Responsible User"/>
+                                    <field name="create_date" string="Signed At" optional="hide"/>
+                                    <field name="signature" widget="signature"
+                                           options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                                    <field name="reason" string="Remarks" required="0"/>
+                                    <button name="sign_request" class="btn-primary" string="Sign" type="object"
+                                            invisible="signature"/>
+                                    <field name="company_id" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View for Tender Bid -->
+    <record id="view_tender_bid_list" model="ir.ui.view">
+        <field name="name">tender.bid.list</field>
+        <field name="model">tender.bid</field>
+        <field name="arch" type="xml">
+            <list string="Tender Bids" default_order="total_score desc">
+                <field name="name"/>
+                <field name="rank" string="Rank#"/>
+                <field name="title"/>
+                <field name="state"/>
+                <field name="company_id" optional="hide"/>
+                <field name="tender_rfq_id"/>
+                <field name="partner_id"/>
+                <field name="bid_user_id" optional="hide"/>
+                <field name="total_commercial_score"/>
+                <field name="total_technical_score"/>
+                <field name="total_score"/>
+                <field name="technical_evaluation_checklist_id" optional="hide"/>
+                <field name="commercial_evaluation_checklist_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tender_bid_search" model="ir.ui.view">
+        <field name="name">tender.bid.view.search</field>
+        <field name="model">tender.bid</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title" string="Title"/>
+                <field name="name" string="Sequence"/>
+                <field name="rank"/>
+                <field name="tender_rfq_id"/>
+                <field name="bid_user_id"/>
+                <field name="partner_id"/>
+                <field name="total_commercial_score"/>
+                <field name="total_technical_score"/>
+                <field name="total_score"/>
+                <separator/>
+                <group expand="1" string="Group By">
+                    <filter string="Tender" name="group_by_tender_rfq_id"
+                            context="{'group_by': 'tender_rfq_id'}"/>
+                    <filter string="Bid Partner" name="group_by_partner_id"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="Bid User" name="group_by_bid_user_id"
+                            context="{'group_by': 'bid_user_id'}"/>
+                    <separator/>
+                    <filter string="State" name="group_by_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+                <searchpanel>
+                    <field name="state" string="State" enable_counters="1" icon="fa-filter"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_tender_bid" model="ir.actions.act_window">
+        <field name="name">Tender Bids</field>
+        <field name="res_model">tender.bid</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                Click to create a new Tender Bid.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_tender_bid" name="Tender Bids" parent="menu_tender_rfq_management"
+              action="action_tender_bid" sequence="2"/>
+
+</odoo>

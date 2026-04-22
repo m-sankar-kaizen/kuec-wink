@@ -1,0 +1,21 @@
+{
+    'name': 'Employee Disciplinary Action',
+    'version': '18.0.0.1',
+    'summary': 'Manage employee disciplinary actions',
+    'category': 'Human Resources',
+    'author': 'Kaizen Principles',
+    'depends': ['hr',
+                'hr_payroll'],
+    'data': [
+        'data/data.xml',
+        'security/security.xml',
+        'security/ir.model.access.csv',
+        'views/disciplinary_action_views.xml',
+        'views/disciplinary_action_type_views.xml',
+        'views/hr_employee.xml',
+        'views/disciplinary_pdf.xml',
+    ],
+    'license': 'LGPL-3',
+    'installable': True,
+    'application': True,
+}

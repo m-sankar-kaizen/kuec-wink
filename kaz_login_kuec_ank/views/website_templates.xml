@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="website.login_layout" inherit_id="web.login_layout"
+              name="Website Login Layout" priority="20"
+              active="False">
+    </template>
+</odoo>

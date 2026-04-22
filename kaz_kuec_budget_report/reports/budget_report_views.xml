@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="budget_report_view_pivot" model="ir.ui.view">
+        <field name="name">budget.report.pivot.committed.amounts</field>
+        <field name="model">budget.report</field>
+        <field name="inherit_id" ref="account_budget.budget_report_view_pivot"/>
+        <field name="arch" type="xml">
+            <xpath expr="//pivot" position="inside">
+                <field name="manpower_committed_amount" type="measure"/>
+                <field name="total_committed_amount" type="measure"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="budget_report_view_tree" model="ir.ui.view">
+        <field name="name">budget.report.view.list</field>
+        <field name="model">budget.report</field>
+        <field name="inherit_id" ref="account_budget.budget_report_view_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <field name="budget_line_tag_id"/>
+                <field name="general_budget_id"/>
+                <field name="master_plan_id"/>
+                <field name="manpower_committed_amount"/>
+                <field name="total_committed_amount"/>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record id="budget_report_view_search" model="ir.ui.view">
+        <field name="name">budget.report.view.search</field>
+        <field name="model">budget.report</field>
+        <field name="inherit_id" ref="account_budget.budget_report_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group" position="inside">
+                <separator/>
+                <field name="budget_line_tag_id"/>
+                <field name="general_budget_id"/>
+                <field name="master_plan_id"/>
+                <filter string="Budgetary Position" name="general_budget_id" context="{'group_by':'general_budget_id'}"/>
+                <filter string="BP Tag" name="budget_line_tag_id" context="{'group_by':'budget_line_tag_id'}"/>
+                <filter string="Master Plan" name="master_plan_id" context="{'group_by':'master_plan_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

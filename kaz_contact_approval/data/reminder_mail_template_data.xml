@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--Email template for reminding partner of their expired document attachments -->
+    <record id="expired_document_email_template" model="mail.template">
+        <field name="name">Expired Document Attachments</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="partner_to">{{ object.id }}</field>
+        <field name="subject">URGENT: Expired Document Attachment</field>
+        <field name="description">Notify partners of their expired document attachments</field>
+        <field name="body_html" type="html">
+            <div style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f7f7f7; width: 100%; display: flex; justify-content: center;">
+                <table style="max-width:600px; width:100%; background-color: #ffffff; border-collapse: collapse; border:1px solid #dddddd; padding:20px;">
+                    <tr>
+                        <td>
+                            <p style="font-size:14px; color:#333333; margin-bottom:20px;">
+                                <t t-set="attachments" t-value="ctx.get('attachments')"/>
+                                Dear <span t-esc="object.name"/>,
+                                <br/><br/>
+                                Hope this email finds you well.
+                            </p>
+
+                            <p style="font-size:14px; color:#333333; margin-bottom:20px;">
+                                Kindly note that the following
+                                <span t-if="len(attachments) &gt; 1">documents</span>
+                                <span t-else="">document</span>
+                                has expired or will soon expire. We would appreciate it if you could please share an updated version for our records.
+                            </p>
+
+                            <!-- Inner table: 80% width, centered -->
+                            <table border="0" cellpadding="8" cellspacing="0"
+                                   style="width:80%; margin:0 auto; border-collapse: collapse; margin-bottom:20px;">
+                                <thead>
+                                    <tr style="background-color:#f2f2f2; text-align:left;">
+                                        <th style="border:1px solid #dddddd; padding:8px;">Document Name</th>
+                                        <th style="border:1px solid #dddddd; padding:8px;">Expiry Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="attachments" t-as="line">
+                                        <tr>
+                                            <td style="border:1px solid #dddddd; padding:8px;">
+                                                <t t-esc="line['name']"/>
+                                            </td>
+                                            <td style="border:1px solid #dddddd; padding:8px;">
+                                                <t t-esc="line['expiry_date']"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+
+                            <p style="font-size:14px; color:#333333; margin-bottom:20px;">
+                                Thank you for your cooperation.
+                                <br/>
+                                Best regards
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </field>
+    </record>
+</odoo>

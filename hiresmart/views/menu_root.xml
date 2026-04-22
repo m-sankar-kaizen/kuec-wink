@@ -1,0 +1,73 @@
+<odoo>
+    <data>
+
+<!-- [Start] (Model: Recruitment) Add menu "Resume OCR" after 'Applications' menu ###########################################################-->
+        <menuitem
+            id="menu_resume_reader"
+            name="Resume OCR"
+            parent="hr_recruitment.menu_hr_recruitment_root"
+            sequence="4"
+            action="action_hrms_resume_ocr"
+            groups="hr_recruitment.group_hr_recruitment_user" 
+        />
+<!-- [End] (Model: Recruitment) Add menu "Resume OCR" after 'Applications' menu ###########################################################-->
+
+
+<!-- [Start] (Model: Recruitment) Add menu "Approval" menu inside Recruitment module #######################################################-->
+        <menuitem
+            id="menu_hr_recruitment_approval_root"
+            name="Approval"
+            parent="hr_recruitment.menu_hr_recruitment_root"
+            sequence="3"
+            groups="base.group_user" 
+        />
+
+    <!-- [Start] (Model: Recruitment) Add sub-menu "Hiring Request" inside Approval menu  #########-->
+            <menuitem
+                id="sub_menu_hr_recruitment_hiring_request"
+                name="Hiring Request"
+                parent="menu_hr_recruitment_approval_root"
+                action="action_hiring_request"
+                sequence="10"
+                groups="hiresmart.group_recruitment_dept_head"
+            />
+    <!-- [End] (Model: Recruitment) Add sub-menu "Hiring Request" inside Approval menu  #########-->
+
+
+    <!-- [Start] (Model: Recruitment) Add sub-menu "Approvals to Review" inside Approval menu  #########-->
+            <menuitem
+                id="sub_menu_hr_recruitment_approval_review"
+                name="Approvals to Review"
+                parent="menu_hr_recruitment_approval_root"
+                action="action_approval_to_review"
+                sequence="20"
+                groups="hiresmart.group_recruitment_hr"
+            />
+    <!-- [End] (Model: Recruitment) Add sub-menu "Approvals to Review" inside Approval menu  #########-->
+
+    <!-- [Start] (Model: Recruitment) Add sub-menu "All Approvals" inside Approval menu  #########-->
+            <menuitem
+                id="sub_menu_hr_recruitment_all_approvals"
+                name="All Approvals"
+                parent="menu_hr_recruitment_approval_root"
+                action="action_all_approvals"
+                sequence="30"
+                groups="hiresmart.group_recruitment_hr"
+            />
+    <!-- [End] (Model: Recruitment) Add sub-menu "All Approvals" inside Approval menu  #########-->
+<!-- [End] (Model: Recruitment) Add menu "Approval" menu inside Recruitment module #######################################################-->
+
+
+<!-- [Start] (Model: Recruitment) Add menu "Internal Job Posting" after 'Applications' menu ###########################################################-->
+        <menuitem
+            id="menu_internal_jobs"
+            name="Internal Jobs Post"
+            parent="hr_recruitment.menu_hr_recruitment_root"
+            sequence="2"
+            action="action_internal_jobs"
+            groups="hiresmart.group_recruitment_employee,hiresmart.group_recruitment_hr,hiresmart.group_recruitment_dept_head"
+        />
+<!-- [End] (Model: Recruitment) Add menu "Resume OCR" after 'Applications' menu ###########################################################-->
+
+    </data>
+</odoo>

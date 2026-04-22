@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================================================================
+        MAIL ACTIVITY TYPE: Health Insurance Request
+        Purpose:
+            Defines a new type of activity that can be scheduled in the chatter (e.g.,
+            as a task, reminder, or to-do item) related to the `health.insurance` model.
+
+        Use Case:
+            This activity type can be used by HR or admin to track pending health
+            insurance approvals, documentation follow-ups, or any required action.
+
+        Fields:
+            - name: Displayed in the activity dropdown (visible to users).
+            - icon: FontAwesome icon used for visual representation in the chatter.
+            - res_model: Links this activity type specifically to the `health.insurance` model.
+    ============================================================================ -->
+    <record id="mail_activity_send_note2_approve" model="mail.activity.type">
+        <field name="name">Health Insurance Request</field>
+        <field name="icon">fa-envelope</field> <!-- Envelope icon represents messaging or notification -->
+        <field name="res_model">health.insurance</field> <!-- Activity is related to this model -->
+    </record>
+</odoo>

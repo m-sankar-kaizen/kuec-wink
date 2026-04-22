@@ -1,0 +1,87 @@
+.tender-type-selection {
+    border: 1px #dbdbdb solid;
+    padding: 8px;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.tender-type-selection:hover {
+    background: #e9ecef;
+}
+
+.tender-type-selection .selected-div {
+    width: 6px;
+    background: #714B67;
+    position: absolute;
+    height: -webkit-fill-available;
+    left: 0;
+    top: 0;
+    border-top-left-radius: inherit;
+    border-bottom-left-radius: inherit;
+}
+
+.tender-state-active {
+    color: green;
+}
+
+.tender-state-closed {
+    color: orange;
+}
+
+.active-scroll {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: clip;
+}
+
+.filter-active-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    overflow-x: clip;
+    border: 1px #dbdbdb solid;
+    border-radius: 6px;
+}
+
+.tender-type-circle-selection {
+    cursor: pointer;
+    padding: 4px 8px;
+    align-items: center;
+}
+
+.tender-type-circle-selection:hover {
+    background: #e9ecef;
+}
+
+.selection-circle {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #714B67; /* primary color */
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.selection-circle.selected {
+    background-color: #714B67; /* filled when selected */
+}
+
+.background-blue {
+    background: #86c8e6;
+}
+
+.text-align-center {
+    text-align: center;
+}
+
+.height-26px {
+    height: 26px;
+}
+
+.tender-state-awarded {
+    color: green;
+}
+
+.tender-state-rejected {
+    color: red;
+}

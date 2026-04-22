@@ -1,0 +1,12 @@
+<odoo>
+
+<!-- [Start] Action record ######################################################################## -->
+    <record id="action_approval_to_review" model="ir.actions.act_window">
+        <field name="name">Approvals to Review</field>
+        <field name="res_model">hiring.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('stage', 'in', ['new', 'in_process'])]</field>
+    </record>
+<!-- [End] Action record ######################################################################## -->
+
+</odoo>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    Tree View: register_form_tree_view
+    Model: register.form
+    Purpose:
+        - Displays a list of resignation form records with summary fields:
+            - name (employee name)
+            - notify (notified person/department)
+            - state (current state of workflow)
+    -->
+       <record id="register_form_tree_view" model="ir.ui.view">
+        <field name="name">register form list</field>
+        <field name="model">register.form</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="notify"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    Form View: register_form_form_view
+    Model: register.form
+    Purpose:
+        - Displays the full resignation form with editable fields and action buttons.
+        - Includes status-based readonly logic.
+        - Enables approval flow: draft → waiting_approval → approved/rejected → cancel/reset.
+    -->
+
+    <record id="register_form_form_view" model="ir.ui.view">
+        <field name="name">register form form</field>
+        <field name="model">register.form</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="submit_for_approval"
+                            type="object"
+                            invisible="state != 'draft'"
+                            string="Submit for Approval" class="oe_highlight"/>
+                    <button type="action"
+                            invisible="state != 'approved'"
+                            name="%(kaz_employee_reports.action_report_register_form_report)d"
+                            string="Print"
+                            class="oe_highlight"
+                            />
+                    <button name="approve"
+                            type="object"
+                            invisible="state != 'waiting_approval'"
+                            groups="kaz_employee_reports.group_letter_manager"
+                            string="Approve" class="oe_highlight"/>
+                    <button name="rejected"
+                            type="object"
+                            groups="kaz_employee_reports.group_letter_manager"
+                            invisible="state not in ['waiting_approval', 'approved']"
+                            string="Reject" class="btn-default"/>
+                    <button name="canceled"
+                            type="object"
+                            invisible="state not in ['draft', 'waiting_approval', 'rejected']"
+                            string="Cancel" class="btn-default"/>
+                    <button name="reset_to_draft"
+                            type="object"
+                            invisible="state != 'cancel'"
+                            string="Reset to Draft" class="btn-default"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="ref"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"
+                                   readonly="state != 'draft'"
+                               groups="kaz_employee_reports.group_letter_manager"/>
+                            <field name="name"
+                               groups="base.group_user,!kaz_employee_reports.group_letter_manager"
+                               readonly="1"/>
+                            <field name="emp_number"/>
+                            <field name="emp_email"/>
+                            <field name="emp_company_id"/>
+                            <field name="reason_id"
+                                   required="1"
+                                   readonly="state != 'draft'"
+                                   options="{'no_quick_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                        </group>
+                        <group>
+                            <field name="notify"
+                                   readonly="state != 'draft'"
+                                   required="1"/>
+                            <field name="last_working_date"
+                                   readonly="state != 'draft'"
+                                   required="1"/>
+                            <field name="remarks"
+                                   readonly="state != 'draft'"
+                                   required="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    Action: action_ank_register_form
+    Purpose:
+        - Launches the list/form view for resignation form model
+        - Triggered by corresponding menuitem
+    -->
+
+
+    <record id="action_ank_register_form" model="ir.actions.act_window">
+        <field name="name">Resignation Form</field>
+        <field name="res_model">register.form</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new resignation form
+            </p>
+        </field>
+    </record>
+
+
+    <!--
+    Menu Hierarchy:
+    1. employee_off_boarding_menu: Main menu under HR → Employee Off-boarding
+    2. register_form_menu: Resignation form screen
+    -->
+
+    <menuitem id="employee_off_boarding_menu" name="Employee Off-boarding" parent="hr.menu_hr_root" sequence="22"/>
+
+    <menuitem id="register_form_menu" name="Resignation Form" parent="kaz_employee_reports.employee_off_boarding_menu"
+              action="action_ank_register_form"/>
+</odoo>

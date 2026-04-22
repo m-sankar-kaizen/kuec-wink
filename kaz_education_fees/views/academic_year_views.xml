@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+    Form View: Academic Year
+    Allows users to define an academic year with start and end dates.
+    ============================================================ -->
+    <record id="academic_year_form_view" model="ir.ui.view">
+        <field name="name">kaz.academic.year.form</field>
+        <field name="model">academic.year</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <group>
+                            <label for="date_start" string="Academic Year"/>
+                            <div name="dates" class="o_row">
+                                <!-- Start Date Field with link to end date -->
+                                <field name="date_start" widget="daterange"
+                                       options="{&quot;related_end_date&quot;: &quot;date&quot;}"/>
+                                <i class="fa fa-long-arrow-right mx-2 oe_edit_only"
+                                   aria-label="Arrow icon"
+                                   title="Arrow"/>
+                                <i class="fa fa-long-arrow-right mx-2 oe_read_only"
+                                   aria-label="Arrow icon"
+                                   title="Arrow"
+                                   invisible="not date_start and not date"/>
+                                <!-- End Date Field with link to start date -->
+                                <field name="date" widget="daterange"
+                                       options="{&quot;related_start_date&quot;: &quot;date_start&quot;}"/>
+                            </div>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================
+    list View: Academic Year
+    Displays list of academic years.
+    ============================================================ -->
+    <record id="academic_year_list_view" model="ir.ui.view">
+        <field name="name">kaz.academic.year.list</field>
+        <field name="model">academic.year</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================
+    Search View: Academic Year
+    Allows filtering academic years by name.
+    ============================================================ -->
+    <record id="academic_year_search_view" model="ir.ui.view">
+        <field name="name">kaz.academic.year.search</field>
+        <field name="model">academic.year</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================
+    Action: Academic Year
+    Makes the academic year model accessible in the UI.
+    ============================================================ -->
+    <record id="academic_year_act_window" model="ir.actions.act_window">
+        <field name="name">Academic Year</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">academic.year</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

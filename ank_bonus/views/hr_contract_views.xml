@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    This XML view extension adds a new "Bonus" tab to the `hr.contract` form view.
+    The tab contains multiple grouped fields used for evaluating bonus-related KPIs,
+    such as performance rates, prorata calculations, mismatch values, and total adjusted bonuses.
+
+    Model: hr.contract
+    Inherited View: hr_contract.hr_contract_view_form
+    Purpose: To allow HR managers or payroll officers to input and review bonus evaluation criteria and metrics.
+-->
+
+<odoo>
+
+    <record id="hr_contract_view_form" model="ir.ui.view">
+        <field name="name">hr.contract.view.form.inherit.ank.bonus</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Bonus" name="bonus">
+                    <group>
+                        <group>
+                            <field name="pm"/>
+                            <field name="perf_rate_overall"/>
+                            <field name="perf_rate_comp"/>
+                            <field name="perf_rate_sum"/>
+                            <field name="r1"/>
+                            <field name="r2"/>
+                            <field name="final_rate"/>
+                        </group>
+                        <group>
+                            <field name="prorate"/>
+                            <field name="category"/>
+                            <field name="crdpms"/>
+                            <field name="r_miss_match"/>
+                        </group>
+                        <group>
+                            <field name="bonus_criteria"/>
+                            <field name="assignment_multiplier"/>
+                            <field name="excessive_leaves"/>
+                            <field name="excessive_leaves_multiplier"/>
+                            <field name="total_amount"/>
+                            <field name="total_prorated"/>
+                            <field name="total_adjusted"/>
+                            <field name="total_pr_adjusted"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

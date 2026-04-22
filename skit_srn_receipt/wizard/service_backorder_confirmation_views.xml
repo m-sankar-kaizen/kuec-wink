@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+        View: service.backorder.confirmation (Form View)
+        Purpose:
+        This view defines the wizard popup for confirming service backorders in the SRN (Service Receipt Note) workflow.
+
+        When a user attempts to validate a service receipt with partially fulfilled quantities, this popup appears,
+        allowing the user to choose whether to create backorders for the remaining service quantities or to cancel them.
+
+        This interface is dynamically shown after validation based on quantity mismatches between 'demand' and 'done'.
+    -->
+    <record id="service_view_backorder_confirmation" model="ir.ui.view">
+        <field name="name">service_backorder_confirmation</field>
+        <field name="model">service.backorder.confirmation</field>
+        <field name="arch" type="xml">
+            <form string="Backorder creation">
+
+                <!-- Explanatory paragraph block for the user -->
+                <group>
+                    <group>
+                        <div colspan="2">
+                            <p name="explanation-text">
+                                You have processed less products than the initial demand.
+                            </p>
+                        </div>
+                    </group>
+                    <group>
+                        <div colspan="2" class="text-muted">
+                            Create a backorder if you expect to process the remaining
+                            products later. Do not create a backorder if you will not
+                            process the remaining products.
+                        </div>
+                    </group>
+                </group>
+
+                <!-- Hidden field storing selected service.receipt recordset -->
+                <field name="receipt_ids" invisible="1"/>
+
+                <!-- Control flag to show/hide the transfer selection table -->
+                <field name="show_transfers" invisible="1"/>
+
+                <!-- Editable list view listing each service receipt line with checkbox to backorder or not -->
+                <field name="backorder_confirmation_line_ids" nolabel="1" invisible="not show_transfers">
+                    <list create="0" delete="0" editable="top">
+                        <field name="service_receipt_id" invisible="1"/>
+                        <field name="to_backorder" widget="boolean_toggle"/>
+                    </list>
+                </field>
+
+                <!-- Wizard action buttons in the footer -->
+                <footer>
+                    <!-- Confirm and create backorders for checked lines -->
+                    <button name="service_process" string="Create Backorder" type="object"
+                            class="oe_highlight" data-hotkey="q"/>
+
+                    <!-- Skip backorder creation (cancel remaining quantities) -->
+                    <button name="service_cancel_backorder" string="No Backorder" type="object"
+                            class="btn-danger text-uppercase"
+                            invisible="not show_transfers"
+                            data-hotkey="w"/>
+
+                    <!-- Standard cancel button to close the wizard -->
+                    <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+</odoo>

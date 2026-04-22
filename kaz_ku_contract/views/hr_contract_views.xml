@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        This view inherits the existing 'hr.contract' form view to add a dedicated "KU Payroll" page
+        in the contract form notebook.
+
+        The added page organizes payroll-related monetary fields into two main groups:
+        1. Allowances: Displays various allowance fields relevant for KU payroll calculations,
+           such as acting allowance, child allowance, cost of living subsidy, market differential,
+           rounding adjustments, and vacation allowance.
+
+        2. Deductions: Includes employee pension contributions for Oman and UAE, housing advance
+           deductions (current and next year), other recovery deductions, unpaid acting allowance
+           deductions, and pension adjustment specific to Oman.
+
+        All monetary fields use the monetary widget to format currency properly, adhering to the
+        currency specified on the contract.
+
+        This customization facilitates detailed payroll data entry and review directly on the
+        employee contract form, streamlining payroll management for KU requirements.
+    -->
+    <record id="hr_contract_view_form" model="ir.ui.view">
+        <field name="name">hr_contract_view_form_inherit_ku</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook[last()]" position="inside">
+                <page string="KU Payroll" name="ku_payroll">
+                    <group>
+                        <group string="Allowances" widget="monetary">
+                            <field name="acting_allowance" widget="monetary"/>
+                            <field name="child_allowance" widget="monetary"/>
+                            <field name="cost_of_living_subsidy" widget="monetary"/>
+                            <field name="market_differential" widget="monetary"/>
+                            <field name="rounding" widget="monetary"/>
+                            <field name="vacation_allowance" widget="monetary"/>
+                        </group>
+                        <group string="Deductions">
+                            <field name="pention_employee_contribution_oman" widget="monetary"/>
+                            <field name="pention_employee_contribution_uae"
+                                   string="Pension Employee Contribution UAE"
+                                   widget="monetary"/>
+                            <field name="ded_housing_advance" widget="monetary"/>
+                            <field name="ded_housing_advance_next_year" widget="monetary"/>
+                            <field name="ded_other_recovery_wb"
+                                   string="Ded Other Recovery WB"
+                                   widget="monetary"/>
+                            <field name="ded_acting_allowance_unpaid" widget="monetary"/>
+                            <field name="pension_employee_adjustment_oman" widget="monetary"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

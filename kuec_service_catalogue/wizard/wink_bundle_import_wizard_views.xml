@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_wink_bundle_import_wizard_form" model="ir.ui.view">
+        <field name="name">wink.bundle.import.wizard.form</field>
+        <field name="model">wink.bundle.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Bundle Packages">
+                <div class="o_form_view">
+
+                    <!-- ── Step 1: Upload ──────────────────────────────── -->
+                    <div invisible="state != 'upload'">
+                        <div class="alert alert-info d-flex align-items-start gap-2 mb-4" role="alert">
+                            <i class="fa fa-info-circle mt-1 flex-shrink-0" title="Information"/>
+                            <div>
+                                Upload an <strong>.xlsx</strong> file with the following columns:
+                                <code>Bundle Name</code>, <code>Tier Name</code>, <code>Tier Seq</code>,
+                                <code>Service Name</code>, <code>Qty</code>, <code>Item Description</code>, <code>Item Seq</code>.
+                                <br/>Service Name must match an existing service product exactly.
+                                Multiple bundles can be in one file.
+                            </div>
+                        </div>
+
+                        <group string="Upload File">
+                            <field name="file_data" widget="binary" filename="file_name"
+                                   string="Excel File (.xlsx)"/>
+                            <field name="file_name" invisible="1"/>
+                        </group>
+                    </div>
+
+                    <!-- ── Step 2: Preview ────────────────────────────── -->
+                    <div invisible="state != 'preview'">
+                        <field name="preview_html" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <!-- ── Step 3: Done ───────────────────────────────── -->
+                    <div invisible="state != 'done'">
+                        <field name="result_html" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <field name="state" invisible="1"/>
+                    <field name="row_data" invisible="1"/>
+
+                </div>
+                <footer>
+                    <!-- Upload step -->
+                    <button name="action_preview"
+                            string="Validate &amp; Preview"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'upload'"
+                            data-hotkey="v"/>
+                    <button name="action_download_template"
+                            string="Download Template"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'upload'"/>
+
+                    <!-- Preview step -->
+                    <button name="action_import"
+                            string="Confirm Import"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'preview'"
+                            data-hotkey="v"/>
+                    <button name="action_back"
+                            string="← Back"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'preview'"/>
+
+                    <!-- Done step -->
+                    <button name="action_back"
+                            string="Import Another File"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'done'"/>
+
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the wizard -->
+    <record id="action_wink_bundle_import_wizard" model="ir.actions.act_window">
+        <field name="name">Import Bundle Packages</field>
+        <field name="res_model">wink.bundle.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

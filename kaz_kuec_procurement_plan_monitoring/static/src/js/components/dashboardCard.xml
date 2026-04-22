@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="DashboardCard">
+        <div class="col-md-3">
+            <div class="card shadow-sm dash-card my-2">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1"
+                        t-esc="props.title"
+                        style="height: 45px;"/>
+                    <h3 t-esc="props.value"/>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="DashboardCardMulti">
+        <div class="col-md-3">
+            <div class="card shadow-sm dash-card my-2">
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted mb-2"
+                        t-esc="props.title"
+                        style="height: 45px;"/>
+                    <t t-log="'DashboardCardMulti', props.value"/>
+
+                    <div class="d-flex justify-content-between px-2">
+
+                        <div>
+                            <h4 t-esc="props.value.total_pr || 0"/>
+                            <small class="text-muted">PR</small>
+                        </div>
+
+                        <div>
+                            <h4 t-esc="props.value.total_rfq || 0"/>
+                            <small class="text-muted">RFQ</small>
+                        </div>
+
+                        <div>
+                            <h4 t-esc="props.value.total_po || 0"/>
+                            <small class="text-muted">PO</small>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </t>
+
+
+    <t t-name="DashboardCardMultiPeriod">
+    <div class="col-md-3">
+        <div class="card shadow-sm dash-card my-2">
+            <div class="card-body text-center">
+
+                <h6 class="text-muted mb-2"
+                    t-esc="props.title"
+                    style="height: 45px;"/>
+                <t t-log="'DashboardCardMultiPeriod', props"/>
+
+                <div class="d-flex justify-content-between px-2">
+
+                    <!-- Year -->
+                    <div>
+                        <h5 t-esc="props.value?.year?.label || '-'"/>
+                        <small class="text-muted">
+                            Year (<t t-esc="props.value?.year?.count || 0"/>)
+                        </small>
+                    </div>
+
+                    <!-- Quarter -->
+                    <div>
+                        <h5 t-esc="props.value?.quarter?.label || '-'"/>
+                        <small class="text-muted">
+                            Quarter (<t t-esc="props.value?.quarter?.count || 0"/>)
+                        </small>
+                    </div>
+
+                    <!-- Month -->
+                    <div>
+                        <h5 t-esc="props.value?.month?.label || '-'"/>
+                        <small class="text-muted">
+                            Month (<t t-esc="props.value?.month?.count || 0"/>)
+                        </small>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</t>
+
+    <t t-name="TopVendorCard">
+        <div class="col-md-12">
+            <div class="card shadow-sm dash-card my-2">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        Top 10 Vendors by Evaluation
+                    </h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr class="text-muted">
+                                    <th>#</th>
+                                    <th>Vendor</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="i" t-value="0"/>
+                                <t t-foreach="props.vendors" t-as="vendor" t-key="vendor.vendor_id">
+                                    <tr>
+                                        <td t-esc="i + 1"/>
+                                        <td t-esc="vendor.vendor_name"/>
+                                        <td class="text-end">
+                                            <strong t-esc="vendor.total_spent"/>
+                                            <t t-log="'prooooopx', props"/>
+<!--                                            <strong t-esc="props.currency.symbol"/>-->
+                                        </td>
+                                        <t t-set="i" t-value="i+1"/>
+                                    </tr>
+                                </t>
+
+                                <tr t-if="!props.vendors.length">
+                                    <td colspan="3" class="text-center text-muted">
+                                        No data available
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="DashboardTopRequestTypesCard">
+        <div class="col-md-12">
+            <div class="card shadow-sm dash-card my-2">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                            Top 10 Procurement types
+                        </h6>
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Request Type</th>
+                                    <th>Total Spend</th>
+                                    <th>Requests</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="i" t-value="0"/>
+                                <t t-foreach="props.top_request_types" t-as="rec" t-key="rec.requisition_type_id">
+                                    <tr>
+                                        <td t-esc="i + 1"/>
+                                        <td t-esc="rec.request_type_name" />
+                                        <td t-esc="rec.total_spend" />
+                                        <td t-esc="rec.request_count" />
+                                        <t t-set="i" t-value="i+1"/>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <t t-name="DashboardTopDepartmentsCard">
+        <div class="col-md-12">
+            <div class="card shadow-sm dash-card my-2">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                            Top 10 Departments
+                    </h6>
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Department</th>
+                                    <th>Total Spend</th>
+                                    <th>Requests</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="i" t-value="0"/>
+                                <t t-set="departments" t-value="props.top_departments"/>
+                                <t t-foreach="departments" t-as="rec" t-key="rec.department_id">
+                                    <tr>
+                                        <td t-esc="i + 1"/>
+                                        <td t-esc="rec.department_name"/>
+                                        <td t-esc="rec.total_spend"/>
+                                        <td t-esc="rec.request_count"/>
+                                        <t t-set="i" t-value="i+1"/>
+                                    </tr>
+
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+
+
+</templates>

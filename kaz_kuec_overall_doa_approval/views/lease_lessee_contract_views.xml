@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_lease_lessee_contract_form" model="ir.ui.view">
+        <field name="name">lease.lessee.contract.form.view.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">lease.lessee.contract</field>
+        <field name="inherit_id" ref="kaz_kuec_leasing.view_lease_lessee_contract_form"/>
+        <field name="arch" type="xml">
+
+            <form position="attributes">
+                <attribute name="js_class">readonly_form_view</attribute>
+            </form>
+
+            <field name="state" position="before">
+                <field name="kuec_approval_state" widget="statusbar" statusbar_visible="draft,approved"/>
+            </field>
+
+            <button name="action_confirm" position="attributes">
+                <attribute name="invisible" add="kuec_approval_state != 'approved'"
+                           separator="or"/>
+            </button>
+
+            <button name="action_submit" position="after">
+                <button name="action_hod_approval"
+                        string="HOD Approve" type="object" class="oe_highlight"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department,account.group_account_manager"
+                        invisible="kuec_approval_state != 'department_approval'"/>
+                <button name="action_reject_request"
+                        invisible="kuec_approval_state != 'department_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department,account.group_account_manager"
+                        class="btn btn-danger" string="Reject" type="object"/>
+                <button name="action_rfc_request"
+                        invisible="kuec_approval_state != 'department_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_department,account.group_account_manager"
+                        class="btn" string="Return for Correction" type="object"/>
+
+                <button name="action_head_fin_approval"
+                        invisible="kuec_approval_state != 'finance_procurement_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        class="btn btn-primary" string="Head of Finance &amp; Procurement Approve" type="object"/>
+                <button name="action_reject_request"
+                        invisible="kuec_approval_state != 'finance_procurement_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        class="btn btn-danger" string="Reject" type="object"/>
+                <button name="action_rfc_request"
+                        invisible="kuec_approval_state != 'finance_procurement_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        class="btn" string="Return for Correction" type="object"/>
+            </button>
+
+        </field>
+    </record>
+</odoo>

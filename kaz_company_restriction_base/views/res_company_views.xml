@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_company_view_form_inherit" model="ir.ui.view">
+        <field name="name">res.company.view.form.inherit.kaz.company.restriction.base</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <sheet position="before">
+                <div invisible="not company_warning_message" class="mb-2">
+                    <div class="alert alert-warning mb-0" role="alert">
+                        <field name="company_warning_message" readonly="1"/>
+                    </div>
+                </div>
+            </sheet>
+
+            <field name="partner_id" position="after">
+                <field name="company_code" required="1" readonly="0"/>
+                <field name="company_ceo_user_id" required="company_code in ['KUEC']"/>
+            </field>
+        </field>
+    </record>
+</odoo>

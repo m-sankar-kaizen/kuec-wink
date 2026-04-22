@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="portal_my_tender_bid" inherit_id="portal.portal_my_home" name="My Bids">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">My Tender Bids</t>
+                <t t-set="url" t-value="'/my/tender/bid'"/>
+                <t t-set="text">Access and track all your submitted tender bids.</t>
+                <t t-set="config_card" t-value="True"/>
+                <t t-set="placeholder_count" t-value="'tender_bid_count'"/>
+                <t t-set="icon" t-value="'/kaz_vendor_management/static/src/img/gavel.png'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="portal_my_tender_bids" name="My Tender Bids">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Tender Bids</t>
+            </t>
+            <t t-if="not tender_bids">
+                <p class="alert alert-warning">There are currently no bids for your account.</p>
+            </t>
+            <t t-if="tender_bids" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Ref #</th>
+                        <th>Tender</th>
+                        <th>Name</th>
+                        <th>State</th>
+                    </tr>
+                </thead>
+                <t t-foreach="tender_bids" t-as="bid">
+                    <tr>
+                        <td id="bid_name">
+                            <a t-attf-href="/tender/{{bid.tender_rfq_id.id}}/bid/{{bid.id}}">
+                                <t t-esc="bid.name"/>
+                            </a>
+                        </td>
+                        <td id="bid_tender_rfq">
+                            <span t-field="bid.tender_rfq_id"/>
+                            #<span t-esc="bid.tender_rfq_id.version"/>
+                        </td>
+                        <td id="bid_title">
+                            <span t-field="bid.title"/>
+                        </td>
+                        <td id="bid_state">
+                            <span t-field="bid.state"/>
+                        </td>
+                    </tr>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

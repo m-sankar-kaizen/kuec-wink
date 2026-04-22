@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_service_receipt,service.receipt,model_service_receipt,base.group_user,1,1,1,1
+access_service_receipt_line,service.receipt.line,model_service_receipt_line,base.group_user,1,1,1,1
+access_service_backorder_confirmation_line,service.backorder.confirmation.line,model_service_backorder_confirmation_line,base.group_user,1,1,1,1
+access_service_backorder_confirmation,service.backorder.confirmation,model_service_backorder_confirmation,base.group_user,1,1,1,1

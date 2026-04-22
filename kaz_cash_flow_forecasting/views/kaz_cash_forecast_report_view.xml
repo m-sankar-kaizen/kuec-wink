@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="kaz_cash_forecast_report_view_list" model="ir.ui.view">
+            <field name="name">kaz_cash_forecast_report_view_list</field>
+            <field name="model">kaz.cash.forecast.report</field>
+            <field name="arch" type="xml">
+                <list string="kaz_cash_forecast_report_list">
+                    <field name="cash_forecast_category_id"/>
+                    <field name="name"/>
+                    <field name="forecast_type"/>
+                    <field name="forecast_period_id"/>
+                    <field name="company_id"/>
+                    <field name="forecast_value"/>
+                    <field name="real_value"/>
+                    <field name="percentage_by_type"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="kaz_cash_forecast_report_custom_pivot_view" model="ir.ui.view">
+            <field name="name">kaz.cash.forecast.report.pivot.view</field>
+            <field name="model">kaz.cash.forecast.report</field>
+            <field name="arch" type="xml">
+                <pivot disable_linking="True" string="Cash Forecast">
+                    <field name="cash_forecast_category_id" type="row"/>
+                    <field name="forecast_period_id" type="col"/>
+                    <field name="name" type="row"/>
+                    <field name="forecast_value" type="measure"/>
+                    <field name="percentage_by_type" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="kaz_cash_forecast_report_custom_graph_view" model="ir.ui.view">
+            <field name="name">kaz.cash.forecast.report.graph.view</field>
+            <field name="model">kaz.cash.forecast.report</field>
+            <field name="arch" type="xml">
+                <graph string="Cash Forecast Report Graph">
+                    <field name="percentage_by_type" type="measure"/>
+                    <field name="forecast_value" type="measure"/>
+                    <field name="real_value" type="measure"/>
+                    <field name="difference_value" type="measure"/>
+                    <field name="forecast_period_id"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="kaz_cash_forecast_report_search" model="ir.ui.view">
+            <field name="name">kaz.cash.forecast.Report.search</field>
+            <field name="model">kaz.cash.forecast.report</field>
+            <field name="arch" type="xml">
+                <search string="Cash Forecast">
+                    <field name="name"/>
+                    <field name="forecast_period_id"/>
+                    <field name="forecast_type_id"/>
+                    <field name="company_id"/>
+                    <field name="cash_forecast_category_id"/>
+                    <field name="forecast_type" string="Forecast Group"/>
+                    <separator/>
+                        <filter string="Past Period Forecast" name="past_period" domain="[('forecast_period_id.end_date','&lt;=', datetime.date.today().strftime('%Y-%m-%d'))]"/>
+                        <filter string="Future Period Forecast" name="future_period" domain="[('forecast_period_id.end_date','&gt;=', datetime.date.today().strftime('%Y-%m-%d'))]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Forecast Group" name="forecast_group" context="{'group_by':'forecast_type'}"/>
+                        <filter string="Period" name="forecast_period_id" context="{'group_by':'forecast_period_id'}"/>
+                        <filter string="Forecast Type" name="forecast_type" context="{'group_by':'forecast_type_id'}"/>
+                        <filter string="Forecast Category" name="cash_forecast_category_id" context="{'group_by':'cash_forecast_category_id'}"/>
+                        <filter string="Company" name="company_id" context="{'group_by':'company_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="kaz_cash_forecast_report_action_view" model="ir.actions.act_window">
+            <field name="name">Cash Forecast Report Analysis</field>
+            <field name="res_model">kaz.cash.forecast.report</field>
+            <field name="domain">[('company_id', 'in', allowed_company_ids)]</field>
+            <field name="view_mode">pivot,graph,list</field>
+            <field name="view_id" ref="kaz_cash_forecast_report_custom_pivot_view"/>
+             <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your Cash Forecast
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="menu_kaz_cash_forecast_report"
+                  name="Cash Forecast Analysis"
+                  parent="kaz_cash_flow_forecasting.menu_sub_kaz_cash_forecast_reporting"
+                  sequence="8"
+                  action="kaz_cash_flow_forecasting.kaz_cash_forecast_report_action_view"/>
+        <record id="kaz_cash_forecast_income_expense_report_pivot_view" model="ir.ui.view">
+            <field name="name">kaz.cash.forecast.report.pivot.view</field>
+            <field name="model">kaz.cash.forecast.report</field>
+            <field name="arch" type="xml">
+                <pivot disable_linking="True" string="Cash Forecast Cash Out">
+                    <field name="cash_forecast_category_id" type="row"/>
+                    <field name="forecast_period_id" type="col"/>
+                    <field name="fiscal_year_id" type="col"/>
+
+                    <field name="name" type="row"/>
+                    <field name="forecast_value" type="measure"/>
+                    <field name="percentage_by_type" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="kaz_cash_forecast_expense_report_action_view" model="ir.actions.act_window">
+            <field name="name">Cash Forecast Expense Report</field>
+            <field name="res_model">kaz.cash.forecast.report</field>
+            <field name="view_mode">pivot,list,graph</field>
+            <field name="domain">[('forecast_type','=','expense'),('company_id', 'in', allowed_company_ids)]</field>
+            <field name="view_id" ref="kaz_cash_forecast_income_expense_report_pivot_view"/>
+        </record>
+
+        <menuitem id="menu_kaz_cash_forecast_expense_report"
+                  name="Cash OUT Analysis"
+                  parent="kaz_cash_flow_forecasting.menu_sub_kaz_cash_forecast_reporting"
+                  sequence="9"
+                  action="kaz_cash_flow_forecasting.kaz_cash_forecast_expense_report_action_view"/>
+
+        <record id="kaz_cash_forecast_income_report_action_view" model="ir.actions.act_window">
+            <field name="name">Cash Forecast Income Report</field>
+            <field name="res_model">kaz.cash.forecast.report</field>
+            <field name="view_mode">pivot,list,graph</field>
+            <field name="domain">[('forecast_type','=','income'),('company_id', 'in', allowed_company_ids)]</field>
+            <field name="view_id" ref="kaz_cash_forecast_income_expense_report_pivot_view"/>
+        </record>
+
+        <menuitem id="menu_kaz_cash_forecast_income_report"
+                  name="Cash In Analysis"
+                  parent="kaz_cash_flow_forecasting.menu_sub_kaz_cash_forecast_reporting"
+                  sequence="9"
+                  action="kaz_cash_flow_forecasting.kaz_cash_forecast_income_report_action_view"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,143 @@
+<odoo>
+
+<!-- [Start] List view ##################################################################################################################### -->
+    <record id="view_list_hrms_evaluation" model="ir.ui.view">
+        <field name="name">hrms.evaluation.list</field>
+        <field name="model">hrms.evaluation</field>
+        <field name="arch" type="xml">
+            <list string="Evaluation" sample="1" expand="1">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+<!-- [End] List view ##################################################################################################################### -->
+
+
+
+<!-- [Start] Form view ##################################################################################################################### -->
+    <record id="view_form_hrms_evaluation" model="ir.ui.view">
+        <field name="name">hrms.evaluation.form</field>
+        <field name="model">hrms.evaluation</field>
+        <field name="arch" type="xml">
+            <form string="Evaluation">
+                <header>
+                    <button name="submit_evaluation" string="Submit" type="object" invisible="state != 'new'" groups="hrms_performance_management.group_performance_employee,hrms_performance_management.group_performance_manager"/>
+                    <button name="review_evaluation" string="Reviewed" type="object" invisible="state != 'submitted'" groups="hrms_performance_management.group_performance_manager"/>
+                    <button name="approve_evaluation" string="Approve" type="object" invisible="state != 'reviewed'" groups="hrms_performance_management.group_performance_manager"/>
+
+                    <!-- <button name="test" string="Test" type="object"/> -->
+
+                    <field name="state" widget="statusbar" statusbar_visible="new,submitted,reviewed,approved"/>
+                </header>
+            <!-- [Start] Form Content #################################################################################### -->
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <div class="oe_title">
+                        <label for="employee_id"/>
+                        <h2><field name="employee_id" class="oe_inline" readonly="state != 'new'"/></h2>
+                    </div>
+                    <group>
+                        <field name="goal_id" readonly="state != 'new'"/>
+                        <div style="display: grid;">
+                            <label for="question_1" string="How well were the expected responsibilities and deliverables completed during this review period ?"/>
+                            <field name="question_1" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}" required="1" readonly="state != 'new'"/>
+                        </div>
+                        <field name="question_1_justification" readonly="state != 'new'"/>
+                        <field name="question_1_document" widget="binary" filename="question_1_document_filename" readonly="state != 'new'"/>
+                        <div style="display: grid;">
+                            <label for="question_2" string="How effectively were tasks and projects prioritized and managed ?"/>
+                            <field name="question_2" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}" required="1" readonly="state != 'new'"/>
+                        </div>
+                        <field name="question_2_justification" readonly="state != 'new'"/>
+                        <field name="question_2_document" widget="binary" filename="question_2_document_filename" readonly="state != 'new'"/>
+                        <div style="display: grid;">
+                            <label for="question_3" string="Did you finish your tasks on time ?"/>
+                            <field name="question_3" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}" required="1" readonly="state != 'new'"/>
+                        </div>
+                        <field name="question_3_justification" readonly="state != 'new'"/>
+                        <field name="question_3_document" widget="binary" filename="question_3_document_filename" readonly="state != 'new'"/>
+                        <div style="display: grid;">
+                            <label for="question_4" string="Were you able to deliver a quality service ?"/>
+                            <field name="question_4" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}" required="1" readonly="state != 'new'"/>
+                        </div>
+                        <field name="question_4_justification" readonly="state != 'new'"/>
+                        <field name="question_4_document" widget="binary" filename="question_4_document_filename" readonly="state != 'new'"/>
+                        <div style="display: grid;">
+                            <label for="question_5" string="What problems did you face, and how did you try to solve them ?"/>
+                            <field name="question_5" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}" required="1" readonly="state != 'new'"/>
+                        </div>
+                        <field name="question_5_justification" readonly="state != 'new'"/>
+                        <field name="question_5_document" widget="binary" filename="question_5_document_filename" readonly="state != 'new'"/>
+                    </group>
+                    <group>
+                        <field name="hr_comment" placeholder="Please add your comments" invisible="state != 'done'"/>
+                        <!-- <field name="outcome_decision" invisible="not (state == 'done' or outcome_decision == 'low')"/> -->
+                    </group>
+                    <notebook>
+                        <page name="feedback_360" string="360 Feedback" groups="hrms_performance_management.group_performance_manager,hrms_performance_management.group_performance_hr">
+                            <field name="feedback360_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="feedback_provider_id"/>
+                                    <field name="feedback_type"/>
+                                    <field name="rating"/>
+                                    <field name="comment"/>
+                                    <field name="suggestion"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="decision" string="Outcome Decision" invisible="state != 'done'">
+                            <group>
+                                <field name="outcome_decision"/>
+                                <field name="outcome_suggestion" invisible="outcome_decision != 'low'" widget="text" style="height: 300px; overflow-y: auto; white-space: pre-wrap; scrollbar-width: none; -ms-overflow-style: none;"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            <!-- [End] Form Content #################################################################################### -->
+            </form>
+        </field>
+    </record>
+<!-- [End] Form view ##################################################################################################################### -->
+
+    <record id="view_search_hrms_evaluation" model="ir.ui.view">
+            <field name="name">hrms.evaluation</field>
+            <field name="model">hrms.evaluation</field>
+            <field name="arch" type="xml">
+                <search string="Search">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+               </search>
+            </field>
+        </record>
+
+    <record id="hrms_evaluation_sequence" model="ir.sequence">
+            <field name="name">Evaluation Sequence</field>
+            <field name="code">hrms.evaluation</field>
+            <field name="prefix">SE</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+
+<!-- [Start] Action ####################################################################################################################### -->
+    <record id="action_hrms_evaluation" model="ir.actions.act_window">
+        <field name="name">Evaluation</field>
+        <field name="res_model">hrms.evaluation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+<!-- [End] Action ####################################################################################################################### -->
+
+
+<menuitem id="self_evaluation_menu"
+						name="Self Evaluation"
+						action="hrms_performance_management.action_hrms_evaluation"
+						parent="hrms_performance_management.performance_management_main_menu"
+						sequence="3"/>
+</odoo>

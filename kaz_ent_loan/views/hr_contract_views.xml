@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    View Inheritance: hr.contract.view.form.inherit
+
+    Purpose:
+    This view extends the standard `hr.contract` form view to introduce a new section titled
+    "Housing Advance Deduction" inside the "Information" tab. The section displays the computed
+    monetary field `housing_advance_deduction`, which represents the monthly loan repayment
+    amount being deducted from the employee’s salary based on approved housing loan records.
+
+    Business Context:
+    - Used in payroll calculations and contract visibility.
+    - Ensures HR and finance officers can track and verify ongoing housing advance repayments
+      for any employee contract directly from the contract form.
+
+    Functional Behavior:
+    - The field is read-only as it is computed dynamically in Python based on:
+        * Active (approved) housing loans linked to the employee.
+        * Loan line dates that fall within the current payroll period.
+
+    Dependencies:
+    - The field `housing_advance_deduction` is defined in the `hr.contract` model.
+    - Computation logic is implemented in the overridden model method `compute_housing_advance`.
+
+    UI Impact:
+    - Adds a grouped field under the "Information" tab for clarity and separation of financial details.
+    -->
+
+    <record id="hr_contract_form_inherit" model="ir.ui.view">
+        <field name="name">hr.contract.view.form.inherit.kaz.ent.loan</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <page name="information" position="inside">
+                <group string="Housing Advance Deduction">
+                    <field name="housing_advance_deduction"/>
+                </group>
+            </page>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+    Template Name: Refusal: HR Loan Request
+    Model: hr.loan (ent_ohrms_loan.model_hr_loan)
+
+    Purpose:
+    This email template is triggered when an HR Loan Request is refused.
+    It notifies the requesting employee that their loan request has been rejected,
+    displays the reason for refusal, and provides a direct link to the rejected record.
+
+    Key Features:
+    - Displays the employee's name.
+    - States the loan request name (display_name or name).
+    - Shows the most recent refusal reason from the one2many field `refuse_reason_ids`.
+    - If the refusal includes the name of the user who rejected it, that name is displayed.
+    - Includes a link to the specific loan request using the `get_record_url()` method.
+    - Email is sent from the company's default email, or fallback to the user's email.
+    - Partner to whom the email is sent is resolved from `employee_id.user_id.partner_id`.
+
+    Styling & Presentation:
+    - Styled using simple HTML with inline CSS for compatibility.
+    - Uses safe Jinja2 templating with fallback handling for missing or empty fields.
+    - Blocks are encapsulated using safe CDATA section.
+
+    Kaizen Principles Followed:
+    - Consistency: Template reuses known company/user fields with graceful fallbacks.
+    - Empathy: Provides clear, polite language with respectful tone.
+    - Feedback Loop: The employee is made aware of the reason and who refused it.
+    - Minimal Waste: Shows only essential details to reduce email clutter.
+    - Continuous Improvement: Can be extended for multilingual or multistep approvals.
+
+    Author:Kaizenae
+    Module: Enterprise Open HRMS Loan Accounting
+    License: OPL-1
+-->
+    <record id="email_template_refusal_notification_hr_loan" model="mail.template">
+        <field name="name">Refusal: HR Loan Request</field>
+        <field name="model_id" ref="ent_ohrms_loan.model_hr_loan"/>
+        <field name="subject">Your request "{{ object.name }}" has been refused</field>
+        <field name="email_from">{{ (object.company_id.email_formatted or user.email_formatted or '') }}</field>
+        <field name="partner_to">{{ object.employee_id.user_partner_id.id }}</field>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear<t t-out="object.employee_id.name or ''"/>,
+        <br/>
+        <br/>
+        Your HR loan request
+        <strong>
+            <t t-out="object.display_name or ''"/>
+        </strong>
+        has been <span style="color:red;">refused</span>.
+        <br/>
+        <br/>
+        <strong>Reason:</strong>
+        <blockquote>
+            <t t-set="last_reason" t-value="object.refuse_reason_ids[-1:]"/>
+            <t t-out="last_reason.reason or 'No reason provided.'"/>
+            <t t-if="last_reason.refused_by_user_id">(by<t t-out="last_reason.refused_by_user_id.name"/>)
+            </t>
+        </blockquote>
+        <br/>
+        You can view your request <a t-att-href="object.get_record_url()">here</a>.
+        <br/>
+        <br/>
+        Regards,
+        <br/>
+        <t t-out="user.name or 'Administrator'"/>
+    </p>
+</div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+</odoo>

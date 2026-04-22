@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_move_form" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.overdraft</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                    <!-- Pending Approval Warning -->
+                <field name="show_credit_control_warning" invisible="1"/>
+                <field name="show_credit_control_block" invisible="1"/>
+                    <div class="alert alert-danger text-center"
+                         role="alert"
+                         invisible="not show_credit_control_block">
+                        <strong>Overdraft is not permitted for this account..</strong>
+                    </div>
+                <div
+                     class="alert alert-warning" role="alert"
+                     invisible="partner_debit_warning == '' or move_type in ('out_invoice', 'out_refund')">
+                    <field name="partner_debit_warning"/>
+                </div>
+             </xpath>
+        </field>
+    </record>
+</odoo>

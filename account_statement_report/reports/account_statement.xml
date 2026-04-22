@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="custom_header">
+        <style>
+            .header {0
+            margin-bottom: 25px !important
+            }
+        </style>
+        <div class="header mb8" style="margin-top:0 px">
+            <div class="row col-12 mb8" style="padding:0 10px;font-size: 14px">
+                <div class="text-start col-12 text-center">
+                    <img t-if="user.company_id.logo" t-att-src="image_data_uri(user.company_id.logo)"
+                         style="max-height: 100px;margin-top: 15px"
+                         alt="Logo"/>
+                </div>
+            </div>
+        </div>
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+
+    <template id="report_account_statement">
+
+        <t t-call="web.html_container">
+            <t t-call="account_statement_report.custom_header">
+                <t t-foreach="docs" t-as="doc">
+                    <style>
+                        .table-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        }
+
+                        .table-wrapper table {
+                        flex: 1;
+                        }
+                        table {
+                        width: 100%;
+                        border: 1px solid black;
+                        border-collapse: collapse;
+                        }
+
+                        th, td {
+                        border: 1px solid black;
+                        padding: 8px;
+                        }
+
+                        th {
+                        <!--                            background-color: #d4d4d7;-->
+                        border: 1px solid black;
+                        }
+
+                    </style>
+                    <div class="container">
+                        <div class="body font-family" style="font-family: 'Times New Roman', Times, serif;">
+                            <center>
+                                <h7 style="text-decoration: underline;font-family: 'Times New Roman', Times, serif;font-weight: bold;">
+                                    Statement of Account
+                                </h7>
+                                <br/>
+                                <br/>
+                                <h14>
+                                    Registration No. 104113877500003
+                                </h14>
+                                <br/>
+                                <h14>
+                                    P.O Box 2497
+                                    <br/>
+                                    Abu Dhabi, United Arab Emirates
+                                </h14>
+                                <br/>
+                                <br/>
+                                <h5 style="font-weight: bold;">
+                                    <t t-esc="doc.name"/>
+                                </h5>
+                            </center>
+
+                            <div class="section row mt-5">
+                                <div class="invoice_section col-md-6">
+                                    <table class="table w-100">
+                                        <tr style="font-size: 14px;background-color: #DAD7D7;padding: 0; line-height: 1; border-spacing: 0;"
+                                            class="full-width-row">
+                                            <th colspan="2" style="display: block; padding: 0; margin: 0;">
+                                                <span style="font-size: 12px; display: block; padding: 0; margin: 0;">
+                                                    Document Num.
+                                                </span>
+                                            </th>
+                                        </tr>
+
+                                        <tr style="padding: 0; line-height: 1; border-spacing: 0;">
+                                            <th>
+                                                <span style=" display: block; padding: 0; margin: 0; font-size: 11px;">
+                                                    103000538
+                                                </span>
+                                            </th>
+                                        </tr>
+                                        <tr style="background-color: #DAD7D7;padding: 0; margin: 0; line-height: 1; border-spacing: 0; ">
+                                            <th colspan="2">
+                                                <span style="font-size: 12px; display: block; padding: 0; margin: 0;">
+                                                    Date
+                                                </span>
+                                            </th>
+                                        </tr>
+                                        <tr colspan="2" style="padding: 0; line-height: 1; border-spacing: 0;">
+                                            <th style=" display: block; padding: 0; margin: 0; font-size: 11px;">
+                                                <t t-esc="datetime.date.today()"/>
+                                            </th>
+                                        </tr>
+                                    </table>
+                                    <table class="table">
+                                        <tr style="padding: 0; line-height: 1; border-spacing: 0;">
+                                            <td>
+                                                <span style=" display: block; padding: 0; margin: 0;font-weight: bold; font-size: 12px">
+                                                    Customer Number
+                                                </span>
+                                                <br/>
+                                                <span style=" display: block; padding: 0; margin: 0;font-size: 11px;">
+                                                    843-10027
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                <span style=" display: block; padding: 0; margin: 0;font-weight: bold; font-size: 12px">
+                                                    Customer Location
+                                                </span>
+                                                <br/>
+                                                <span style=" display: block; padding: 0; margin: 0;font-size: 11px;">
+                                                    UAE1771538
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                    </table>
+                                    <table style="font-size: 11px;">
+                                        <tr>
+                                            <tr>
+                                                P.O Box 44321/ABU DHABI
+                                            </tr>
+                                            <br/>
+                                            <tr>
+                                                VAT: 100038992200003
+                                            </tr>
+                                            <br/>
+                                            <tr>
+                                                Remit to: P.O. Box 2497 , Abu Dhabi, United Arab Emirates
+                                            </tr>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container mt-5">
+                        <div class="row">
+                            <table class="table table-sm o_main_table" name="statement_line_table">
+                                <thead class="invoice_tbody">
+                                    <tr>
+                                        <th name="th_description" class="text-start text-center">
+                                            <span>No.</span>
+                                        </th>
+                                        <th name="th_quantity" class="text-center">
+                                            <span>Invoice No.</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Invoice Date</span>
+                                        </th>
+                                        <th name="th_description" class="text-center">
+                                            <span>Description</span>
+                                        </th>
+                                        <th name="th_taxes" class="text-center">
+                                            <span>Amount</span>
+                                        </th>
+
+                                        <th name="th_taxes" class="text-center">
+                                            <span>VAT</span>
+                                        </th>
+                                        <th name="th_taxes" class="text-center">
+                                            <span>Total Amount</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <t t-set="current_subtotal" t-value="0"/>
+                                    <t t-set="lines"
+                                       t-value="doc.partner_invoices_ids.sorted(key=lambda l: ( l.date ), reverse=True)"/>
+                                    <t t-set="sequence" t-value="0"/>
+                                    <t t-if="lines">
+                                        <t t-foreach="lines" t-as="line">
+                                            <tr t-att-class="'bg-200 fw-bold o_line_section'">
+                                                <td name="account_invoice_line_sequence">
+                                                    <t t-esc="sequence + 1"/>
+                                                </td>
+                                                <td name="account_invoice_line_name">
+                                                    <span t-field="line.name" t-options="{'widget': 'text'}"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-field="line.invoice_date"/>
+                                                </td>
+                                                <td>
+                                                    <span t-field="line.description"/>
+                                                </td>
+                                                <td>
+                                                    <span t-field="line.amount_untaxed_signed"
+                                                          t-options="{'precision': 2}"/>
+                                                </td>
+                                                <td>
+                                                    <span t-field="line.amount_tax_signed"
+                                                          t-options="{'precision': 2}"/>
+                                                </td>
+                                                <td class="text-end o_price_total">
+                                                    <span class="text-nowrap" t-field="line.amount_total_signed"
+                                                          t-options="{'precision': 2}"/>
+                                                </td>
+                                            </tr>
+                                            <t t-set="sequence" t-value="sequence + 1"/>
+                                        </t>
+                                    </t>
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <div class="container mt-5">
+                        <table class="table able-wrapper">
+                            <tr>
+                                <td>
+                                    <div style="border:0px text-align: center; font-size: 18px">
+                                        <div colspan="2">
+                                            <span>
+                                                <strong>Bank Details</strong>
+                                            </span>
+
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Bank Name</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>FIRST ABU DHABI BANK</span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Branch Name</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>ABU DHABI KHALIFA ST</span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>A/C No.</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>4031005702912001</span>
+                                                    <br/>
+                                                    <span>ANKABUT INFO TECH SOLE PROP LLC</span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>IBAN</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>AE930354031005702912001</span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Swift Code</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>NBADAEAAXXX</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div>
+                                            <div class="row mt-4">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Subtotal</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>
+
+                                                        <span t-field="doc.total_amount_untaxed_signed"/>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Tax</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>
+                                                        <span t-field="doc.total_amount_tax_signed"/>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Shipping</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8">
+                                                    <span>
+                                                        <t t-esc="line.partner_id.mobile"/>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-4">
+                                                <div class="col-4">
+                                                    <span>
+                                                        <strong>Total</strong>
+                                                    </span>
+                                                </div>
+                                                <div class="col-8 mb-2 ">
+                                                    <span>
+                                                        <strong>
+                                                            <span t-field="doc.total_amount_total_signed"/>
+                                                        </strong>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <div class="col-12">
+                                    <table>
+                                        <tr>
+                                            <td style="width:15%">
+                                                <strong>Total</strong>
+                                            </td>
+                                            <td style="width:85%;">
+                                                <span t-esc="line.currency_id.with_context(lang='es_AR').amount_to_text(doc.total_amount_total_signed)"/>
+                                                *****
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </tr>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="custom_account_statment_report" model="ir.actions.report">
+        <field name="name">Statement of Account</field>
+        <field name="model">res.partner</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">account_statement_report.report_account_statement</field>
+        <field name="report_file">account_statement_report.report_account_statement</field>
+        <field name="print_report_name">'Statement of Account'</field>
+        <field name="binding_model_id" ref="account.model_res_partner"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

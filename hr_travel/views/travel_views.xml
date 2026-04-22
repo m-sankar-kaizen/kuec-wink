@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <data>
+
+    <record id="action_hr_travel" model="ir.actions.act_window">
+      <field name="name">Travel</field>
+      <field name="res_model">hr.travel</field>
+      <field name="view_mode">list,form</field>
+      <field name="help" type="html">
+        <p>Create and manage employee travel and errands.</p>
+      </field>
+    </record>
+
+    <menuitem id="menu_hr_travel_root"
+              name="Travel"
+              parent="hr.menu_hr_root" sequence="90"/>
+    <menuitem id="menu_hr_travel"
+              name="Travel Requests"
+              parent="menu_hr_travel_root"
+              action="action_hr_travel" sequence="10"/>
+    <menuitem id="menu_res_destination"
+              name="Destinations"
+              parent="menu_hr_travel_root"
+              action="kaz_annual_air_ticket.action_destination"
+              sequence="11"/>
+
+
+    <record id="view_hr_travel_list" model="ir.ui.view">
+      <field name="name">hr.travel.list</field>
+      <field name="model">hr.travel</field>
+      <field name="arch" type="xml">
+        <list>
+          <field name="name"/>
+          <field name="employee_id"/>
+          <field name="department_id"/>
+          <field name="grade_id"/>
+          <field name="travel_level"/>
+          <field name="date_from"/>
+          <field name="date_to"/>
+          <field name="days_count"/>
+          <field name="destination"/>
+          <field name="state"/>
+          <field name="expense_count" string="Expenses"/>
+        </list>
+      </field>
+    </record>
+
+    <record id="view_hr_travel_form" model="ir.ui.view">
+      <field name="name">hr.travel.form</field>
+      <field name="model">hr.travel</field>
+      <field name="arch" type="xml">
+        <form string="Travel">
+          <header>
+            <button name="action_confirm" type="object" string="Confirm" class="btn-primary" invisible="state != 'draft'"/>
+            <button name="action_create_expense" type="object" string="Create Expense" class="btn-primary" invisible="state != 'confirmed'"/>
+            <button name="action_done" type="object" string="Done" class="btn-secondary" invisible="state != 'confirmed'"/>
+            <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state != 'cancelled'"/>
+            <button name="action_cancel" type="object" string="Cancel" invisible="state in ('cancelled', 'done')"/>
+            <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done,cancelled"/>
+          </header>
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+              <button class="oe_stat_button" type="object" name="action_view_expense" invisible="expense_count == 0">
+                <field name="expense_count" widget="statinfo" string="Expenses"/>
+              </button>
+            </div>
+            <group>
+              <group>
+                <field name="name" readonly="1"/>
+                <field name="employee_id" readonly="state != 'draft'"/>
+                <field name="department_id" readonly="1"/>
+                <field name="grade_id"/>
+                <field name="travel_level" readonly="state != 'draft'"/>
+              </group>
+              <group>
+                <field name="date_from" readonly="state != 'draft'"/>
+                <field name="date_to" readonly="state != 'draft'"/>
+                <field name="days_count" readonly="1"/>
+                <field name="destination" readonly="state != 'draft'"/>
+              </group>
+            </group>
+            <group>
+              <field name="purpose" readonly="state != 'draft'"/>
+            </group>
+          </sheet>
+          <chatter>
+            <field name="message_follower_ids"/>
+            <field name="activity_ids"/>
+            <field name="message_ids"/>
+          </chatter>
+        </form>
+      </field>
+    </record>
+
+    <record id="view_hr_travel_search" model="ir.ui.view">
+      <field name="name">hr.travel.search</field>
+      <field name="model">hr.travel</field>
+      <field name="arch" type="xml">
+        <search string="Travel">
+          <field name="name" string="Reference"/>
+          <field name="employee_id"/>
+          <field name="department_id"/>
+          <field name="destination"/>
+          <separator/>
+          <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+          <filter string="Confirmed" name="confirmed" domain="[('state','=','confirmed')]"/>
+          <filter string="Done" name="done" domain="[('state','=','done')]"/>
+          <filter string="Cancelled" name="cancelled" domain="[('state','=','cancelled')]"/>
+        </search>
+      </field>
+    </record>
+
+  </data>
+</odoo>

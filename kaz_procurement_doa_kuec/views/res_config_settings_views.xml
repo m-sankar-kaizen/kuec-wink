@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.vendor.management</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='purchase_setting_container']" position="after">
+                <block title="Purchase Order Management" id="pr_po_management" invisible="company_code not in ['KUEC']">
+                    <field name="company_code" invisible="1"/>
+                    <setting string="Amount PO without PR">
+                        <div class="text-muted content-group mt16">
+                            <field name="amount_po_without_pr"/>
+                            <span>The max amount of a single PO that can be created without a PR, 0 for no limit.</span>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

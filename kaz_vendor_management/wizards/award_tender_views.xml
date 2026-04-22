@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard Form View -->
+    <record id="view_award_tender_wizard_form" model="ir.ui.view">
+        <field name="name">award.tender.wizard.form</field>
+        <field name="model">award.tender</field>
+        <field name="arch" type="xml">
+            <form string="Award Tender" create="false" edit="false">
+                <group>
+                    <field name="tender_rfq_id" invisible="1"/>
+                    <field name="tender_bid_ids" invisible="1"/>
+                    <field name="tender_bid_id"
+                           domain="[('id', 'in', tender_bid_ids)]"
+                           placeholder="Select a Vendor"
+                           required="1"
+                           context="{'tender_award_display': True}"
+                           options="{'no_create': True, 'no_open': False, 'no_quick_create': True}"/>
+                    <field name="reason" required="1"/>
+                </group>
+
+                <footer>
+                    <button string="Award" type="object" name="action_award_tender" class="btn-primary"
+                            confirm="Are you sure you want to award this tender? This action cannot be undone."/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Window Action -->
+    <record id="action_award_tender_wizard" model="ir.actions.act_window">
+        <field name="name">Award Tender</field>
+        <field name="res_model">award.tender</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_award_tender_wizard_form"/>
+        <field name="target">new</field>
+        <field name="context">{'default_tender_rfq_id': active_id}</field>
+    </record>
+
+</odoo>

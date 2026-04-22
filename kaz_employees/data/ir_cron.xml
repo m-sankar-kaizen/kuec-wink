@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Scheduled Action: Grade Review Finalization
+
+        This scheduled action triggers the method `_cron_grade_review()` in the `hr.grade` model
+        every day. The purpose is likely to automatically review or finalize employee grade evaluations
+        or promotions based on business logic defined in the Python method.
+
+        Fields explained:
+        - name: Label of the cron job (displayed in Scheduled Actions UI)
+        - model_id: Reference to the model 'hr.grade' where the method is defined
+        - state: 'code' indicates the `code` field is executed as Python
+        - code: The actual method to be called
+        - interval_number: 1 → frequency is once per interval
+        - interval_type: days → run once every day
+    -->
+    <record id="ir_cron_auto_finalise" model="ir.cron">
+        <field name="name">Grade: Review</field>
+        <field name="model_id" ref="model_hr_grade"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_grade_review()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+    </record>
+</odoo>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ========================================
+         Form View Inheritance: HR Grade Housing Advance
+         Inherits: hr.grade form view from kaz_employees
+         Purpose:
+         - Adds housing advance settings per grade
+         - Includes toggle and per-month limit field
+    ======================================== -->
+    <record id="housing_allowance_hr_grade_form" model="ir.ui.view">
+        <field name="name">hr_grade_form_inherit_housing</field>
+        <field name="model">hr.grade</field>
+        <field name="inherit_id" ref="kaz_employees.action_hr_grade_form"/>
+        <field name="arch" type="xml">
+
+            <!-- ========================================
+                 XPath Target:
+                 Inserts housing fields after the second <group> inside the <sheet>
+            ======================================== -->
+            <xpath expr="//sheet/group[2]" position="after">
+
+                <!-- Outer Group Wrapper (for separation on UI) -->
+                <group>
+                    <!-- Inner Group with Label -->
+                    <group string="Housing Advance">
+                        <field name="is_housing_advance"
+                               readonly="state != 'draft'"/>
+                        <label for="per_month_housing_advance"
+                               invisible="not is_housing_advance"/>
+                        <div class="o_row mw-50" name="per_month_housing_advance"
+                             invisible="not is_housing_advance">
+                            <field name="per_month_housing_advance"
+                                   readonly="state != 'draft'"
+                                   class="oe_inline o_hr_narrow_field"
+                                   nolabel="1"/>
+                            <div class="mb-3">/ Month</div>
+                        </div>
+                    </group>
+
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

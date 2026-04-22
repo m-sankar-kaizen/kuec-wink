@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_hr_internship" model="ir.sequence">
+            <field name="name">Internship Reference</field>
+            <field name="code">hr.internship</field>
+            <field name="prefix">INT</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+        </record>
+        
+        <record id="seq_hr_internship_certificate" model="ir.sequence">
+            <field name="name">Internship Certificate</field>
+            <field name="code">hr.internship.certificate</field>
+            <field name="prefix">CERT-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+        </record>
+        
+        <record id="seq_hr_internship_payment_request" model="ir.sequence">
+            <field name="name">Payment Request</field>
+            <field name="code">hr.internship.payment.request</field>
+            <field name="prefix">PAYREQ-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+        </record>
+    </data>
+</odoo>

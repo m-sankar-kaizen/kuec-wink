@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.documents</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="80"/>
+        <field name="inherit_id" ref="hr_recruitment.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='recruitment_process_div']"
+                   position="inside">
+                <setting string="Notify Department Managers to fill staffing request"
+                         help="Notify Department Managers for Staffing Request X days before end of year (Dec 31)."
+                         id="recruitment_notification_days">
+                    <field name="notify_staffing"/>
+                    <div class="content-group"
+                         invisible="not notify_staffing">
+                        <div class="row mt16">
+                            <label class="col-lg-3 o_light_label"
+                                   string="X Days"
+                                   for="recruitment_notification_days"/>
+                            <field name="recruitment_notification_days" placeholder="15"
+                                required="recruitment_notification_days"/>
+                        </div>
+                    </div>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!--
+    ======================================================================
+    SECURITY GROUP & MODULE CATEGORY DEFINITION
+    ======================================================================
+
+    - The category "Employment Letters" groups all HR document-related
+      permissions such as Employment Letter, Salary Transfer, Resignation,
+      Exit Interview, and Exit Clearance.
+    - The group "HR Team" is assigned elevated access to manage all types
+      of employee-related letter records across the company.
+    -->
+
+    <record id="module_category_ankabut_letters" model="ir.module.category">
+        <field name="name">Employment Letters</field>
+        <field name="sequence" eval="1"/>
+    </record>
+
+    <record id="group_letter_manager" model="res.groups">
+        <field name="name">HR Team</field>
+        <field name="category_id" ref="kaz_employee_reports.module_category_ankabut_letters"/>
+        <field name="comment">Ankabut Group: This group is intended for HR personnel who should have unrestricted access to all employment-related document models.</field>
+    </record>
+
+    <!--
+    ======================================================================
+    EMPLOYMENT LETTER SECURITY RULES
+    Model: employment_letter
+    ======================================================================
+    -->
+
+    <!-- Allow base users to access only their own employment letter requests. -->
+    <record id="employment_letter_user_rule" model="ir.rule">
+        <field name="name">Employment: User</field>
+        <field name="model_id" ref="model_employment_letter"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Allow visibility on employment letters within the user's companies. -->
+    <record id="employment_letter_company_rule" model="ir.rule">
+        <field name="name">Employment: Company</field>
+        <field name="model_id" ref="model_employment_letter"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- Grant full unrestricted access to HR group (managerial access). -->
+    <record id="employment_letter_manger_rule" model="ir.rule">
+        <field name="name">Employment: HR Team</field>
+        <field name="model_id" ref="model_employment_letter"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_letter_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!--
+    ======================================================================
+    SALARY TRANSFER LETTER SECURITY RULES
+    Model: salary_transfer_letter
+    ======================================================================
+    -->
+
+    <!-- User can only access their own salary transfer letters. -->
+    <record id="salary_transfer_letter_user_rule" model="ir.rule">
+        <field name="name">Salary transfer: User</field>
+        <field name="model_id" ref="model_salary_transfer_letter"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Allow HR officers to view records of users belonging to their company. -->
+    <record id="salary_transfer_letter_company_rule" model="ir.rule">
+        <field name="name">Salary transfer: Company</field>
+        <field name="model_id" ref="model_salary_transfer_letter"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- HR team has full unrestricted access. -->
+    <record id="salary_transfer_letter_manger_rule" model="ir.rule">
+        <field name="name">Salary transfer: HR Team</field>
+        <field name="model_id" ref="model_salary_transfer_letter"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_letter_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!--
+    ======================================================================
+    SALARY LETTER SECURITY RULES
+    Model: salary_letter
+    ======================================================================
+    -->
+
+    <!-- Access limited to letters created by the logged-in user -->
+    <record id="salary_letter_user_rule" model="ir.rule">
+        <field name="name">Salary: User</field>
+        <field name="model_id" ref="model_salary_letter"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Allows visibility of salary letters within the same company -->
+    <record id="salary_letter_company_rule" model="ir.rule">
+        <field name="name">Salary: Company</field>
+        <field name="model_id" ref="model_salary_letter"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- HR group has unrestricted access -->
+    <record id="salary_letter_manger_rule" model="ir.rule">
+        <field name="name">Salary: HR Team</field>
+        <field name="model_id" ref="model_salary_letter"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_letter_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!--
+    ======================================================================
+    RESIGNATION FORM SECURITY RULES
+    Model: register_form
+    ======================================================================
+    -->
+
+    <!-- Only the employee who submitted the resignation can see it -->
+    <record id="register_user_rule" model="ir.rule">
+        <field name="name">Resignation: User</field>
+        <field name="model_id" ref="model_register_form"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Company-wide rule for HR officers (non-HR managers) -->
+    <record id="register_company_rule" model="ir.rule">
+        <field name="name">Resignation: Company</field>
+        <field name="model_id" ref="model_register_form"/>
+        <field name="domain_force">[('emp_company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- Full access for HR managers -->
+    <record id="register_manger_rule" model="ir.rule">
+        <field name="name">Resignation: HR Team</field>
+        <field name="model_id" ref="model_register_form"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_letter_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!--
+    ======================================================================
+    EXIT INTERVIEW SECURITY RULES
+    Model: exit_interview
+    ======================================================================
+    -->
+
+    <!-- Only the current user can see their interview record -->
+    <record id="exit_user_rule" model="ir.rule">
+        <field name="name">Exit Interview: User</field>
+        <field name="model_id" ref="model_exit_interview"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Allow HR officers to access records within their companies -->
+    <record id="exit_company_rule" model="ir.rule">
+        <field name="name">Exit Interview: Company</field>
+        <field name="model_id" ref="model_exit_interview"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- HR team (group_letter_manager) has unrestricted access -->
+    <record id="exit_manger_rule" model="ir.rule">
+        <field name="name">Exit Interview: HR Team</field>
+        <field name="model_id" ref="model_exit_interview"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_letter_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!--
+    ======================================================================
+    EXIT CLEARANCE SECURITY RULES
+    Model: exit_clearance
+    ======================================================================
+    -->
+
+    <!-- Users can only view their own exit clearance record -->
+    <record id="exit_clarance_user_rule" model="ir.rule">
+        <field name="name">Exit Clearance: User</field>
+        <field name="model_id" ref="model_exit_clearance"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Allow company-level filtering for general HR staff -->
+    <record id="exit_clarance_company_rule" model="ir.rule">
+        <field name="name">Exit Clearance: Company</field>
+        <field name="model_id" ref="model_exit_clearance"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- HR team has full unrestricted access to all exit clearance records -->
+    <record id="exit_clearance_manger_rule" model="ir.rule">
+        <field name="name">Exit Clearance: HR Team</field>
+        <field name="model_id" ref="model_exit_clearance"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_letter_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+</odoo>

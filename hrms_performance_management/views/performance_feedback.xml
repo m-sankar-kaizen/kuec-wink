@@ -1,0 +1,124 @@
+<odoo>
+    <data>
+        <record id="view_performance_feedback_list" model="ir.ui.view">
+            <field name="name">performance.feedback.list</field>
+            <field name="model">performance.feedback</field>
+            <field name="arch" type="xml">
+                <list string="Performance Feedback">
+                    <field name="employee_id"/>
+                    <field name="evaluation_id"/>
+                    <field name="outcome_decision"/>
+                    <field name="state"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_performance_feedback_form" model="ir.ui.view">
+            <field name="name">performance.feedback.form</field>
+            <field name="model">performance.feedback</field>
+            <field name="arch" type="xml">
+                <form string="Performance Feedback">
+                    <header>
+                        <button name="action_done" type="object" string="Set to done" class="oe_highlight" invisible="state in ('new','submitted', 'reviewed', 'done')"/>
+                        <button name="check_outcome_decision" type="object" string="Add Outcome Decision" class="oe_highlight" invisible="outcome_decision or state in ('new','submitted', 'reviewed', 'done')"/>
+                        <!-- <button name="test" string="Test" type="object"/> -->
+                        <field name="state" widget="statusbar"
+                           statusbar_visible="new,submitted,reviewed,approved"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1><field name="evaluation_id"/></h1>
+                        </div>
+                        <div class="oe_title">
+                            <label for="employee_id"/>
+                            <h2><field name="employee_id" class="oe_inline"/></h2>
+                            <!-- <h1><field name="evaluation_id" class="oe_inline"/></h1> -->
+                        </div>
+                        <group>
+                            <field name="goal_id"/>
+                            <div style="display: grid;">
+                                <label for="question_1" string="How well were the expected responsibilities and deliverables completed during this review period ?"/>
+                                <field name="question_1" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}"/>
+                            </div>
+                            <field name="question_1_justification"/>
+                            <field name="question_1_document" widget="binary" filename="question_1_document_filename"/>
+                            <div style="display: grid;">
+                                <label for="question_2" string="How effectively were tasks and projects prioritized and managed ?"/>
+                                <field name="question_2" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}"/>
+                            </div>
+                            <field name="question_2_justification"/>
+                            <field name="question_2_document" widget="binary" filename="question_2_document_filename"/>
+                            <div style="display: grid;">
+                                <label for="question_3" string="Did you finish your tasks on time ?"/>
+                                <field name="question_3" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}"/>
+                            </div>
+                            <field name="question_3_justification"/>
+                            <field name="question_3_document" widget="binary" filename="question_3_document_filename"/>
+                            <div style="display: grid;">
+                                <label for="question_4" string="Were you able to deliver a quality service ?"/>
+                                <field name="question_4" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}"/>
+                            </div>
+                            <field name="question_4_justification"/>
+                            <field name="question_4_document" widget="binary" filename="question_4_document_filename"/>
+                            <div style="display: grid;">
+                                <label for="question_5" string="What problems did you face, and how did you try to solve them ?"/>
+                                <field name="question_5" widget="priority" options="{'clickable': true, 'rating_values': [1, 2, 3, 4, 5]}"/>
+                            </div>
+                            <field name="question_5_justification"/>
+                            <field name="question_5_document" widget="binary" filename="question_5_document_filename"/>
+                        </group>
+                        <group>
+                            <field name="hr_comment" placeholder="Please add your comments" readonly="state != 'approved'"/>
+                            <!-- <field name="outcome_decision"/>
+                            <field name="outcome_suggestion" invisible="outcome_decision != 'low'"/> -->
+                        </group>
+                        <notebook>
+                            <page name="feedback_360" string="360 Feedback">
+                                <field name="feedback360_ids" readonly="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="feedback_provider_id"/>
+                                        <field name="feedback_type"/>
+                                        <field name="rating"/>
+                                        <field name="comment"/>
+                                        <field name="suggestion"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page name="decision" string="Outcome Decision">
+                                <group>
+                                    <field name="outcome_decision"/>
+                                    <field name="outcome_suggestion" invisible="outcome_decision != 'low'" widget="text" style="height: 300px; overflow-y: auto; white-space: pre-wrap; scrollbar-width: none; -ms-overflow-style: none;"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_performance_feedback_search" model="ir.ui.view">
+            <field name="name">performance.feedback</field>
+            <field name="model">performance.feedback</field>
+            <field name="arch" type="xml">
+                <search string="Search">
+                    <field name="name"/>
+                    <field name="employee_id"/>
+               </search>
+            </field>
+        </record>
+
+        <record id="action_performance_feedback" model="ir.actions.act_window">
+            <field name="name">Performance Feedback</field>
+            <field name="res_model">performance.feedback</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem id="performance_feedback_menu"
+						name="Performance Feedback"
+                        action="action_performance_feedback"
+                        parent="performance_management_main_menu"
+						sequence="5"
+                        groups="hrms_performance_management.group_performance_hr"/>
+    </data>
+</odoo>

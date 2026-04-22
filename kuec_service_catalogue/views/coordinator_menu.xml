@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EPIC-8: WINK Operations — Coordinator menu -->
+<odoo>
+    <!-- Top-level menu: WINK Operations -->
+    <menuitem id="menu_wink_operations_root"
+              name="WINK Operations"
+              sequence="50"
+              web_icon="kuec_service_catalogue,static/description/icon.png"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 1: Requests ── -->
+    <menuitem id="menu_wink_group_requests"
+              name="Requests"
+              parent="menu_wink_operations_root"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_queue"
+              name="All Requests"
+              parent="menu_wink_group_requests"
+              action="action_wink_coordinator_queue"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_confirmed"
+              name="Confirmed"
+              parent="menu_wink_group_requests"
+              action="action_wink_coordinator_confirmed"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_needs_pricing"
+              name="Needs Pricing"
+              parent="menu_wink_group_requests"
+              action="action_wink_coordinator_needs_pricing"
+              sequence="30"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_services"
+              name="Services"
+              parent="menu_wink_group_requests"
+              action="action_wink_services"
+              sequence="40"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 2: Subscriptions ── -->
+    <menuitem id="menu_wink_group_subscriptions"
+              name="Subscriptions"
+              parent="menu_wink_operations_root"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_active_subs"
+              name="Active Subscriptions"
+              parent="menu_wink_group_subscriptions"
+              action="action_wink_coordinator_active_subs"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_coordinator_near_expiry"
+              name="Near to Expiry"
+              parent="menu_wink_group_subscriptions"
+              action="action_wink_coordinator_near_expiry"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 3: Tickets ── -->
+    <menuitem id="menu_wink_tickets"
+              name="Wink Tickets"
+              parent="menu_wink_operations_root"
+              action="action_wink_tickets"
+              sequence="30"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 4: eWallet ── -->
+    <menuitem id="menu_wink_group_ewallet"
+              name="eWallet"
+              parent="menu_wink_operations_root"
+              sequence="40"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+     <!-- ── Wallet Transactions Menu (defined here so action exists at parse time) ── -->
+    <menuitem id="menu_wink_wallet_transactions"
+              name="Transactions"
+              parent="menu_wink_group_ewallet"
+              action="action_kuec_wallet_transactions"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_wallet_topup"
+              name="Top-Up Wallet"
+              parent="menu_wink_group_ewallet"
+              action="action_wink_wallet_topup_wizard"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <!-- ── Group 5: Reports ── -->
+    <menuitem id="menu_wink_reports_root"
+              name="Reports"
+              parent="menu_wink_operations_root"
+              sequence="90"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_catalogue"
+              name="Catalogue"
+              parent="menu_wink_reports_root"
+              action="action_wink_catalogue_report"
+              sequence="10"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_sla"
+              name="Delivery SLA"
+              parent="menu_wink_reports_root"
+              action="action_wink_delivery_sla_report"
+              sequence="20"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_financial"
+              name="Financial (MRR / ARR)"
+              parent="menu_wink_reports_root"
+              action="action_wink_financial_report"
+              sequence="30"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+
+    <menuitem id="menu_wink_report_cx"
+              name="Customer Experience"
+              parent="menu_wink_reports_root"
+              action="action_wink_cx_report"
+              sequence="50"
+              groups="kuec_portal_foundation.group_kuec_coordinator,base.group_system"/>
+</odoo>

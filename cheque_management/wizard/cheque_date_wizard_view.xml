@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="cheque_date_wizard_form" model="ir.ui.view">
+        <field name="name">cheque.date.wizard.form</field>
+        <field name="model">cheque.date.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="cheque_received_date" invisible="button_type != 'confirm'" required="button_type == 'confirm'"/>
+                        <field name="cheque_send_date" invisible="button_type != 'send_to_bank'" required="button_type == 'send_to_bank'"/>
+                        <field name="return_to_partner_date" invisible="button_type != 'return_to_partner'" required="button_type == 'return_to_partner'"/>
+                        <field name="return_from_partner_date" invisible="button_type  != 'return_from_partner'" required="button_type == 'return_from_partner'"/>
+                        <field name="deposit_date" invisible="button_type != 'out_deposit' and button_type != 'in_deposit'" required="button_type == 'out_deposit' or button_type == 'in_deposit'"/>
+                        <field name="bounced_date" invisible="button_type !='in_bounced' and button_type != 'out_bounced'" required="button_type !='in_bounced' or button_type != 'out_bounced'"/>
+                        <field name="bank_account_id" invisible="button_type != 'send_to_bank'" required="button_type == 'send_to_bank'" options="{'no_open': True, 'no_create': True}"/>
+                        <field name="button_type" invisible="1"/>
+                        <field name="cash_type" invisible="1"/>
+                        <field name="cash_date" invisible="button_type != 'cashed'" required="button_type == 'cashed'"/>
+                        <field name="collected_by_another_bank_treasury" options="{'no_open': True, 'no_create': True}" invisible="cash_type != 'in'" required="cash_type == 'in'"/>
+                        <field name="deducted_by_another_bank_treasury" options="{'no_open': True, 'no_create': True}" invisible="cash_type != 'out'" required="cash_type == 'out'"/>
+
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="confirm" string="Confirm" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-default" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

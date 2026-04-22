@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_form_inherit_overdraft" model="ir.ui.view">
+        <field name="name">account.account.form.inherit.overdraft</field>
+        <field name="model">account.account</field>
+        <field name="inherit_id" ref="account.view_account_form"/>
+        <field name="arch" type="xml">
+            <field name="account_type" position="after">
+                <field name="credit_limit_control"
+                       groups="kuec_kaz_overdraft_permission.group_overdraft_manager"
+                       invisible="account_type not in ('asset_cash', 'liability_payable', 'liability_current', 'liability_non_current', 'liability_credit_card')"/>
+                <field name="allowed_limit"
+                       invisible="not credit_limit_control"/>
+            </field>
+        </field>
+    </record>
+</odoo>

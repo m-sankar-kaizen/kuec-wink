@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="purchase_order_report">
+        <t t-call="web.report_layout">
+            <t t-set="body_classname" t-value="'main_page'"/>
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_kuec_report_base.external_layout">
+                    <t t-set="show_page" t-value="True"/>
+                    <t t-set="sequence_field" t-value="'name'"/>
+                    <div class="page main_page">
+                        <div class="px-2 english-text">
+
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <h3 class="fw-bold">
+                                        <u>
+                                            <t t-if="o.order_type == 'service'">
+                                                Service Order
+                                            </t>
+                                            <t t-else="">
+                                                Purchase Order
+                                            </t>
+                                            <span class="ms-1">-</span>
+                                            <span class="ms-1">
+                                                (<t t-out="o.name"/>)
+                                            </span>
+                                        </u>
+                                    </h3>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="fw-bold" style="white-space: nowrap;">
+                                        <span>Issued To:</span>
+                                        <span t-field="o.partner_id" class="ms-1"/>
+                                    </div>
+                                    <div class="fw-bold" style="white-space: nowrap;">
+                                        <span>Address:</span>
+                                        <span t-field="o.partner_id.contact_address" class="ms-1"/>
+                                    </div>
+                                    <div class="fw-bold" style="white-space: nowrap;">
+                                        <span>Telephone number:</span>
+                                        <span t-if="o.partner_id.phone" t-field="o.partner_id.phone" class="ms-1"/>
+                                        <span t-else="" t-field="o.partner_id.mobile" class="ms-1"/>
+                                    </div>
+                                    <div class="fw-bold" style="white-space: nowrap;">
+                                        <span>Attention to:</span>
+                                        <span t-field="o.partner_id.email" class="ms-1"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5 class="fw-bold">Subject:</h5>
+                                    <div>
+                                        We are pleased to inform you that KUEC has accepted your Quotation Form issued
+                                        on
+                                        [<span class="fw-bold" t-field="o.create_date"
+                                               t-options="{'widget': 'date'}"/>],
+                                        Reference [<span class="fw-bold" t-field="o.partner_ref"/>] as per
+                                        specifications/ description mentioned Below:
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5 class="fw-bold">Purchase order terms and conditions:</h5>
+                                    <div class="mt-1">
+                                        <table class="table" style="width: 100%; table-layout: fixed;">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 10%;">
+                                                        <span class="ms-2">SL No.</span>
+                                                    </th>
+                                                    <th style="width: 40%;">Description</th>
+                                                    <th style="width: 10%;">Qty</th>
+                                                    <th style="width: 20%;">Price</th>
+                                                    <th style="width: 20%;">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-set="sl_no" t-value="1"/>
+                                                <tr t-foreach="o.order_line" t-as="line">
+                                                    <td style="padding: 10px 5px; text-align: center;">
+                                                        <span t-out="sl_no"/>
+                                                    </td>
+                                                    <td style="padding: 10px 5px; word-wrap: break-word;">
+                                                        <span t-field="line.name"/>
+                                                    </td>
+                                                    <td style="padding: 10px 5px; text-align: center;">
+                                                        <span t-field="line.product_qty"/>
+                                                    </td>
+                                                    <td style="padding: 10px 5px; text-align: right;">
+                                                        <span t-field="line.price_unit"
+                                                              t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                                    </td>
+                                                    <td style="padding: 10px 5px; text-align: right;">
+                                                        <span t-field="line.price_subtotal"
+                                                              t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                                                    </td>
+                                                    <t t-set="sl_no" t-value="sl_no + 1"/>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div t-field="o.notes"/>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <h5 class="fw-bold text-center">
+                                        Thank you for your cooperation,
+                                    </h5>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h5>
+                                        <div>For and on Behalf of</div>
+                                        <div class="fw-bold">Khalifa University Enterprises Company</div>
+                                    </h5>
+                                    <h5 class="mt-2" style="white-space: nowrap;">
+                                        <span t-if="o.company_id.company_ceo_user_id" class="fw-bold" t-field="o.company_id.company_ceo_user_id"/>
+                                        <span>- Chief Executive Officer</span>
+                                    </h5>
+                                    <div style="padding: 10px 5px;">
+                                        <img t-if="o.company_id.company_ceo_user_id"
+                                             t-att-src="image_data_uri(o.company_id.company_ceo_user_id.sign_signature)"
+                                             style="max-height: 50px;"
+                                             alt="Signature"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="purchase_order_report_action" model="ir.actions.report">
+        <field name="name">Purchase Order (KUEC)</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_srn_pdp_company_kuec.purchase_order_report</field>
+        <field name="report_file">kaz_srn_pdp_company_kuec.purchase_order_report</field>
+        <field name="print_report_name">'Purchase Order - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_view_types">form</field>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="kaz_kuec_report_base.paperformat_kuec_general"/>
+    </record>
+</odoo>

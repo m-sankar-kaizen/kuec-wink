@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- =========================================================
+         Inherit: hr.employee Form View
+         Purpose: Add a dedicated tab for Purchase Requisition Settings
+                  and include the destination stock location field.
+         Field: dest_location_id (Many2one to stock.location)
+         Visibility: Only visible to HR users (as per model field definition)
+    ========================================================== -->
+    <record id="purchase_requisition_employee_form_view" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.dest.location</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert a new tab after the last notebook page -->
+            <xpath expr="//notebook/page[last()]" position="after">
+                <page name="purchase_settings" string="Purchase Requisition Settings">
+                    <group>
+                        <group>
+                            <!-- Custom Destination Location field for internal transfers/pickings -->
+                            <field name="dest_location_id"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

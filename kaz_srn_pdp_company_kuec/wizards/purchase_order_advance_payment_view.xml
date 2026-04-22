@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="purchase_order_advance_payment_view_form_inherit_kaz_srn_pdp_company_kuec" model="ir.ui.view">
+        <field name="name">purchase.order.advance.payment.form.inherit.kaz.srn.pdp.company.kuec</field>
+        <field name="model">purchase.order.advance.payment</field>
+        <field name="inherit_id" ref="kaz_purchase_down_payment.purchase_order_advance_payment_view_form"/>
+        <field name="arch" type="xml">
+            <field name="product_id" position="attributes">
+                <attribute name="readonly">1</attribute>
+            </field>
+            <field name="product_id" position="after">
+                <field name="letter_of_guarantee" widget="binary"
+                       invisible="advance_payment_method not in ('fixed','percentage')"
+                       required="advance_payment_method in ('fixed','percentage')"/>
+            </field>
+        </field>
+    </record>
+</odoo>

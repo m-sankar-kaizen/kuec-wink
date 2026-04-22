@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_property_form" model="ir.ui.view">
+        <field name="name">res.partner.view.form.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="account.view_partner_property_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//label[@for='use_partner_credit_limit']" position="attributes">
+                <attribute name="string">Receivable Limit</attribute>
+            </xpath>
+            <xpath expr="//group[@name='credit_limits']" position="inside">
+                <field name="debit" string="Total Payable"/>
+                <label for="use_partner_debit_limit" string="Payable Limits"/>
+                <div class="o_row">
+                    <field name="use_partner_debit_limit"/>
+                    <field name="debit_limit" class="oe_inline" widget="monetary" options="{'currency_field': 'currency_id'}"  invisible="not use_partner_debit_limit"/>
+                </div>
+                <separator/>
+                <label for="use_partner_block_limits" string="Block Limits"/>
+                <div class="o_row">
+                    <field name="use_partner_block_limits"/>
+                    <field name="receivable_block_limit" class="oe_inline" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="not use_partner_block_limits"/>
+                    <field name="payable_block_limit" class="oe_inline" widget="monetary" options="{'currency_field': 'currency_id'}" invisible="not use_partner_block_limits"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

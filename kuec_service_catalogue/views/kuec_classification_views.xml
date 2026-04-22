@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Department Views -->
+    <record id="kuec_department_view_tree" model="ir.ui.view">
+        <field name="name">kuec.department.view.list</field>
+        <field name="model">kuec.department</field>
+        <field name="arch" type="xml">
+            <list string="Departments" editable="bottom">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="kuec_department_action" model="ir.actions.act_window">
+        <field name="name">Departments</field>
+        <field name="res_model">kuec.department</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new department!
+            </p>
+        </field>
+    </record>
+
+    <!-- Service Nature Views -->
+    <record id="kuec_service_nature_view_tree" model="ir.ui.view">
+        <field name="name">kuec.service.nature.view.list</field>
+        <field name="model">kuec.service.nature</field>
+        <field name="arch" type="xml">
+            <list string="Service Natures" editable="bottom">
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="kuec_service_nature_action" model="ir.actions.act_window">
+        <field name="name">Service Natures</field>
+        <field name="res_model">kuec.service.nature</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define a service nature!
+            </p>
+        </field>
+    </record>
+
+    <!-- Menus under Sales > Wink Configuration -->
+    <menuitem id="menu_kuec_wink_config_root"
+              name="Wink Configuration"
+              parent="sale.menu_sale_config"
+              sequence="100"/>
+
+    <menuitem id="menu_kuec_department"
+              name="Departments"
+              parent="menu_kuec_wink_config_root"
+              action="kuec_department_action"
+              sequence="10"/>
+
+    <menuitem id="menu_kuec_service_nature"
+              name="Service Natures"
+              parent="menu_kuec_wink_config_root"
+              action="kuec_service_nature_action"
+              sequence="20"/>
+</odoo>

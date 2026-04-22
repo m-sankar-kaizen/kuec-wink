@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_transfer_wizard_form_inherit_extension" model="ir.ui.view">
+        <field name="name">budget.transfer.wizard.inherit.extension</field>
+        <field name="model">budget.transfer.wizard</field>
+        <field name="inherit_id" ref="kz_requisition_quintuple_approvals.view_transfer_wizard_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='line_ids']/list/field[@name='increase_budget_id']" position="after">
+                <field name="increase_budget_tag_id" string="Increase Budget Tag" column_invisible="1"/>
+                <field name="tag_type" string="Increase Budget Tag Type" column_invisible="1"/>
+            </xpath>
+            <xpath expr="//field[@name='line_ids']/list/field[@name='increase_budget_id']" position="attributes">
+                <attribute name="domain">[('budget_analytic_id.state', 'in', ['confirmed'])]</attribute>
+            </xpath>
+            <xpath expr="//field[@name='line_ids']/list/field[@name='decrease_budget_id']" position="attributes">
+                <attribute name="domain">[('budget_analytic_id.state', 'in', ['confirmed']), ('tag_type', '=', tag_type), ('id', '!=', increase_budget_id)]</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

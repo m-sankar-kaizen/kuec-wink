@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherit the res.users form view to add a new field 'department_id'
+        before the notebook element.
+
+        This customization places the 'department_id' field in a nested group
+        just above the notebook tabs on the user form, making it visible and editable.
+
+        - Model: res.users
+        - Inherited view: base.view_users_form
+        - Added field: department_id (must exist on res.users model)
+    -->
+    <record id="res_users_form_inherit" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.kz.requisition.quintuple.approvals</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="before">
+                <group>
+                    <group>
+                        <field name="department_id"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

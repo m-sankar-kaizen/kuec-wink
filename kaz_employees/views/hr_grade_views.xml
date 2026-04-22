@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    ===========================================================
+    HR Grade Form View Definition
+    This view manages the form layout of the hr.grade model,
+    which contains employee grade levels and associated allowances.
+
+    Functional Highlights:
+    - Editable only in draft state
+    - Controlled via 'Grade Approval' security group
+    - Includes monthly allowances and basic salary ranges
+    - Supports mail chatter for audit and communication
+
+    Related Model:
+    - Model: hr.grade
+    ===========================================================
+    -->
+    <record id="action_hr_grade_form" model="ir.ui.view">
+        <field name="name">hr.grade.form</field>
+        <field name="model">hr.grade</field>
+        <field name="arch" type="xml">
+            <form>
+                <!-- Header Buttons for Approval Workflow -->
+                <header>
+                    <!-- Confirm button: Available in 'draft' state only -->
+                    <button name="action_confirm"
+                            string="Confirm"
+                            type="object"
+                            invisible="state != 'draft'"
+                            class="oe_highlight"
+                            groups="kaz_employees.group_grade_approval"/>
+
+                    <!-- Reset button: Available in 'confirm' state only -->
+                    <button name="action_reset"
+                            string="Reset to Draft"
+                            type="object"
+                            invisible="state != 'confirm'"
+                            class="btn-secondary"
+                            groups="kaz_employees.group_grade_approval"/>
+
+                    <!-- Statusbar showing current workflow state -->
+                    <field name="state" widget="statusbar"/>
+                </header>
+
+                <sheet>
+                    <!--
+                    Basic Information Block:
+                    Includes essential metadata such as name, responsible user,
+                    and timestamp. Most fields are read-only outside of draft state.
+                    -->
+                    <group>
+                        <field name="name" readonly="state != 'draft'"/>
+                        <field name="company_id" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="responsible_user_id" readonly="state != 'draft'"/>
+                        <field name="create_date" readonly="state != 'draft'"/>
+                    </group>
+
+                    <!--
+                    Compensation Details:
+                    Monthly allowances and salary ranges are grouped logically.
+                    These are the financial metrics tied to this grade.
+                    -->
+                    <group>
+                        <group string="Monthly Allowance">
+                            <field name="monthly_personal_allowance" readonly="state != 'draft'"/>
+                            <field name="monthly_premium_uae_allowance" readonly="state != 'draft'"/>
+                            <field name="monthly_living_allowance" readonly="state != 'draft'"/>
+                            <field name="monthly_connectivity" readonly="state != 'draft'"/>
+                        </group>
+
+                        <group string="Basic">
+                            <field name="social_uae_allowance" readonly="state != 'draft'"/>
+                            <field name="minimum_basic" readonly="state != 'draft'"/>
+                            <field name="midpoint_basic" readonly="state != 'draft'"/>
+                            <field name="maximum_basic" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                </sheet>
+
+                <!--
+                Chatter Integration:
+                Enables thread-based communication and activity tracking.
+                Useful for audit trails and collaboration on grade data changes.
+                -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    HR Grade Tree/List View:
+    Used for displaying multiple grade records in a summarized tabular format.
+    Fields like monthly allowances are shown optionally.
+    -->
+    <record id="action_hr_grade_tree" model="ir.ui.view">
+        <field name="name">hr.grade.list</field>
+        <field name="model">hr.grade</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="monthly_personal_allowance" optional="hide"/>
+                <field name="monthly_premium_uae_allowance" optional="hide"/>
+                <field name="monthly_living_allowance" optional="hide"/>
+                <field name="monthly_connectivity" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    Action: Open HR Grade Views
+    Binds form/list views to an action accessible from the menu.
+    -->
+    <record id="action_hr_grade" model="ir.actions.act_window">
+        <field name="name">Grade</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr.grade</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!--
+    Menu Item: HR Grade Configuration
+    Adds the HR Grade section under Payroll Configuration menu.
+
+    Path:
+    Payroll > Configuration > HR Grade
+    -->
+    <menuitem id="hr_grade_menu"
+              name="HR Grade"
+              parent="hr_work_entry_contract_enterprise.menu_hr_payroll_configuration"
+              action="action_hr_grade"
+              sequence="12"/>
+</odoo>

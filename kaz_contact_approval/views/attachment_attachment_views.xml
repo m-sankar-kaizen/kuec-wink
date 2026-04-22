@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_attachment_list" model="ir.ui.view">
+        <field name="name">attachment.attachment.list</field>
+        <field name="model">attachment.attachment</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="company_type"/>
+                <field name="is_vendor" widget="boolean_toggle"/>
+                <field name="is_customer" widget="boolean_toggle"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hidden"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_attachment_form" model="ir.ui.view">
+        <field name="name">attachment.attachment.form</field>
+        <field name="model">attachment.attachment</field>
+        <field name="arch" type="xml">
+            <form string="Attachment">
+                <sheet>
+                    <div class="oe_title mb24">
+                        <field name="company_type" widget="radio" options="{'horizontal': true}"/>
+                        <h1>
+                            <field id="name" options="{'line_breaks': False}" widget="text" class="text-break"
+                                   name="name" default_focus="1" placeholder="e.g. Vendor Category A"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <field name="is_vendor" widget="boolean_toggle"/>
+                        <field name="is_customer" widget="boolean_toggle"/>
+                        <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Checklist Lines" name="checklist_lines">
+                            <field name="checklist_line_ids">
+                                <list editable="bottom" default_order="sequence">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="attachment_is_required" widget="boolean_toggle"/>
+                                    <field name="expiry_date_required" widget="boolean_toggle"/>
+                                    <field name="attachment_type" readonly="1"/>
+                                    <!--_________^^^^^^^^^^^Field is defaulted to attachment.                            -->
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_attachment_attachment" model="ir.actions.act_window">
+        <field name="name">Attachments Checklist</field>
+        <field name="res_model">attachment.attachment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_contact_checklist_root"
+              groups="kaz_contact_approval.group_contact_admin,purchase.group_purchase_manager"
+              parent="contacts.res_partner_menu_config" name="Contact Checklist" sequence="5"/>
+    <menuitem id="menu_attachment_checklist" name="Attachment Checklist"
+              parent="menu_contact_checklist_root"
+              action="action_attachment_attachment"
+              sequence="1"/>
+</odoo>

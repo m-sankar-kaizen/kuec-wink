@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_lease_lessor_contract" model="ir.sequence">
+            <field name="name">Lessor Contract</field>
+            <field name="code">lease.lessor.contract</field>
+            <field name="prefix">Lessor/</field>
+            <field name="padding">4</field>
+        </record>
+    </data>
+</odoo>

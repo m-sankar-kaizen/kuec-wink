@@ -1,0 +1,20 @@
+{
+    "name": "Account Monthly Closing (BR1-BR6)",
+    "version": "18.0.1.0.0",
+    "category": "Accounting",
+    "summary": "Two-step monthly close (15/20) + auto-open (21) + DG approval workflow",
+    "author": "Generated",
+    'license': 'AGPL-3',
+    "depends": ["base", "account_accountant", "account", "account_batch_payment", "mail",
+                "kaz_company_restriction_base"],
+    "data": [
+        "security/security.xml",
+        "views/res_config_settings_views.xml",
+        "views/account_payment_views.xml",
+        "data/ir_cron.xml",
+        "wizard/account_change_lock_date_wizard_views.xml",
+    ],
+    "installable": True,
+    "application": True,
+    'auto_install': False,
+}

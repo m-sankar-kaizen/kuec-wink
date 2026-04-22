@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+
+    <!--
+    #####################################################################
+    # Module Category: Payment Approval
+    #####################################################################
+    This record defines a new module category called "Payment Approval".
+    Categories are used to logically group security groups in the user interface.
+    All security groups defined for the requisition and payment approval process
+    will be assigned under this category to allow better visibility and separation
+    from other business modules like Sales, Accounting, etc.
+    -->
+    <record model="ir.module.category" id="module_category_payment_approval">
+        <field name="name">Payment Approval</field>
+    </record>
+
+    <!--
+    #####################################################################
+    # Group: Requisition Base (Parent group for all approval levels)
+    #####################################################################
+    This is the base group that acts as the common ancestor for all other
+    approval groups. It implies basic internal user access (base.group_user)
+    and is used to control global access to requisition models and menus.
+
+    All other approval role groups (Head of Unit, CEO, Procurement, etc.)
+    inherit from this one.
+    -->
+    <record id="requisition_main_group" model="res.groups">
+        <field name="name">Requisition Base</field>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!--
+    ========================
+    Sequential Approval Roles
+    ========================
+    Each group below represents a distinct approval role that is part of
+    a multi-stage requisition approval process. These roles are defined
+    in increasing order of authority and responsibility. They all inherit
+    from the "Requisition Base" group to get base requisition access.
+    -->
+
+    <!-- Head of Unit: First-level approver, typically department head -->
+    <record id="head_of_unit" model="res.groups">
+        <field name="name">Head of unit</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Head of Operation: Approves operational feasibility and cost -->
+    <record id="head_of_operation" model="res.groups">
+        <field name="name">Head of Operation</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Procurement: Handles post-approval purchase order creation -->
+    <record id="procurement" model="res.groups">
+        <field name="name">Procurement</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Head of Finance (HOF): Validates financial availability and compliance -->
+    <record id="hof" model="res.groups">
+        <field name="name">HOF</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- CEO: Final internal executive-level approval -->
+    <record id="ceo" model="res.groups">
+        <field name="name">CEO</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Board: Optional layer for strategic/high-value approvals -->
+    <record id="board" model="res.groups">
+        <field name="name">Board</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Shareholders: Only required for equity or investment-related requests -->
+    <record id="shareholders" model="res.groups">
+        <field name="name">Shareholders</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Finance: Executes payments, audits approved requisitions -->
+    <record id="finance" model="res.groups">
+        <field name="name">Finance</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Head of Department: Similar to Head of Unit, for multi-division setups -->
+    <record id="hod" model="res.groups">
+        <field name="name">HOD</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- Director of Operations: Can overlap or be above Head of Operations -->
+    <record id="do" model="res.groups">
+        <field name="name">DO</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+    <!-- BOD: Alternate naming for board; ensure you don't duplicate with 'board' -->
+    <record id="bod" model="res.groups">
+        <field name="name">BOD</field>
+        <field name="implied_ids"
+               eval="[Command.link(ref('kz_requisition_quintuple_approvals.requisition_main_group'))]"/>
+        <field name="category_id" ref="kz_requisition_quintuple_approvals.module_category_payment_approval"/>
+    </record>
+
+</odoo>

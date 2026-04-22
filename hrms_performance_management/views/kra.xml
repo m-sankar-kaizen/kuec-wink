@@ -1,0 +1,58 @@
+<odoo>
+    <data>
+        <record id="view_kra_list" model="ir.ui.view">
+            <field name="name">kra.list</field>
+            <field name="model">kra.kra</field>
+            <field name="arch" type="xml">
+                <list string="KRA">
+                    <field name="name"/>
+                    <field name="department_id"/>
+                    <field name="job_id"/>
+                    <field name="kpi_id" widget="many2many_tags"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_kra_form" model="ir.ui.view">
+            <field name="name">kra.form</field>
+            <field name="model">kra.kra</field>
+            <field name="arch" type="xml">
+                <form string="KRA">
+                    <sheet>
+                        <group>
+                            <field name="is_department_wise" invisible="is_jobposition_wise"/>
+                            <field name="is_jobposition_wise" invisible="is_department_wise"/>
+                            <field name="name"/>
+                            <field name="kpi_id" widget="many2many_tags"/>
+                            <field name="department_id" invisible="is_jobposition_wise"/>
+                            <field name="job_id" invisible="is_department_wise"/>
+                            <field name="description"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_kra" model="ir.actions.act_window">
+            <field name="name">KRA</field>
+            <field name="res_model">kra.kra</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem id="performance_management_main_menu"
+						name="Performance Management"
+						sequence="1"/>
+
+        <menuitem id="configuration_main_menu"
+						name="Configuration"
+						parent="performance_management_main_menu"
+						sequence="7"
+                        groups="hrms_performance_management.group_performance_hr,hrms_performance_management.group_performance_manager"/>
+
+        <menuitem id="kra_menu"
+						name="KRA"
+						action="action_kra"
+						parent="configuration_main_menu"
+						sequence="1"/>
+    </data>
+</odoo>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    =================================================================================
+    Tree View: address.to.view.list
+    =================================================================================
+    Defines the list (list) view for the `address.to` model, used to display multiple
+    records in a tabular layout.
+    Displays:
+    - name (usually in English)
+    - arabic_name (corresponding Arabic version)
+    -->
+    <record id="address_to_view_tree" model="ir.ui.view">
+        <field name="name">address.to.view.list</field>
+        <field name="model">address.to</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="arabic_name"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    =================================================================================
+    Form View: address.to.view.form
+    =================================================================================
+    Defines the detailed form view for creating/updating a single `address.to` record.
+    Includes:
+    - name (English/primary name)
+    - arabic_name (Arabic name for dual-language correspondence)
+    -->
+    <record id="address_to_view_form" model="ir.ui.view">
+        <field name="name">address.to.view.form</field>
+        <field name="model">address.to</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <field name="arabic_name"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    =================================================================================
+    Action Window: action_address_to
+    =================================================================================
+    Binds the views (list, form) with an action so it can be launched via menu.
+    Associates the `address.to` model with its views.
+    -->
+    <record id="action_address_to" model="ir.actions.act_window">
+        <field name="name">Address To</field>
+        <field name="res_model">address.to</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                <!-- Placeholder: Shown when no records exist. Add help text if needed. -->
+            </p>
+        </field>
+    </record>
+
+    <!--
+    =================================================================================
+    Menu Item: address_to_menu
+    =================================================================================
+    Adds a menu item under the HR > Configuration menu to access "Address To".
+    Used typically for destination addresses in official letters or documents.
+    -->
+    <menuitem
+        id="address_to_menu"
+        name="Address To"
+        parent="hr.menu_config_employee"
+        action="action_address_to"
+    />
+
+</odoo>

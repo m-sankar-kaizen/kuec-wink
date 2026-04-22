@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="annual_department_procurement_plan_items_view_tree" model="ir.ui.view">
+        <field name="name">annual.department.procurement.plan.items.view.tree</field>
+        <field name="model">annual.department.procurement.plan.items</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="name"/>
+                <field name="date_start"/>
+                <field name="date"/>
+                <field name="department_id"/>
+                <field name="product_id"/>
+                <field name="category_id"/>
+                <field name="planned_cost" widget='monetary'
+                       sum="Total Planned Cost"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="planned_quantity"/>
+                <field name="sub_total" widget='monetary'
+                       sum="Total Subtotal"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="annual_department_procurement_plan_items_view_search" model="ir.ui.view">
+        <field name="name">annual.department.procurement.plan.items.view.search</field>
+        <field name="model">annual.department.procurement.plan.items</field>
+        <field name="arch" type="xml">
+            <search string="Procurement Master Plan">
+                <field name="name" string="Plan Reference"/>
+                <field name="department_id"/>
+                <filter name="group_by_department_id" context="{'group_by': 'department_id'}"/>
+                <filter name="group_by_status" context="{'group_by': 'status'}"/>
+            </search>
+        </field>
+    </record>
+</odoo>

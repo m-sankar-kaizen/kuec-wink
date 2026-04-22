@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+      Inherited Form View: hr.payslip.run (Payslip Batch)
+      Purpose:
+          Extend the payroll batch form to include custom report buttons for Excel export.
+
+      Buttons Added Inside Header:
+          - Print Non WPS Report: Calls method `print_xlsx_report2`
+          - Print WPS Report: Calls method `print_xlsx_report`
+          - Print Payroll Register: Calls method `print_registration_report`
+          - Print Housing Advance: Calls method `print_housing_advance`
+
+      Assumptions:
+          - All four methods are defined as `@api.multi` or `@api.model` methods in the Python class
+            that inherits `hr.payslip.run`
+          - Each method handles Excel report generation (likely using `openpyxl`) and returns a download action
+
+      Usage:
+          These buttons are shown at the top (header) of the batch payslip form,
+          allowing payroll officers to generate and download reports on demand.
+    -->
+
+    <record id="payslip_run_form_inherit" model="ir.ui.view">
+        <field name="name">hr.payslip.run.form.inherit.wps</field>
+        <field name="model">hr.payslip.run</field>
+        <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert custom report export buttons inside the form header -->
+            <xpath expr="//header" position="inside">
+                <button name="print_xlsx_report2" type="object" string="Print Non WPS Report"/>
+                <button name="print_xlsx_report" type="object" string="Print WPS Report"/>
+                <button name="print_registration_report" type="object" string="Print Payroll Register"/>
+                <button name="print_housing_advance" type="object" string="Print Housing Advance"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    =====================================================================================
+    Tree View: exit_interview_tree_view
+    A list view for displaying summary of exit interviews.
+    Fields:
+        - name: Employee name
+        - date: Interview date
+        - position: Job title
+        - department: Department
+        - state: Current approval status
+    =====================================================================================
+    -->
+    <record id="exit_interview_tree_view" model="ir.ui.view">
+        <field name="name">exit interview list</field>
+        <field name="model">exit.interview</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="position"/>
+                <field name="department"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    =====================================================================================
+    Form View: exit_interview_form_view
+    A comprehensive form capturing full details of the exit interview process,
+    from employee background to feedback across multiple categories.
+
+    Workflow buttons:
+        - Submit for Approval
+        - Approve (restricted to HR Managers)
+        - Reject
+        - Cancel
+        - Reset to Draft
+        - Print (when approved)
+
+    Sections:
+        - Employee Info
+        - Reasons for Leaving
+        - Questionnaire (rating various job experience areas)
+        - Benefits Evaluation
+        - Supervisor Feedback
+        - University-related questions
+        - Regret & Suggestions
+    =====================================================================================
+    -->
+    <record id="exit_interview_form_view" model="ir.ui.view">
+        <field name="name">exit interview form</field>
+        <field name="model">exit.interview</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="submit_for_approval"
+                            type="object"
+                            invisible="state != 'draft'"
+                            string="Submit for Approval" class="oe_highlight"/>
+                    <button type="action"
+                            invisible="state != 'approved'"
+                            name="%(kaz_employee_reports.action_report_exit_interview_report)d"
+                            string="Print"
+                            class="oe_highlight"
+                            />
+                    <button name="approve"
+                            type="object"
+                            invisible="state != 'waiting_approval'"
+                            groups="kaz_employee_reports.group_letter_manager"
+                            string="Approve" class="oe_highlight"/>
+                    <button name="rejected"
+                            type="object"
+                            groups="kaz_employee_reports.group_letter_manager"
+                            invisible="state not in ['waiting_approval', 'approved']"
+                            string="Reject" class="btn-default"/>
+                    <button name="canceled"
+                            type="object"
+                            invisible="state not in ['draft', 'waiting_approval', 'rejected']"
+                            string="Cancel" class="btn-default"/>
+                    <button name="reset_to_draft"
+                            type="object"
+                            invisible="state != 'cancel'"
+                            string="Reset to Draft" class="btn-default"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="ref"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"
+                                   readonly="state != 'draft'"
+                               groups="kaz_employee_reports.group_letter_manager"/>
+                            <field name="name"
+                               groups="base.group_user,!kaz_employee_reports.group_letter_manager"
+                               readonly="1"/>
+                            <field name="emp_id"/>
+                            <field name="email"/>
+                            <field name="mobile"/>
+                        </group>
+                        <group>
+                            <field name="date"
+                                   readonly="state != 'draft'"/>
+                            <field name="position"/>
+                            <field name="department"/>
+                            <field name="company_id"/>
+                        </group>
+                    </group>
+                    <group>
+                      <group string="reason for leaving">
+                            <field name="exit"
+                                   readonly="state != 'draft'"/>
+                            <field name="further_study"
+                                   readonly="state != 'draft'"/>
+                            <field name="conflict"
+                                   readonly="state != 'draft'"/>
+                            <field name="family"
+                                   readonly="state != 'draft'"/>
+                            <field name="conflict_with_manager"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group string="reason for leaving">
+                            <field name="better_career"
+                                   readonly="state != 'draft'"/>
+                            <field name="other"
+                                   readonly="state != 'draft'"/>
+                            <field name="conflict_renewal"
+                                   readonly="state != 'draft'"/>
+                            <field name="circum"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <group string="Questionnaire">
+                        <group>
+                            <field name="physical_working_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="opportunities_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="salary_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="relation_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="direction_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="support_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="quality_rate"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="new_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="overall_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="personal_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="equipment_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="performance_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="job_rate"
+                                   readonly="state != 'draft'"/>
+                            <field name="Khalifa_rate"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                      <group>
+                        <group string="Benefits">
+                            <field name="salary_level_benefit"
+                                   readonly="state != 'draft'"/>
+                            <field name="housing_allowance_benefit"
+                                   readonly="state != 'draft'"/>
+                            <field name="ticket_benefit"
+                                   readonly="state != 'draft'"/>
+                            <field name="medical_benefit"
+                                   readonly="state != 'draft'"/>
+                            <field name="annual_benefit"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Benefits">
+                            <field name="sick_benefit"
+                             readonly="state != 'draft'"/>
+                            <field name="educational_benefit"
+                             readonly="state != 'draft'"/>
+                            <field name="relocation_benefit"
+                             readonly="state != 'draft'"/>
+                            <field name="repatriation_benefit"
+                             readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                        <group string="Supervisor">
+                            <field name="was_consistently_supervisor"
+                             readonly="state != 'draft'"/>
+                            <field name="provided_supervisor"
+                             readonly="state != 'draft'"/>
+                            <field name="resolved_supervisor"
+                             readonly="state != 'draft'"/>
+                            <field name="was_sensitive_supervisor"
+                             readonly="state != 'draft'"/>
+                            <field name="feedback_supervisor"
+                             readonly="state != 'draft'"/>
+                            <field name="receptive_supervisor"
+                             readonly="state != 'draft'"/>
+                            <field name="encouraged_supervisor"
+                             readonly="state != 'draft'"/>
+                        </group>
+                     <group string="Khalifa university">
+                            <field name="advise"
+                             readonly="state != 'draft'"/>
+                            <field name="consider"
+                             readonly="state != 'draft'"/>
+                            <field name="experience"
+                             readonly="state != 'draft'"/>
+                        </group>
+                    <group string="Regret we are Parting">
+                        <group>
+                            <field name="most_regret"
+                             readonly="state != 'draft'"/>
+                            <field name="least_regret"
+                             readonly="state != 'draft'"/>
+                            <field name="suggestion_regret"
+                             readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="general_regret"
+                             readonly="state != 'draft'"/>
+                            <field name="attach"
+                             readonly="state != 'draft'"/>
+                        </group>
+
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    =====================================================================================
+    Action: action_ank_exit_interview
+    Opens the exit interview list/form view from the menu.
+    =====================================================================================
+    -->
+    <record id="action_ank_exit_interview" model="ir.actions.act_window">
+        <field name="name">Exit Interview</field>
+        <field name="res_model">exit.interview</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new exit interview
+            </p>
+        </field>
+    </record>
+
+    <!--
+    =====================================================================================
+    Menu: exit_interview_menu
+    Adds "Exit Interview" menu under the "Employee Off-Boarding" menu list.
+    Parent: kaz_employee_reports.employee_off_boarding_menu
+    =====================================================================================
+    -->
+    <menuitem id="exit_interview_menu"
+              name="Exit Interview"
+              parent="kaz_employee_reports.employee_off_boarding_menu"
+              action="action_ank_exit_interview"/>
+
+</odoo>

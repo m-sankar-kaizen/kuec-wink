@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_purchase_requisition_form" model="ir.ui.view">
+        <field name="name">purchase.requisition.form.inherit.kaz.vendor.management</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="purchase_requisition.view_purchase_requisition_form"/>
+        <field name="arch" type="xml">
+
+            <div name="button_box" position="inside">
+                <button invisible="not tender_rfq_id" class="oe_stat_button" type="object"
+                        name="action_open_tender_rfq" icon="fa-file">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Tender</span>
+                    </div>
+                </button>
+            </div>
+
+            <field name="vendor_id" position="attributes">
+                <attribute name="readonly" add="tender_rfq_id" separator="or"/>
+            </field>
+
+            <xpath expr="//field[@name='currency_id' and @groups='base.group_multi_currency']" position="attributes">
+                <attribute name="readonly" add="tender_rfq_id" separator="or"/>
+            </xpath>
+
+
+            <field name="user_id" position="attributes">
+                <attribute name="readonly" add="tender_rfq_id" separator="or"/>
+            </field>
+
+            <field name="requisition_type" position="attributes">
+                <attribute name="readonly" add="tender_rfq_id" separator="or"/>
+            </field>
+
+            <field name="reference" position="after">
+                <field name="order_type" readonly="tender_rfq_id"/>
+            </field>
+
+            <xpath expr="//header/button[@type='action'][1]" position="replace">
+                <button name="action_create_quotation"
+                        type="object"
+                        string="New Quotation"
+                        class="btn-primary"
+                        invisible="state != 'confirmed'"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+    <record id="ir_cron_material_purchase_requisition_reminder" model="ir.cron">
+        <field name="name">Purchase Requisition Reminder</field>
+        <field name="model_id" ref="material_purchase_requisitions.model_material_purchase_requisition"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_purchase_requisition_reminder()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

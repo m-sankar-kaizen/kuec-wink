@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="add_job_code_employee_form" model="ir.ui.view">
+        <field name="name">kuec.recruitment</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="kaz_employees.add_job_code_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[1]" position="before">
+                <field name="company_code" invisible="1"/>
+                <group string="KUEC Posting" invisible="company_code != 'KUEC'">
+                    <group string="Internal Posting">
+                        <field name="is_internal_distribution"/>
+                        <field name="mode"
+                               required="is_internal_distribution"
+                               invisible="not is_internal_distribution"/>
+                        <div class="o_row" invisible="not is_internal_distribution">
+                            <field name="mode_employee_ids"
+                                   widget="many2many_tags"
+                                   required="is_internal_distribution and mode == 'employee'"
+                                   style="width: 50% !important"
+                                   invisible="mode != 'employee'"/>
+                            <field name="mode_department_id"
+                                   required="is_internal_distribution and mode == 'department'"
+                                   style="width: 50% !important"
+                                   invisible="mode != 'department'"/>
+                            <field name="mode_company_id"
+                                   required="is_internal_distribution and mode == 'company'"
+                                   style="width: 50% !important"
+                                   invisible="mode != 'company'"/>
+                            <field name="mode_tag_id"
+                                   required="is_internal_distribution and mode == 'tag'"
+                                   style="width: 50% !important"
+                                   invisible="mode != 'tag'"/>
+                            <a name="notify_employees"
+                               string="Notify"
+                               style="width: 50% !important"
+                               class="btn-link ms-2"
+                               invisible="not is_internal_distribution"
+                               type="object"/>
+                        </div>
+                        <field name="internal_for_specific_duration"
+                                invisible="not is_internal_distribution"/>
+                        <field name="no_of_days"
+                                invisible="not internal_for_specific_duration"/>
+                    </group>
+                    <group string="External Posting">
+                        <field name="is_external_distribution"/>
+
+<!--                        <field name="external_mode"-->
+<!--                               required="is_external_distribution"-->
+<!--                               invisible="not is_external_distribution"/>-->
+                        <div class="o_row" invisible="not is_external_distribution">
+                            <group>
+                                <field name="is_job_portal"/>
+                                <div>
+                                    <a name="publish_on_website"
+                                       string="Publish on Portal"
+                                       style="width: 50% !important"
+                                       class="btn-link ms-2"
+                                       invisible="(not is_job_portal or is_published)"
+                                       type="object"/>
+                                    <a name="unpublish_on_website"
+                                       string="Un-publish on Portal"
+                                       style="width: 50% !important"
+                                       class="btn-link ms-2"
+                                       invisible="(not is_job_portal or not is_published)"
+                                       type="object"/>
+                                </div>
+                                <field name="is_company_website_external"/>
+                                <field name="kuec_website_url"
+                                       invisible="not is_company_website_external"/>
+                                <field name="is_linkedin"/>
+                                <div>
+                                    <a name="share_linkedin"
+                                       string="Share on LinkedIn"
+                                       style="width: 50% !important"
+                                       class="btn-link ms-2"
+                                       invisible="not is_linkedin"
+                                       type="object"/>
+                                </div>
+                                <field name="is_ku"/>
+                                <field name="ku_emails"
+                                       invisible="not is_ku"/>
+                                <field name="is_external_recruitment_companies"/>
+
+                                <field name="ku_partners"
+                                       widget="many2many_tags"
+                                       domain="[('company_id', 'in', [company_id, False]), ('is_external_recruiter', '=', True), ('state', '=', 'approved')]"
+                                       invisible="not is_external_recruitment_companies"/>
+                                <field name="salary_min"
+                                       invisible="not is_external_recruitment_companies"/>
+                                <field name="salary_max"
+                                           invisible="not is_external_recruitment_companies"/>
+                                <div>
+                                    <a name="notify_external"
+                                       string="Notify External Agencies"
+                                       style="width: 50% !important"
+                                       class="btn-link ms-2"
+                                       invisible="not is_external_recruitment_companies"
+                                       type="object"/>
+                                </div>
+                                <field name="company_currency_id"
+                                       invisible="1"/>
+                            </group>
+
+                        </div>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_hr_job_form" model="ir.ui.view">
+        <field name="name">kuec.recruitment</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="hr_linkedin_recruitment.view_hr_job_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='share_linkedin']"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_hr_job_form_website_published_button" model="ir.ui.view">
+        <field name="name">hr.job.form.website.published.button</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="website_hr_recruitment.view_hr_job_form_website_published_button"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='website_published']"
+                   position="attributes">
+                <attribute name="readonly">company_code == 'KUEC'</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

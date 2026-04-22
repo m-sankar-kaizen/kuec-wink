@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Record: mail.activity.type (Activity Type)
+        ID: mail_activity_send_note2_approve
+
+        Purpose:
+        This activity type is defined to support workflow steps related to Bank Transfer Requests.
+        It can be used in scheduled activities (mail.activity) on the 'bank.transfer' model, for approvals,
+        reminders, or manual workflow tracking.
+
+        Fields:
+        - name: Label shown to the user, typically indicating the task/purpose.
+        - icon: Font Awesome icon used in the UI to represent the activity type.
+        - res_model: The model this activity type is applicable to (bank.transfer).
+    -->
+    <record id="mail_activity_send_note2_approve" model="mail.activity.type">
+        <field name="name">Bank Transfer Request</field>
+        <field name="icon">fa-envelope</field>
+        <field name="res_model">bank.transfer</field>
+    </record>
+</odoo>

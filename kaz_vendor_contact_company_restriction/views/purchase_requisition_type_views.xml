@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_purchase_requisition_type_form" model="ir.ui.view">
+        <field name="name">purchase.requisition.type.form.inherit.kaz.vendor.contact.company.restriction</field>
+        <field name="model">purchase.requisition.type</field>
+        <field name="inherit_id" ref="kaz_vendor_management.view_purchase_requisition_type_form"/>
+        <field name="arch" type="xml">
+
+            <field name="is_tender" position="before">
+                <field name="company_code" invisible="1"/>
+            </field>
+
+            <field name="is_tender" position="attributes">
+                <attribute name="invisible" add="company_code not in ['KUEC']" separator="or"/>
+            </field>
+
+            <field name="is_justification_required" position="attributes">
+                <attribute name="invisible" add="company_code not in ['KUEC']" separator="or"/>
+            </field>
+            <page name="required_attachment_page" position="attributes">
+                <attribute name="invisible" add="company_code not in ['KUEC']" separator="or"/>
+            </page>
+        </field>
+    </record>
+</odoo>

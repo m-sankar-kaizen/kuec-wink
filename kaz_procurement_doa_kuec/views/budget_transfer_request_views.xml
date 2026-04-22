@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_budget_transfer_request_form" model="ir.ui.view">
+        <field name="name">budget.transfer.request.form.view</field>
+        <field name="model">budget.transfer.request</field>
+        <field name="inherit_id" ref="kz_requisition_quintuple_approvals.view_budget_transfer_request_form"/>
+        <field name="arch" type="xml">
+
+            <sheet position="after">
+                <chatter/>
+            </sheet>
+
+            <xpath expr="//sheet/group/group" position="after">
+                <group>
+                    <field name="company_id" readonly="1"/>
+                    <field name="company_code" invisible="1"/>
+                </group>
+            </xpath>
+
+            <button name="button_first_approve" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </button>
+            <button name="button_second_approve" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </button>
+            <button name="reject" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </button>
+            <button name="reset_to_draft" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </button>
+            <field name="state" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </field>
+
+            <header position="inside">
+                <button name="action_approve_ccoe" type="object"
+                        string="CCOE Approval"
+                        class="oe_highlight"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                        invisible="kuec_approval_state != 'ccoe' or company_code not in ['KUEC']"/>
+                <button name="action_reject_request" type="object" string="CCOE Reject"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                        invisible="kuec_approval_state != 'ccoe' or company_code not in ['KUEC']"/>
+
+                <button name="action_approve_ceo" type="object"
+                        string="CEO Approval"
+                        class="oe_highlight"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                        invisible="kuec_approval_state != 'ceo' or company_code not in ['KUEC']"/>
+                <button name="action_reject_request" type="object" string="CEO Reject"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                        invisible="kuec_approval_state != 'ceo' or company_code not in ['KUEC']"/>
+
+                <button name="action_approve_request" type="object"
+                        string="Chairman Approval"
+                        class="oe_highlight"
+                        groups="kaz_procurement_doa_kuec.group_kuec_chairman"
+                        invisible="kuec_approval_state != 'chairman' or company_code not in ['KUEC']"/>
+                <button name="action_reject_request" type="object" string="Chairman Reject"
+                        groups="kaz_procurement_doa_kuec.group_kuec_chairman"
+                        invisible="kuec_approval_state != 'chairman' or company_code not in ['KUEC']"/>
+
+                <field name="kuec_approval_state" widget="statusbar" invisible="company_code not in ['KUEC']"/>
+            </header>
+
+            <page name="lines" position="after">
+                <page name="budget_transfer_request_approval" string="Signed Approval History"
+                      invisible="not budget_transfer_request_approval_ids or company_code not in ['KUEC']">
+                    <field name="budget_transfer_request_approval_ids">
+                        <list editable="bottom" create="0" edit="0" delete="0">
+                            <field name="current_display_name" column_invisible="1"/>
+                            <field name="sequence"/>
+                            <field name="parent_state_at_request" optional="show"/>
+                            <field name="request_type"/>
+                            <field name="create_uid" string="Signed By"/>
+                            <field name="create_date" string="Signed At" optional="hide"/>
+                            <field name="signature" widget="signature"
+                                   options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                            <field name="reason"/>
+                            <field name="company_id" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+
+                <page name="chairman_approval_attachment" string="Chairman Approval Attachment"
+                      invisible="hide_chairman_approval_attachment">
+                    <field name="hide_chairman_approval_attachment" invisible="1"/>
+                    <group>
+                        <group>
+                            <field name="chairman_approval_attachment" readonly="kuec_approval_state == 'approved'"
+                                   widget="binary"/>
+                        </group>
+
+                    </group>
+                </page>
+            </page>
+        </field>
+    </record>
+</odoo>

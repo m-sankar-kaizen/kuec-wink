@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherited form view for hr.leave model.
+        Purpose:
+            - Add support for three-level time off approval process.
+            - Display additional HR approval button conditionally.
+            - Adjust visibility and access to existing buttons like "Approve" and "Refuse"
+              based on the current state and custom logic fields.
+    -->
+    <record id="hr_leave_view_form" model="ir.ui.view">
+        <field name="name">hr.leave.view.form.inherit.3.level.timeoff.approval</field>
+        <field name="model">hr.leave</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert invisible fields and HR Approval button after the Confirm button -->
+            <xpath expr="//button[@name='action_approve']" position="after">
+                <!-- Internal fields used to control 3-level logic in views -->
+                <field name="is_three_level" invisible="1"/>
+                <field name="can_three_level" invisible="1"/>
+
+                <!-- New HR Manager approval button -->
+                <button
+                        string="Hr Approval"
+                        name="action_hr_manager"
+                        type="object"
+                        class="oe_highlight"
+                        groups="hr_holidays.group_hr_holidays_user"
+                        invisible="not is_three_level or state != 'validate1'"
+                />
+            </xpath>
+
+            <!-- Adjust visibility of 'Approve' button for 3-level approval -->
+            <xpath expr="//button[@name='action_validate']" position="attributes">
+                <attribute name="groups">kaz_3_level_timeoff_approval.group_hr_manager</attribute>
+                <attribute name="invisible">not is_three_level or state not in ['validate1', 'validate2']</attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_refuse']" position="before">
+                <field name="id" invisible="1"/>
+            </xpath>
+            <xpath expr="//button[@name='action_refuse']" position="attributes">
+                <!-- Fixed: 'attribite' → 'attribute' -->
+                <attribute name="invisible">not id or not can_approve or state not in ['confirm', 'validate1', 'validate2', 'validate']</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

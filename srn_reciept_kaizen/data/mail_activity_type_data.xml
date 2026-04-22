@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+    <!--
+        Mail Activity Type: Service Receipt Signature
+
+        Purpose:
+        Defines a custom activity type for scheduling follow-ups or approval tasks
+        related to service receipt signatures.
+
+        Configuration:
+        - name: Label shown to users when scheduling the activity.
+        - icon: FontAwesome icon (`fa-file-text-o`) shown in the activity widget.
+        - res_model: Restricts this activity type to the `service.receipt` model only.
+
+        Usage:
+        Available in the chatter/activity panel of service receipts.
+        Can be scheduled manually or programmatically (e.g., via activity_schedule).
+    -->
+    <record id="mail_service_sign" model="mail.activity.type">
+        <field name="name">Service Receipt Signature</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="res_model">service.receipt</field>
+    </record>
+
+</odoo>

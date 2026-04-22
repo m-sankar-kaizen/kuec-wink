@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="related_party_balance_seq" model="ir.sequence">
+        <field name="name">Related Party Entry Sequence</field>
+        <field name="code">kaz.related.party.entry.seq</field>
+        <field name="prefix">PE/%(year)s/%(month)s/%(day)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id"/>
+    </record>
+</odoo>
