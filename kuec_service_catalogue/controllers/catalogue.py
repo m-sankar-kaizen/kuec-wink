@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import base64
+import logging
 import re
 import werkzeug
 from werkzeug.urls import url_encode
 from odoo import http, _
 from odoo.http import request
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import html2plaintext
 from werkzeug.exceptions import NotFound
+
+
+_logger = logging.getLogger(__name__)
 
 
 class WinkCatalogue(http.Controller):
@@ -408,6 +413,23 @@ class WinkCatalogue(http.Controller):
         order = entitlement.order_id
         requires_employees = bool(getattr(product, 'requires_employee_selection', False))
 
+        def _activation_redirect_error(message):
+            err = werkzeug.urls.url_quote(message or '')
+            return request.redirect(
+                f'/services/{product_id}/activate/{entitlement_id}?error={err}'
+            )
+
+        def _create_activation_attachments(uploaded_docs):
+            for doc in uploaded_docs:
+                request.env['ir.attachment'].sudo().create({
+                    'name': doc['filename'],
+                    'res_model': 'wink.bundle.entitlement',
+                    'res_id': entitlement.id,
+                    'datas': base64.b64encode(doc['content']).decode(),
+                    'mimetype': doc['mimetype'],
+                    'description': doc['description'],
+                })
+
         # Gov charge detection — two separate systems:
         #   wink_has_gov_charge    → standalone request flow: invoice created immediately, amount always known
         #   requires_government_charges → bundle entitlement flow: may or may not have a known amount
@@ -450,7 +472,11 @@ class WinkCatalogue(http.Controller):
                 try:
                     entitlement.sudo().action_gov_charge_paid()
                 except Exception:
-                    pass
+                    _logger.exception(
+                        "Activation retry after paid gov-charge invoice failed for "
+                        "entitlement %s from order %s.",
+                        entitlement.id, order.id,
+                    )
                 return request.redirect(f'/my/requests/{order.id}')
 
         # ── POST: process activation ──────────────────────────────────────────
@@ -463,7 +489,11 @@ class WinkCatalogue(http.Controller):
                     try:
                         entitlement.sudo().action_gov_charge_paid()
                     except Exception:
-                        pass
+                        _logger.exception(
+                            "POST activation retry after paid gov-charge invoice failed "
+                            "for entitlement %s from order %s.",
+                            entitlement.id, order.id,
+                        )
                     return request.redirect(f'/my/requests/{order.id}')
                 else:
                     # Unpaid invoice already exists — send customer back to pay it
@@ -496,24 +526,53 @@ class WinkCatalogue(http.Controller):
                 })
                 employee_ids.append(new_emp.id)
 
-            # ── Save uploaded activation documents as attachments on the entitlement ──
-            import base64 as _b64
+            if employee_ids:
+                unique_employee_ids = list(dict.fromkeys(employee_ids))
+                valid_employees = request.env['kuec.employee.directory'].sudo().search([
+                    ('id', 'in', unique_employee_ids),
+                    ('partner_id', 'child_of', partner.id),
+                ])
+                if len(valid_employees) != len(unique_employee_ids):
+                    return _activation_redirect_error(_(
+                        "One or more selected employees are no longer available. "
+                        "Please refresh the page and try again."
+                    ))
+                employee_ids = valid_employees.ids
+
+            # Collect uploaded documents, then save them only after activation/invoice success.
+            uploaded_docs = []
+            uploaded_doc_ids = set()
+            product_docs = product.kuec_document_ids
+            product_doc_ids = set(product_docs.ids)
             _doc_files = request.httprequest.files
             for _key in list(_doc_files.keys()):
                 if not _key.startswith('doc_file_'):
                     continue
+                _doc_id_str = _key[len('doc_file_'):]
+                if not _doc_id_str.isdigit():
+                    continue
+                _doc_id = int(_doc_id_str)
+                if _doc_id not in product_doc_ids:
+                    continue
+                _doc = product_docs.filtered(lambda d: d.id == _doc_id)[:1]
                 for _uf in _doc_files.getlist(_key):
                     if _uf and getattr(_uf, 'filename', None):
                         _content = _uf.read()
                         if _content:
-                            request.env['ir.attachment'].sudo().create({
-                                'name': _uf.filename,
-                                'res_model': 'wink.bundle.entitlement',
-                                'res_id': entitlement.id,
-                                'datas': _b64.b64encode(_content).decode(),
+                            uploaded_doc_ids.add(_doc_id)
+                            uploaded_docs.append({
+                                'filename': _uf.filename,
+                                'content': _content,
                                 'mimetype': _uf.content_type or 'application/octet-stream',
-                                'description': 'Activation document',
+                                'description': 'Activation document: %s' % (_doc.name or _doc_id),
                             })
+
+            required_docs = product_docs.filtered(lambda d: d.requirement == 'required')
+            missing_docs = required_docs.filtered(lambda d: d.id not in uploaded_doc_ids)
+            if missing_docs:
+                return _activation_redirect_error(
+                    _('Please attach a file for: %s') % ', '.join(missing_docs.mapped('name')[:3])
+                )
 
             # ── Gov charge path A: wink_has_gov_charge (standalone-style, invoice-first) ──
             # Or requires_government_charges + gov_charge_is_known (known amount upfront)
@@ -557,12 +616,17 @@ class WinkCatalogue(http.Controller):
                 try:
                     gov_invoice.sudo().action_post()
                 except Exception:
-                    pass
+                    _logger.exception(
+                        "Failed to post gov-charge invoice %s for entitlement %s "
+                        "from order %s.",
+                        gov_invoice.id, entitlement.id, order.id,
+                    )
                 entitlement.sudo().write({
                     'wink_gov_charge_invoice_id': gov_invoice.id,
                     'wink_gov_charge_per_employee': total_gov / max(num_employees, 1),
                     'wink_pending_employee_ids': [(6, 0, employee_ids)] if employee_ids else [(5, 0, 0)],
                 })
+                _create_activation_attachments(uploaded_docs)
                 # Send customer directly to the payment page — show invoice amount + pay options
                 return request.redirect(
                     f'/my/requests/{order.id}/gov-charges-payment?invoice_id={gov_invoice.id}'
@@ -575,17 +639,21 @@ class WinkCatalogue(http.Controller):
 
             # ── Direct activation path (no gov charges, or pending-coordinator path) ──
             try:
-                entitlement.sudo().action_activate(employee_ids=employee_ids)
-            except UserError as e:
-                err = werkzeug.urls.url_quote(str(e))
-                return request.redirect(
-                    f'/services/{product_id}/activate/{entitlement_id}?error={err}'
-                )
+                with request.env.cr.savepoint():
+                    entitlement.sudo().action_activate(employee_ids=employee_ids)
+                    _create_activation_attachments(uploaded_docs)
+            except (UserError, ValidationError) as e:
+                return _activation_redirect_error(str(e))
             except Exception:
-                err = werkzeug.urls.url_quote(_('Activation failed. Please try again.'))
-                return request.redirect(
-                    f'/services/{product_id}/activate/{entitlement_id}?error={err}'
+                _logger.exception(
+                    "Catalogue activation failed for entitlement %s, product %s, "
+                    "order %s, partner %s.",
+                    entitlement.id, product.id, order.id, partner.id,
                 )
+                return _activation_redirect_error(_(
+                    "Activation failed due to an unexpected technical error. "
+                    "The issue has been logged."
+                ))
 
             # Show dedicated success + next-steps page
             # Pass gov_charges_pending=True so the template can show the
