@@ -1070,8 +1070,8 @@
                             </t>
                         </div>
                         <!-- When no plans loaded: remind admin to set Recurring Prices on the product -->
-                        <div role="status" t-if="product.delivery_model == 'retainer' and not subscription_plans" class="alert alert-info py-2 mb-3">
-                            <small>Plan options (Monthly / Yearly) come from this product's <strong>Recurring Prices</strong> tab. Add at least one price line there and save the product — then the plan selector will appear here.</small>
+                        <div role="alert" t-if="product.delivery_model == 'retainer' and not subscription_plans and not wink_is_bundle" class="alert alert-warning py-2 mb-3">
+                            <small>This retainer cannot be requested yet because no billing plan is configured. Plan options come from the product's <strong>Recurring Prices</strong> tab. Add at least one recurring price line and save the product before allowing portal requests.</small>
                         </div>
 
                         <!-- Bundle: employees per child service (DEPRECATED for request phase, moved to activation) -->
@@ -1156,10 +1156,15 @@
                                             </label>
                                         </t>
                                     </div>
-                                    <a href="/my/employees" target="_blank" class="small mt-2 d-inline-block" style="color:var(--wink-primary);">
-                                        <i class="fa fa-plus me-1"/>Add employee
-                                    </a>
-                                    <span class="text-muted small ms-1">(opens in new tab — come back here after saving)</span>
+                                    <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+                                        <a href="/my/employees" target="_blank" class="small d-inline-flex align-items-center" style="color:var(--wink-primary);">
+                                            <i class="fa fa-plus me-1"/>Add employee
+                                        </a>
+                                        <span class="text-muted small">If you add new employees, refresh the page to view them.</span>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.location.assign(window.location.pathname + window.location.search + window.location.hash)">
+                                            <i class="fa fa-refresh me-1"/>Refresh
+                                        </button>
+                                    </div>
                                 </t>
                                 <t t-else="">
                                     <div role="alert" class="alert alert-warning py-2 small">
@@ -1240,12 +1245,22 @@
                                    style="border:1.5px solid #6c757d;color:#6c757d;background:#fff;">
                                     <i class="fa fa-arrow-left me-1"/>Back
                                 </a>
-                                <button type="submit" id="wink-request-submit-btn"
-                                        class="btn btn-sm fw-semibold rounded-pill px-4"
-                                        disabled="disabled"
-                                        style="background:var(--wink-primary);border:0;color:#fff;opacity:0.45;pointer-events:none;">
-                                    <i class="fa fa-paper-plane me-2"/>Submit Request
-                                </button>
+                                <t t-if="product.delivery_model == 'retainer' and not subscription_plans and not wink_is_bundle">
+                                    <button type="button"
+                                            class="btn btn-sm fw-semibold rounded-pill px-4"
+                                            disabled="disabled"
+                                            style="background:var(--wink-primary);border:0;color:#fff;opacity:0.45;pointer-events:none;">
+                                        <i class="fa fa-paper-plane me-2"/>Submit Request
+                                    </button>
+                                </t>
+                                <t t-else="">
+                                    <button type="submit" id="wink-request-submit-btn"
+                                            class="btn btn-sm fw-semibold rounded-pill px-4"
+                                            disabled="disabled"
+                                            style="background:var(--wink-primary);border:0;color:#fff;opacity:0.45;pointer-events:none;">
+                                        <i class="fa fa-paper-plane me-2"/>Submit Request
+                                    </button>
+                                </t>
                             </div>
                         </div>
                     </form>
@@ -2705,9 +2720,9 @@
                                                         </a>
                                                         <button type="button" class="btn btn-sm btn-outline-primary wink-reload-modal"
                                                                 t-att-data-ent-id="ent_m.id">
-                                                            <i class="fa fa-refresh me-1"/>Refresh List
+                                                            <i class="fa fa-refresh me-1"/>Refresh
                                                         </button>
-                                                        <span class="text-muted" style="font-size:0.72rem;">Add in new tab, then Refresh List</span>
+                                                        <span class="text-muted" style="font-size:0.72rem;">If you add new employees, refresh the page to view them.</span>
                                                     </div>
                                                 </div>
                                             </t>
@@ -3997,9 +4012,9 @@
                                                             </a>
                                                             <button type="button" class="btn btn-sm btn-outline-primary wink-reload-modal"
                                                                     t-att-data-ent-id="ent_m.id">
-                                                                <i class="fa fa-refresh me-1"/>Refresh List
+                                                                <i class="fa fa-refresh me-1"/>Refresh
                                                             </button>
-                                                            <span class="text-muted" style="font-size:0.72rem;">Add in new tab, then Refresh List</span>
+                                                            <span class="text-muted" style="font-size:0.72rem;">If you add new employees, refresh the page to view them.</span>
                                                         </div>
                                                     </div>
                                                 </t>
@@ -4120,6 +4135,20 @@
                         <h5 class="mb-1 fw-bold"><i class="fa fa-tachometer me-2"/>My Dashboard</h5>
                         <p class="mb-0 small" style="opacity:.85;">View your requests, subscriptions, outstanding balance and upcoming renewals.</p>
                     </div>
+                    <a t-if="vendor_rating_count"
+                       href="/my/vendor-ratings"
+                       class="btn btn-sm fw-semibold flex-shrink-0"
+                       style="background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.38);">
+                        <i class="fa fa-star me-1 text-warning"/>
+                        Vendor Rating
+                        <span class="ms-1">
+                            <t t-esc="'%.1f' % (vendor_avg_rating or 0.0)"/>/5
+                        </span>
+                        <span class="badge rounded-pill ms-1"
+                              style="background:rgba(255,255,255,.25);color:#fff;">
+                            <t t-esc="vendor_rating_count"/>
+                        </span>
+                    </a>
                     <a href="/my/dashboard" class="btn btn-sm fw-semibold flex-shrink-0"
                        style="background:#fff;color:var(--wink-primary,#0055b7);border:0;">
                         <i class="fa fa-arrow-right me-1"/>Open Dashboard

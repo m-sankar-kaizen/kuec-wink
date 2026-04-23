@@ -274,6 +274,7 @@ class WinkCatalogue(http.Controller):
         is_subscription_service = bool(
             getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer'
         )
+        allow_plan_fallback = bool(product.wink_is_bundle or product.commercial_structure == 'bundled')
         subscription_plans = []
         selected_plan_id = None
         display_plan = None
@@ -281,7 +282,10 @@ class WinkCatalogue(http.Controller):
         active_period = None
 
         if is_subscription_service:
-            subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+            subscription_plans = product._wink_subscription_plans_dicts(
+                pricelist_id=False,
+                allow_plan_fallback=allow_plan_fallback,
+            )
             if subscription_plans:
                 # Handle ?plan= pre-selection (e.g. returning from wizard via "Change Plan")
                 plan_param = kwargs.get('plan') or kwargs.get('pricing_id')
@@ -348,6 +352,12 @@ class WinkCatalogue(http.Controller):
                 bundle_employees = request.env['kuec.employee.directory'].sudo().search([
                     ('partner_id', 'child_of', partner.id)
                 ])
+
+        is_bundled_child_service = bool(
+            product.commercial_structure == 'bundled' and not product.wink_is_bundle
+        )
+        if is_bundled_child_service and not (entitlement or entitlement_activated):
+            raise NotFound()
 
         values = {
             'product': product,

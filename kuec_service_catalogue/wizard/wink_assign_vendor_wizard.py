@@ -26,7 +26,6 @@ class WinkAssignVendorWizard(models.TransientModel):
         'res.partner',
         string='Vendor',
         required=True,
-        domain=[('is_company', '=', True)],
         help='Select the vendor to deliver this service. A draft RFQ will be created automatically.',
     )
 

@@ -29,6 +29,10 @@ class _EmptyPricing:
 
 class WinkRequest(http.Controller):
 
+    @staticmethod
+    def _is_bundled_child_service(product):
+        return bool(product and product.commercial_structure == 'bundled' and not product.wink_is_bundle)
+
     def _parse_product_id(self, value):
         """Parse product_id from request; returns int or None on invalid."""
         if not value:
@@ -64,8 +68,12 @@ class WinkRequest(http.Controller):
                 tier_data = [{'tier': t, 'items': t.item_ids.sorted('sequence')} for t in tiers]
                 vals.update({'wink_is_bundle': True, 'bundle': bundle, 'tier_data': tier_data})
 
+        allow_plan_fallback = bool(_is_bundle_product)
+
         # Plan selection: Odoo subscription only (Recurring Prices tab)
-        recurring_lines = product._wink_recurring_plan_lines()
+        recurring_lines = product._wink_recurring_plan_lines(
+            allow_plan_fallback=allow_plan_fallback
+        )
         if recurring_lines:
             vals['recurring_plan_lines'] = recurring_lines
             vals['use_recurring_prices'] = True
@@ -73,7 +81,10 @@ class WinkRequest(http.Controller):
         is_sub = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
         vals['is_subscription_service'] = is_sub
         if is_sub:
-            subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+            subscription_plans = product._wink_subscription_plans_dicts(
+                pricelist_id=False,
+                allow_plan_fallback=allow_plan_fallback,
+            )
             vals['subscription_plans'] = subscription_plans
             vals['selected_plan'] = None  # bundles must NOT pre-select
 
@@ -129,6 +140,8 @@ class WinkRequest(http.Controller):
             ('available_on_wink', '=', True),
         ], limit=1)
         if not product:
+            raise NotFound()
+        if self._is_bundled_child_service(product):
             raise NotFound()
         # Edge case 10.3: already has active subscription for this service
         # UI-BUG-005e (FB-005.7): Exclude cancelled so user can submit new request after cancel
@@ -211,7 +224,11 @@ class WinkRequest(http.Controller):
                 pricing_id = int(pricing_param)
             except (TypeError, ValueError):
                 pricing_id = None
-        subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+        allow_plan_fallback = bool(product.commercial_structure == 'bundled' or product.wink_is_bundle)
+        subscription_plans = product._wink_subscription_plans_dicts(
+            pricelist_id=False,
+            allow_plan_fallback=allow_plan_fallback,
+        )
         selected_plan = None
         if subscription_plans:
             if pricing_id is not None:
@@ -352,6 +369,8 @@ class WinkRequest(http.Controller):
         ], limit=1)
 
         if not product:
+            return request.redirect('/services')
+        if self._is_bundled_child_service(product):
             return request.redirect('/services')
 
         # Default step=1 when product_id present
@@ -527,7 +546,10 @@ class WinkRequest(http.Controller):
                         try:
                             plan_found = False
                             # 1. Try native subscription plans
-                            plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+                            plans = product._wink_subscription_plans_dicts(
+                                pricelist_id=False,
+                                allow_plan_fallback=True,
+                            )
                             for p in (plans or []):
                                 if str(p.get('pricing_id')) == str(rec_id) or str(p.get('recurrence_id')) == str(rec_id):
                                     review_display['plan_name'] = p.get('plan_name', '')
@@ -545,7 +567,10 @@ class WinkRequest(http.Controller):
                         plan_name = ''
                         price_str = ''
                         try:
-                            plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+                            plans = product._wink_subscription_plans_dicts(
+                                pricelist_id=False,
+                                allow_plan_fallback=False,
+                            )
                             for p in (plans or []):
                                 if str(p.get('pricing_id')) == str(rec_id) or str(p.get('recurrence_id')) == str(rec_id):
                                     plan_name = p.get('plan_name', '')
@@ -621,8 +646,12 @@ class WinkRequest(http.Controller):
                     'tier_data': tier_data,
                     'bundle_total_tier': selected_tier_for_total,
                 })
+            allow_plan_fallback = bool(is_bundle_config)
+
             # Plan selection: Odoo subscription only (Recurring Prices tab)
-            recurring_lines = product._wink_recurring_plan_lines()
+            recurring_lines = product._wink_recurring_plan_lines(
+                allow_plan_fallback=allow_plan_fallback
+            )
             if recurring_lines:
                 render_vals['recurring_plan_lines'] = recurring_lines
                 render_vals['use_recurring_prices'] = True
@@ -630,7 +659,10 @@ class WinkRequest(http.Controller):
             is_sub = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
             render_vals['is_subscription_service'] = is_sub
             if is_sub:
-                subscription_plans = product._wink_subscription_plans_dicts(pricelist_id=False)
+                subscription_plans = product._wink_subscription_plans_dicts(
+                    pricelist_id=False,
+                    allow_plan_fallback=allow_plan_fallback,
+                )
                 render_vals['subscription_plans'] = subscription_plans
                 render_vals['selected_plan'] = None  # bundles never pre-select
 
@@ -712,6 +744,8 @@ class WinkRequest(http.Controller):
         ], limit=1) if pid is not None else None
 
         if not product:
+            return request.redirect('/services')
+        if self._is_bundled_child_service(product):
             return request.redirect('/services')
 
         errors = {}
@@ -803,6 +837,8 @@ class WinkRequest(http.Controller):
         ], limit=1)
         if not product:
             return request.redirect('/services')
+        if self._is_bundled_child_service(product):
+            return request.redirect('/services')
 
         partner = request.env.user.partner_id.commercial_partner_id
 
@@ -855,9 +891,27 @@ class WinkRequest(http.Controller):
             variant = tier.product_variant_id
 
         # Plan: Odoo subscription only (Recurring Prices)
-        recurring_lines = product._wink_recurring_plan_lines()
+        allow_plan_fallback = bool(wink_is_bundle)
+        recurring_lines = product._wink_recurring_plan_lines(
+            allow_plan_fallback=allow_plan_fallback
+        )
         use_recurring_prices = bool(recurring_lines)
         is_subscription_service = bool(getattr(product, 'recurring_invoice', False) or product.delivery_model == 'retainer')
+
+        if is_subscription_service and not wink_is_bundle and not use_recurring_prices:
+            vals = self._get_request_form_vals(
+                product,
+                errors={
+                    'subscription_plan': _(
+                        'This retainer service cannot be requested because no recurring plan is configured yet.'
+                    )
+                },
+                post=post,
+            )
+            vals['is_subscription_service'] = True
+            vals['subscription_plans'] = []
+            vals['selected_plan'] = None
+            return request.render('kuec_service_catalogue.wink_request_form', vals)
 
         # v2: validate selected_pricing_id (from request form) — price always from server
         selected_pricing_id = None
@@ -916,7 +970,10 @@ class WinkRequest(http.Controller):
                 vals['recurring_plan_lines'] = recurring_lines
                 vals['use_recurring_prices'] = True
                 vals['is_subscription_service'] = True
-                vals['subscription_plans'] = product._wink_subscription_plans_dicts(pricelist_id=False)
+                vals['subscription_plans'] = product._wink_subscription_plans_dicts(
+                    pricelist_id=False,
+                    allow_plan_fallback=allow_plan_fallback,
+                )
                 vals['selected_plan'] = vals['subscription_plans'][0] if vals['subscription_plans'] else None
                 return request.render('kuec_service_catalogue.wink_request_form', vals)
         elif is_subscription_service and use_recurring_prices and not selected_pricing_id:
@@ -925,7 +982,10 @@ class WinkRequest(http.Controller):
             vals['recurring_plan_lines'] = recurring_lines
             vals['use_recurring_prices'] = True
             vals['is_subscription_service'] = True
-            vals['subscription_plans'] = product._wink_subscription_plans_dicts(pricelist_id=False)
+            vals['subscription_plans'] = product._wink_subscription_plans_dicts(
+                pricelist_id=False,
+                allow_plan_fallback=allow_plan_fallback,
+            )
             vals['selected_plan'] = None
             return request.render('kuec_service_catalogue.wink_request_form', vals)
 

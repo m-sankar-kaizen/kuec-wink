@@ -54,14 +54,24 @@ class KuecCustomerPortal(CustomerPortal):
             values['request_count'] = request_count
 
         # V-1: Vendor Ratings Counter — shown only when user is a vendor (has received POs)
-        if not counters or 'vendor_rating_count' in counters:
-            vendor_partner = request.env.user.partner_id.commercial_partner_id
-            vendor_rating_count = request.env['rating.rating'].sudo().search_count([
-                ('rated_partner_id', 'child_of', vendor_partner.id),
-                ('consumed', '=', True),
-                ('res_model', '=', 'project.task'),
-            ])
-            values['vendor_rating_count'] = vendor_rating_count
+        user_partner = request.env.user.partner_id
+        vendor_partner = user_partner.commercial_partner_id
+        vendor_partner_ids = (vendor_partner | user_partner).ids
+        vendor_rating_domain = [
+            '|',
+            ('rated_partner_id', 'child_of', vendor_partner.id),
+            ('rated_partner_id', 'in', vendor_partner_ids),
+            ('consumed', '=', True),
+            ('res_model', '=', 'project.task'),
+        ]
+        rating_stats = request.env['rating.rating'].sudo().read_group(
+            vendor_rating_domain,
+            ['rating:avg', 'id:count'],
+            [],
+        )
+        stats = rating_stats[0] if rating_stats else {}
+        values['vendor_rating_count'] = stats.get('id_count') or stats.get('__count') or 0
+        values['vendor_avg_rating'] = stats.get('rating_avg') or 0.0
 
         # U-3: My Bundles Counter (confirmed + self-service-cancelled orders with entitlements)
         if not counters or 'bundle_count' in counters:
@@ -1384,10 +1394,14 @@ class KuecCustomerPortal(CustomerPortal):
         Each row shows the service name (task), PO reference, score, feedback, and date.
         Only consumed (submitted) ratings are shown.
         """
-        vendor_partner = request.env.user.partner_id.commercial_partner_id
+        user_partner = request.env.user.partner_id
+        vendor_partner = user_partner.commercial_partner_id
+        vendor_partner_ids = (vendor_partner | user_partner).ids
 
         domain = [
+            '|',
             ('rated_partner_id', 'child_of', vendor_partner.id),
+            ('rated_partner_id', 'in', vendor_partner_ids),
             ('consumed', '=', True),
             ('res_model', '=', 'project.task'),
         ]

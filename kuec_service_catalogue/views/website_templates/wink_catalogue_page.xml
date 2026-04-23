@@ -128,15 +128,9 @@
                 <div class="wink-catalogue-container">
                     <!-- CAT-1, CAT-2 Hero: gradient, optional pattern overlay -->
                     <div class="wink-catalogue-hero kuec-gradient rounded-2xl wink-hero-pattern position-relative">
-                        <!-- Quick links: My Dashboard + My Ratings (logged-in users only) -->
+                        <!-- Quick link: My Dashboard (logged-in users only) -->
                         <t t-if="not request.env.user._is_public()">
-                            <t t-set="has_po" t-value="request.env['purchase.order'].sudo().search_count([('partner_id', 'child_of', request.env.user.partner_id.id), ('state', '!=', 'cancel')]) > 0"/>
                             <div class="d-flex gap-2" style="position:absolute;top:1rem;right:1rem;z-index:10;">
-                                <t t-if="has_po">
-                                    <a href="/my" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
-                                        <i class="fa fa-star me-1" title="My Ratings"/>My Ratings
-                                    </a>
-                                </t>
                                 <a href="/my/dashboard" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
                                     <i class="fa fa-th-large me-1" title="My Dashboard"/>My Dashboard
                                 </a>
@@ -632,9 +626,9 @@
 
                                     <!-- No plans edge case -->
                                     <t t-if="is_subscription_service and not subscription_plans and not is_bundle">
-                                        <p class="text-muted text-center mb-3" style="font-size: 0.85rem;">
-                                            Pricing is customised per client — submit a request and our team will prepare a quote for you.
-                                        </p>
+                                        <div class="alert alert-warning py-2 mb-3 text-start" role="alert">
+                                            <small>This retainer cannot be requested yet because no billing plan is configured. Add at least one line on the product's <strong>Recurring Prices</strong> tab first.</small>
+                                        </div>
                                     </t>
 
                                     <!-- Bundle info -->
@@ -652,14 +646,23 @@
                                     <!-- CTA Button -->
                                     <div class="d-grid mt-3">
                                         <t t-if="request.env.user._is_public()">
-                                            <button type="button"
-                                                    class="wink-cta-btn wink-request-btn"
-                                                    t-att-data-product-id="product.id"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#winkLoginModal">
-                                                <t t-if="is_subscription_service and not subscription_plans">Request a Quote</t>
-                                                <t t-else="">Request Service <i class="fa fa-arrow-right ms-1"/></t>
-                                            </button>
+                                            <t t-if="is_subscription_service and not subscription_plans and not is_bundle">
+                                                <button type="button"
+                                                        class="wink-cta-btn wink-request-btn"
+                                                        disabled="disabled"
+                                                        style="opacity:0.55;pointer-events:none;">
+                                                    Unavailable until billing plan is configured
+                                                </button>
+                                            </t>
+                                            <t t-else="">
+                                                <button type="button"
+                                                        class="wink-cta-btn wink-request-btn"
+                                                        t-att-data-product-id="product.id"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#winkLoginModal">
+                                                    Request Service <i class="fa fa-arrow-right ms-1"/>
+                                                </button>
+                                            </t>
                                         </t>
                                         <t t-elif="entitlement">
                                             <!-- User has an available entitlement — link to dedicated activation page -->
@@ -722,6 +725,14 @@
                                                    t-att-data-service-id="product.id">
                                                     Request Service <i class="fa fa-arrow-right ms-1"/>
                                                 </a>
+                                            </t>
+                                            <t t-elif="is_subscription_service and not subscription_plans">
+                                                <button type="button"
+                                                        class="wink-cta-btn"
+                                                        disabled="disabled"
+                                                        style="opacity:0.55;pointer-events:none;">
+                                                    Unavailable until billing plan is configured
+                                                </button>
                                             </t>
                                             <t t-else="">
                                                 <a t-attf-href="/my/requests/new?product_id=#{product.id}"
