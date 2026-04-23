@@ -1269,8 +1269,14 @@
                             var listEl  = document.getElementById(listId);
                             if (!input || !listEl) return;
 
-                            // DataTransfer holds the managed file collection
+                            // DataTransfer holds the managed file collection submitted by the hidden input.
                             var dt = new DataTransfer();
+
+                            function syncInputFiles() {
+                                try { input.files = dt.files; } catch(e) {}
+                            }
+
+                            picker._winkSyncFiles = syncInputFiles;
 
                             function renderFiles() {
                                 listEl.innerHTML = '';
@@ -1296,7 +1302,7 @@
                                         rmBtn.innerHTML = '&amp;times;';
                                         rmBtn.addEventListener('click', function() {
                                             dt.items.remove(idx);
-                                            try { input.files = dt.files; } catch(e) {}
+                                            syncInputFiles();
                                             renderFiles();
                                         });
 
@@ -1317,10 +1323,8 @@
                                     }
                                     if (!dup) dt.items.add(f);
                                 });
-                                try { input.files = dt.files; } catch(e) {}
+                                syncInputFiles();
                                 renderFiles();
-                                // Reset value so the same file can be re-added after removal
-                                input.value = '';
                             });
 
                             renderFiles();
@@ -1332,6 +1336,11 @@
                         var _form = document.getElementById('wink-activation-form');
                         if (_form) {
                             _form.addEventListener('submit', function(ev) {
+                                document.querySelectorAll('.wink-file-picker').forEach(function(picker) {
+                                    if (typeof picker._winkSyncFiles === 'function') {
+                                        picker._winkSyncFiles();
+                                    }
+                                });
                                 var missing = [];
                                 document.querySelectorAll('.wink-file-real-input[data-required="1"]').forEach(function(inp) {
                                     if (!inp.files || inp.files.length === 0) {
