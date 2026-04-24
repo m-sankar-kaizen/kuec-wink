@@ -13,7 +13,11 @@ class HrInternship(models.Model):
                                  help='Company to which this internship record belongs')
 
     # Basic Information
-    name = fields.Char(string='Reference', required=True, readonly=True, default='/',
+    name = fields.Char(string='Reference',
+                       required=True,
+                       readonly=True,
+                       default='/',
+                       copy=False,
                       help='Auto-generated unique reference number for the internship')
     state = fields.Selection([
         ('draft', 'Draft'),
