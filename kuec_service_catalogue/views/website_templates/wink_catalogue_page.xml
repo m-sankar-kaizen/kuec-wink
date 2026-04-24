@@ -574,7 +574,7 @@
                                             </t>
                                             <div id="wink-plan-cards" class="d-flex flex-column gap-2">
                                                 <t t-foreach="subscription_plans" t-as="plan">
-                                                    <label t-attf-class="wink-plan-card #{'selected' if plan['recurrence_id'] == selected_plan_id else ''}"
+                                                    <label t-att-class="'wink-plan-card selected' if subscription_plans[0]['pricing_id'] == plan['pricing_id'] else 'wink-plan-card'"
                                                            t-att-data-price="'{:,.2f}'.format(plan['price'])"
                                                            t-att-data-period="plan['period_label']"
                                                            t-att-data-pricing-id="plan['pricing_id']"
@@ -585,7 +585,7 @@
                                                         <input type="radio" name="selected_plan_recurrence_id"
                                                                class="d-none"
                                                                t-att-value="plan['recurrence_id_str']"
-                                                               t-att-checked="'checked' if plan['recurrence_id'] == selected_plan_id else None"/>
+                                                               t-att-checked="subscription_plans[0]['pricing_id'] == plan['pricing_id']"/>
                                                         <div class="wink-plan-name"><t t-esc="plan['plan_name']"/></div>
                                                         <t t-if="plan.get('is_most_popular') or plan.get('show_savings')">
                                                             <div class="d-flex gap-1 mb-1 flex-wrap">
