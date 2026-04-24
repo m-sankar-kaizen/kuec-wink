@@ -11,24 +11,23 @@
                 <attribute name="invisible">company_code not in ['KUEC', 'WINK']</attribute>
             </button>
 
-            <!--
-                The extension_request page is currently hidden for non-KUEC.
-                Replace the invisible condition to include WINK.
-            -->
+            <!-- Make the Extension Requests tab visible for WINK as well -->
             <page name="extension_request" position="attributes">
                 <attribute name="invisible">company_code not in ['KUEC', 'WINK']</attribute>
             </page>
 
-            <!-- Add WINK approval state badge as a read-only column in the list.
-                 Approvers open the full form via the external link icon to take action. -->
-            <xpath expr="//page[@name='extension_request']//list//field[@name='state']"
+            <!--
+                Add an Open button after the existing KUEC Reject button.
+                Visible only for WINK — opens the full extend.agreement form
+                where all WINK approval actions live.
+            -->
+            <xpath expr="//page[@name='extension_request']//list//button[@name='action_reject']"
                    position="after">
                 <field name="company_code" column_invisible="1"/>
-                <field name="wink_approval_state"
-                       string="WINK State"
-                       widget="badge"
-                       optional="show"
-                       invisible="company_code not in ['WINK']"/>
+                <button name="action_open_extend_form"
+                        string="Open" type="object"
+                        icon="fa-external-link"
+                        invisible="company_code not in ['WINK']"/>
             </xpath>
 
         </field>

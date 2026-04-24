@@ -6,84 +6,77 @@
         <field name="inherit_id" ref="kaz_pr_and_po_ageing_management.view_extend_agreement_form_wizard"/>
         <field name="arch" type="xml">
 
-            <!-- Add helper fields inside the existing group -->
+            <!-- Add company_code as an invisible helper inside the existing group -->
             <field name="request_user_id" position="after">
                 <field name="company_code" invisible="1"/>
-                <field name="wink_approval_state" invisible="1"/>
             </field>
 
             <!--
-                Insert a header before the sheet.
-                Only visible for WINK company — contains the statusbar and all
-                per-stage approval / reject buttons, each restricted to the
-                appropriate group and approval state.
+                Insert a header before the sheet (WINK only).
+                Contains the statusbar on the shared state field (only draft and
+                approved are pinned as visible steps) and all per-stage approve /
+                reject buttons, each restricted to its approver group.
             -->
-            <xpath expr="//sheet" position="before">
-                <header invisible="company_code not in ['WINK']">
-
+            <xpath expr="//header" position="inside">
                     <!-- Coordinator stage -->
                     <button name="action_coordinator_approval"
                             string="Coordinator Approve" type="object" class="oe_highlight"
                             groups="kaz_wink_approval_doa.group_wink_coordinator"
-                            invisible="wink_approval_state != 'coordinator_approval'"/>
+                            invisible="state != 'coordinator_approval'"/>
                     <button name="action_reject_request"
                             string="Reject" type="object" class="btn btn-danger"
                             groups="kaz_wink_approval_doa.group_wink_coordinator"
-                            invisible="wink_approval_state != 'coordinator_approval'"/>
+                            invisible="state != 'coordinator_approval'"/>
 
                     <!-- Department Head stage -->
                     <button name="action_hod_approval"
                             string="HOD Approve" type="object" class="oe_highlight"
                             groups="kaz_wink_approval_doa.group_wink_head_department"
-                            invisible="wink_approval_state != 'department_approval'"/>
+                            invisible="state != 'department_approval'"/>
                     <button name="action_reject_request"
                             string="Reject" type="object" class="btn btn-danger"
                             groups="kaz_wink_approval_doa.group_wink_head_department"
-                            invisible="wink_approval_state != 'department_approval'"/>
+                            invisible="state != 'department_approval'"/>
 
                     <!-- CCOE stage -->
                     <button name="action_ccoe_approval"
                             string="CCOE Approve" type="object" class="oe_highlight"
                             groups="kaz_wink_approval_doa.group_wink_ccoe"
-                            invisible="wink_approval_state != 'ccoe_approval'"/>
+                            invisible="state != 'ccoe_approval'"/>
                     <button name="action_reject_request"
                             string="Reject" type="object" class="btn btn-danger"
                             groups="kaz_wink_approval_doa.group_wink_ccoe"
-                            invisible="wink_approval_state != 'ccoe_approval'"/>
+                            invisible="state != 'ccoe_approval'"/>
 
                     <!-- Legal Team stage -->
                     <button name="action_legal_approval"
                             string="Legal Approve" type="object" class="oe_highlight"
                             groups="kaz_wink_approval_doa.group_wink_legal_team"
-                            invisible="wink_approval_state != 'legal_approval'"/>
+                            invisible="state != 'legal_approval'"/>
                     <button name="action_reject_request"
                             string="Reject" type="object" class="btn btn-danger"
                             groups="kaz_wink_approval_doa.group_wink_legal_team"
-                            invisible="wink_approval_state != 'legal_approval'"/>
+                            invisible="state != 'legal_approval'"/>
 
                     <!-- CEO stage -->
                     <button name="action_ceo_approval"
                             string="CEO Approve" type="object" class="oe_highlight"
                             groups="kaz_wink_approval_doa.group_wink_ceo"
-                            invisible="wink_approval_state != 'ceo_approval'"/>
+                            invisible="state != 'ceo_approval'"/>
                     <button name="action_reject_request"
                             string="Reject" type="object" class="btn btn-danger"
                             groups="kaz_wink_approval_doa.group_wink_ceo"
-                            invisible="wink_approval_state != 'ceo_approval'"/>
+                            invisible="state != 'ceo_approval'"/>
 
-                    <field name="wink_approval_state"
-                           widget="statusbar"
-                           statusbar_visible="draft,coordinator_approval,department_approval,ccoe_approval,legal_approval,ceo_approval,approved"/>
+                    <!-- Only pin draft and approved; intermediate WINK stages
+                         appear automatically as the current state progresses -->
 
-                </header>
+
             </xpath>
 
-            <!--
-                Hide the "Request" footer button once the WINK flow is in progress
-                so the form acts as a read-only approval view from that point on.
-            -->
+            <!-- Hide the Request footer button once the WINK flow is in progress -->
             <button name="action_notify" position="attributes">
-                <attribute name="invisible">company_code in ['WINK'] and wink_approval_state != 'draft'</attribute>
+                <attribute name="invisible">company_code in ['WINK'] and state != 'draft'</attribute>
             </button>
 
         </field>

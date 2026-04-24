@@ -8,7 +8,7 @@ from odoo.exceptions import ValidationError
 class ExtendAgreement(models.Model):
     _name = 'extend.agreement'
     _description = 'Extend Agreement'
-    _inherit = ['mail.thread', 'mail.activity']
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     purchase_requisition_id = fields.Many2one('purchase.requisition', string="Purchase Requisition")
     new_date_end = fields.Date(string="New Date End", required=True)
@@ -90,3 +90,15 @@ class ExtendAgreement(models.Model):
         """Reject the extension request"""
         for record in self:
             record.state = 'rejected'
+
+    def action_open_extend_form(self):
+        """Open this extension request as a full form popup."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Extension Request'),
+            'view_mode': 'form',
+            'res_model': 'extend.agreement',
+            'res_id': self.id,
+            'target': 'new',
+        }

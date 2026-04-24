@@ -4,10 +4,15 @@
         <field name="model">extend.agreement</field>
         <field name="arch" type="xml">
             <form string="Extend Agreement">
+                <header>
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,approved"/>
+                </header>
                 <sheet>
                     <group>
                         <field name="purchase_requisition_id" readonly="1"/>
-                        <field name="new_date_end" required="1"/>
+                        <field name="new_date_end" required="1" readonly="state != 'draft'"/>
                         <field name="request_user_id" readonly="1"/>
                     </group>
                     <footer>
