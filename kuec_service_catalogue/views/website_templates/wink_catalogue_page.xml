@@ -574,10 +574,12 @@
                                             </t>
                                             <div id="wink-plan-cards" class="d-flex flex-column gap-2">
                                                 <t t-foreach="subscription_plans" t-as="plan">
+<!--                                                    <t t-esc="'plaaan', plan"/>-->
                                                     <label t-attf-class="wink-plan-card #{'selected' if plan['recurrence_id'] == selected_plan_id else ''}"
                                                            t-att-data-price="'{:,.2f}'.format(plan['price'])"
                                                            t-att-data-period="plan['period_label']"
                                                            t-att-data-recurrence-id="plan['recurrence_id_str']"
+                                                           t-att-data-pricing-id="plan['pricing_id']"
                                                            t-att-data-savings="plan.get('savings_pct', 0)"
                                                            t-att-data-monthly-equiv="'{:,.2f}'.format(plan.get('monthly_equivalent') or plan['price'])"
                                                            t-att-style="'' if plan['period_label'] == active_period else 'display:none'">
@@ -723,7 +725,7 @@
                                                    id="wink-detail-request-btn"
                                                    t-att-data-product-id="product.id"
                                                    t-att-data-service-id="product.id">
-                                                    Request Service <i class="fa fa-arrow-right ms-1"/>
+                                                    Request Servicessss <i class="fa fa-arrow-right ms-1"/>
                                                 </a>
                                             </t>
                                             <t t-elif="is_subscription_service and not subscription_plans">
@@ -802,7 +804,7 @@
                                         btn.addEventListener('click', function(e) {
                                             e.preventDefault();
                                             var sel = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
-                                            var rid = sel ? sel.getAttribute('data-recurrence-id') : null;
+                                            var rid = sel ? sel.getAttribute('data-pricing-id') : null;
                                             var sid = btn.getAttribute('data-service-id');
                                             if (sid) window.location.href = '/services/' + sid + '/request' + (rid ? '?plan=' + rid : '');
                                         });
