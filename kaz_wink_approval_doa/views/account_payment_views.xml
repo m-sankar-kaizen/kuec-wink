@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_account_payment_form_wink_doa" model="ir.ui.view">
+        <field name="name">account.payment.form.inherit.kaz.wink.doa.approval</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Hidden helper fields -->
+            <xpath expr="//field[@name='partner_id']" position="before">
+                <field name="company_code" invisible="1"/>
+                <field name="from_bill" invisible="1"/>
+                <field name="wink_approval_state" invisible="1"/>
+            </xpath>
+
+            <!-- Delivery Type field — readonly when payment originated from bill wizard -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="delivery_type"
+                       readonly="from_bill"
+                       invisible="company_code not in ['WINK']"
+                       required="company_code in ['WINK']"/>
+            </xpath>
+
+            <!-- Block the Confirm button for unapproved WINK non-general payments -->
+            <xpath expr="//button[@name='action_post']" position="attributes">
+                <attribute name="invisible"
+                           add="company_code in ['WINK'] and delivery_type in ['project', 'retainer'] and wink_approval_state != 'approved'"
+                           separator="or"/>
+            </xpath>
+
+            <!-- WINK approval action buttons in header -->
+            <header position="inside">
+
+                <button name="submit_to_approve"
+                        string="Submit for Approval" type="object" class="oe_highlight"
+                        invisible="company_code not in ['WINK'] or delivery_type == 'general' or wink_approval_state != 'draft'"/>
+
+                <button name="action_hod_approval"
+                        string="Department Head Approve" type="object" class="oe_highlight"
+                        groups="kaz_wink_approval_doa.group_wink_head_department"
+                        invisible="wink_approval_state != 'department_approval'"/>
+                <button name="action_reject_request"
+                        string="Reject" type="object" class="btn btn-danger"
+                        groups="kaz_wink_approval_doa.group_wink_head_department"
+                        invisible="wink_approval_state != 'department_approval'"/>
+                <button name="action_rfc_request"
+                        string="Return for Correction" type="object" class="btn"
+                        groups="kaz_wink_approval_doa.group_wink_head_department"
+                        invisible="wink_approval_state != 'department_approval'"/>
+
+                <button name="action_ccoe_approval"
+                        string="CCOE Approve" type="object" class="oe_highlight"
+                        groups="kaz_wink_approval_doa.group_wink_ccoe"
+                        invisible="wink_approval_state != 'ccoe_approval'"/>
+                <button name="action_reject_request"
+                        string="Reject" type="object" class="btn btn-danger"
+                        groups="kaz_wink_approval_doa.group_wink_ccoe"
+                        invisible="wink_approval_state != 'ccoe_approval'"/>
+                <button name="action_rfc_request"
+                        string="Return for Correction" type="object" class="btn"
+                        groups="kaz_wink_approval_doa.group_wink_ccoe"
+                        invisible="wink_approval_state != 'ccoe_approval'"/>
+
+                <field name="wink_approval_state"
+                       widget="statusbar"
+                       statusbar_visible="draft,approved"
+                       invisible="company_code not in ['WINK'] or delivery_type == 'general'"/>
+
+            </header>
+
+            <!-- Approval history section at bottom of sheet -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Approval History"
+                       invisible="not payment_approval_ids or company_code not in ['WINK']">
+                    <field name="payment_approval_ids" nolabel="1">
+                        <list create="0" edit="0" delete="0">
+                            <field name="current_display_name" column_invisible="1"/>
+                            <field name="sequence"/>
+                            <field name="parent_state_at_request" optional="show"/>
+                            <field name="request_type"/>
+                            <field name="create_uid" string="Signed By"/>
+                            <field name="create_date" string="Signed At" optional="hide"/>
+                            <field name="signature" widget="signature"
+                                   options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                            <field name="reason"/>
+                            <field name="company_id" optional="hide"/>
+                        </list>
+                    </field>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

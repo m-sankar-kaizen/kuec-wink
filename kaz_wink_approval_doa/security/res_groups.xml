@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="module_category_wink_doa" model="ir.module.category">
+        <field name="name">WINK DOA/Access Rights</field>
+        <field name="sequence" eval="31"/>
+    </record>
+
+    <record id="group_wink_coordinator" model="res.groups">
+        <field name="name">Coordinator</field>
+        <field name="category_id" ref="module_category_wink_doa"/>
+    </record>
+
+    <record id="group_wink_head_department" model="res.groups">
+        <field name="name">Department Head</field>
+        <field name="category_id" ref="module_category_wink_doa"/>
+    </record>
+
+    <record id="group_wink_ccoe" model="res.groups">
+        <field name="name">CCOE</field>
+        <field name="category_id" ref="module_category_wink_doa"/>
+    </record>
+
+    <record id="group_wink_legal_team" model="res.groups">
+        <field name="name">Legal Team</field>
+        <field name="category_id" ref="module_category_wink_doa"/>
+    </record>
+
+    <record id="group_wink_ceo" model="res.groups">
+        <field name="name">CEO</field>
+        <field name="category_id" ref="module_category_wink_doa"/>
+    </record>
+
+    <record id="group_wink_reset_draft" model="res.groups">
+        <field name="name">Reset to Draft</field>
+        <field name="category_id" ref="module_category_wink_doa"/>
+    </record>
+
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_move_form_wink_doa" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.kaz.wink.doa.approval</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Extend action_post invisibility to block WINK moves until approved -->
+            <xpath expr="//button[@name='action_post'][1]" position="attributes">
+                <attribute name="invisible" add="company_code in ['WINK'] and kuec_approval_state != 'approved'"
+                           separator="or"/>
+            </xpath>
+            <xpath expr="//button[@name='action_post'][2]" position="attributes">
+                <attribute name="invisible" add="company_code in ['WINK'] and kuec_approval_state != 'approved'"
+                           separator="or"/>
+            </xpath>
+
+            <!-- Extend button_cancel invisibility to block cancellation once WINK is in-flight -->
+            <xpath expr="//button[@name='button_cancel'][1]" position="attributes">
+                <attribute name="invisible" add="company_code in ['WINK'] and kuec_approval_state != 'draft'"
+                           separator="or"/>
+            </xpath>
+            <xpath expr="//button[@name='button_cancel'][2]" position="attributes">
+                <attribute name="invisible" add="company_code in ['WINK'] and kuec_approval_state != 'draft'"
+                           separator="or"/>
+            </xpath>
+
+            <!-- Allow submit_to_approve to show for both KUEC and WINK companies -->
+            <xpath expr="//button[@name='submit_to_approve']" position="attributes">
+                <attribute name="invisible">kuec_approval_state != 'draft' or company_code not in ['KUEC', 'WINK']</attribute>
+            </xpath>
+
+            <!-- Coordinator approval buttons (WINK only) -->
+            <xpath expr="//button[@name='submit_to_approve']" position="after">
+                <button name="action_coordinator_approval"
+                        string="Coordinator Approve" type="object" class="oe_highlight"
+                        groups="kaz_wink_approval_doa.group_wink_coordinator"
+                        invisible="kuec_approval_state != 'coordinator_approval'"/>
+                <button name="action_reject_request"
+                        string="Reject" type="object" class="btn btn-danger"
+                        groups="kaz_wink_approval_doa.group_wink_coordinator"
+                        invisible="kuec_approval_state != 'coordinator_approval'"/>
+                <button name="action_rfc_request"
+                        string="Return for Correction" type="object" class="btn"
+                        groups="kaz_wink_approval_doa.group_wink_coordinator"
+                        invisible="kuec_approval_state != 'coordinator_approval'"/>
+            </xpath>
+
+            <!-- Show the approval statusbar for WINK as well as KUEC -->
+            <xpath expr="//field[@name='kuec_approval_state']" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC', 'WINK']</attribute>
+            </xpath>
+
+            <!-- Delivery Model field — visible on move form for WINK company -->
+            <xpath expr="//group[@name='accounting_info_group']/field[@name='company_id']" position="before">
+                <field name="delivery_model"
+                       string="Delivery Model"
+                       invisible="company_code not in ['WINK']"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

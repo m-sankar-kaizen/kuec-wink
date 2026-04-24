@@ -122,8 +122,16 @@ class AccountMove(models.Model):
         else:
             raise UserError(_("A Department Head is not assigned for this employee."))
 
+    def _validate_lines(self):
+        if not self.invoice_line_ids:
+            raise ValidationError(
+                _("At least One invoice line is required for submission")
+            )
+
+
     def submit_to_approve(self):
         self.ensure_one()
+        self._validate_lines()
         if self.company_code not in ['KUEC']:
             return
         # if self.move_type in ['in_invoice']:
@@ -228,6 +236,13 @@ class AccountMove(models.Model):
             if rec.company_code in ['KUEC'] and rec.kuec_approval_state != 'draft':
                 rec.kuec_approval_state = 'draft'
         return res
+
+    def button_cancel(self):
+        for order in self:
+            if order.company_code in ['KUEC']:
+                order.kuec_approval_state = 'cancel'
+        return super().button_cancel()
+
 
     @api.depends_context('uid')
     @api.depends('state')
