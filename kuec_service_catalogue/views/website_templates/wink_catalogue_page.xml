@@ -577,6 +577,7 @@
                                                     <label t-attf-class="wink-plan-card #{'selected' if plan['recurrence_id'] == selected_plan_id else ''}"
                                                            t-att-data-price="'{:,.2f}'.format(plan['price'])"
                                                            t-att-data-period="plan['period_label']"
+                                                           t-att-data-pricing-id="plan['pricing_id']"
                                                            t-att-data-recurrence-id="plan['recurrence_id_str']"
                                                            t-att-data-savings="plan.get('savings_pct', 0)"
                                                            t-att-data-monthly-equiv="'{:,.2f}'.format(plan.get('monthly_equivalent') or plan['price'])"
@@ -802,7 +803,7 @@
                                         btn.addEventListener('click', function(e) {
                                             e.preventDefault();
                                             var sel = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
-                                            var rid = sel ? sel.getAttribute('data-recurrence-id') : null;
+                                            var rid = sel ? sel.getAttribute('data-pricing-id') : null;
                                             var sid = btn.getAttribute('data-service-id');
                                             if (sid) window.location.href = '/services/' + sid + '/request' + (rid ? '?plan=' + rid : '');
                                         });
