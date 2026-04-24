@@ -57,6 +57,7 @@ class WinkCatalogue(http.Controller):
         search = kwargs.get('search')
         if search:
             domain.append(('name', 'ilike', search))
+        domain.append(('company_id', 'in', [False, request.website.company_id.id]))
 
         products = Product.search(domain)
 
