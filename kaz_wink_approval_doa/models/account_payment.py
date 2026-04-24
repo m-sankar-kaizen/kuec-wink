@@ -147,28 +147,68 @@ class AccountPayment(models.Model):
         return self._open_approve_reject_wizard('Return for Correction', 'rfc', 'action_rfc_request')
 
     def _approve_and_post(self):
-        """Set state to approved, post the payment, and reconcile stored bill lines.
+        """Set state to approved, post the payment, and reconcile with the source bill.
+
+        Mirrors the base wizard's _post_payments + _reconcile_payments sequence
+        (including matched_payment_ids) for payments that were deferred from the
+        wizard because they required approval.
 
         Workflow:
-            1. Set wink_approval_state to 'approved'.
-            2. Call action_post() to generate and post the journal entry.
-            3. Reconcile payment journal lines against stored bill move lines.
+            1. Cache stored bill lines before any state change.
+            2. Set wink_approval_state to 'approved'.
+            3. Call action_post() — triggers write() which generates and posts the
+               journal entry synchronously via _generate_journal_entry().
+            4. Flush ORM write-queue and invalidate record cache so move_id is fresh.
+            5. Reconcile payment AR/AP lines with bill lines per account, using
+               filtered_domain exactly as the base _reconcile_payments does.
+            6. Add self to matched_payment_ids on the source invoice — same as
+               lines.move_id.matched_payment_ids += payment in the base wizard.
+            7. Clear reconcile_move_line_ids.
         """
         self.ensure_one()
+        # Cache before any write — state changes can dirty the ORM cache
+        bill_lines = self.reconcile_move_line_ids
         self._perform_action('approved')
         self.action_post()
-        if self.reconcile_move_line_ids:
-            valid_account_types = self._get_valid_payment_account_types()
-            domain = [
-                ('parent_state', '=', 'posted'),
-                ('account_type', 'in', valid_account_types),
-                ('reconciled', '=', False),
-            ]
-            payment_lines = self.move_id.line_ids.filtered_domain(domain)
-            bill_lines = self.reconcile_move_line_ids.filtered(lambda l: not l.reconciled)
-            if payment_lines and bill_lines:
-                (payment_lines + bill_lines).reconcile()
-            self.reconcile_move_line_ids = [fields.Command.clear()]
+
+        if not bill_lines:
+            return
+
+        # Flush pending DB writes and drop cached field values so that move_id
+        # and its line_ids reflect the journal entry just created by action_post()
+        self.env.cr.flush()
+        self.invalidate_recordset()
+
+        valid_account_types = self._get_valid_payment_account_types()
+        payment_move = self.move_id
+        if not payment_move or payment_move.state != 'posted':
+            return
+
+        payment_line_domain = [
+            ('parent_state', '=', 'posted'),
+            ('account_type', 'in', valid_account_types),
+            ('reconciled', '=', False),
+        ]
+        payment_lines = payment_move.line_ids.filtered_domain(payment_line_domain)
+        open_bill_lines = bill_lines.filtered_domain([
+            ('reconciled', '=', False),
+            ('parent_state', '=', 'posted'),
+        ])
+
+        if payment_lines and open_bill_lines:
+            # Per-account reconciliation — mirrors base _reconcile_payments exactly
+            for account in payment_lines.account_id:
+                (payment_lines + open_bill_lines).filtered_domain([
+                    ('account_id', '=', account.id),
+                    ('reconciled', '=', False),
+                    ('parent_state', '=', 'posted'),
+                ]).reconcile()
+
+            # Mirror: lines.move_id.matched_payment_ids += payment (base wizard)
+            # This populates the "In Payment" link visible on the invoice form.
+            open_bill_lines.move_id.matched_payment_ids |= self
+
+        self.reconcile_move_line_ids = [fields.Command.clear()]
 
     def action_post(self):
         """Override to block posting for unapproved WINK project/retainer payments."""
@@ -176,10 +216,11 @@ class AccountPayment(models.Model):
             if (payment.company_code == 'WINK'
                     and payment.delivery_type in ('project', 'retainer')
                     and payment.wink_approval_state != 'approved'):
-                raise UserError(_(
-                    "Payment '%s' requires approval before it can be confirmed. "
-                    "Please submit it for approval first."
-                ) % payment.name)
+                # raise UserError(_(
+                #     "Payment '%s' requires approval before it can be confirmed. "
+                #     "Please submit it for approval first."
+                # ) % payment.name)
+                return False
         return super().action_post()
 
     def action_cancel(self):

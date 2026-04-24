@@ -18,18 +18,12 @@ class AccountPaymentRegister(models.TransientModel):
     @api.model
     def default_get(self, fields_list):
         """Populate delivery_type from the source invoice for WINK companies."""
-        import logging
         res = super().default_get(fields_list)
-        logging.info(f"resres: {res}")
         if self.env.company.company_code == 'WINK':
             active_id = self._context.get('active_id')
-            logging.info(f"active_id active_id: {active_id}")
             if active_id:
                 invoice = self.env['account.move'].browse(active_id)
-                logging.info(f"invoice invoice: {invoice}")
                 res['delivery_type'] = invoice.delivery_model or 'general'
-                logging.info(f"invoice invoice.delivery_model: {invoice.delivery_model}")
-                logging.info(f"res: {res}")
 
         return res
 
@@ -57,18 +51,3 @@ class AccountPaymentRegister(models.TransientModel):
                     res['reconcile_move_line_ids'] = [fields.Command.set(bill_lines.ids)]
         return res
 
-    def _post_payments(self, to_process, edit_mode=False):
-        """Skip posting for WINK project/retainer payments — they need approval first."""
-        if self.company_code != 'WINK':
-            return super()._post_payments(to_process, edit_mode)
-        general = [v for v in to_process if v['payment'].delivery_type == 'general']
-        if general:
-            super()._post_payments(general, edit_mode)
-
-    def _reconcile_payments(self, to_process, edit_mode=False):
-        """Skip reconciliation for WINK non-general payments — handled after approval."""
-        if self.company_code != 'WINK':
-            return super()._reconcile_payments(to_process, edit_mode)
-        general = [v for v in to_process if v['payment'].delivery_type == 'general']
-        if general:
-            super()._reconcile_payments(general, edit_mode)

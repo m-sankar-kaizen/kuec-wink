@@ -28,7 +28,6 @@
         'views/account_move_views.xml',
         'views/account_payment_approval_views.xml',
         'views/account_payment_views.xml',
-        'wizards/account_payment_register_views.xml',
     ],
     'license': 'LGPL-3',
     'installable': True,
