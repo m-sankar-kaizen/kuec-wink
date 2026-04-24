@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- Server Action Definition:
+         This server action allows users to confirm draft assets directly from the list or form view by automatically computing the depreciation board and validating the asset.
+    -->
+    <record id="action_account_asset_inherit_from_list" model="ir.actions.server">
+        <field name="name">Asset Confirmation</field>
+        <field name="type">ir.actions.server</field>
+        <field name="model_id" ref="account_asset.model_account_asset"/>
+        <field name="binding_model_id" ref="account_asset.model_account_asset"/>
+        <field name="state">code</field>
+        <field name="code">
+            for record in records:
+                if record.state == 'draft':
+                    record.compute_depreciation_board()
+                    record.validate()
+        </field>
+    </record>
+</odoo>

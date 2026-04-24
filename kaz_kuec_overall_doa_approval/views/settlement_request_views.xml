@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_settlement_request_list" model="ir.ui.view">
+        <field name="name">settlement.request.list</field>
+        <field name="model">settlement.request</field>
+        <field name="arch" type="xml">
+            <list string="Settlement Requests">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="request_type"/>
+                <field name="kuec_approval_state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_settlement_request_form" model="ir.ui.view">
+        <field name="name">settlement.request.form</field>
+        <field name="model">settlement.request</field>
+        <field name="arch" type="xml">
+            <form string="Settlement Request">
+                <header>
+                    <button name="submit_to_approve" string="Submit for Approval" type="object" class="oe_highlight"
+                            invisible="kuec_approval_state != 'draft'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="kuec_approval_state != 'draft'"/>
+
+                    <button name="action_reconcile" string="Reconcile" type="object" class="oe_highlight"
+                            invisible="kuec_approval_state != 'approved'"/>
+
+                    <button name="action_hod_approval"
+                            string="HOD Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+                            invisible="kuec_approval_state != 'department_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'department_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'department_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_ccoe_approval"
+                            string="CCOE Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            invisible="kuec_approval_state != 'ccoe_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'ccoe_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'ccoe_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <field name="kuec_approval_state"
+                           widget="statusbar"
+                           statusbar_visible="draft,approved"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="company_id" readonly="1"/>
+                            <field name="request_type" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Settlements">
+                            <field name="settlement_ids" widget="one2many" readonly="1"/>
+                        </page>
+
+                        <page name="settlement_request_approval" string="Signed Approval History"
+                              invisible="not settlement_request_approval_ids">
+                            <field name="settlement_request_approval_ids">
+                                <list editable="bottom" create="0" edit="0" delete="0">
+                                    <field name="current_display_name" column_invisible="1"/>
+                                    <field name="sequence"/>
+                                    <field name="parent_state_at_request" optional="show"/>
+                                    <field name="request_type"/>
+                                    <field name="create_uid" string="Signed By"/>
+                                    <field name="create_date" string="Signed At" optional="hide"/>
+                                    <field name="signature" widget="signature"
+                                           options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                                    <field name="reason"/>
+                                    <field name="company_id" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_settlement_request_search" model="ir.ui.view">
+        <field name="name">settlement.request.search</field>
+        <field name="model">settlement.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Settlement Requests">
+
+                <!-- Quick search -->
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="request_type"/>
+
+                <!-- Filters -->
+                <filter string="Draft"
+                        name="draft"
+                        domain="[('kuec_approval_state', '=', 'draft')]"/>
+
+                <filter string="Department Approval"
+                        name="department_approval"
+                        domain="[('kuec_approval_state', '=', 'department_approval')]"/>
+
+                <filter string="CCOE Approval"
+                        name="ccoe_approval"
+                        domain="[('kuec_approval_state', '=', 'ccoe_approval')]"/>
+
+                <filter string="Approved"
+                        name="approved"
+                        domain="[('kuec_approval_state', '=', 'approved')]"/>
+
+                <filter string="Rejected"
+                        name="rejected"
+                        domain="[('kuec_approval_state', '=', 'rejected')]"/>
+
+                <filter string="Cancelled"
+                        name="cancel"
+                        domain="[('kuec_approval_state', '=', 'cancel')]"/>
+
+                <separator/>
+
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter string="Company"
+                            name="group_company"
+                            context="{'group_by': 'company_id'}"/>
+
+                    <filter string="Request Type"
+                            name="group_request_type"
+                            context="{'group_by': 'request_type'}"/>
+
+                    <filter string="Approval State"
+                            name="group_state"
+                            context="{'group_by': 'kuec_approval_state'}"/>
+                </group>
+
+            </search>
+        </field>
+    </record>
+
+
+</odoo>

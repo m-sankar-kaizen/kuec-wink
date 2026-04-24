@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_hr_employee_form_inherit_age" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.age</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='birthday']" position="after">
+                <field name="age" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_hr_department_graph_avg_age" model="ir.ui.view">
+        <field name="name">hr.department.graph.average.age</field>
+        <field name="model">hr.department</field>
+        <field name="arch" type="xml">
+            <graph string="Average Age by Department" type="bar">
+                <field name="name" type="row"/>
+                <field name="average_age" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_hr_department_pivot_avg_age" model="ir.ui.view">
+        <field name="name">hr.department.pivot.average.age</field>
+        <field name="model">hr.department</field>
+        <field name="arch" type="xml">
+            <pivot string="Average Age by Department">
+                <field name="name" type="row"/>
+                <field name="average_age" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+
+    <record id="act_hr_department_graph_view_kanban_action" model="ir.actions.act_window.view">
+        <field name="sequence" eval="25"/>
+        <field name="view_mode">graph</field>
+        <field name="act_window_id" ref="hr.hr_department_kanban_action"/>
+    </record>
+    <record id="act_hr_department_pivot_view_kanban_action" model="ir.actions.act_window.view">
+        <field name="sequence" eval="25"/>
+        <field name="view_mode">pivot</field>
+        <field name="act_window_id" ref="hr.hr_department_kanban_action"/>
+    </record>
+
+    <record id="act_hr_department_graph_view_tree_action" model="ir.actions.act_window.view">
+        <field name="sequence" eval="25"/>
+        <field name="view_mode">graph</field>
+        <field name="act_window_id" ref="hr.hr_department_tree_action"/>
+    </record>
+    <record id="act_hr_department_pivot_view_tree_action" model="ir.actions.act_window.view">
+        <field name="sequence" eval="25"/>
+        <field name="view_mode">pivot</field>
+        <field name="act_window_id" ref="hr.hr_department_tree_action"/>
+    </record>
+</odoo>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_year_list" model="ir.ui.view">
+        <field name="name">year.year.list</field>
+        <field name="model">year.year</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_year_form" model="ir.ui.view">
+        <field name="name">year.year.form</field>
+        <field name="model">year.year</field>
+        <field name="arch" type="xml">
+            <form string="Year">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="sequence" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="company_id" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_year_search" model="ir.ui.view">
+        <field name="name">year.year.search</field>
+        <field name="model">year.year</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <filter string="Current Year"
+                        name="current_year"
+                        domain="[
+                            ('date_from','&lt;=',context_today()),
+                            ('date_to','&gt;=',context_today())
+                        ]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Company"
+                            name="group_company"
+                            context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_year_year" model="ir.actions.act_window">
+        <field name="name">Years</field>
+        <field name="res_model">year.year</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_year_search"/>
+        <field name="context">{}</field>
+    </record>
+
+    <menuitem id="menu_year_year"
+              name="Year"
+              parent="kaz_employee_performance_kuec.menu_performance_evaluation_conf"
+              action="action_year_year"
+              sequence="5"/>
+
+</odoo>

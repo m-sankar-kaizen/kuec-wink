@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherit the HR Grade Form View to Add a Field for Leave Travel Allowance
+        This customization adds a new field `ticket_type_id` under a new group
+        titled "Leave Travel Allowance". This field allows the HR user to assign
+        a default ticket type (e.g., Economy, Business) per employee grade.
+    -->
+
+    <record id="action_hr_grade_form" model="ir.ui.view">
+        <field name="name">action_hr_grade_form_inherit_ticket</field>
+        <field name="model">hr.grade</field>
+        <!-- Reference to the original HR grade form view from the kaz_employees module -->
+        <field name="inherit_id" ref="kaz_employees.action_hr_grade_form"/>
+
+        <field name="arch" type="xml">
+            <!--
+                Insert the new group after the second existing group on the form.
+                This location is chosen to keep ticket-related fields visually separate.
+            -->
+            <xpath expr="//sheet/group[2]" position="after">
+                <group>
+                    <!-- Ticket-related group for LTA (Leave Travel Allowance) -->
+                    <group string="Leave Travel Allowance">
+                        <!-- Field to select the default ticket type for this grade -->
+                        <field name="ticket_type_id"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

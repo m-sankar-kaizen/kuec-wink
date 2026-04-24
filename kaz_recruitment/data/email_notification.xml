@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="0">
+    <!--
+   Email Template: Notify internal users when a new job is listed.
+
+   This template is intended to be triggered manually or programmatically
+   when a new `hr.job` record is created. The template notifies users
+   through email with a direct application link (if provided).
+
+   Context requirements:
+       - ctx['user']: The user to whom the email is addressed.
+       - ctx['link']: (Optional) URL link to the job page (e.g. a website or portal job listing).
+
+   Fields:
+       - name: Human-readable name for the email template.
+       - model_id: Links the template to the `hr.job` model.
+       - subject: Subject of the email.
+       - partner_to / email_to: Logic to decide the recipient based on whether the user has a partner.
+       - description: Purpose of the email.
+       - body_html: The HTML content of the email.
+   -->
+    <!--Email template for new job -->
+    <record id="email_template_new_job" model="mail.template">
+        <field name="name">New Job listed</field>
+        <field name="model_id" ref="kaz_recruitment.model_hr_job"/>
+        <field name="subject">New Job listed</field>
+<!--        <field name="partner_to">{{ ctx.get('user').partner_id != False and ctx.get('user').partner_id.id }}</field>-->
+<!--        <field name="email_to">{{ (not ctx.get('user').partner_id and ctx.get('user').email_from) }}</field>-->
+        <field name="email_to">{{ ctx.get('employee').work_email }}</field>
+        <field name="description">Notify Users of new job</field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear <span class="ms-1" t-esc="ctx.get('employee').name"/>,
+        <br/>
+        Hope you are doing well.
+        <br/>
+        <br/>
+        There is a new job listed for the position
+        <strong t-out="object.name"/>.
+        <br/>
+
+        <t t-if="ctx.get('link')">
+            Click on the button to apply:
+            <br/>
+            <br/>
+            <br/>
+            <div style="display: flex; justify-content: center;">
+                <a t-att-href="ctx.get('link')"
+                   type="button"
+                   class="btn btn-primary"
+                   style="background: #3a93af; font-size: 12px; color: #FFFFFF; display: block; padding: 8px 12px 11px; text-decoration: none !important; font-weight: 400;">
+                    Go to Job
+                </a>
+            </div>
+        </t>
+    </p>
+</div>
+        </field>
+    </record>
+</odoo>

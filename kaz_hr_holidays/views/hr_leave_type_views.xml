@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This XML view inheritance customizes the form view for leave types (`hr.leave.type` model)
+    by adding two hidden Boolean fields: `by_hr_director` and `by_ceo`.
+
+    Purpose:
+    These fields are used to configure whether the selected leave type requires
+    additional validation steps from HR Director or CEO before final approval.
+
+    Field Additions:
+    1. `by_hr_director`:
+       - Type: Boolean
+       - Controls whether leave requests of this type must be validated by the HR Director.
+       - Hidden from the form view (`invisible="1"`), typically used in workflow logic.
+
+    2. `by_ceo`:
+       - Type: Boolean
+       - Controls whether the CEO must approve the leave after HR Director approval.
+       - Also hidden and used in backend logic to manage multi-step leave approval.
+
+    Context of Use:
+    These fields are utilized in the `hr.leave` model’s overridden `action_validate()` method
+    to determine the next step in the approval chain. Groups are notified accordingly.
+
+    Related Models and Groups:
+    - Related model: `hr.leave.type`
+    - Related groups: `time_of_hr_director_group`, `time_of_hr_ceo_group` (defined in security XML)
+-->
+<odoo>
+    <record id="hr_leave_type_form_inherit_v1" model="ir.ui.view">
+        <field name="name">hr.leave.type.form.view.inherit.kaz.hr.holiday</field>
+        <field name="model">hr.leave.type</field>
+        <field name="inherit_id" ref="hr_holidays.edit_holiday_status_form"/>
+        <field name="priority" eval="8"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='leave_validation_type']" position="after">
+                <field name="by_hr_director" invisible="1"/>
+                <field name="by_ceo" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

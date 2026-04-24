@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_disciplinary_action,access_hr_disciplinary_action,model_hr_disciplinary_action,,1,1,1,1
+access_hr_disciplinary_action_type,access_hr_disciplinary_action_type,model_hr_disciplinary_action_type,,1,1,1,1
+access_hr_disciplinary_action_category,access_hr_disciplinary_action_category,model_hr_disciplinary_action_category,,1,1,1,1

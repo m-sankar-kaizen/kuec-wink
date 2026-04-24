@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!--
+    Email Template: Request for Material Purchase Requisition (First Approval)
+    Purpose:
+        - Sent to the line manager or department head for initial approval.
+        - Automatically uses the employee's work email as sender.
+        - Uses fallback logic to determine the recipient (employee's parent or department manager).
+
+    Logic:
+        - `email_to` selects either:
+            1. The direct manager of the employee (`parent_id`)
+            2. OR the department manager if the parent is not set.
+    -->
+
+    <record id="email_confirm_material_purchase_requistion" model="mail.template">
+        <field name="name">Request for Material Purchase Requisition - Send by Email</field>
+        <field name="email_from">{{object.employee_id.work_email}}</field>
+        <field name="subject">Request for Material Purchase Requisition - {{object.name}}</field>
+        <field name="email_to">{{object.employee_id.parent_id.sudo().work_email or
+            object.employee_id.department_id.sudo().manager_id.work_email}}
+        </field>
+        <field name="model_id" ref="material_purchase_requisitions.model_material_purchase_requisition"/>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="font-family: 'Lucida Grande', Ubuntu, Arial, Verdana, sans-serif; font-size: 12px; color: rgb(34, 34, 34); background-color: #FFF; ">
+    <p>Dear<t t-out="object.employee_id.parent_id.sudo().name"/>,
+    </p>
+    <br/>
+    <p>Please approve the request for material requisition with reference number<t t-out="object.name"/>.
+    </p>
+    <br/>
+    <p>Do not hesitate to contact us if you have any questions.</p>
+
+</div>
+        </field>
+    </record>
+
+    <!--
+     Email Template: Approval Request to Purchase Responsible
+     Purpose:
+         - Sent to the designated purchase user (requisition_responsible_id) for final procurement approval.
+         - Automatically uses the employee’s work email as sender.
+
+     Logic:
+         - `email_to` uses the requisition's responsible person email directly.
+     -->
+
+    <record id="email_purchase_requisition" model="mail.template">
+        <field name="name">Approval Request for Purchase Requisition to Purchase User - Send by Email</field>
+        <field name="email_from">{{object.employee_id.work_email}}</field>
+        <field name="subject">Approval Request for Purchase Requisition to Purchase User - {{object.name}}</field>
+        <field name="email_to">{{object.requisiton_responsible_id.work_email}}</field>
+        <field name="model_id" ref="material_purchase_requisitions.model_material_purchase_requisition"/>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="font-family: 'Lucida Grande', Ubuntu, Arial, Verdana, sans-serif; font-size: 12px; color: rgb(34, 34, 34); background-color: #FFF; ">
+    <p>Dear
+        <t t-out="object.requisiton_responsible_id.name"/>,
+    </p>
+    <br/>
+    <p>Please approve the request for material requisition with reference number
+        <t t-out="object.name"/>.
+    </p>
+    <br/>
+    <p>Do not hesitate to contact us if you have any questions.</p>
+
+</div>
+        </field>
+    </record>
+
+</odoo>
+

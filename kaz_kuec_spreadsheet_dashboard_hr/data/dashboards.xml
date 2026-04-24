@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="spreadsheet_dashboard_employees_gender" model="spreadsheet.dashboard">
+        <field name="name">KUEC Employee</field>
+        <field name="spreadsheet_binary_data" type="base64" file="kaz_kuec_spreadsheet_dashboard_hr/data/files/male_female_employees_dashboard.json"/>
+        <field name="main_data_model_ids" eval="[(4, ref('hr.model_hr_employee'))]"/>
+        <field name="sample_dashboard_file_path">kaz_kuec_spreadsheet_dashboard_hr/data/files/male_female_employees_dashboard.json</field>
+        <field name="dashboard_group_id" ref="spreadsheet_dashboard.spreadsheet_dashboard_group_hr"/>
+        <field name="group_ids" eval="[Command.link(ref('hr.group_hr_manager'))]"/>
+        <field name="sequence">100</field>
+        <field name="is_published">True</field>
+    </record>
+
+</odoo>

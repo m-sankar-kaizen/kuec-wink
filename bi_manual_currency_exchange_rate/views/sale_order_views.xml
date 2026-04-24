@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    View Extension: Manual Currency Rate Fields in Sale Order Form
+
+    Purpose:
+    - This XML modifies the standard `sale.order` form view to support manual currency rate entry.
+    - It introduces two custom fields:
+        1. `sale_manual_currency_rate_active`: A toggle to enable manual FX rate usage.
+        2. `sale_manual_currency_rate`: A float field to input the custom rate.
+
+    Functional Use Case:
+    - Useful when a sales deal requires a locked-in exchange rate different from Odoo's real-time conversion.
+    - Helps businesses override automatic currency conversion for specific orders.
+
+    Behavior:
+    - Both fields appear right after `payment_term_id`.
+    - They are read-only when the order is in `sale`, `done`, or `cancel` state.
+    - The rate field is required and visible only when the toggle is activated.
+-->
+<odoo>
+    <!-- View definition record -->
+    <record id="view_sale_form_exchange_rate_field_add_inherit" model="ir.ui.view">
+        <field name="name">view.sale.form.exchange.rate.field.add.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <field name="payment_term_id" position="after">
+
+                <label for="currency_id" groups="base.group_multi_currency"/>
+                <div name="journal_div" class="d-flex"
+                     groups="base.group_multi_currency">
+                    <div name="in_and_refresh_button_div" groups="base.group_multi_currency"
+                         class="d-flex flex-column mx-3 text-center" style="width: 6ch;">
+                        <field name="expected_currency_rate" invisible="1"/>
+                        <div class="d-flex flex-column justify-content-center flex-grow-1"
+                             invisible="state != 'draft' or sale_manual_currency_rate == expected_currency_rate">
+                            <button type="object" name="refresh_currency_rate" icon="fa-refresh"
+                                    title="Refresh currency rate to the invoice date" class="btn btn-link p-0"/>
+                        </div>
+                    </div>
+                    <div name="currency_div" groups="base.group_multi_currency" class="w-100">
+                        <div class="d-flex gap-1">
+                            <field name="currency_id" readonly="state != 'draft'" class="oe_inline"
+                                   options="{'no_create': True}"
+                                   context="{'search_default_active': 1, 'search_default_inactive': 1}"/>
+                            <widget name="pick_currency_date" update_field="sale_manual_currency_rate"
+                                    invisible="state != 'draft' or currency_id == company_currency_id"/>
+                        </div>
+                        <div name="currency_conversion_div" class="d-flex gap-1 text-muted"
+                             invisible="currency_id == company_currency_id">
+                            <span>1</span>
+                            <field name="company_currency_id" readonly="True" options="{'no_open': True}"
+                                   class="w-auto"/>
+                            <span>=</span>
+                            <field name="sale_manual_currency_rate" digits="[12,6]" readonly="state != 'draft'"/>
+                            <field name="currency_id" readonly="True" options="{'no_open': True}" class="w-auto"/>
+                        </div>
+                    </div>
+                </div>
+            </field>
+        </field>
+    </record>
+</odoo>

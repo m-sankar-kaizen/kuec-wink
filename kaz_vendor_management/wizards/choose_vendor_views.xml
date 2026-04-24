@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wizard Form View -->
+    <record id="view_choose_vendor_wizard_form" model="ir.ui.view">
+        <field name="name">choose.vendor.wizard.form</field>
+        <field name="model">choose.vendor</field>
+        <field name="arch" type="xml">
+            <form string="Award Tender" create="false" edit="false">
+                <group>
+                    <field name="partner_id"
+                           domain="[('is_vendor', '=', True)]"
+                           placeholder="Select a Bid"
+                           required="1"
+                           options="{'no_create': True, 'no_open': False, 'no_quick_create': True}"/>
+                </group>
+
+                <footer>
+                    <button string="Select" type="object" name="action_choose_vendor" class="btn-primary"
+                            confirm="Are you sure you want to Select this Vendor? This action cannot be undone."/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Window Action -->
+    <record id="action_choose_vendor_wizard" model="ir.actions.act_window">
+        <field name="name">Award Tender</field>
+        <field name="res_model">choose.vendor</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_choose_vendor_wizard_form"/>
+        <field name="target">new</field>
+        <field name="context">{'default_tender_rfq_id': active_id}</field>
+    </record>
+
+</odoo>

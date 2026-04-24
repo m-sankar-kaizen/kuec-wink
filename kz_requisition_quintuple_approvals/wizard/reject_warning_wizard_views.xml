@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Form view definition for the transient model 'reject.warning.wizard'.
+
+        Purpose:
+        This wizard provides a UI to either reject a requisition or to create a budget transfer request,
+        depending on the 'mode' field value.
+
+        Fields:
+          - mode: Hidden field to indicate the wizard mode ('approve' or 'reject').
+          - remarks: Visible only when mode is 'reject', allows entering rejection remarks.
+          - message: Visible only when mode is 'approve', shows informational messages.
+          - requisition_id: Read-only field showing the linked requisition.
+
+        Buttons in Footer:
+          - "Reject": Calls the 'confirm' method; visible only in reject mode.
+          - "Budget Transfer Request": Calls the 'confirm' method; visible only in approve mode.
+          - "Cancel": Closes the wizard without action.
+
+        The wizard opens as a modal dialog (target="new").
+    -->
+    <record id="view_reject_warning_wizard" model="ir.ui.view">
+        <field name="name">reject.warning.wizard.form</field>
+        <field name="model">reject.warning.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reject Warning">
+                <group>
+                    <field name="mode" invisible="1"/>
+                    <field name="remarks" invisible="mode == 'approve'"/>
+                    <field name="message" invisible="mode == 'reject'"/>
+                    <field name="requisition_id" readonly="1"/>
+                </group>
+                <footer>
+                    <button string="Reject" type="object" name="confirm" class="btn-primary"
+                            invisible="mode == 'approve'"/>
+                    <button string="Budget Transfer Request" type="object" name="confirm" class="btn-primary"
+                            invisible="mode == 'reject'"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        Window action to open the 'reject.warning.wizard' as a modal form.
+
+        - Name: Reject Warning
+        - Model: reject.warning.wizard
+        - View mode: form
+        - Uses the above defined form view by reference
+        - Opens in a modal dialog (target="new")
+    -->
+    <record id="action_reject_warning_wizard" model="ir.actions.act_window">
+        <field name="name">Reject Warning</field>
+        <field name="res_model">reject.warning.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_reject_warning_wizard"/>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

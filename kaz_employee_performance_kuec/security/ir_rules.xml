@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="performance_evaluation_comp_rule" model="ir.rule">
+        <field name="name">Performance Evaluation multi-company</field>
+        <field name="model_id" ref="model_performance_evaluation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="performance_improvement_plan_comp_rule" model="ir.rule">
+        <field name="name">Performance Improvement Plan multi-company</field>
+        <field name="model_id" ref="model_performance_improvement_plan"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="evaluation_method_comp_rule" model="ir.rule">
+        <field name="name">Evaluation Method multi-company</field>
+        <field name="model_id" ref="model_performance_evaluation"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="evaluation_category_comp_rule" model="ir.rule">
+        <field name="name">Evaluation Category multi-company</field>
+        <field name="model_id" ref="model_evaluation_category"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="goal_template_comp_rule" model="ir.rule">
+        <field name="name">Goal Evaluation multi-company</field>
+        <field name="model_id" ref="model_goal_template"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="year_year_comp_rule" model="ir.rule">
+        <field name="name">Year multi-company</field>
+        <field name="model_id" ref="model_year_year"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="group_kuec_performance_eval_user_rule" model="ir.rule">
+        <field name="name">Performance Evaluation User Rule</field>
+        <field name="model_id" ref="model_performance_evaluation"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_performance_kuec.group_kuec_performance_eval_user'))]"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    </record>
+
+    <record id="group_kuec_performance_improvement_user_rule" model="ir.rule">
+        <field name="name">Performance Improvement Plan User Rule</field>
+        <field name="model_id" ref="model_performance_improvement_plan"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_performance_kuec.group_kuec_performance_eval_user'))]"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    </record>
+
+    <record id="rule_kuec_hod_see_performance_eval" model="ir.rule">
+        <field name="name">KUEC: HOD Performance Evaluations</field>
+        <field name="model_id" ref="model_performance_evaluation"/>
+        <field name="groups" eval="[Command.link(ref('kaz_procurement_doa_kuec.group_kuec_head_department'))]"/>
+        <field name="domain_force">
+            ['|',
+            ('employee_id.user_id','=',user.id),
+            ('employee_hod_id.user_id','=',user.id)
+            ]
+        </field>
+    </record>
+
+    <record id="rule_kuec_hod_see_performance_improvement" model="ir.rule">
+        <field name="name">KUEC: HOD Performance Improvement Plan</field>
+        <field name="model_id" ref="model_performance_improvement_plan"/>
+        <field name="groups" eval="[Command.link(ref('kaz_procurement_doa_kuec.group_kuec_head_department'))]"/>
+        <field name="domain_force">
+            ['|',
+            ('employee_id.user_id','=',user.id),
+            ('employee_hod_id.user_id','=',user.id)
+            ]
+        </field>
+    </record>
+
+    <record id="rule_kuec_finance_and_above_see_all_performance_eval" model="ir.rule">
+        <field name="name">KUEC: Finance/CCOE/CEO/Board can see all Performance Evaluations</field>
+        <field name="model_id" ref="model_performance_evaluation"/>
+        <field name="groups" eval="[
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_head_fin_procurement')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_ccoe')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_ceo')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_board'))
+        ]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_kuec_finance_and_above_see_all_performance_improvement" model="ir.rule">
+        <field name="name">KUEC: Finance/CCOE/CEO/Board can see all Performance Improvement Plan</field>
+        <field name="model_id" ref="model_performance_improvement_plan"/>
+        <field name="groups" eval="[
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_head_fin_procurement')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_ccoe')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_ceo')),
+            Command.link(ref('kaz_procurement_doa_kuec.group_kuec_board'))
+        ]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>

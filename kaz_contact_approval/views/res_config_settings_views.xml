@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.contact.approval</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="40"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <form position="inside">
+                <app data-string="Contacts" string="Contacts" name="contacts" groups="base.group_system">
+                    <block title="Contacts" name="approval_reminder_contact">
+                        <setting id="attachment_expiry_reminder"
+                                 title="Number of days before an attachment expires when a notification should be sent to responsible users."
+                                 help="Number of days before an attachment expires when a notification should be sent to responsible users.">
+                            <field name="attachment_expiry_reminder" readonly="0"/>
+                        </setting>
+                    </block>
+                </app>
+            </form>
+        </field>
+    </record>
+    <record id="action_contacts_configuration" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'contacts', 'bin_size': False}</field>
+    </record>
+
+    <menuitem id="menu_contacts_settings" name="Settings"
+              parent="contacts.res_partner_menu_config" sequence="0" action="action_contacts_configuration"
+              groups="base.group_system"/>
+</odoo>

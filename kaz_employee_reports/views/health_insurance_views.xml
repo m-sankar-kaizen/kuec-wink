@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="health_insurance_list_view" model="ir.ui.view">
+        <field name="name">health insurance list</field>
+        <field name="model">health.insurance</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="ref"/>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="full_name"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    Form View: health_insurance_form_view
+    Displays the full health insurance request form, including:
+    - Header actions for sending to HR, manager approval, reject, cancel
+    - Sectioned form with employee info, applicant details, marital info, attachment
+
+    Buttons behavior:
+        - Send To HR Team: available in 'draft' state
+        - Send To HR Manager: available in 'hr_approve' state, for HR team
+        - Approve: available in 'hr_manager' state, for HR Manager
+        - Reject: available for HR team or manager depending on current state
+        - Cancel: resets draft requests
+        - State field shown as statusbar
+
+    Fields controlled based on state and request type (self or others).
+    Attachment is required for submission.
+    -->
+    <record id="health_insurance_form_view" model="ir.ui.view">
+        <field name="name">health insurance form</field>
+        <field name="model">health.insurance</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_send_for_hr_approval" type="object" string="Send To HR Team"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_send_for_hr_manager_approval" type="object" string="Send To HR Manager"
+                            invisible="state != 'hr_approve'"
+                            groups="kaz_employee_reports.group_hr_person" class="oe_highlight"/>
+
+                    <button name="action_approve" string="Approve"
+                            invisible="state != 'hr_manager'"
+                            class="oe_highlight"
+                            type="object" groups="kaz_employee_reports.hr_manager"/>
+
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_reject" type="object" string="Reject"
+                            groups="kaz_employee_reports.group_hr_person"
+                            invisible="state != 'hr_approve'"/>
+
+                    <button name="action_reject" type="object" string="Reject"
+                            groups="kaz_employee_reports.hr_manager"
+                            invisible="state != 'hr_manager'"/>
+
+                    <field name="state" widget="statusbar" nolabel="1"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="ref"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date"
+                                   readonly="1"/>
+                            <field name="name"
+                                   readonly="state != 'draft'"
+                                   options="{'no_create': True, 'no_create_edit': True}"
+                                   groups="kaz_employee_reports.group_hr_person"/>
+                            <field name="name"
+                                   groups="base.group_user,!kaz_employee_reports.group_hr_person,!kaz_employee_reports.hr_manager"
+                                   readonly="1"/>
+                            <field name="email"/>
+                            <field name="mobile"/>
+                        </group>
+                        <group>
+                            <field name="emp_id"/>
+                            <field name="position"/>
+                            <field name="department"/>
+                            <field name="company_id"/>
+                        </group>
+                    </group>
+                    <hr class="d-none"/>
+                    <div class="o_row mw-50 d-none">
+                        <field name="is_behalf_of_someone_else"
+                               readonly="state != 'draft'"
+                               class="oe_inline" nolabel="1"/>
+                        <div>
+                            <strong>Raise this request on behalf of someone else?</strong>
+                        </div>
+                    </div>
+                    <group string="applicant personal information">
+                        <group>
+                            <field name="type_of_request" required="1" readonly="state != 'draft'"/>
+                            <field name="full_name"
+                                   readonly="state != 'draft' or type_of_request == 'self'"
+                                   required="type_of_request != 'self'"/>
+                            <field name="father_name"
+                                   readonly="state != 'draft' or type_of_request == 'self'"
+                                   required="type_of_request != 'self'"/>
+                            <field name="email_id"
+                                   readonly="state != 'draft' or type_of_request == 'self'"
+                                   required="type_of_request != 'self'"/>
+                        </group>
+                        <group>
+                            <field name="date_of_birth"
+                                   readonly="state != 'draft' or type_of_request == 'self'"
+                                   required="type_of_request != 'self'"/>
+                            <field name="contact_no"
+                                   readonly="state != 'draft' or type_of_request == 'self'"
+                                   required="type_of_request != 'self'"/>
+                            <field name="nationality"
+                                   readonly="state != 'draft' or type_of_request == 'self'"
+                                   required="type_of_request != 'self'"/>
+                            <field name="passport_num"
+                                   readonly="state != 'draft' or type_of_request == 'self'"
+                                   required="type_of_request != 'self'"/>
+                            <field name="marital_status"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="marital information"
+                               invisible="not marital_status or marital_status in ['single']">
+                            <field name="num_of_children"/>
+                            <field name="children_age"/>
+                            <field name="spouse_name"/>
+                        </group>
+                        <group string="Attachment">
+                            <field name="attach" required="1"
+                                   filename="attachment_name"
+                                   widget="binary" readonly="state != 'draft'"/>
+                            <field name="attachment_name" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    Action: action_ank_health_insurance
+    Opens the health insurance records in list/form view.
+    Used by the menu item to route to the model's action.
+    -->
+    <record id="action_ank_health_insurance" model="ir.actions.act_window">
+        <field name="name">Health Insurance</field>
+        <field name="res_model">health.insurance</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new health insurance
+            </p>
+        </field>
+    </record>
+
+    <!--
+    Menu Item: health_insurance_menu
+    Adds the Health Insurance menu under the Housing Advance module
+    (ent_ohrms_loan.menu_hr_housing_advance).
+    Triggers the action_ank_health_insurance defined above.
+    -->
+    <menuitem id="health_insurance_menu" name="Health Insurance"
+              parent="ent_ohrms_loan.menu_hr_housing_advance"
+              action="action_ank_health_insurance"/>
+
+</odoo>

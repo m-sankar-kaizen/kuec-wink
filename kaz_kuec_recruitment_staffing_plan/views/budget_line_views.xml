@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="budget_form_inherit_budget_custom" model="ir.ui.view">
+            <field name="name">budget.analytic.form.inherit.quintuple.approvals</field>
+            <field name="model">budget.analytic</field>
+            <field name="inherit_id" ref="kz_requisition_quintuple_approvals.budget_form_inherit_budget_custom"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='company_id']" position="after">
+                    <field name="company_code"
+                           invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='budget_line_ids']/list/field[@name='committed_amount']" position="before">
+                    <field name="staffing_plan_id"
+                           column_invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='budget_line_ids']/list/field[@name='committed_amount']" position="after">
+                    <field name="company_code"
+                           column_invisible="1"/>
+                    <field name="manpower_committed_amount"
+                           column_invisible="parent.company_code != 'KUEC'"/>
+                    <field name="total_committed_amount"/>
+                </xpath>
+
+            </field>
+    </record>
+
+
+</odoo>

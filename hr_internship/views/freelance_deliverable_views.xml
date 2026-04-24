@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_internship_freelance_deliverable_form" model="ir.ui.view">
+        <field name="name">hr.internship.freelance.deliverable.form</field>
+        <field name="model">hr.internship.freelance.deliverable</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start_progress" string="Start Progress" type="object" class="oe_highlight" invisible="state != 'pending'"/>
+                    <button name="action_submit" string="Submit" type="object" class="oe_highlight" invisible="state != 'in_progress'"/>
+                    <button name="action_accept" string="Accept" type="object" class="oe_highlight" invisible="state != 'submitted'"/>
+                    <button name="action_reject" string="Reject" type="object" invisible="state != 'submitted'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,in_progress,submitted,accepted"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Deliverable Information">
+                            <field name="internship_id" readonly="1" help="The freelance internship for this deliverable"/>
+                            <field name="name" required="1" readonly="state != 'pending'" help="Name or title of the deliverable (e.g., Website Design, Mobile App, Report)"/>
+                            <field name="due_date" required="1" readonly="state != 'pending'" help="Target due date for completing this deliverable"/>
+                        </group>
+                        <group string="Status">
+                            <field name="submission_date" help="Date when deliverable was submitted"/>
+                            <field name="hours_consumed" readonly="state != 'in_progress'" help="Number of hours consumed on this deliverable"/>
+                        </group>
+                    </group>
+
+                    <group string="Scope &amp; Terms">
+                        <field name="description" widget="html" readonly="state != 'pending'" help="Detailed description of the deliverable scope and requirements"/>
+                        <field name="project_terms" readonly="state != 'pending'" help="Project terms and conditions (timeline, milestones, payment terms, etc.)"/>
+                        <field name="ip_ownership" readonly="state != 'pending'" help="Intellectual property ownership clauses and rights assignment"/>
+                    </group>
+
+                    <field name="completion_notes" placeholder="Comments on completion..." readonly="state in ['submitted', 'accepted']" help="Comments and notes on the completed deliverable"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_internship_freelance_deliverable_list" model="ir.ui.view">
+        <field name="name">hr.internship.freelance.deliverable.list</field>
+        <field name="model">hr.internship.freelance.deliverable</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="internship_id"/>
+                <field name="name"/>
+                <field name="due_date"/>
+                <field name="hours_consumed"/>
+                <field name="state" widget="badge"/>
+                <field name="submission_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_hr_internship_freelance_deliverable" model="ir.actions.act_window">
+        <field name="name">Deliverables</field>
+        <field name="res_model">hr.internship.freelance.deliverable</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

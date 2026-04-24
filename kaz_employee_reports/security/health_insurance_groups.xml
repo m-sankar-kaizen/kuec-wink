@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    ======================================================================
+    MODULE CATEGORY: Health Insurance
+    ======================================================================
+
+    This category groups all security permissions and user roles related to
+    the health insurance request workflow. It enables better organization
+    in the "Settings > Users & Companies > Groups" UI.
+    -->
+    <record id="module_category_health_insurance" model="ir.module.category">
+        <field name="name">Health Insurance</field>
+        <field name="description">Health Insurance Groups - Ankabut</field>
+        <field name="sequence" eval="1"/>
+    </record>
+
+    <!--
+    ======================================================================
+    USER GROUPS: Health Insurance Roles
+    ======================================================================
+
+    1. group_health_insurance_user:
+        - Base access level for employees submitting requests.
+    2. group_hr_person:
+        - HR team members who can view and approve any request.
+    3. hr_manager:
+        - Senior HR staff (managers), with inherited rights from HR team.
+    -->
+
+    <!-- Base user group for employees submitting their own health insurance request -->
+    <record id="group_health_insurance_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="kaz_employee_reports.module_category_health_insurance"/>
+        <field name="comment">Base access level for employees submitting requests.</field>
+    </record>
+
+    <!-- HR team group; inherits user group permissions -->
+    <record id="group_hr_person" model="res.groups">
+        <field name="name">HR Team</field>
+        <field name="category_id" ref="kaz_employee_reports.module_category_health_insurance"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_employee_reports.group_health_insurance_user'))]"/>
+        <field name="comment">HR team members who can view and approve any request.</field>
+    </record>
+
+    <!-- HR manager group; inherits from HR team -->
+    <record id="hr_manager" model="res.groups">
+        <field name="name">HR Manager</field>
+        <field name="category_id" ref="kaz_employee_reports.module_category_health_insurance"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_employee_reports.group_hr_person'))]"/>
+        <field name="comment">Senior HR staff (managers), with inherited rights from HR team.</field>
+    </record>
+
+    <!--
+    ======================================================================
+    RECORD RULES: Access to model_health_insurance
+    ======================================================================
+
+    1. health_insurance_base_user_hr_rule:
+        - Restricts users to only their own records (based on name.user_id).
+    2. health_insurance_hr_rule:
+        - Allows HR Team to access all records (domain_force = True).
+    3. health_insurance_company_rule:
+        - Ensures users can access records within their own company scope.
+    -->
+
+    <!-- Restrict basic users to access only their own health insurance records -->
+    <record id="health_insurance_base_user_hr_rule" model="ir.rule">
+        <field name="name">Health: User Rule</field>
+        <field name="model_id" ref="model_health_insurance"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_health_insurance_user'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Grant full unrestricted access to HR Team to view, approve, and edit any record -->
+    <record id="health_insurance_hr_rule" model="ir.rule">
+        <field name="name">Health: Approval HR</field>
+        <field name="model_id" ref="model_health_insurance"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_hr_person'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!-- Allow viewing and searching of records within the user's company -->
+    <record id="health_insurance_company_rule" model="ir.rule">
+        <field name="name">Health: Company</field>
+        <field name="model_id" ref="model_health_insurance"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+</odoo>

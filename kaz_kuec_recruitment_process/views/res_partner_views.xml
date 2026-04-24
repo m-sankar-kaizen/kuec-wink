@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_partner_view_form" model="ir.ui.view">
+        <field name="name">res.partner.view.form.inherit.recruitment</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="kaz_contact_approval.res_partner_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='is_customer']" position="after">
+                <field name="is_external_recruiter"
+                       widget="boolean_toggle"
+                       readonly="state != 'draft'"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_checklist_ids']/list/field[@name='for_vendor']"
+                   position="after">
+                <field name="for_external_recruiter"
+                       optional="hidden"
+                       readonly="1"
+                       widget="boolean_toggle"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

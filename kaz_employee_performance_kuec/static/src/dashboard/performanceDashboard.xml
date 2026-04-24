@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="PerformanceDashboard">
+        <div>
+            <div class="d-flex justify-content-between align-items-center p-2">
+                <div class="ms-2">
+                    <h3>
+                        <i class="fa fa-tachometer me-1" aria-hidden="true"/>
+                        Performance Dashboard
+                    </h3>
+                </div>
+                <div class="me-4">
+                    <Dropdown>
+                        <button class="btn btn-primary py-0 px-1 o-dropdown-caret">
+                            <t t-esc="state.activeFilters?.yearId?.name"/>
+                        </button>
+                        <t t-set-slot="content">
+                            <DropdownItem t-foreach="state.filters.yearIds" t-as="year" t-key="year.id"
+                                          onSelected="() => this.updateYear(year)">
+                                <t t-out="year?.name"/>
+                            </DropdownItem>
+                        </t>
+                    </Dropdown>
+                </div>
+            </div>
+            <div class="container scrollable-container">
+
+                <div class="d-flex justify-content-center gap-3 p-2 m-2">
+                    <KPI t-props="improvedKPI">
+                        <t t-set-slot="icon">
+                            <img style="width: 40px;"
+                                 t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-arrow-up.svg'"
+                                 alt="Arrow"/>
+                        </t>
+                        <t t-set-slot="content">
+                            <div class="d-flex gap-2">
+                                <div>
+                                    Positive YoY performance change :
+                                </div>
+                                <h3>
+                                    <span t-out="improvedKPI.rating"/>
+                                </h3>
+                            </div>
+                        </t>
+                    </KPI>
+                    <KPI t-props="stableKPI">
+                        <t t-set-slot="icon">
+                            <img style="width: 40px;"
+                                 t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-minus.svg'"
+                                 alt="Minus"/>
+                        </t>
+                        <t t-set-slot="content">
+                            <div class="d-flex gap-2">
+                                <div>
+                                    No change compared to last year :
+                                </div>
+                                <h3>
+                                    <span t-out="stableKPI.rating"/>
+                                </h3>
+                            </div>
+                        </t>
+                    </KPI>
+                    <KPI t-props="declinedKPI">
+                        <t t-set-slot="icon">
+                            <img style="width: 40px;"
+                                 t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-arrow-down.svg'"
+                                 alt="Arrow Down"/>
+                        </t>
+                        <t t-set-slot="content">
+                            <div class="d-flex gap-2">
+                                <div>
+                                    Negative YoY performance change :
+                                </div>
+                                <h3>
+                                    <span t-out="declinedKPI.rating"/>
+                                </h3>
+                            </div>
+                        </t>
+                    </KPI>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3 p-2 m-2">
+                    <KPI t-props="midEvalKpi">
+                                <t t-set-slot="icon">
+                                    <img style="width: 40px;"
+                                         t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-clipboard-check.svg'"
+                                         alt="Clipboard"/>
+                                </t>
+                                <t t-set-slot="content">
+                                    <div class="d-flex gap-2">
+                                        <div>
+                                            Employees Evaluated :
+                                        </div>
+                                        <h3>
+                                            <span t-out="midEvalKpi.midEvaluated"/>
+                                            /
+                                            <span t-out="midEvalKpi.total"/>
+                                        </h3>
+                                    </div>
+                                </t>
+                            </KPI>
+                    <KPI t-props="yearEvalKpi">
+                                <t t-set-slot="icon">
+                                    <img style="width: 40px;"
+                                         t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-user-check.svg'"
+                                         alt="User"/>
+                                </t>
+                                <t t-set-slot="content">
+                                    <div class="d-flex gap-2">
+                                        <div>
+                                            Employees Evaluated :
+                                        </div>
+                                        <h3>
+                                            <span t-out="yearEvalKpi.yearEndEvaluated"/>
+                                            /
+                                            <span t-out="yearEvalKpi.total"/>
+                                        </h3>
+                                    </div>
+                                </t>
+                            </KPI>
+                    <KPI t-props="avgAnnualRating">
+                                <t t-set-slot="icon">
+                                    <img style="width: 40px;"
+                                         t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-gauge-simple.svg'"
+                                         alt="Gauge"/>
+                                </t>
+                                <t t-set-slot="content">
+                                    <div class="d-flex gap-2">
+                                        <div>
+                                            Average Annual Performance :
+                                        </div>
+                                        <h3>
+                                            <span t-out="avgAnnualRating.rating"/>
+                                            /
+                                            <span>4</span>
+                                        </h3>
+                                    </div>
+                                </t>
+                            </KPI>
+                </div>
+                <div class="d-flex justify-content-center gap-3 p-2 m-2">
+                    <KPI t-props="yoyAnnualRating">
+                                <t t-set-slot="icon">
+                                    <img style="width: 40px;"
+                                         t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-chart-line.svg'"
+                                         alt="chart"/>
+                                </t>
+                                <t t-set-slot="content">
+                                    <div class="d-flex gap-2">
+                                        <div>
+                                            YoY growth in rating :
+                                        </div>
+                                        <h3>
+                                            <span t-out="yoyAnnualRating.rating"/>
+                                            <span>%</span>
+                                        </h3>
+                                    </div>
+                                </t>
+                            </KPI>
+                </div>
+
+
+                <div class="d-flex justify-content-center gap-3 p-2 m-2">
+                    <Chart t-props="midYearStatus"/>
+                    <Chart t-props="yearEndStatus"/>
+                    <Chart t-props="annualDistribution"/>
+                </div>
+
+            </div>
+
+        </div>
+    </t>
+</templates>

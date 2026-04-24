@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="0">
+    <!-- ===================================================================================
+         Template ID: service_receipt_custom_header
+         Purpose: Provides a reusable header for the Service Receipt PDF report.
+         Features:
+             - Displays company logo (if available).
+             - Applies consistent spacing and layout styling.
+         Usage: Called inside the main report template (`service_receipt_report_temp`).
+     =================================================================================== -->
+    <template id="service_receipt_custom_header">
+        <style>
+            .header {
+            margin-bottom: 25px !important; /* Space below the header */
+            }
+        </style>
+        <div class="header mb8" style="margin-top:0px">
+            <div class="row col-12 mb8" style="padding:0 10px; font-size: 14px">
+                <div class="text-start col-12">
+                    <!-- Dynamically displays the company logo if configured -->
+                    <img t-if="user.company_id.logo"
+                         t-att-src="image_data_uri(user.company_id.logo)"
+                         style="max-height: 100px; margin-top: 15px"
+                         alt="Logo"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placeholder for the body content of the main report -->
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <!-- ===================================================================================
+         Template ID: service_receipt_report_temp
+         Purpose: Renders the Service Receipt Note as a printable PDF.
+         Model: `service.receipt`
+         Context: This report shows confirmation of service deliveries,
+                  with scheduling details and a breakdown of service lines.
+         Sections:
+             - Title and Document Number
+             - Vendor and Date Metadata
+             - Tabular Service Line Listing
+     =================================================================================== -->
+    <template id="service_receipt_report_temp">
+        <t t-call="web.html_container">
+            <t t-call="skit_srn_receipt.service_receipt_custom_header">
+                <!-- Iterate over the recordset of `service.receipt` -->
+                <t t-foreach="docs" t-as="doc">
+
+                    <!-- ======================
+                         Embedded Report Styling
+                         ====================== -->
+                    <style>
+                        .table-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        }
+
+                        .table-wrapper table {
+                        flex: 1;
+                        }
+
+                        table {
+                        width: 100%;
+                        border: 1px solid black;
+                        border-collapse: collapse;
+                        }
+
+                        th, td {
+                        border: 1px solid black;
+                        padding: 8px;
+                        text-align: center; /* Center-aligns cell contents */
+                        }
+
+                        th {
+                        background-color: #d4d4d7;
+                        border: 1px solid black;
+                        }
+
+                        .text-center {
+                        text-align: center;
+                        }
+                    </style>
+
+                    <!-- ========================
+                         Report Header Title
+                         ======================== -->
+                    <div class="container">
+                        <div class="body-text text-center">
+                            <h2>Service Received Note</h2>
+                        </div>
+
+                        <br/>
+
+                        <!-- Reference name / Document identifier -->
+                        <div class="body-text text-center">
+                            <h4>
+                                <t t-esc="doc.name"/>
+                            </h4>
+                        </div>
+
+                        <!-- ===========================
+                             Basic Receipt Metadata Table
+                             =========================== -->
+                        <div class="row">
+                            <table>
+                                <tr>
+                                    <th>Receive From</th>
+                                    <th>Scheduled Date</th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <!-- Vendor / Supplier Name -->
+                                        <t t-esc="doc.partner_id.name"/>
+                                    </td>
+                                    <td>
+                                        <!-- Scheduled receipt date, formatted -->
+                                        <t t-esc="doc.scheduled_date.strftime('%d/%m/%Y') if doc.scheduled_date else ''"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Effective Date</th>
+                                    <th>Source Document</th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <!-- Actual processing/completion date -->
+                                        <t t-esc="doc.date_done.strftime('%d/%m/%Y') if doc.date_done else ''"/>
+                                    </td>
+                                    <td>
+                                        <!-- Origin field (typically PO reference) -->
+                                        <t t-esc="doc.origin"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <br/>
+
+                        <!-- ========================
+                             Section Title: Operations
+                             ======================== -->
+                        <h5 class="text-center">Operations</h5>
+
+                        <!-- ===============================
+                             Table of Service Line Entries
+                             =============================== -->
+                        <div class="row">
+                            <table class="table table-sm o_main_table">
+                                <thead>
+                                    <tr>
+                                        <th>Service Name</th>
+                                        <th>Demand</th>
+                                        <th>Received</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Fetch all related service line records -->
+                                    <t t-set="lines" t-value="doc.service_receipt_line_ids"/>
+                                    <t t-foreach="lines" t-as="line">
+                                        <tr>
+                                            <!-- Product name -->
+                                            <td>
+                                                <t t-esc="line.product_id.name" t-options="{'widget': 'text'}"/>
+                                            </td>
+
+                                            <!-- Planned quantity -->
+                                            <td>
+                                                <t t-esc="line.product_uom_qty"/>
+                                            </td>
+
+                                            <!-- Actual received quantity -->
+                                            <td>
+                                                <t t-esc="line.quantity_done"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ===================================================================================
+         Record ID: action_service_receipt_report_temp_report
+         Model:     ir.actions.report
+         Purpose:
+             Registers the `service_receipt_report_temp` QWeb template as a PDF report action.
+             Allows printing the report from the "Print" button or via `report_action()`.
+
+         Fields:
+             - name: Display name of the report.
+             - model: Model the report is linked to (`service.receipt`).
+             - report_name: Full XML ID of the QWeb template.
+             - print_report_name: Controls default filename when report is printed.
+             - binding_model_id: Links the report action to `service.receipt`.
+     =================================================================================== -->
+    <record id="action_service_receipt_report_temp_report" model="ir.actions.report">
+        <field name="name">Service Receipt</field>
+        <field name="model">service.receipt</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">skit_srn_receipt.service_receipt_report_temp</field>
+        <field name="report_file">skit_srn_receipt.service_receipt_report_temp</field>
+        <field name="print_report_name">'Receipt - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_service_receipt"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

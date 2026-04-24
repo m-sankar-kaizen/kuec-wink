@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit Form View to Modify it -->
+    <record id="view_account_payment_form_inter_company_payment" model="ir.ui.view">
+        <field name="name">account.payment.form.inter.company.payment</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='id']" position="after">
+                <field name="intercompany_move_id" invisible="1"/>
+                <field name="intercompany_id" invisible="1"/>
+                <field name="is_intercompany_payment" invisible="1"/>
+            </xpath>
+            <xpath expr="//button[@name='button_open_journal_entry']" position="after">
+                <button name="button_open_intercom_entry" type="object" class="oe_stat_button" icon="fa-bars"
+                        groups="account.group_account_user,account.group_account_readonly"
+                        invisible="not is_intercompany_payment or not intercompany_move_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">InterComp Entry</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <xpath expr="//div[@name='button_box']" position="after">
+                <div class="badge rounded-pill text-bg-info fs-6 border-0 my-2" invisible="not is_intercompany_payment">
+                    Inter-Company Payment
+                    <field name="is_intercompany_payment" invisible="1"/>
+                </div>
+            </xpath>
+            <xpath expr="//group[@name='group2']" position="after">
+                <group string="Inter Company" invisible="not is_intercompany_payment">
+                    <field name="intercompany_account_ids" widget="many2many_tags" invisible="1"/>
+                    <field name="intercompany_journal_id"
+                           string="IC Journal"
+                           required="is_intercompany_payment"
+                           domain="[('type', 'in', ['cash', 'bank']), ('company_id', '=', intercompany_id)]"
+                           readonly="state != 'draft'"
+                    />
+                    <field name="intercompany_account_id"
+                           string="IC Account"
+                           required="is_intercompany_payment"
+                           domain="[('id', 'in', intercompany_account_ids)]"
+                           readonly="state != 'draft'"
+                    />
+                </group>
+
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

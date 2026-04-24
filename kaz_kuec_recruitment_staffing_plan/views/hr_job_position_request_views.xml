@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_hr_recruitment_request_views_list" model="ir.ui.view">
+        <field name="name">hr.recruitment.requests.views.list</field>
+        <field name="model">hr.job.position.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="position_name"/>
+                <field name="department_id"/>
+                <field name="requester_id"/>
+                <field name="target"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="hr_job_position_request_view_form"
+                model="ir.ui.view">
+        <field name="name">hr.job.position.request.views.form</field>
+        <field name="model">hr.job.position.request</field>
+        <field name="arch" type="xml">
+            <form string="Job Position Requests">
+                <header>
+                    <button name="action_requested"
+                            type="object"
+                            string="Request"
+                            invisible="status != 'draft'"
+                            class="oe_highlight"/>
+                    <button name="action_cancel"
+                            type="object"
+                            string="Cancel"
+                            invisible="status != 'draft'"
+                            class="btn btn-secondary"/>
+                    <button name="action_approve"
+                            type="object"
+                            invisible="status != 'requested'"
+                            class="oe_highlight"
+                            string="Approve"/>
+                    <button name="action_reject"
+                            type="object"
+                            invisible="status != 'requested'"
+                            class="btn btn-secondary"
+                            string="Reject"/>
+                    <button name="action_confirm"
+                            type="object"
+                            string="Confirm &amp; Create Job Position"
+                            invisible="status != 'approved'"
+                            class="oe_highlight"/>
+                    <field name="status"
+                           widget="statusbar"
+                           statusbar_visible="draft,requested,approved,confirmed"/>
+                </header>
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+
+                        <button class="oe_stat_button"
+                                name="action_show_job"
+                                invisible="not hr_job_id"
+                                type="object"
+                                string="Created Job" icon="fa-edit">
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"
+                                   placeholder="JOB/REQ/XX/XXXXX"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="position_name"/>
+                            <field name="department_id"/>
+                            <field name="company_id"/>
+                        </group>
+
+                        <group>
+                            <field name="target"/>
+                            <field name="requester_id"/>
+                            <field name="created_date"/>
+                            <field name="staffing_plan_id"
+                                   string="Related Staffing Plan"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+</odoo>

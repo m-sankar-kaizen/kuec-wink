@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================ -->
+    <!-- Custom Header Template     -->
+    <!-- Used across QWeb reports   -->
+    <!-- ============================ -->
+
+    <template id="custom_header">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o and o.company_id.sudo()">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+        <div class="header mb8">
+            <div class="logo">
+                <img t-att-src="'/kaz_end_of_service/static/src/img/logo.jpeg'"
+                     style="max-height: 100px;"
+                     alt="Logo"/>
+            </div>
+
+        </div>
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <!-- =================================================================== -->
+    <!-- Main Report Template: End of Service Settlement Report              -->
+    <!-- Renders all settlement financial details with approval placeholders -->
+    <!-- =================================================================== -->
+
+    <template id="hr_employee_settlements_report">
+
+            <t t-call="web.html_container">
+                <t t-call="kaz_end_of_service.custom_header">
+                    <t t-foreach="docs" t-as="o">
+                    <style>
+                        .kaz_eos border {
+                            border: 1px solid black !important;
+                        }
+                    </style>
+                    <div class="page kaz_eos">
+                        <div class="row text-center border"
+                             style="background: #cbe2ff;">
+                            <div>
+                                <strong>END OF SERVICE CALCULATIONS</strong>
+                            </div>
+                        </div>
+                        <div class="row border">
+                            <div class="ms-2">
+                                Run Date:
+                                <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/>
+                            </div>
+                        </div>
+                        <div class="row text-center border"
+                             style="background: #cbe2ff;">
+                            <div>
+                                <strong>EMPLOYEE INFORMATION</strong>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                    Name
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-field="o.employee_id.name"/>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Employee ID
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-field="o.employee_id.sequence"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Position Title
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-field="o.employee_id.job_title"/>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Department
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-field="o.department_id"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Date of Joining
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-field="o.joined_date"/>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Last Working
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-field="o.last_working_date"/>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Total Years of Service
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-esc="str(round(o.years_worked, 2))"/>
+                            </div>
+                            <div class="col-3 border"><span class="ms-2">
+                                Final Process Day
+                            </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2" t-field="o.relieving_date"/>
+                            </div>
+                        </div>
+                        <div class="row text-center"
+                             style="background: #cbe2ff;">
+                            <div>
+                                <strong>SALARY INFORMATION</strong>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Basic
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.basic_contract"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Market Differential
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.current_contract_id.market_differential"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Cost of Living
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.current_contract_id.cost_of_living_subsidy"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Other Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.other_allowance"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Vacation Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.current_contract_id.vacation_allowance"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                National Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.national_allowance"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Housing Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.housing_allowance"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Supplemental Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.supplemental_allowance"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Social Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.social_allowance"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Mobile Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.mobile_allowance"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Shift Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.shift_allowance"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                Stipend Allowance
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.stipend_allowance"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 border">
+                                <span class="ms-2">
+                                Gross Pay
+                                </span>
+                            </div>
+                            <div class="col-6 border text-right">
+                                <span class="ms-2">
+                                <span t-out="o.basic_contract + o.current_contract_id.market_differential + o.current_contract_id.cost_of_living_subsidy + o.current_contract_id.acting_allowance + o.current_contract_id.child_allowance + o.current_contract_id.vacation_allowance" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row text-center border"
+                             style="background: #cbe2ff;">
+                            <div>
+                                <strong>PAYMENT DETAILS</strong>
+                            </div>
+                        </div>
+                        <div class="row text-center border">
+                            <div>
+                                <strong>Earnings</strong>
+                            </div>
+                        </div>
+
+                        <div class="row" style="height: 50px;">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                a) Gratuity
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.gratuity_amount"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                        </div>
+                        <div class="row" style="height: 50px;">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                b) Leave Pay
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.leave_balance_total"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                        </div>
+                        <div class="row" style="height: 50px;">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                c) Salary
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.total"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                        </div>
+                        <div class="row" style="height: 50px;">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                d) Other Earnings
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.other_earnings"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                        </div>
+                        <div class="row" style="height: 50px;">
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                e) Rounding
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-field="o.rounding"/>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                        </div>
+
+                        <div class="row" style="height: 50px;">
+                            <div class="col-9 border ">
+                                <span class="ms-2">
+                                Earnings Total (a+b+c+d+e)
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-out="o.gratuity_amount + o.leave_balance_total + o.other_earnings_settlement + o.total + o.rounding" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row" style="height: 50px;">
+                            <div class="col-9 border">
+                                <span class="ms-2">
+                                Other Deduction
+                                </span>
+                            </div>
+                            <div class="col-3 border text-right">
+                                <span class="ms-2">
+                                <span t-out="o.other_deductions_settlement + o.pension_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row" style="height: 50px; page-break-after: always">
+                            <div class="col-9 border">
+                                <span class="ms-2">
+                                Net Amount Payable (Earnings - Deduction)
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                                <span class="ms-2">
+                                <span t-out="o.gratuity_amount + o.leave_balance_total + o.total + o.other_earnings_settlement + o.rounding - (o.other_deductions + o.pension_amount)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row text-center"
+                             style="background: #cbe2ff;">
+                            <div>
+                                <strong>APPROVAL</strong>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="ms-2">
+                                <strong>Human Resources</strong>
+                            </div>
+                        </div>
+
+                        <div class="row" style="height: 100px;">
+                            <div class="col-6 border">
+                                <span class="ms-2">
+                                Manager - HR
+                                </span>
+                            </div>
+                            <div class="col-6 border">
+                                <span class="ms-2">
+                                Director Support Services
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="ms-2">
+                                <strong>Finance</strong>
+                            </div>
+                        </div>
+
+                        <div class="row" style="height: 100px;">
+                            <div class="col-6 border">
+                                <span class="ms-2">
+                                Senior Accountant
+                                </span>
+                            </div>
+                            <div class="col-6 border">
+                                <span class="ms-2">
+                                Director - Finance
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row" style="height: 100px;">
+                            <div class="ms-2">
+                                <strong>CEO</strong>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 border">
+                                <span class="ms-2">
+                                Chief Executive Officer
+                                </span>
+                            </div>
+                            <div class="col-6 border">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="ms-2">Acknowledge and Acceptance</div>
+                        </div>
+
+                        <div class="row">
+                            <p class="me-2 ms-2 mt-2 mb-2">I, the Undersigned ………………………………… hereby
+                                irrevocably accept and confirm the above End of
+                                Service Calculation as constituting the entire
+                                End of Service Entitlements and benefits of my
+                                Employment at ………………………………………………………………………. (as
+                                well as its legal successor Ankabut Information
+                                Technology - LLC).
+                            </p>
+                        </div>
+
+                        <div class="row" style="height: 50px;">
+                            <div class="col-4 border">
+                                <span class="me-2 ms-2 mt-2 mb-2">
+                                <strong>Employee Signature:</strong>
+                                </span>
+                            </div>
+                            <div class="col-3 border">
+                            </div>
+                            <div class="col-1 border">
+                                <span class="me-2 ms-2 mt-2 mb-2">
+                                <strong>Date:</strong>
+                                </span>
+                            </div>
+                            <div class="col-4 border">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <u class="me-2 ms-2 mt-2 mb-2">"Note: You have 10 working days to revert back
+                                with the signed document and if we do not hear
+                                back from you within the time limit, we will
+                                consider that the calculation is accepted, and
+                                we proceed with the payment to your bank
+                                account."
+                            </u>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!--
+    Report Action: End of Service Settlement Form
+
+    This report action registers a QWeb PDF report for the model `hr.employee.settlements`.
+    It uses the report template `kaz_end_of_service.hr_employee_settlements_report`, and restricts
+    access to users in the HR group. The report is bound to the form view of the model and will
+    generate a downloadable PDF with the filename "Settlement Form - <Employee Name>".
+-->
+
+    <record id="action_report_settlement_form"
+            model="ir.actions.report">
+        <field name="name">Settlement form</field>
+        <field name="model">hr.employee.settlements</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_end_of_service.hr_employee_settlements_report</field>
+        <field name="report_file">kaz_end_of_service.hr_employee_settlements_report</field>
+        <field name="print_report_name">'Settlement Form - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_hr_employee_settlements"/>
+        <field name="binding_type">report</field>
+        <field name="groups_id" eval="[(4, ref('kaz_end_of_service.group_hr'))]"/>
+    </record>
+</odoo>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="account_account_inherit_list_view" model="ir.ui.view">
+            <field name="name">Account inherit list view</field>
+            <field name="model">account.account</field>
+            <field name="inherit_id" ref="account.view_account_list"/>
+            <field name="arch" type="xml">
+                <field name="account_type" position="after">
+                    <field name="cash_forecast_tag"
+                           context="{'company_id': company_ids}"
+                           domain="[('company_id','in',company_ids),('company_id','in',allowed_company_ids)]"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="action_create_cash_forecast_type" model="ir.actions.server">
+            <field name="name">Create Cash Forecast Type</field>
+            <field name="model_id" ref="model_account_account"/>
+            <field name="binding_model_id" ref="account.model_account_account"/>
+            <field name="binding_view_types">list</field>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.create_forecast_type()
+            </field>
+        </record>
+    </data>
+</odoo>

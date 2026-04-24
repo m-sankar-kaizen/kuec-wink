@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="exit_clearance_form_view_primary" model="ir.ui.view">
+        <field name="name">exit_clearance_form_view_primary</field>
+        <field name="model">exit.clearance</field>
+        <field name="mode">primary</field>
+        <field name="inherit_id" ref="kaz_employee_reports.exit_clearance_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='rejected']" position="before">
+                <button name="proceed_to_employee_settlement"
+                        type="object"
+                        string="Proceed to Employee Settlement"
+                        groups="kaz_end_of_service.group_hr"
+                        invisible="state != 'approved' or employee_settlement_id"
+                        class="oe_highlight"/>
+            </xpath>
+            <xpath expr="//button[@name='rejected']" position="attributes">
+                <attribute name="invisible" add="employee_settlement_id" separator="or"/>
+            </xpath>
+            <xpath expr="//div[hasclass('oe_title')]" position="before">
+                <field name="notifications" widget="html" readonly="1"/>
+
+                <div class="oe_button_box" name="button_box">
+                    <button class="oe_stat_button"
+                            name="action_view_resignation_form"
+                            string="Resignation Form"
+                            type="object"
+                            icon="fa-edit" invisible="not resignation_form_id">
+                    </button>
+                    <button class="oe_stat_button"
+                            name="action_view_exit_interview"
+                            string="Exit Interview"
+                            type="object"
+                            icon="fa-edit" invisible="not exit_interview_id">
+                    </button>
+                    <button class="oe_stat_button"
+                            name="action_view_employee_settlement_form"
+                            groups="kaz_end_of_service.group_hr"
+                            string="Settlement Form"
+                            type="object"
+                            icon="fa-edit" invisible="not employee_settlement_id">
+                    </button>
+
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="exit_clearance_form" model="ir.actions.act_window">
+        <field name="name">Exit Clearance Form</field>
+        <field name="res_model">exit.clearance</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="kaz_kuec_offboarding.exit_clearance_form_view_primary"/>
+        <field name="view_ids" eval="[Command.clear(),
+                          (0,0,{'view_mode':'form', 'view_id': ref('exit_clearance_form_view_primary')})]"/>
+    </record>
+</odoo>

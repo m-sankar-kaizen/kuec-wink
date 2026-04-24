@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ================================================================
+    Inherited Form View: hr.payroll.structure
+    Purpose:
+        - Extend the payroll structure form to support multi-company logic
+          by adding a hidden `company_id` field.
+    Behavior:
+        - Visible only for multi-company users.
+        - Field is positioned after `country_id`.
+    Dependency:
+        - Original view: hr_payroll.view_hr_employee_grade_form
+================================================================= -->
+    <record model="ir.ui.view" id="view_hr_employee_grade_form_inherit_ent_ohrms_loan">
+        <field name="name">hr.payroll.structure.form.inherit.ent.ohrms.loan</field>
+        <field name="model">hr.payroll.structure</field>
+        <field name="inherit_id" ref="hr_payroll.view_hr_employee_grade_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='country_id']" position="after">
+                <field name="company_id"
+                       options="{'no_create': True}"
+                       groups="base.group_multi_company"
+                       invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

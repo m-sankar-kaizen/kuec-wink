@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_account_payment_form" model="ir.ui.view">
+        <field name="name">account.payment.form.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+
+            <div name="button_box" position="inside">
+                <button name="action_open_write_off" class="oe_stat_button" icon="fa-money" type="object"
+                        invisible="not write_off_id">
+                    <field name="write_off_id" invisible="1"/>
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Write-off Request</span>
+                    </div>
+                </button>
+            </div>
+        </field>
+    </record>
+</odoo>

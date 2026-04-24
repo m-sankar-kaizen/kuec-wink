@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+    <!--
+        Record ID: email_template_approval_notify
+        Model: mail.template
+
+        Purpose:
+        This is an email template used for notifying approvers about a Purchase Order that requires their approval.
+
+        Use Case:
+        - Triggered manually or automatically (e.g., via server action or workflow) when a PO enters a specific state.
+        - Sent to managers or stakeholders who are expected to review and approve the PO.
+
+        Fields:
+        - name: Display name of the template for reference in Odoo backend.
+        - model_id: Links this template to the `purchase.order` model.
+        - subject: Subject of the email. Uses Jinja2 templating to include the PO name.
+        - body_html: HTML-formatted email body using inline CSS for compatibility with various email clients.
+
+        Styling Considerations:
+        - Clean and professional layout using inline CSS styles.
+        - CTA button links directly to the PO form view using `object.get_document_url()`.
+    -->
+
+    <record id="email_template_approval_notify" model="mail.template">
+        <field name="name">PO Approval Request</field>
+        <field name="model_id" ref="purchase.model_purchase_order"/>
+        <field name="subject">{{ object.name }} Approval Request</field>
+        <field name="body_html" type="html">
+<div style=" font-family: Arial, sans-serif;
+color: #333;">
+    <p style=" font-size: 14px;">Dear Ms./ Mrs./</p>
+    <p style="font-size: 16px;
+color: #666;
+margin-bottom: 10px;">Kindly be informed that:
+    </p>
+    <p style="font-size: 16px;
+color: #666;
+margin-bottom: 10px;">
+        <strong>Purchase Order:</strong>
+        ${object.name}
+    </p>
+    <p style="font-size: 16px;
+color: #666;
+margin-bottom: 10px;">requires your approval<strong>
+        ${env.user.name}</strong>.
+    </p>
+    <a style=" font-size: 12px;
+color: #901790;
+display: inline-block;
+padding: 8px 12px;
+text-decoration: none;
+font-weight: 400;
+background-color: #f2f2f2;
+border-radius: 4px;
+margin-top: 10px;" t-att-href="{object.get_document_url()}">
+        <button class="email-button">View Purchase Order
+        </button>
+    </a>
+    <p class="email-content">Best Regards <strong></strong>.
+    </p>
+</div>
+
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+    <!--Adding a salary rule for loan-->
+
+    <!--
+    Salary Rules and Input Types for Loan Deductions in KSA Payroll Structures
+
+    Purpose:
+    This XML file defines custom salary rules and their corresponding input types
+    for handling loan deductions in employee payslips within the KSA localization
+    of Odoo Payroll.
+
+    Salary Rules Included:
+    1. LO_Ksa
+       - Description: Standard Loan Deduction for Saudi Employees.
+       - Applies to: `ksa_saudi_employee_payroll_structure`
+       - Input Code: `LO_Ksa`
+
+    2. LO_Ksa_general
+       - Description: General Loan Deduction applicable across Saudi payroll cases.
+       - Applies to: `ksa_saudi_employee_payroll_structure`
+       - Input Code: `LO_Ksa_general`
+
+    3. LO_ksa_expat
+       - Description: Loan Deduction rule specifically for Expatriate employees.
+       - Applies to: `ksa_expat_employee_payroll_structure`
+       - Input Code: `LO_ksa_expat`
+
+    Rule Logic:
+    - All rules use a Python condition: `result = inputs.<input_code>`
+      which checks if the respective input exists in the payslip inputs.
+    - The deduction amount is calculated as a negative value of the input amount:
+        `result = inputs.<input_code> and - (inputs.<input_code>.amount)`
+    - The rule is applied only when a loan deduction input is present in the payslip.
+
+    Best Practices & Kaizen Principles Followed:
+    - **Clarity**: Each salary rule is precisely named and documented by type.
+    - **Maintainability**: Clear code structure enables easy extension and updates.
+    - **Empathy**: Differentiates between local and expat payroll structures.
+    - **Minimal Waste**: Applies logic only when relevant inputs exist.
+    - **Continuous Improvement**: Uses clean, modular logic to adapt for future loan schemes.
+
+    Notes:
+    - Ensure that these rules are matched with the appropriate `hr.payslip.input` entries during computation.
+    - You can dynamically assign these input codes through Python or external modules during payslip generation.
+
+    Author: Kaizenae
+    Module: Enterprise Open HRMS Loan Accounting
+    License: OPL-1
+-->
+
+
+    <record id="hr_rule_loan_ksa_saudi" model="hr.salary.rule">
+        <field name="code">LO_Ksa</field>
+        <field name="name">Loan Ksa Saudi Rule</field>
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = inputs.LO_Ksa</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">result = inputs.LO_Ksa and - (inputs.LO_Ksa.amount)</field>
+        <field name="appears_on_payslip" eval="True"/>
+        <field name="sequence" eval="190"/>
+        <field name="struct_id" ref="l10n_sa_hr_payroll.ksa_saudi_employee_payroll_structure"/>
+    </record>
+
+    <record id="hr_rule_input_loan_ksa_saudi" model="hr.payslip.input.type">
+        <field name="code">LO_Ksa</field>
+        <field name="name">Loan Ksa Saudi</field>
+        <field name="input_id" ref="hr_rule_loan_ksa_saudi"/>
+    </record>
+
+    <record id="hr_rule_loan_ksa_general" model="hr.salary.rule">
+        <field name="code">LO_Ksa_general</field>
+        <field name="name">Loan Ksa general Rule</field>
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = inputs.LO_Ksa_general</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">result = inputs.LO_Ksa_general and - (inputs.LO_Ksa_general.amount)</field>
+        <field name="appears_on_payslip" eval="True"/>
+        <field name="sequence" eval="211"/>
+        <field name="struct_id" ref="l10n_sa_hr_payroll.ksa_saudi_employee_payroll_structure"/>
+    </record>
+
+    <record id="hr_rule_input_loan_ksa_general" model="hr.payslip.input.type">
+        <field name="code">LO_Ksa_general</field>
+        <field name="name">Loan Ksa general</field>
+        <field name="input_id" ref="hr_rule_loan_ksa_general"/>
+    </record>
+
+    <record id="hr_rule_loan_ksa_expat" model="hr.salary.rule">
+        <field name="code">LO_ksa_expat</field>
+        <field name="name">Loan Ksa Expat rule</field>
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = inputs.LO_ksa_expat</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">result = inputs.LO_ksa_expat and - (inputs.LO_ksa_expat.amount)</field>
+        <field name="appears_on_payslip" eval="True"/>
+        <field name="sequence" eval="193"/>
+        <field name="struct_id" ref="l10n_sa_hr_payroll.ksa_expat_employee_payroll_structure"/>
+    </record>
+
+    <record id="hr_rule_input_loan_ksa_expat" model="hr.payslip.input.type">
+        <field name="code">LO_ksa_expat</field>
+        <field name="name">Loan Ksa Expat rule</field>
+        <field name="input_id" ref="hr_rule_loan_ksa_expat"/>
+    </record>
+</odoo>

@@ -1,0 +1,92 @@
+<odoo>
+    <data>
+        <record id="my_goals_sequence" model="ir.sequence">
+            <field name="name">Goals Sequence</field>
+            <field name="code">my.goals</field>
+            <field name="prefix">GLS</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="view_my_goal_list" model="ir.ui.view">
+            <field name="name">my.goal.list</field>
+            <field name="model">my.goals</field>
+            <field name="arch" type="xml">
+                <list string="Goals">
+                    <field name="sequence"/>
+                    <!-- <field name="name"/> -->
+                    <field name="employee_id"/>
+                    <!-- <field name="target"/> -->
+                    <!-- <field name="achieved"/> -->
+                    <field name="weightage"/>
+                    <field name="timeline_start"/>
+                    <field name="timeline_end"/>
+                    <field name="state" widget="badge"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_my_goal_form" model="ir.ui.view">
+            <field name="name">my.goal.form</field>
+            <field name="model">my.goals</field>
+            <field name="arch" type="xml">
+                <form string="Goals">
+                    <header>
+                        <button name="action_set_to_completed" type="object" string="Set to completed" class="oe_highlight" invisible="state in ('draft','active', 'completed', 'not_finished','expired')"/>
+                        <button name="action_set_to_in_progress" type="object" string="Set to in progress" class="oe_highlight" invisible="state in ('draft','in_progress', 'completed', 'not_finished','expired')"/>
+                        <!-- <button name="print_department" type="object" string="Test" class="oe_highlight"/> -->
+                        <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,in_progress,completed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="sequence" placeholder="New" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="employee_id"/>
+                                <field name="department_id"/>
+                                <field name="job_id"/>
+                                <field name="timeline_start"/>
+                                <field name="timeline_end"/>
+                                <field name="weightage"/>
+                            </group>
+                            <group>
+                                <group>
+                                    <field name="target"/>
+                                    <field name="kra_id"/>
+                                    <field name="kpi_id" widget="many2many_tags"/>
+                                    <field name="kpi_score"/>
+                                    <field name="kpi_rating" widget="priority"/>
+                                </group>
+                            </group>
+                            <!-- <group>                                
+                                <field name="timeline_start"/>
+                                <field name="timeline_end"/>
+                                <field name="weightage"/>
+                            </group> -->
+                        </group>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_my_goals" model="ir.actions.act_window">
+            <field name="name">Goals</field>
+            <field name="res_model">my.goals</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        
+
+        <menuitem id="my_goals_menu"
+						name="Goals"
+						action="action_my_goals"
+						parent="performance_management_main_menu"
+						sequence="1"/>
+    </data>
+</odoo>

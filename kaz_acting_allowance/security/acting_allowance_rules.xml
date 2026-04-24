@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Record Rule 1: Limit access for regular users to their own records only -->
+    <record id="employee_acting_allowance_user_rule" model="ir.rule">
+        <field name="name">Employee Acting Allowance: User</field>
+        <field name="model_id" ref="model_employee_acting_allowance"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <!-- Optional: uncomment if you want to restrict this rule from being applied globally -->
+        <!-- <field name="global" eval="False"/> -->
+    </record>
+
+    <!-- Record Rule 2: Multi-company access control -->
+    <record id="employee_acting_allowance_multi_company_rule" model="ir.rule">
+        <field name="name">Employee Acting Allowance: Company</field>
+        <field name="model_id" ref="model_employee_acting_allowance"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- Record Rule 3: Full access for Department Heads and CEOs -->
+    <record id="employee_acting_allowance_department_head_rule" model="ir.rule">
+        <field name="name">Employee Acting Allowance: Department Head</field>
+        <field name="model_id" ref="model_employee_acting_allowance"/>
+        <field name="groups"
+               eval="[Command.link(ref('kaz_acting_allowance.group_department_head')),
+                      Command.link(ref('kaz_acting_allowance.group_ceo'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>

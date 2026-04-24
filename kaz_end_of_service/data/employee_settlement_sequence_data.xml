@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ===============================================================
+         Sequence Definition: Employee Settlement Reference Number
+
+         This sequence will be used to auto-generate unique reference
+         numbers for employee settlement records (e.g., End of Service).
+         It ensures that each record has a consistent and sequential
+         identifier in the format: EST/00001, EST/00002, ...
+         ============================================================== -->
+    <record id="employee_settlement_sequence" model="ir.sequence">
+        <field name="name">Settlement</field>
+        <field name="code">hr.employee.settlements</field>
+        <field name="prefix">EST/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

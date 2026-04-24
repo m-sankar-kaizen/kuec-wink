@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="mail_template_tender_bafo" model="mail.template">
+        <field name="name">BAFO Request: Submit Your Best and Final Offer for Tender</field>
+        <field name="model_id" ref="kaz_vendor_management.model_tender_rfq"/>
+        <field name="subject">BAFO Request: Submit Your Best and Final Offer for Tender {{ object.name }}
+        </field>
+        <field name="email_from">{{ object.company_id.email or user.email }}</field>
+        <field name="description">A Notification Will be sent to the partners to notify them that they have been
+            selected for BAFO Tender
+        </field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+            <p>Dear <span t-esc="ctx.get('partner')"/>,
+            </p>
+
+            <p>Congratulations! You have been shortlisted for the Best and Final Offer (BAFO) of the tender
+                <strong t-esc="object.tender_rfq_id.title"/>, Ref
+                <strong t-esc="object.tender_rfq_id.name"/>
+            </p>
+            <p>The New BAFO Tender Request <strong>Ref:<span t-esc="object.name"/>).
+                </strong> Please search for this in the Website</p>
+            <p>
+                <strong>(BID Ref: <span t-esc="ctx.get('bid_reference')"/>).
+                </strong>
+            </p>
+
+            <p>We invite you to submit your revised proposal for this tender. Please log in to the vendor portal and
+                provide your best and final offer before the deadline.
+            </p>
+
+            <p>Thank you for your participation and efforts. We look forward to receiving your revised bid.</p>
+
+            <p>Regards,
+                <br/>
+                Procurement Team
+            </p>
+
+        </field>
+    </record>
+</odoo>

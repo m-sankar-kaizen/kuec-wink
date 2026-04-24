@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="hr_leave_type_view_form" model="ir.ui.view">
+        <field name="name">hr.leave.type.view.form.kaz.leave.entitlement.kuec</field>
+        <field name="model">hr.leave.type</field>
+        <field name="inherit_id" ref="hr_holidays.edit_holiday_status_form"/>
+        <field name="arch" type="xml">
+
+            <field name="company_id" position="attributes">
+                <attribute name="readonly">1</attribute>
+            </field>
+            <field name="company_id" position="after">
+                <field name="company_code" invisible="1"/>
+            </field>
+
+            <field name="leave_validation_type" position="after">
+                <field name="escalate_to_job_position_id"
+                       invisible="leave_validation_type != 'escalate_to_x' or company_code not in ['KUEC']"
+                       required="leave_validation_type == 'escalate_to_x' and company_code in ['KUEC']"/>
+                <field name="approval_requirement_days"
+                       invisible="leave_validation_type != 'escalate_to_x' or company_code not in ['KUEC']"
+                       required="leave_validation_type == 'escalate_to_x' and company_code in ['KUEC']"/>
+            </field>
+
+            <group name="configuration" position="inside">
+                <field name="requires_advance_notice" invisible="company_code not in ['KUEC']"/>
+                <field name="advance_number_of_days" invisible="not requires_advance_notice"/>
+                <field name="allow_leave_extension" invisible="company_code not in ['KUEC']"/>
+                <field name="min_days_for_request" invisible="company_code not in ['KUEC']"/>
+                <field name="max_days_for_request" invisible="company_code not in ['KUEC']"/>
+                <field name="is_wfh" invisible="company_code not in ['KUEC']"/>
+            </group>
+
+            <group name="configuration" position="after">
+                <group name="validation_domain" strings="Eligibility" invisible="company_code not in ['KUEC']">
+                    <field name="employee_type" invisible="company_code not in ['KUEC']"/>
+                    <field name="gender" invisible="company_code not in ['KUEC']"/>
+                    <field name="kuec_grade_id" invisible="company_code not in ['KUEC']"/>
+                    <field name="religion_id" widget="selection" invisible="company_code not in ['KUEC']"/>
+                </group>
+            </group>
+
+            <field name="support_document" position="after">
+                <field name="is_attachment_mandatory" invisible="not support_document or company_code not in ['KUEC']"/>
+                <field name="attachment_warning" invisible="not is_attachment_mandatory"
+                       required="is_attachment_mandatory"/>
+            </field>
+
+        </field>
+    </record>
+</odoo>

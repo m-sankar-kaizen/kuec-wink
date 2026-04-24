@@ -1,0 +1,849 @@
+// UI-LOV-001, UI-LOV-004, UI-LOV-005, UI-LOV-020 — Lovable parity (portal only)
+
+/* ── Semantic classes (same names as Lovable where possible) ── */
+.page-header {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--wink-text-dark);
+    margin-bottom: 0.25rem;
+}
+.page-subtitle {
+    font-size: 0.9rem;
+    color: var(--wink-muted);
+    margin-bottom: 1.5rem;
+}
+.touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.text-muted-foreground {
+    color: var(--wink-muted) !important;
+}
+.border-border {
+    border-color: var(--wink-border) !important;
+}
+
+/* UI-LOV-004 Gradient header (Order Summary, Service CTA, Ticket card, mobile CTA bar) */
+.kuec-gradient {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
+    color: #fff !important;
+    border: none;
+}
+
+/* UI-LOV-001 Premium card */
+.card-premium {
+    background: #fff;
+    border: 1px solid var(--wink-border);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.rounded-2xl { border-radius: 16px; }
+.rounded-xl { border-radius: 12px; }
+
+/* UI-LOV-020 Layout & spacing (Tailwind equivalents) */
+.wink-portal-container {
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1rem;
+}
+@media (min-width: 768px) {
+    .wink-portal-container { padding: 1.5rem; }
+}
+@media (min-width: 992px) {
+    .wink-portal-container {
+        max-width: 1152px;
+        padding: 2rem;
+    }
+}
+.space-y-6 > * + * { margin-top: 1.5rem; }
+.p-4 { padding: 1rem; }
+.p-6 { padding: 1.5rem; }
+.p-8 { padding: 2rem; }
+
+/* UI-LOV-005 Badge variants (Status, Payment, Type, Document) */
+.badge-wink-status-quotation {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+}
+.badge-wink-status-salesorder {
+    background-color: #e3f2fd;
+    color: var(--wink-primary);
+    border: 1px solid #90caf9;
+}
+.badge-wink-payment-locked {
+    background-color: #fff8e1;
+    color: #f57c00;
+}
+.badge-wink-payment-due {
+    background-color: #ffebee;
+    color: #c62828;
+}
+.badge-wink-payment-paid {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+.badge-wink-type-retainer {
+    background-color: #e3f2fd;
+    color: var(--wink-primary);
+}
+.badge-wink-type-onetime {
+    background-color: #f5f5f5;
+    color: #616161;
+}
+.badge-wink-doc-required {
+    background-color: var(--wink-primary);
+    color: #fff;
+    font-size: 0.75rem;
+}
+.badge-wink-doc-optional {
+    background-color: #e0e0e0;
+    color: #424242;
+}
+
+/* Department colored badges (Lovable palette) */
+.badge-wink-dept-purple { background-color: #f3e5f5; color: #7b1fa2; }
+.badge-wink-dept-cyan { background-color: #e0f7fa; color: #00838f; }
+.badge-wink-dept-rose { background-color: #fce4ec; color: #c2185b; }
+.badge-wink-dept-warning { background-color: #fff3e0; color: #ef6c00; }
+.badge-wink-dept-success { background-color: #e8f5e9; color: #2e7d32; }
+
+/* Alert/banner variants for Request Detail */
+.alert-wink-locked {
+    background-color: #fff8e1;
+    border-color: #ffc107;
+    color: #856404;
+}
+.alert-wink-due {
+    background-color: #e3f2fd;
+    border-color: var(--wink-info);
+    color: #0d47a1;
+}
+.alert-wink-paid {
+    background-color: #e8f5e9;
+    border-color: #4caf50;
+    color: #1b5e20;
+}
+
+/* Sticky CTA bar (mobile Service Detail) */
+.wink-cta-bar-mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
+    color: #fff;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+.wink-cta-bar-mobile .btn {
+    width: 100%;
+    padding: 12px 24px;
+    font-weight: 600;
+}
+
+/* Hide table on mobile, show cards */
+@media (max-width: 767px) {
+    .wink-requests-table-wrap .table {
+        display: none;
+    }
+    .wink-requests-cards {
+        display: block;
+    }
+}
+@media (min-width: 768px) {
+    .wink-requests-cards {
+        display: none;
+    }
+}
+
+/* Upload zone (New Ticket, etc.) */
+.border-dashed { border-style: dashed !important; }
+
+/* Empty state */
+.wink-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--wink-muted);
+}
+.wink-empty-state .fa {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+/* CAT-1, CAT-2, CAT-10 — Service Catalogue hero & container */
+.wink-catalogue-hero {
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.wink-catalogue-hero.kuec-gradient {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
+    color: #fff;
+}
+.wink-catalogue-hero .form-control,
+.wink-catalogue-hero .input-group-text {
+    border-radius: 12px;
+}
+.wink-catalogue-container {
+    max-width: 1280px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 1rem !important;
+}
+@media (min-width: 768px) {
+    .wink-catalogue-container { padding: 1.5rem !important; }
+}
+@media (min-width: 992px) {
+    .wink-catalogue-container { padding: 2rem !important; }
+}
+
+/* CAT-5 — Department strip on service cards (left border); default for unknown slugs */
+.wink-service-card.wink-dept-strip {
+    border-left-width: 4px;
+    border-left-style: solid;
+    border-left-color: var(--wink-primary);
+}
+.wink-dept-strip.wink-dept-legal { border-left-color: #7b1fa2; }
+.wink-dept-strip.wink-dept-it { border-left-color: #00838f; }
+.wink-dept-strip.wink-dept-hr { border-left-color: #c2185b; }
+.wink-dept-strip.wink-dept-finance { border-left-color: #ef6c00; }
+.wink-dept-strip.wink-dept-business-development,
+.wink-dept-strip.wink-dept-business-dev { border-left-color: #2e7d32; }
+.wink-dept-strip.wink-dept-marketing { border-left-color: #5e35b1; }
+.wink-dept-strip.wink-dept-operations { border-left-color: #00695c; }
+
+/* CAT-2 optional hero pattern overlay (enable by adding .wink-hero-pattern to hero) */
+.wink-catalogue-hero.wink-hero-pattern {
+    position: relative;
+}
+.wink-catalogue-hero.wink-hero-pattern::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='0.5' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* CAT-9 mobile filter offcanvas (bottom sheet) */
+.wink-filter-offcanvas.offcanvas-bottom {
+    height: 70vh;
+    border-radius: 16px 16px 0 0;
+}
+
+/* CAT-6 description clamp */
+.wink-line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* G-2 — Card selected state (wizard) */
+.wink-card-selectable {
+    transition: border-color 0.2s, background-color 0.2s;
+}
+.wink-card-selectable .wink-card-selected-check {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    opacity: 0;
+    color: var(--wink-primary);
+    font-size: 1.25rem;
+}
+.wink-card-selected {
+    border: 2px solid var(--wink-primary) !important;
+    background-color: rgba(33, 150, 243, 0.06);
+}
+.wink-card-selected .wink-card-selected-check {
+    opacity: 1;
+}
+
+/* CR-5 employee card avatar (initials) */
+.wink-avatar-initials {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--wink-primary);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* UI-BUG-005b (FB-005.4): Plan/tier card selected state */
+.wink-plan-card:has(input:checked),
+.wink-tier-card:has(input:checked) .wink-tier-label {
+    border-color: var(--wink-primary) !important;
+    border-width: 2px;
+    background-color: rgba(31, 78, 121, 0.06);
+}
+
+/* Standalone retainer plan card — Most Popular highlight */
+.wink-plan-popular .wink-tier-label {
+    border-color: var(--wink-primary) !important;
+    border-width: 2px !important;
+    background: linear-gradient(160deg, #eef5ff 0%, #fff 100%);
+}
+
+/* Service description preview in configure step */
+.wink-service-desc-preview {
+    max-height: 120px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+/* UI-TAG-001 (FB-001h): Diagonal folded-corner ribbon (like screenshot)
+   Use a standard 75x75 clipped corner so ribbon is visible and inside the card */
+.wink-service-card,
+.wink-catalogue-page-detail {
+    position: relative;
+    overflow: hidden;
+}
+.wink-ribbon-wrapper {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 75px;
+    height: 75px;
+    overflow: hidden;
+    z-index: 10;
+    pointer-events: none;
+}
+.wink-ribbon {
+    position: relative;
+    display: block;
+    left: -20px;
+    top: 18px;
+    width: 140px;
+    padding: 4px 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #fff !important;
+    text-align: center;
+    white-space: nowrap;
+    transform: rotate(45deg);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    /* default if no inline background */
+    background: var(--wink-primary);
+}
+
+/* UI-TAG-002: Tag badges pill style with backend color */
+.wink-tag-badge {
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* ── UI-REV-001: Bundle Configurator Premium Tier Cards ────────────── */
+/* Billing toggle */
+.wink-billing-toggle-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+}
+.wink-toggle-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--wink-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+    &.active { color: var(--wink-primary); }
+}
+.wink-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    input { opacity: 0; width: 0; height: 0; }
+}
+.wink-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 999px;
+    transition: background 0.25s;
+    &::before {
+        content: '';
+        position: absolute;
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.25s;
+        box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+}
+input:checked + .wink-slider {
+    background: var(--wink-primary);
+    &::before { transform: translateX(22px); }
+}
+
+/* Tier card grid */
+.wink-tier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+}
+.wink-tier-card-premium {
+    position: relative;
+    background: #fff;
+    border: 2px solid var(--wink-border);
+    border-radius: 16px;
+    padding: 1.5rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    &:hover {
+        border-color: var(--wink-primary);
+        box-shadow: 0 4px 16px rgba(31,78,121,0.12);
+        transform: translateY(-2px);
+    }
+    &.selected, &.wink-popular {
+        border-color: var(--wink-primary);
+        box-shadow: 0 4px 20px rgba(31,78,121,0.18);
+    }
+}
+/* Most popular: distinct accent ring */
+.wink-tier-card-premium.wink-popular {
+    border-color: var(--wink-primary);
+    background: linear-gradient(160deg, #eef5ff 0%, #fff 100%);
+}
+.wink-most-popular-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--wink-primary);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(31,78,121,0.25);
+}
+/* Tier name */
+.wink-tier-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--wink-primary);
+    text-align: center;
+    letter-spacing: 0.01em;
+}
+/* Tier price block */
+.wink-tier-price-wrapper {
+    text-align: center;
+    padding: 0.5rem 0;
+}
+.wink-tier-amount-row { line-height: 1; }
+.wink-tier-amount {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--wink-primary);
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: -0.02em;
+}
+.wink-tier-price-subtext {
+    font-size: 0.78rem;
+    color: var(--wink-muted);
+    margin-top: 4px;
+    display: block;
+}
+/* Select / Subscribe button */
+.wink-select-btn {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    &:hover:not(:disabled) { opacity: 0.88; transform: scale(1.02); }
+    &:disabled { cursor: not-allowed; }
+}
+.wink-btn-primary {
+    background: var(--wink-primary);
+    color: #fff !important;
+}
+.wink-btn-outline {
+    background: transparent;
+    border: 2px solid var(--wink-primary) !important;
+    color: var(--wink-primary) !important;
+}
+/* Feature list inside tier card */
+.wink-tier-progression-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--wink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-top: 1px solid var(--wink-border);
+    padding-top: 0.6rem;
+    margin-top: auto;
+}
+.wink-tier-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.wink-tier-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--wink-text-dark);
+    .fa-check { color: #22c55e; font-size: 0.75rem; margin-top: 2px; flex-shrink: 0; }
+}
+
+/* UI-REV-001: Compare Plans toggle + table */
+.wink-compare-toggle {
+    text-align: center;
+    margin-top: 1.25rem;
+}
+.wink-compare-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--wink-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    &:hover { opacity: 0.75; }
+    i { transition: transform 0.25s; }
+    &.open i { transform: rotate(180deg); }
+}
+.wink-compare-table {
+    margin-top: 1rem;
+    border: 1px solid var(--wink-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+        th {
+            background: linear-gradient(135deg, var(--wink-primary), #003d8a);
+            color: #fff;
+            padding: 0.6rem 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            &:first-child { text-align: left; }
+        }
+        td {
+            padding: 0.45rem 0.75rem;
+            border-bottom: 1px solid var(--wink-border);
+            text-align: center;
+            &:first-child { text-align: left; font-weight: 500; color: var(--wink-text-dark); }
+            &:last-child { border-bottom: none; }
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) td { background: #f8faff; }
+        .fa-check { color: #22c55e; }
+        .fa-minus { color: #cbd5e1; }
+    }
+}
+
+/* ── UI-REV-002: Review page redesign ─────────────────────────────── */
+.wink-review-card {
+    background: #fff;
+    border: 1px solid var(--wink-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(31,78,121,0.08);
+}
+.wink-review-header {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    i { font-size: 1.3rem; opacity: 0.9; }
+}
+.wink-review-header-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0;
+}
+.wink-review-header-subtitle { font-size: 0.82rem; opacity: 0.82; margin: 0; }
+.wink-review-body {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.wink-review-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #f0f4f8;
+    gap: 1rem;
+    &:last-child { border-bottom: none; }
+}
+.wink-review-label {
+    font-size: 0.82rem;
+    color: var(--wink-muted);
+    font-weight: 500;
+    white-space: nowrap;
+    min-width: 110px;
+}
+.wink-review-value {
+    font-size: 0.9rem;
+    color: var(--wink-text-dark);
+    font-weight: 500;
+    text-align: right;
+    flex: 1;
+}
+.wink-review-amount-row {
+    background: #f0f6ff;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.wink-review-amount-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--wink-primary);
+}
+.wink-review-amount-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--wink-primary);
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── Activation Modal ─────────────────────────────────────────────── */
+.wink-activate-modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 85, 183, 0.18);
+}
+.wink-activate-modal-header {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
+    color: #fff;
+    padding: 1rem 1.25rem;
+    border-bottom: none;
+    .modal-title { font-size: 1rem; font-weight: 700; }
+    .btn-close-white { filter: brightness(0) invert(1); opacity: 0.85; }
+}
+.wink-activate-section {
+    padding: 1rem 1.25rem;
+}
+.wink-activate-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--wink-muted);
+    margin-bottom: 0.75rem;
+}
+.wink-activate-doc-row {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--wink-border);
+    &:last-child { border-bottom: none; }
+}
+.wink-activate-doc-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--wink-text-dark);
+}
+.wink-doc-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    &.approved  { background: #dcfce7; color: #15803d; }
+    &.pending   { background: #fef9c3; color: #854d0e; }
+    &.rejected  { background: #fee2e2; color: #b91c1c; }
+    &.missing   { background: #f1f5f9; color: var(--wink-muted); }
+}
+.wink-inline-upload-form input[type="file"] {
+    font-size: 0.8rem;
+}
+/* Employee grid */
+.wink-emp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+.wink-emp-card {
+    border: 2px solid var(--wink-border);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+    &:hover { border-color: var(--wink-primary); background: #f0f6ff; }
+    &.selected { border-color: var(--wink-primary); background: #e8f0ff; }
+}
+.wink-emp-body {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.wink-emp-icon {
+    color: var(--wink-primary);
+    font-size: 1rem;
+}
+.wink-emp-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--wink-text-dark);
+    line-height: 1.2;
+}
+
+// ── /my/bundles Dashboard ─────────────────────────────────────────────
+.wink-bundle-kpi {
+    background: #fff;
+    border: 1px solid var(--wink-border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    &-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    &-label { font-size: 0.78rem; color: var(--wink-text-muted); margin-top: 0.25rem; }
+    &-warn { border-color: #ffc107; background: #fffdf0; }
+}
+
+.wink-bundle-card-header {
+    background: linear-gradient(135deg, var(--wink-primary) 0%, #003d8a 100%);
+    color: #fff;
+    padding: 1.25rem 1.5rem 1rem;
+
+    // Dropdown menu must not inherit the white text from the header
+    .dropdown-menu {
+        color: #212529;
+        .dropdown-item {
+            color: #212529;
+            &:hover { background: #f8f9fa; color: #1e2125; }
+        }
+    }
+}
+
+.wink-bundle-ring {
+    background: rgba(255,255,255,0.18);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    min-width: 72px;
+    span { display: block; font-size: 1.4rem; font-weight: 700; line-height: 1; }
+    small { font-size: 0.7rem; opacity: 0.75; }
+}
+
+.wink-bundle-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.25);
+    &-bar {
+        background: linear-gradient(90deg, #fff, rgba(255,255,255,0.7));
+        border-radius: 999px;
+        transition: width 0.6s ease;
+    }
+}
+
+.wink-ent-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--wink-border);
+    &:last-child { border-bottom: none; }
+}
+
+.wink-ent-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.wink-ent-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    &.available { background: #e8f0ff; color: var(--wink-primary); }
+    &.done      { background: #d1fae5; color: #059669; }
+    &.expired   { background: #fee2e2; color: #dc2626; }
+}
+
+.wink-ent-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.wink-ent-meta {
+    font-size: 0.8rem;
+    margin-top: 0.15rem;
+}
+
+.wink-ent-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.wink-ent-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 20px;
+    white-space: nowrap;
+    &.available { background: #e8f0ff; color: var(--wink-primary); }
+    &.done      { background: #d1fae5; color: #059669; }
+    &.expired   { background: #fee2e2; color: #dc2626; }
+}
+
+.wink-task-pill {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-weight: 500;
+    &.done   { background: #d1fae5; color: #059669; }
+    &.inprog { background: #fef3c7; color: #d97706; }
+}

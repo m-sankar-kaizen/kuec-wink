@@ -1,0 +1,10 @@
+<odoo>
+    <data noupdate="1">
+        <record id="model_hr_disciplinary_action_rule" model="ir.rule">
+            <field name="name">Disciplinary Actions: User Access</field>
+            <field name="model_id" ref="model_hr_disciplinary_action"/>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+    </data>
+</odoo>

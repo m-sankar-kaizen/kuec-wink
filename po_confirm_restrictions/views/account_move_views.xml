@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    Inherited Form View: `account.move` (Vendor Bill / Invoice Form)
+    View ID: account_move_restrictions_form
+    Purpose:
+        Adds a new tab "KU PO Details" after the "Other Info" tab in the account.move form view.
+
+    Functionality:
+    - Displays custom fields that relate an invoice to a purchase order:
+        • `total_amount`: The total approved amount on the linked PO.
+        • `remaining_amount`: The remaining unpaid or unbilled amount.
+        • `purchase_order_attach`: A binary field used to upload the original signed PO.
+        • `goods_received_note`: A binary field for uploading the GRN (Goods Received Note).
+
+    Use Case:
+    - Enables the Accounts or Finance team to verify and track purchase order documents and
+      partial invoicing values directly within the invoice form.
+    -->
+
+    <record model="ir.ui.view" id="account_move_restrictions_form">
+        <field name="name">account.move.form.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert new tab after the 'Other Info' tab -->
+            <xpath expr="//page[@name='other_info']" position="after">
+                <page string="KUEC PO Details">
+                    <group colspan="2">
+                        <group>
+                            <field name="total_amount"/>
+                            <field name="remaining_amount"/>
+                        </group>
+                        <group>
+                            <field name="purchase_order_attach"/>
+                            <field name="goods_received_note"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

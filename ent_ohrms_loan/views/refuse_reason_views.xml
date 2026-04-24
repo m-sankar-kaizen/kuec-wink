@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- ================================================================
+        Form View: Refuse Reason
+        Model: refuse.reason
+
+        Purpose:
+            This view defines a modal form that allows users to input the reason
+            for refusing a document or request (e.g. housing advance, leave request).
+            It also triggers an action (`action_on_confirm`) to apply the refusal.
+
+        Behavior:
+            - The `reason` field is shown as a text input with a placeholder.
+            - Footer includes two buttons:
+                - "Confirm": Triggers `action_on_confirm` method on the model.
+                - "Close": Closes the modal window without taking any action.
+    ================================================================= -->
+    <record id="refuse_reason_form_view" model="ir.ui.view">
+        <field name="name">refuse.reason.form</field>
+        <field name="model">refuse.reason</field>
+        <field name="arch" type="xml">
+            <form string="Refuse Reason">
+                <sheet>
+                    <!-- Input for user to describe the reason for refusal -->
+                    <field name="reason" placeholder="Please describe the refusal reason..."/>
+                </sheet>
+                <footer>
+                    <!-- Triggers action method on the refuse.reason model -->
+                    <button name="action_on_confirm"
+                            string="Confirm"
+                            type="object"
+                            class="btn-primary"/>
+
+                    <!-- Cancels and closes the form without saving -->
+                    <button special="cancel"
+                            data-hotkey="z"
+                            string="Close"
+                            class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

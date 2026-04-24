@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Service Natures -->
+        <record id="kuec_service_nature_governmental" model="kuec.service.nature">
+            <field name="name">Governmental</field>
+        </record>
+        <record id="kuec_service_nature_non_governmental" model="kuec.service.nature">
+            <field name="name">Non-Governmental</field>
+        </record>
+    </data>
+</odoo>

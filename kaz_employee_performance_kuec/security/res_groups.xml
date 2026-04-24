@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="group_kuec_performance_eval_user" model="res.groups">
+        <field name="name">Performance Evaluation User</field>
+        <field name="comment">This group gives users access to the Performance Evaluation module.
+            Admins, HOD users should not be assigned to this group, as they access Goals with administrative
+            capacity.
+        </field>
+        <field name="category_id" ref="kaz_procurement_doa_kuec.module_category_kuec_doa"/>
+    </record>
+</odoo>

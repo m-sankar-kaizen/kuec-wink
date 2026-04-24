@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record model="ir.ui.view" id="account_statment_report_form">
+        <field name="name">res.partner.view.form.inherit.account.statement.report</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='vat']" position="after">
+                <field name="partner_invoices_ids" string="Partner Invoice"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

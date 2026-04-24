@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── WINK Task smart button on RFQ / PO form ─────────────────────── -->
+    <record id="purchase_order_form_wink" model="ir.ui.view">
+        <field name="name">purchase.order.form.wink</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart button: linked WINK task -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_wink_task"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-check-square-o"
+                        invisible="not wink_task_id"
+                        help="Open the WINK delivery task this RFQ was created from.">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">WINK Task</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- Hidden field needed for invisible condition -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="wink_task_id" invisible="1"/>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

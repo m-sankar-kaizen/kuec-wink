@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default maximum internship reward amount (AED). Change via System Parameters or res.config.settings. -->
+    <data noupdate="1">
+        <record id="param_hr_internship_reward_max_amount" model="ir.config_parameter">
+            <field name="key">hr_internship.reward_max_amount</field>
+            <field name="value">10000</field>
+        </record>
+    </data>
+</odoo>

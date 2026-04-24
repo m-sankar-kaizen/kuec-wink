@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+
+    <!--
+    ===========================================================================
+    Sequence Definition: Budget Transfer Request
+    ===========================================================================
+    This sequence is used to auto-generate unique identifiers for budget transfer
+    requests within the system. The sequence ensures that every request is
+    traceable and has a consistent reference format.
+
+    Key Fields Explained:
+    - name: Human-readable label shown in the sequence form.
+    - code: Technical identifier used in code and model `ir.sequence`.
+            It is typically referenced in Python using `self.env['ir.sequence'].next_by_code('budget.transfer.request')`
+    - prefix: This is a string that will be prepended to the generated number.
+              For example, a prefix of 'BTR-' will result in IDs like BTR-0001.
+    - padding: Determines the number of digits in the numeric part.
+               Padding = 4 means numbers like 0001, 0002, ..., 0123.
+    - number_next: The starting value of the sequence. Will increment from this.
+    - number_increment: Step size for each new number generated. Usually 1.
+
+    Example Output:
+    First call to sequence will return: BTR-0001
+    Second call: BTR-0002
+    ...
+    -->
+    <record id="seq_budget_transfer_request" model="ir.sequence">
+        <field name="name">Budget Transfer Request Sequence</field>
+        <field name="code">budget.transfer.request</field>
+        <field name="prefix">BTR-</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+</odoo>

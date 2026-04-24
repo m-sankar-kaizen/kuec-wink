@@ -1,0 +1,129 @@
+<odoo>
+
+<!-- [Start] Form view ###############################################################################-->
+    <record id="view_hr_resume_ocr_form" model="ir.ui.view">
+        <field name="name">resume.ocr.form</field>
+        <field name="model">resume.ocr</field>
+        <field name="arch" type="xml">
+            <form string="Resume OCR">
+            <!-- [Start] Form Header ################################################-->
+                <header>
+                    <button name="action_rerun_ocr"
+                        string="Re-run OCR"
+                        type="object"
+                        class="btn-primary"
+                        invisible="file == False or (ocr_status != 'new' and ocr_status != 'fail') or application_id"
+                        icon="fa-refresh"
+                    />
+                    <field name="ocr_status" 
+                        widget="statusbar" 
+                        statusbar_visible="fail"
+                        invisible="ocr_status != 'fail'" 
+                    />
+                    <field name="ocr_status" 
+                        widget="statusbar" 
+                        statusbar_visible="new,pending,done"
+                        invisible="ocr_status == 'fail'" 
+                    />
+                </header>
+            <!-- [End] Form Header ################################################-->
+
+            <!-- [Start] Form Content #############################################-->
+                <sheet>
+                    <group>
+                        <field name="ocr_error_message" 
+                            nolabel="1" 
+                            readonly="1"
+                            invisible="not ocr_error_message"
+                        />
+                        <group>
+                            <separator string="Resume/Application Details"/>
+                            <field name="name" invisible="1"/>
+                            <field name="file" filename="name" readonly="0" required="1"/>
+                            <field name="application_id" readonly="0"/>
+
+                            <separator string="OCR Details"/>
+                            <field name="ocr_model" />
+                        </group>
+                        <group>
+                            <notebook invisible="not name">
+                                <page string="Resume Preview">
+                                    <field name="file" widget="image" 
+                                        class="mt-2" 
+                                        nolabel="1"
+                                        invisible="file_type == 'pdf'"
+                                    />
+                                    <field name="pdf_images_html" widget="html"
+                                        invisible="file_type == 'image'"
+                                    />
+                                </page>
+                            </notebook>
+                        </group>
+                    </group>
+                </sheet>
+
+                <chatter/>
+            <!-- [End] Form Content #############################################-->
+            </form>
+        </field>
+    </record>
+<!-- [End] Form view ###############################################################################-->
+
+
+
+<!-- [Start] List view ###############################################################################-->
+    <record id="view_hr_resume_ocr_list" model="ir.ui.view">
+        <field name="name">resume.ocr.list</field>
+        <field name="model">resume.ocr</field>
+        <field name="arch" type="xml">
+            <list>
+            <!-- [Start] List Header #############################################-->
+                <header>
+                    <button
+                        type="action"
+                        name="%(action_resume_ocr_upload_wizard)d"
+                        string="Upload Resume"
+                        icon="fa-upload"
+                        context="{}"
+                        display="always"
+                    />
+                    <button
+                        string="Re-run OCR"
+                        type="object"
+                        name="action_resume_ocr_batch_rerun"
+                        icon="fa-refresh"
+                        context="{}"
+                        confirm="Are you sure you want to re-run OCR for the selected records?"
+                        class="oe_highlight"
+                    />
+                </header>
+            <!-- [End] List Header #############################################-->
+
+            <!-- [Start] List Content #############################################-->
+                <field name="application_id" />
+                <field name="name"/>
+                <field name="ocr_status" />
+                <field name="ocr_model" />
+            <!-- [End] List Content #############################################-->
+            </list>
+        </field>
+    </record>
+<!-- [End] List view ###############################################################################-->
+
+
+
+<!-- [Start] Action ###################################################################################-->
+    <record id="action_hrms_resume_ocr" model="ir.actions.act_window">
+        <field name="name">Resume OCR</field>
+        <field name="res_model">resume.ocr</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Click “Upload New Resume” to begin.
+            </p>
+        </field>
+    </record>
+<!-- [End] Action #####################################################################################-->
+
+</odoo>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+
+    <!--
+        Mail Activity Type: Requisition Approve Request
+        Used to notify responsible users that a requisition approval is needed.
+        Appears on the `material.purchase.requisition` model.
+    -->
+    <record id="mail_requisition_approval" model="mail.activity.type">
+        <field name="name">Requisition Approve Request</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="res_model">material.purchase.requisition</field>
+    </record>
+
+    <!--
+        Mail Activity Type: Approved Requisition
+        Triggers after the requisition is approved and ready for purchase order processing.
+    -->
+    <record id="mail_po_ready" model="mail.activity.type">
+        <field name="name">Approved Requisition</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="res_model">material.purchase.requisition</field>
+    </record>
+
+    <!--
+        Mail Activity Type: Completed Requisition
+        Used to notify stakeholders that the purchase order has been created and the requisition is fulfilled.
+    -->
+    <record id="po_created" model="mail.activity.type">
+        <field name="name">Completed Requisition</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="res_model">material.purchase.requisition</field>
+    </record>
+
+    <!--
+        Mail Activity Type: Payment Approval
+        Notifies approvers to review and approve payments.
+        Used for `account.payment` model (vendor payments, employee reimbursements, etc).
+    -->
+    <record id="mail_payment_approval" model="mail.activity.type">
+        <field name="name">Payment Approval</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="res_model">account.payment</field>
+    </record>
+
+</odoo>

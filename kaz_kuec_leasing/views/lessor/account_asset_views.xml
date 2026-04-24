@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit account.asset form view to add leased ribbon and fields -->
+    <record id="view_account_asset_lessor_form" model="ir.ui.view">
+        <field name="name">account.asset.lessor.form</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+            <!-- Add ribbon for leased assets -->
+            <xpath expr="//widget[@name='web_ribbon']" position="after">
+                <widget name="web_ribbon" title="Is Leased" bg_color="text-bg-warning" invisible="is_leased == False"/>
+            </xpath>
+            
+            <xpath expr="//field[@name='method_number']" position="after">
+                <field name="is_leased" readonly="1"/>
+                <field name="lease_contract_id" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

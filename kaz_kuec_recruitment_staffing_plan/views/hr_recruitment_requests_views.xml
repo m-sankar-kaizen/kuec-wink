@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_hr_recruitment_request_views_list" model="ir.ui.view">
+        <field name="name">hr.recruitment.requests.views.list</field>
+        <field name="model">hr.recruitment.requests</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="job_position_id"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="hr_recruitment_requests_view_form"
+                model="ir.ui.view">
+        <field name="name">hr.recruitment.requests.views.form</field>
+        <field name="model">hr.recruitment.requests</field>
+        <field name="arch" type="xml">
+            <form string="Recruitment Requests">
+                <header>
+                    <button name="action_confirm"
+                            type="object"
+                            string="Confirm"
+                            invisible="status != 'draft'"
+                            class="oe_highlight"/>
+                    <button name="action_cancel"
+                            type="object"
+                            string="Cancel"
+                            invisible="status != 'draft'"
+                            class="btn btn-secondary"/>
+                    <button name="action_approve"
+                            type="object"
+                            invisible="status != 'confirmed'"
+                            class="oe_highlight"
+                            string="Approve"/>
+                    <button name="action_start_recruitment"
+                            type="object"
+                            string="Start Recruitment"
+                            invisible="not(status == 'approved' and not is_recruitment_started)"
+                            class="oe_highlight"/>
+                    <button name="action_reject"
+                            type="object"
+                            groups="kaz_kuec_recruitment_staffing_plan.group_staffing_master"
+                            invisible="status != 'confirmed'"
+                            class="btn btn-secondary"
+                            string="Reject"/>
+                    <button name="action_done"
+                            type="object"
+                            invisible="status != 'approved'"
+                            class="oe_highlight"
+                            string="Done"/>
+                    <button name="action_reset"
+                            type="object"
+                            invisible="status != 'canceled'"
+                            class="oe_highlight"
+                            string="Reset to Draft"/>
+
+                    <field name="status"
+                           widget="statusbar"
+                           statusbar_visible="draft,confirmed,approved,done"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon"
+                            title="In Recruitment"
+                            bg_color="text-bg-success"
+                            invisible="not (is_recruitment_started and status == 'approved')"/>
+
+                    <div class="oe_button_box" name="button_box">
+
+                        <button class="oe_stat_button"
+                                name="action_go_to_job"
+                                invisible="not job_position_id"
+                                type="object"
+                                string="Job Position" icon="fa-edit">
+                        </button>
+
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"
+                                   readonly="status != 'draft'"
+                                   placeholder="RECRUITMENT/XX/XXXXX"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="is_recruitment_started" invisible="1"/>
+                            <field name="department_id" readonly="status != 'draft'"/>
+                            <field name="job_position_id" readonly="status != 'draft'"/>
+                            <field name="priority" widget="priority" readonly="status != 'draft'"/>
+                            <field name="staffing_plan_id" readonly="1"/>
+                            <field name="company_id" readonly="status != 'draft'"/>
+                        </group>
+
+                        <group>
+                            <field name="expected_start_date" readonly="status != 'draft'"/>
+                            <field name="requested_by" readonly="status != 'draft'"/>
+                            <field name="created_date" readonly="status != 'draft'"/>
+                            <field name="expected_employees"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="is_off_cycle_staffing"
+                                   readonly="1"/>
+                            <field name="reason_id"
+                                   readonly="status != 'draft'"
+                                   required="is_off_cycle_staffing"
+                                   invisible="not is_off_cycle_staffing"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" nolabel="1" readonly="status != 'draft'"/>
+                        </page>
+                        <page string="Applications">
+                            <field name="application_ids" nolabel="1" readonly="status != 'draft'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+</odoo>

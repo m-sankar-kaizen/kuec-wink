@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--   Inherited the Purchase Order form view to add a new button -->
+    <record id="purchase_order_form" model="ir.ui.view">
+        <field name="name">purchase.order.view.form.inherit.kaz.srn.pdp.company.kuec</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="kaz_purchase_down_payment.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <header position="inside">
+                <field name="company_code" invisible="1"/>
+                <field name="can_show_srn_tab" invisible="1"/>
+            </header>
+
+            <xpath expr="//header/button[@name='%(kaz_purchase_down_payment.purchase_order_advance_payment_action)d']"
+                   position="attributes">
+                <attribute name="string">Create Bill</attribute>
+                <attribute name="invisible">state not in ('purchase', 'done') or invoice_status in ('invoiced') or company_code not in ['KUEC']</attribute>
+            </xpath>
+
+            <xpath expr="//button[@name='button_approve']" position="after">
+
+                <button name="action_create_invoice" string="Create Bill" type="object" class="oe_highlight"
+                        context="{'create_bill':True}"
+                        invisible="state not in ('purchase', 'done') or invoice_status in ('no', 'invoiced') or company_code in ['KUEC']"
+                        data-hotkey="w"/>
+
+            </xpath>
+
+            <xpath expr="//button[@name='action_create_invoice'][2]" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </xpath>
+
+            <xpath expr="//page[@name='purchase_delivery_invoice']//group[@name='other_info']/field[@name='company_id']"
+                   position="replace">
+                <field name="company_id"
+                       options="{'no_create': True}"
+                       readonly="1"
+                       domain="[('id','in',allowed_company_ids)]"/>
+            </xpath>
+
+            <page name="purchase_delivery_invoice" position="after">
+                <page name="srn_report_line" string="SRN Report Lines"
+                      invisible="not can_show_srn_tab or company_code not in ['KUEC']">
+                    <field name="srn_report_line_ids">
+                        <list create="0" delete="0" editable="bottom">
+                            <field name="srn_report_template_line_id" column_invisible="1"/>
+                            <field name="available_answer_selection_ids" column_invisible="1"/>
+                            <field name="sequence" readonly="1"/>
+                            <field name="name" readonly="1"/>
+                            <field name="answer_selection_id"
+                                   options="{'no_quick_create': True, 'no_create_edit': True}"
+                                   domain="[('id', 'in', available_answer_selection_ids)]"
+                                   required="1"/>
+                            <field name="remarks"/>
+                            <field name="company_id" optional="hide"/>
+                        </list>
+                    </field>
+                    <button name="action_generate_srn_report_lines" string="Generate SRN Report Lines" type="object"
+                            class="oe_highlight"
+                            invisible="srn_report_line_ids"/>
+                    <button name="service_completion_report" string="Service Completion Report" type="object"
+                            class="oe_highlight me-2" icon="fa-download"
+                            invisible="not srn_report_line_ids or not can_show_srn_tab or company_code not in ['KUEC']"/>
+
+                    <button name="action_notify_finance" string="Notify Finance" type="object"
+                            class="btn-secondary" icon="fa-plane"
+                            invisible="not srn_report_line_ids or not can_show_srn_tab or company_code not in ['KUEC']"/>
+                </page>
+            </page>
+
+        </field>
+    </record>
+
+    <record id="view_purchase_order_form_inherit_kaz_vendor_management" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.kaz.srn.pdp.company.kuec</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="kaz_vendor_management.view_purchase_order_form_inherit_kaz_vendor_management"/>
+        <field name="arch" type="xml">
+            <field name="order_type" position="before">
+                <field name="company_code" invisible="1"/>
+            </field>
+            <field name="order_type" position="attributes">
+                <attribute name="required">company_code in ['KUEC']</attribute>
+                <attribute name="invisible">company_code not in ['KUEC']</attribute>
+            </field>
+
+            <page name="purchase_delivery_invoice" position="after">
+                <page name="srn_scope_of_work" string="SRN Scope of Work"
+                      invisible="company_code not in ['KUEC'] or order_type != 'service'">
+                    <field name="srn_scope_of_work" readonly="state != 'draft'"/>
+                </page>
+            </page>
+
+        </field>
+    </record>
+</odoo>

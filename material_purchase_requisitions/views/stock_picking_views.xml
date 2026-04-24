@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- =======================================================================
+        XML View Extension: Internal Picking Form (stock.picking)
+        XML ID: internal_requisition_stock_form_view
+        Model Affected: stock.picking
+        Inherits: stock.view_picking_form
+        Purpose:
+            This view injects a new field `custom_requisition_id` into the
+            stock picking form. This field is a Many2one reference to a
+            material.purchase.requisition, establishing a linkage between
+            stock transfers (internal picking, delivery, receipts) and
+            purchase requisition workflows.
+
+            This improves traceability of inventory movements initiated
+            through requisition processes, particularly for internal material
+            consumption or stock movement requests.
+
+        Usage:
+            - Set automatically when the picking is created from an approved
+              material purchase requisition.
+            - Readonly for users; used for reporting, audit trails, and QWeb.
+            - Displayed just after the `owner_id` field for logical grouping
+              under picking metadata.
+
+        Related Field:
+            - Defined in Python on `stock.picking`:
+                custom_requisition_id = fields.Many2one(
+                    'material.purchase.requisition',
+                    string='Purchase Requisition',
+                    readonly=True,
+                    copy=True
+                )
+
+        Integration:
+            - Supports multi-step custom approval workflows.
+            - Used in QWeb reports for cross-referencing.
+    ======================================================================== -->
+    <record id="internal_requisition_stock_form_view" model="ir.ui.view">
+        <field name="name">stock.picking.form.view</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <!-- ============================================================
+                Insertion Point:
+                XPath targets the <field name="owner_id"/> in the form view.
+                Our custom field will be placed immediately after it.
+            ============================================================ -->
+            <xpath expr="//field[@name='owner_id']" position="after">
+                <field name="custom_requisition_id"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

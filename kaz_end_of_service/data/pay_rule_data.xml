@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- ===============================================================
+         Payroll Structure Type Definition for End of Service
+         This is used to categorize the payroll structure under a new
+         type called "End of Service", which helps in filtering and
+         managing related structures separately.
+         ============================================================== -->
+    <record id="end_of_service_structure_type" model="hr.payroll.structure.type">
+        <field name="name">End of Service</field>
+        <!-- Setting country_id to False to make it globally available -->
+        <field name="country_id" eval="False"/>
+    </record>
+
+    <!-- ===============================================================
+         Payroll Structure: End of Service Structure
+         Defines a dedicated payroll structure that holds all salary
+         rules used during the employee exit process.
+         ============================================================== -->
+    <record id="end_of_service_structure" model="hr.payroll.structure">
+        <field name="name">End of service Structure</field>
+        <!-- No default rules; added explicitly below -->
+        <field name="rule_ids" eval="[]"/>
+        <field name="country_id" eval="False"/>
+        <field name="is_end_of_service" eval="True"/>
+        <!-- Link this structure to the newly defined structure type -->
+        <field name="type_id" ref="kaz_end_of_service.end_of_service_structure_type"/>
+    </record>
+
+    <!-- ===============================================================
+         SALARY RULES FOR END OF SERVICE STRUCTURE
+         The following rules represent different components of
+         final employee settlement during offboarding.
+         ============================================================== -->
+
+    <!-- Settlement Basic Salary Rule -->
+    <record id="hr_rule_settlement_basic" model="hr.salary.rule">
+        <field name="code">SETBAS</field>
+        <field name="name">Settlement Basic</field>
+        <field name="category_id" ref="hr_payroll.ALW"/> <!-- Categorized as allowance -->
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- Basic salary fetched from end_of_service_id -->
+        <field name="amount_python_compute">result = payslip.end_of_service_id.basic</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="170"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+    <!-- Cost of Living Allowance in Settlement -->
+    <record id="hr_rule_settlement_cols" model="hr.salary.rule">
+        <field name="code">SETCOL</field>
+        <field name="name">Settlement Cost of Living</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- COLS value is computed from end_of_service_id -->
+        <field name="amount_python_compute">result = payslip.end_of_service_id.cols</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="172"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+    <!-- Vacation Allowance as part of Settlement -->
+    <record id="hr_rule_settlement_vacation" model="hr.salary.rule">
+        <field name="code">SETVAC</field>
+        <field name="name">Settlement Vacation Allowance</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- Vacation allowance from EOS wizard -->
+        <field name="amount_python_compute">result = payslip.end_of_service_id.vacation_allowance</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="174"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+    <!-- Rounding Adjustment Rule -->
+    <record id="hr_rule_settlement_rounding" model="hr.salary.rule">
+        <field name="code">SETROU</field>
+        <field name="name">Settlement Rounding</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- Rounding amount from end_of_service record -->
+        <field name="amount_python_compute">result = payslip.end_of_service_id.rounding</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="176"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+    <!-- Leave Balance Encashment -->
+    <record id="hr_rule_settlement_leave_balance" model="hr.salary.rule">
+        <field name="code">SETLEA</field>
+        <field name="name">Settlement Leave Balance</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- Unused leave days payout -->
+        <field name="amount_python_compute">result = payslip.end_of_service_id.leave_balance_total</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="178"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+    <!-- End of Service Gratuity -->
+    <record id="hr_rule_settlement_gratuity" model="hr.salary.rule">
+        <field name="code">SETGRA</field>
+        <field name="name">Settlement Gratuity</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- Gratuity amount from EOS model -->
+        <field name="amount_python_compute">result = payslip.end_of_service_id.gratuity_amount</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="182"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+    <!-- Pension Deduction at End of Service -->
+    <record id="hr_rule_settlement_pension" model="hr.salary.rule">
+        <field name="code">SETPEN</field>
+        <field name="name">Settlement Pension</field>
+        <!-- Categorized as a deduction -->
+        <field name="category_id" ref="hr_payroll.DED"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- Pension amount retrieved from EOS wizard -->
+        <field name="amount_python_compute">result = payslip.end_of_service_id.pension_amount</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="184"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+    <!-- Net Settlement Salary: Sum of BASIC, ALW, and DED categories -->
+    <record id="hr_rule_settlement_net" model="hr.salary.rule">
+        <field name="code">SETNET</field>
+        <field name="name">Settlement Net Salary</field>
+        <field name="category_id" ref="hr_payroll.NET"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <!-- Net = BASIC + ALW + DED, accounting for positive/negative -->
+        <field name="amount_python_compute">result = categories['BASIC'] + categories['ALW'] + categories['DED']</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="450"/>
+        <field name="struct_id" ref="kaz_end_of_service.end_of_service_structure"/>
+    </record>
+
+</odoo>

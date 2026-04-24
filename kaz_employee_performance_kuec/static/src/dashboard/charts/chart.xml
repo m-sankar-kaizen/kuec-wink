@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="Chart">
+        <div class="chart-wrapper box-shadow-6 p-5">
+            <div t-attf-class="chart_canvas_{{props.type}}" t-ref="root"/>
+        </div>
+    </t>
+</templates>

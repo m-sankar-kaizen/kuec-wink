@@ -1,0 +1,48 @@
+<odoo>
+    <record model="ir.module.category" id="module_category_Company">
+        <field name="name">Company</field>
+        <field name="description">Category For Company</field>
+        <field name="sequence">9</field>
+    </record>
+
+    <!-- HR Group -->
+    <record id="group_performance_hr" model="res.groups">
+        <field name="name">Performance management - HR</field>
+        <field name="category_id" ref="module_category_Company"/>
+        <field name="implied_ids" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- Manager Group -->
+    <record id="group_performance_manager" model="res.groups">
+        <field name="name">Performance management - Manager</field>
+        <field name="category_id" ref="module_category_Company"/>
+    </record>
+
+    <!-- Employee Group -->
+    <record id="group_performance_employee" model="res.groups">
+        <field name="name">Performance management - Employee</field>
+        <field name="category_id" ref="module_category_Company"/>
+    </record>
+
+    
+    <record id="evaluation_employee_self_rule" model="ir.rule">
+        <field name="name">Employee: only see own record for evaluation</field>
+        <field name="model_id" ref="hrms_performance_management.model_hrms_evaluation"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('hrms_performance_management.group_performance_employee'))]"/>
+    </record>
+
+    <record id="feedback360_employee_self_rule" model="ir.rule">
+        <field name="name">Employee: only see own record for 360 feedback</field>
+        <field name="model_id" ref="hrms_performance_management.model_hrms_feedback360"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('hrms_performance_management.group_performance_employee'))]"/>
+    </record>
+
+    <record id="mygoals_employee_self_rule" model="ir.rule">
+        <field name="name">Employee: only see own record for My Goals</field>
+        <field name="model_id" ref="hrms_performance_management.model_my_goals"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('hrms_performance_management.group_performance_employee'))]"/>
+    </record>
+</odoo>

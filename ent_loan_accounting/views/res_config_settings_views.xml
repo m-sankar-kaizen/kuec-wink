@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        View: Inherit Account Settings Form to Add Loan Approval Toggle
+
+        Kaizen Principles Applied:
+        - Visibility: Make approval policy configurable by Accounting team.
+        - Respect for People: Empower Finance to control approval gatekeeping via a user-friendly setting.
+        - Simplicity & Standardization: Keeps feature modular and configurable per company need.
+
+        Purpose:
+        Adds a setting under the "Accounting" section in Odoo configuration
+        allowing toggling loan/housing advance approvals by account manager.
+    -->
+
+    <record id="view_account_config_inherit" model="ir.ui.view">
+        <field name="name">Accounting settings</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Inject our loan setting inside the 'account' settings group -->
+            <xpath expr="//app[@name='account']" position="inside">
+                <block title="Loans" name="loan_approval_setting_container">
+                    <setting id="loan_approve"
+                             help="Loan / Housing Advance Approval from account manager">
+                        <field name="loan_approve"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

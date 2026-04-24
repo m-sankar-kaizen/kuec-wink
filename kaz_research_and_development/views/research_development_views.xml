@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- LIST VIEW  -->
+    <record id="view_research_development_list" model="ir.ui.view">
+        <field name="name">research.development.list</field>
+        <field name="model">research.development</field>
+        <field name="arch" type="xml">
+            <list string="Research &amp; Development">
+                <field name="name"/>
+                <field name="title"/>
+                <field name="employee_id"/>
+                <field name="department_id" optional="show"/>
+                <field name="employee_parent_id" optional="show"/>
+                <field name="state"/>
+                <field name="approval_state" optional="hide"/>
+                <field name="company_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM VIEW -->
+    <record id="view_research_development_form" model="ir.ui.view">
+        <field name="name">research.development.form</field>
+        <field name="model">research.development</field>
+        <field name="arch" type="xml">
+            <form string="Research &amp; Development">
+                <header>
+                    <button name="action_submit_for_approval" string="Submit" type="object"
+                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state != 'draft'" class="btn-secondary"/>
+
+                    <button name="action_department_head_approval" string="Approve" type="object"
+                            groups="kaz_research_and_development.group_research_dep_head_kuec"
+                            invisible="approval_state != 'dep_head'" class="btn-primary"/>
+                    <button name="action_rfc_dep_head" string="Return for Correction" type="object"
+                            groups="kaz_research_and_development.group_research_dep_head_kuec"
+                            invisible="approval_state != 'dep_head'" class="btn-secondary"/>
+                    <button name="action_reject_dep_head" string="Reject" type="object"
+                            groups="kaz_research_and_development.group_research_dep_head_kuec"
+                            invisible="approval_state != 'dep_head'" class="btn-danger"/>
+
+                    <button name="action_cio_approval" string="Approve" type="object"
+                            groups="kaz_research_and_development.group_research_cio_kuec"
+                            invisible="approval_state != 'cio'" class="btn-primary"/>
+                    <button name="action_rfc" string="Return for Correction" type="object"
+                            groups="kaz_research_and_development.group_research_cio_kuec"
+                            invisible="approval_state != 'cio'" class="btn-secondary"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            groups="kaz_research_and_development.group_research_cio_kuec"
+                            invisible="approval_state != 'cio'" class="btn-danger"/>
+
+                    <button name="action_approve" string="Approve" type="object"
+                            groups="kaz_research_and_development.group_research_cco_kuec"
+                            invisible="approval_state != 'cco'" class="btn-success"/>
+                    <button name="action_rfc" string="Return for Correction" type="object"
+                            groups="kaz_research_and_development.group_research_cco_kuec"
+                            invisible="approval_state != 'cco'" class="btn-secondary"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            groups="kaz_research_and_development.group_research_cco_kuec"
+                            invisible="approval_state != 'cco'" class="btn-danger"/>
+
+                    <button name="action_create_pr" string="Create PR" type="object"
+                            invisible="approval_state != 'approved' or material_purchase_requisition_ids"
+                            class="btn-primary"/>
+
+                    <field name="approval_state" widget="statusbar" statusbar_visible="dep_head,cio,cco,approved"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approval,approved"/>
+                </header>
+
+                <sheet>
+                    <div name="button_box" class="oe_button_box">
+                        <button invisible="not material_purchase_requisition_ids" class="oe_stat_button" type="object"
+                                name="action_purchase_requisition" icon="fa-file">
+                            <field name="material_purchase_requisition_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Purchase Requisitions</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="title" required="1" readonly="state != 'draft'"/>
+                            <field name="employee_id" readonly="1"/>
+                            <field name="employee_parent_id" readonly="1" required="1"/>
+                            <field name="department_id" readonly="1"/>
+                        </group>
+
+                        <group>
+                            <field name="company_id" readonly="1"/>
+                            <field name="partner_ids" widget="many2many_tags" required="1" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="description" string="Description">
+                            <field name="description" required="1" readonly="state != 'draft'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_research_development" model="ir.actions.act_window">
+        <field name="name">Research &amp; Development</field>
+        <field name="res_model">research.development</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_research_root"
+              name="Research &amp; Development"
+              parent="material_purchase_requisitions.menu_purchase_requisition"
+              groups="kaz_research_and_development.group_research_employee_kuec"
+              action="action_research_development"
+              sequence="20"/>
+
+</odoo>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="email_template_contract_end_notification" model="mail.template">
+        <field name="name">Contract End Notification</field>
+        <field name="model_id" ref="kaz_kuec_employee_notice_period.model_hr_contract"/>
+        <field name="subject">Contract Ending – {{object.name}}</field>
+        <field name="email_to">{{object.hr_responsible_id.user_id.partner_id.email}}</field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+            <p>Dear <t t-esc="object.hr_responsible_id.name"/>,</p>
+            <p>
+                The contract for employee
+                <strong><t t-esc="object.employee_id.name"/></strong>
+                is nearing its end.
+            </p>
+
+            <p>
+                <strong>Contract End Date:</strong>
+                <t t-esc="object.date_end"/>
+            </p>
+
+            <p>Please take the necessary action.</p>
+
+            <br/>
+            <p>Regards,<br/>
+            <t t-esc="object.company_id.name"/></p>
+        </field>
+    </record>
+
+</odoo>

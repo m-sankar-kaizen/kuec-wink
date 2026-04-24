@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- =====================================================
+         Inherited Form View: HR Grade (for Education Allowance)
+         Adds fields: is_education_allowance, per_child_allowance,
+         and reimbursement_limit under a grouped section.
+         ===================================================== -->
+    <record id="action_hr_grade_form" model="ir.ui.view">
+        <field name="name">action_hr_grade_form_inherit_education</field>
+        <field name="model">hr.grade</field>
+        <field name="inherit_id" ref="kaz_employees.action_hr_grade_form"/>
+        <field name="arch" type="xml">
+            <!-- Insert new group after the second group in <sheet> -->
+            <xpath expr="//sheet/group[2]" position="after">
+                <group>
+                    <group string="Child Education Allowance">
+                        <!-- Boolean toggle: Enable Education Allowance -->
+                        <field name="is_education_allowance" readonly="state != 'draft'"/>
+
+                        <!-- Label and input for Per Child Allowance -->
+                        <label for="per_child_allowance" readonly="state != 'draft'"
+                               invisible="not is_education_allowance"/>
+                        <div class="o_row mw-50" name="per_child_allowance" invisible="not is_education_allowance">
+                            <field name="per_child_allowance"
+                                   class="oe_inline o_hr_narrow_field"
+                                   readonly="state != 'draft'"
+                                   nolabel="1"/>
+                            <div class="mb-3">/ Annum</div>
+                        </div>
+
+                        <!-- Label and input for Reimbursement Limit -->
+                        <label for="reimbursement_limit" invisible="not is_education_allowance"/>
+                        <div class="o_row mw-50" name="reimbursement_limit" invisible="not is_education_allowance">
+                            <field name="reimbursement_limit"
+                                   class="oe_inline o_hr_narrow_field"
+                                   readonly="state != 'draft'"
+                                   nolabel="1"/>
+                            <div class="mb-3">/ Annum</div>
+                        </div>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+        Record: Purchase Requisition Sequence
+        Purpose:
+        - Defines a unique sequence for material purchase requisition documents.
+        - The sequence will be used to generate reference numbers like EPR00001, EPR00002, etc.
+
+        Key Fields:
+        - name: Human-readable name for the sequence.
+        - code: Technical key used in `ir.sequence` calls (e.g., `self.env['ir.sequence'].next_by_code('purchase.requisition.seq')`)
+        - prefix: Each sequence number will start with 'EPR'.
+        - padding: The numeric part of the sequence will be 5 digits long.
+        -->
+    <record id="purchase_requisition_seq" model="ir.sequence">
+        <field name="name">Purchase Requisition Sequence</field>
+        <field name="code">purchase.requisition.seq</field>
+        <field name="prefix">EPR</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

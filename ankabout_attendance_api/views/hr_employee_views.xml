@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="emp_code_ankabut" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.attendance.api</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group/group/field[@name='company_id']" position="after">
+                <field name="company_code" invisible="1"/>
+                <field name="emp_code" required="company_code == 'ANK'"
+                       invisible="company_code != 'ANK'"/>
+                <field name="emp_code"
+                       string="KU ID" invisible="company_code != 'KUEC'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

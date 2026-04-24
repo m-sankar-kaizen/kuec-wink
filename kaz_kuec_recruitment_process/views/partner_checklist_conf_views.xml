@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_partner_checklist_conf_list" model="ir.ui.view">
+        <field name="name">view.partner.checklist.conf.list.inherit.recruitment</field>
+        <field name="model">partner.checklist.conf</field>
+        <field name="inherit_id" ref="kaz_contact_approval.view_partner_checklist_conf_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='for_vendor']" position="after">
+                <field name="for_external_recruiter"
+                       widget="boolean_toggle"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

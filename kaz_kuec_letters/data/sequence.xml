@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="seq_kuec_emp_letter" model="ir.sequence">
+        <field name="name">KUEC Employee Letter</field>
+        <field name="code">kuec.employment.letter</field>
+        <field name="prefix">EMP/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_kuec_salary_transfer_letter" model="ir.sequence">
+        <field name="name">KUEC Salary Transfer Letter</field>
+        <field name="code">kuec.salary.transfer.letter</field>
+        <field name="prefix">SAL-TRANSFER/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_kuec_health_insurance_letter" model="ir.sequence">
+        <field name="name">KUEC Health Insurance Letter</field>
+        <field name="code">kuec.health.insurance.letter</field>
+        <field name="prefix">HEALTH-INSURANCE/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_kuec_golden_visa_letter" model="ir.sequence">
+        <field name="name">KUEC Golden Visa Request</field>
+        <field name="code">kuec.golden.visa.request</field>
+        <field name="prefix">GOLDEN-VISA/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_kuec_salary_letter" model="ir.sequence">
+        <field name="name">KUEC Salary Letter</field>
+        <field name="code">kuec.salary.letter</field>
+        <field name="prefix">SALARY/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_kuec_visa_request_letter" model="ir.sequence">
+        <field name="name">KUEC Visa Request Letter</field>
+        <field name="code">kuec.visa.request</field>
+        <field name="prefix">VISA-REQUEST/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

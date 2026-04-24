@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+        Inherited View: hr.payroll.structure.form.inherit.kaz
+        Model: hr.payroll.structure
+        Purpose:
+        Adds a Boolean field `is_end_of_service` to the payroll structure form view.
+
+        Functional Use:
+        This field is used to differentiate payroll structures that are specific to end-of-service settlements.
+        It allows filtering of payroll structures when selecting the appropriate one for employee settlements.
+
+        Technical Notes:
+        - Inserted immediately after the existing `country_id` field using XPath
+        - Field `is_end_of_service` must be defined on the model `hr.payroll.structure`
+    -->
+    <record id="view_hr_employee_grade_form_inherit_kaz" model="ir.ui.view">
+        <field name="name">hr.payroll.structure.form.inherit.kaz.eos</field>
+        <field name="model">hr.payroll.structure</field>
+        <field name="inherit_id" ref="hr_payroll.view_hr_employee_grade_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='country_id']" position="after">
+                <field name="is_end_of_service"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!--
+        Inherited View: hr.payslip.form.inherit.kaz
+        Model: hr.payslip
+        Purpose:
+        Adds a Many2one field `end_of_service_id` to the payslip form view.
+
+        Functional Use:
+        Links a payslip to its corresponding End of Service record (`hr.employee.settlements`), if applicable.
+        This enables tracking of which payslip was generated as part of a final settlement.
+
+        Technical Notes:
+        - Inserted after the `struct_id` (salary structure) field using XPath
+        - Field `end_of_service_id` must be defined on the `hr.payslip` model (typically with `related='...'` or direct relation)
+    -->
+    <record id="view_hr_payslip_form_inherit_kaz" model="ir.ui.view">
+        <field name="name">hr.payslip.form.inherit.kaz.eos</field>
+        <field name="model">hr.payslip</field>
+        <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='struct_id']" position="after">
+                <field name="end_of_service_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

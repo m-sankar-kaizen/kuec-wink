@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+        <record id="res_config_settings_view_form_inherit_probation_period" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.probation.period</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='employees_setting_container']"
+                   position="after">
+                <block title="KUEC Off-boarding Conditions (KUEC)" invisible="company_code != 'KUEC'">
+                    <setting id="kuec_settlement_conditions"
+                             help="Define the settlement conditions for KUEC employees based on years of service.">
+                        <field name="kuec_settlement_conditions">
+                            <list editable="bottom">
+                                <field name="name" placeholder="Slab !"/>
+                                <field name="year_start"/>
+                                <field name="year_end"/>
+                                <field name="amount"/>
+                            </list>
+                            <form string="Settlement Condition">
+                                <sheet>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="year_start"/>
+                                        <field name="year_end"/>
+                                        <field name="amount"/>
+                                    </group>
+                                </sheet>
+                            </form>
+
+                        </field>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

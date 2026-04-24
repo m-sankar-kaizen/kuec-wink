@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Module Category for grouping overtime-related permissions -->
+    <record id="module_category_employee_overtime" model="ir.module.category">
+        <field name="name">Overtime</field>
+        <field name="sequence" eval="1"/>
+        <!-- This category will appear under User & Companies > Groups in the Odoo UI -->
+    </record>
+
+    <!-- Group: Line Manager -->
+    <record id="group_line_manager" model="res.groups">
+        <field name="name">Line Manager</field>
+        <field name="category_id" ref="kaz_employee_overtime.module_category_employee_overtime"/>
+        <field name="comment">
+            Members of this group can review and approve/reject overtime requests submitted
+            by employees in their own department. This group is suitable for team leads or supervisors.
+        </field>
+    </record>
+
+    <!-- Group: HR Person -->
+    <record id="group_hr_person" model="res.groups">
+        <field name="name">HR Person</field>
+        <field name="category_id" ref="kaz_employee_overtime.module_category_employee_overtime"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_employee_overtime.group_line_manager'))]"/>
+        <field name="comment">
+            This group extends the Line Manager permissions and allows HR users to further
+            process overtime requests, including final approvals and validations. They can view
+            and manage all requests across departments.
+        </field>
+    </record>
+
+    <!-- Group: Director -->
+    <record id="group_director" model="res.groups">
+        <field name="name">Director</field>
+        <field name="category_id" ref="kaz_employee_overtime.module_category_employee_overtime"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_employee_overtime.group_hr_person'))]"/>
+        <field name="comment">
+            Directors have the highest level of access among the overtime approval chain.
+            In addition to HR-level permissions, they can finalize and override decisions
+            on any overtime request within the company. Suitable for executive or departmental head roles.
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="procurement_master_plan_view_tree" model="ir.ui.view">
+        <field name="name">procurement.master.plan.view.tree</field>
+        <field name="model">procurement.master.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date_start"/>
+                <field name="date"/>
+                <field name="department_ids"
+                       widget="many2many_tags"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="procurement_master_plan_view_form" model="ir.ui.view">
+        <field name="name">procurement.master.plan.view.form</field>
+        <field name="model">procurement.master.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_request"
+                            class="oe_highlight"
+                            string="Request"
+                            invisible="status not in ['draft']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_close"
+                            class="oe_highlight"
+                            string="Close Plan"
+                            invisible="status not in ['open']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_active"
+                            class="oe_highlight"
+                            string="Active"
+                            invisible="status not in ['close']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_done"
+                            class="oe_highlight"
+                            string="Done"
+                            invisible="status not in ['active']"
+                            type="object"
+                            help="Request"/>
+                    <button name="action_cancel"
+                            class="btn btn-secondary"
+                            string="Cancel"
+                            invisible="status not in ['draft']"
+                            type="object"
+                            help="Cancel"/>
+                    <field name="status" widget='statusbar'/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="view_master_procurement_plans"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-pencil-square-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Procurement Plans</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"
+                                   placeholder="Budget 25 - 26"
+                                   readonly="status != 'draft'"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+<!--                            <field name="active" invisible="1"/>-->
+                            <field name="deadline" readonly="status != 'draft'"/>
+                            <field name="department_ids"
+                                   readonly="status != 'draft'"
+                                   widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <field name="date_start" string="Planned Date"
+                                   widget="daterange"
+                                   options="{&quot;end_date_field&quot;: &quot;date&quot;, &quot;always_range&quot;: &quot;1&quot;}"
+                                   required="1"
+                                   readonly="status != 'draft'"/>
+                            <field name="date" invisible="1" required="1"/>
+                            <field name="company_id" />
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description"
+                                   readonly="status != 'draft'"/>
+                        </page>
+
+                        <page string="Procurement Lines">
+                            <field name="procurement_plan_item_ids"
+                                   domain="[('status', '=', 'submitted')]"
+                                   readonly="status in ['active', 'done', 'canceled']">
+                                <list editable="bottom"
+                                      decoration-danger="deviation_status == 'over'"
+                                      decoration-warning="deviation_status == 'on_target'"
+                                      decoration-success="deviation_status == 'under'">
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="department_id"/>
+                                    <field name="name"/>
+                                    <field name="product_id"/>
+                                    <field name="description"/>
+                                    <field name="budget_reference_id" required="1"/>
+                                    <field name="company_id"
+                                           column_invisible="True"/>
+                                    <field name="master_plan_id"
+                                           column_invisible="True"/>
+                                    <field name="master_plan_status"
+                                           column_invisible="True"/>
+                                    <field name="planned_quantity" readonly="1"/>
+                                    <field name="approved_planned_quantity"/>
+                                    <field name="planned_cost"
+                                           widget='monetary'
+                                           readonly="1"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                    <field name="approved_planned_cost"
+                                           widget='monetary'
+                                            options="{'currency_field': 'currency_id'}"/>
+                                    <field name="planned_purchase_quarter"/>
+                                    <field name="uom_id"/>
+                                    <field name="sub_total_approved"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"/>
+                                    <field name="sub_total_actual"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"/>
+                                    <field name="status"/>
+                                    <field name="execution_rate"
+                                           placeholder="(Actual Purchased Quantity / Planned Quantity) × 100" optional="hide"/>
+                                    <field name="deviation_status" optional="hide"/>
+                                    <field name="qty_deviation" optional="hide"/>
+                                    <field name="cost_deviation" optional="hide"/>
+                                    <field name="actual_purchase_price"
+                                           string="Actual Purchase Price"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"
+                                           optional="hide"/>
+                                    <field name="actual_requisition_price"
+                                           string="Actual PR Price"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"
+                                           optional="hide"/>
+                                    <field name="actual_bill_price" optional="hide"/>
+                                    <field name="actual_requisition_qty"
+                                           string="Actual PR Qty"
+                                           optional="hide"/>
+                                    <field name="actual_purchased_qty"
+                                           string="Actual Purchase Qty"
+                                           optional="hide"/>
+                                    <field name="actual_bill_qty" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Department Procurement Plans"
+                              invisible="1">
+                            <field name="department_procurement_plan_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="procurement_master_plan_view_search" model="ir.ui.view">
+        <field name="name">procurement.master.plan.view.search</field>
+        <field name="model">procurement.master.plan</field>
+        <field name="arch" type="xml">
+            <search string="Procurement Master Plan">
+                <field name="name"/>
+                <field name="department_ids"/>
+            </search>
+        </field>
+    </record>
+</odoo>

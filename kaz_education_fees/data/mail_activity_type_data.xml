@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="mail_activity_send_note2_approve" model="mail.activity.type">
+        <field name="name">Education Fees Request</field>
+        <field name="icon">fa-envelope</field>
+        <field name="res_model">education.fees</field>
+    </record>
+</odoo>

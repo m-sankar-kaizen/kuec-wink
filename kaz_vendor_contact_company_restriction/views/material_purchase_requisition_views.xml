@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="requisition_form_inherit" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.form.view.inherit.kaz.vendor.contact.company.restriction
+        </field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="inherit_id" ref="kaz_vendor_management.requisition_form_inherit"/>
+        <field name="arch" type="xml">
+
+            <button name="return_to_draft" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </button>
+            <button name="reject_requisition" position="attributes">
+                <attribute name="invisible" add="company_code in ['KUEC']" separator="or"/>
+            </button>
+
+            <field name="order_type" position="before">
+                <field name="company_code" invisible="1"/>
+            </field>
+            <field name="order_type" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC']</attribute>
+                <attribute name="required">company_code in ['KUEC']</attribute>
+            </field>
+            <page name="warning_tab" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC']</attribute>
+            </page>
+        </field>
+    </record>
+    <record id="material_purchase_requisition_kuec_view_list" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.list</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="purchase_ids" column_invisible="1"/>
+                <field name="tender_rfq_id" column_invisible="1"/>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="requisition_type_id"/>
+                <field name="request_date"/>
+                <field name="date_end"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="kuec_approval_state" string="Approval State" widget="badge"
+                       decoration-success="kuec_approval_state == 'approved' and tender_rfq_id"
+                       decoration-danger="kuec_approval_state == 'approved' and not purchase_ids and not tender_rfq_id"
+                       decoration-primary="kuec_approval_state == 'approved' and purchase_ids" optional="show"/>
+                <field name="action_state" string="Action State" widget="badge"
+                       decoration-success="action_state == 'tender'"
+                       decoration-danger="action_state == 'action_needed'"
+                       decoration-primary="action_state == 'rfq'" optional="show"/>
+                <field name="is_tender" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_material_purchase_requisition_kuec" model="ir.actions.act_window">
+        <field name="name">Purchase Requisition</field>
+        <field name="res_model">material.purchase.requisition</field>
+        <field name="view_id" ref="material_purchase_requisition_kuec_view_list"/>
+        <field name="view_mode">list,form,activity</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first Purchase Requisition</p>
+        </field>
+    </record>
+
+    <record id="action_material_purchase_requisition_kuec_confirmed" model="ir.actions.act_window">
+        <field name="name">Confirmed Purchase Requisition</field>
+        <field name="res_model">material.purchase.requisition</field>
+        <field name="view_id" ref="material_purchase_requisition_kuec_view_list"/>
+        <field name="view_mode">list,form,activity</field>
+        <field name="domain">[('kuec_approval_state', '=', 'approved')]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first Purchase Requisition</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_material_purchase_requisition_kuec_root"
+              name="Purchase Requisition"
+              parent="material_purchase_requisitions.menu_purchase_requisition"
+              sequence="1"/>
+
+    <menuitem id="menu_material_purchase_requisition_kuec"
+              name="All Purchase Requisition"
+              parent="menu_material_purchase_requisition_kuec_root"
+              action="action_material_purchase_requisition_kuec"
+              sequence="1"/>
+
+    <menuitem id="menu_material_purchase_requisition_kuec_confirmed"
+              name="Confirmed Purchase Requisition"
+              parent="menu_material_purchase_requisition_kuec_root"
+              action="action_material_purchase_requisition_kuec_confirmed"
+              sequence="2"/>
+</odoo>

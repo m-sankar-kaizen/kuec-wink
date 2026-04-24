@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Tree View -->
+    <record id="view_kuec_employee_directory_tree" model="ir.ui.view">
+        <field name="name">kuec.employee.directory.tree</field>
+        <field name="model">kuec.employee.directory</field>
+        <field name="arch" type="xml">
+            <list string="Employee Directory" default_order="partner_id, name">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="job_title" optional="show"/>
+                <field name="nationality_id" optional="show"/>
+                <field name="uae_status" optional="show"/>
+                <field name="passport_number" optional="hide"/>
+                <field name="emirates_id" optional="hide"/>
+                <field name="active" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_kuec_employee_directory_form" model="ir.ui.view">
+        <field name="name">kuec.employee.directory.form</field>
+        <field name="model">kuec.employee.directory</field>
+        <field name="arch" type="xml">
+            <form string="Employee Details">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Full Name..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Employment">
+                            <field name="partner_id" context="{'default_is_company': True}"/>
+                            <field name="job_title"/>
+                            <field name="full_name_arabic"/>
+                            <field name="email" widget="email"/>
+                            <field name="mobile" widget="phone"/>
+                            <field name="gender"/>
+                            <field name="date_of_birth"/>
+                            <field name="place_of_birth"/>
+                            <field name="marital_status"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="Nationality &amp; ID">
+                            <field name="nationality_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="passport_number"/>
+                            <field name="passport_issue_date"/>
+                            <field name="passport_expiry_date"/>
+                            <field name="passport_place_of_issue"/>
+                            <field name="uid_number"/>
+                        </group>
+                        <group string="UAE Status">
+                            <field name="uae_status"/>
+                            <field name="current_location"/>
+                            <field name="previous_uae_visa"/>
+                            <field name="emirates_id" invisible="uae_status == 'none'"/>
+                            <field name="visa_expiry_date" invisible="uae_status in ('none', 'citizen')"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_kuec_employee_directory_search" model="ir.ui.view">
+        <field name="name">kuec.employee.directory.search</field>
+        <field name="model">kuec.employee.directory</field>
+        <field name="arch" type="xml">
+            <search string="Search Employees">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="passport_number"/>
+                <field name="emirates_id"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Company" name="group_company" context="{'group_by':'partner_id'}"/>
+                    <filter string="Nationality" name="group_nationality" context="{'group_by':'nationality_id'}"/>
+                    <filter string="UAE Status" name="group_uae_status" context="{'group_by':'uae_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_kuec_employee_directory" model="ir.actions.act_window">
+        <field name="name">Employee Directory</field>
+        <field name="res_model">kuec.employee.directory</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create the first employee record.
+            </p>
+            <p>
+                Manage customer employee lists centrally to accelerate service delivery for visas and ticketing.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menuitem -->
+    <menuitem id="menu_kuec_employee_directory"
+              name="Employee Directory"
+              parent="sale.sale_order_menu"
+              action="action_kuec_employee_directory"
+              sequence="50"/>
+
+</odoo>

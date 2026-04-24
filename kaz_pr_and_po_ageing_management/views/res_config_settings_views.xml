@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kaz.pr.and.po.ageing.management</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="kaz_vendor_management.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='kaz_vendor_management']" position="inside">
+                <block title="Fiscal Year-End Draft PR Notifications" id="kaz_rd_fiscal_year_end_notify">
+                    <setting string="Draft PR Notification Lead Days">
+                        <div class="text-muted content-group mt16">
+                            <field name="draft_pr_pa_notify_days"
+                                   class="text-center" required="1"
+                                   style="width: 10%; min-width: 4rem;"/>
+                            <span>Number of days before fiscal year-end to notify responsible users for Draft Material
+                                Purchase Requisitions &amp;
+                                Purchase Requisitions.
+                            </span>
+                        </div>
+                    </setting>
+                    <setting id="draft_pr_pa_notify_year" string="Draft PR/PA Notification Date">
+                        <div class="text-muted content-group mt16">
+                            <field name="draft_pr_pa_notify_month" class="pe-2"/>
+                            <field name="draft_pr_pa_notify_day"/>
+                        </div>
+                        <span class="text-muted d-block">
+                            Select the month and day when users should be notified about draft PRs/PAs.
+                        </span>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

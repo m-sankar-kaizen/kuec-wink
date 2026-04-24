@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_kuec_service" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kuec.service</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="10"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Wink" string="Wink" name="kuec_service_catalogue" groups="base.group_user">
+
+                    <!-- Government Charges global product -->
+                    <block title="Government Charges" name="kuec_wink_gov_charge_setting_container">
+                        <setting id="kuec_gov_charge_product" string="Government Charges Product"
+                                 help="Select the product to use on all government charge sale order lines. If not set, the service product is used as fallback.">
+                            <field name="wink_gov_charge_product_id"
+                                   options="{'no_create': True}"
+                                   placeholder="Select a product…"/>
+                        </setting>
+                    </block>
+
+                    <!-- eWallet Promotional Credit expense journal -->
+                    <block title="eWallet" name="kuec_wink_ewallet_setting_container">
+                        <setting id="kuec_expense_journal" string="Promotional Credit Expense Journal"
+                                 help="Default journal for posting the expense entry when a Promotional Credit top-up is issued. Must be a general/miscellaneous journal.">
+                            <field name="wink_expense_journal_id"
+                                   options="{'no_create': True}"
+                                   placeholder="Select a general journal…"/>
+                        </setting>
+                    </block>
+
+                    <!-- Terms & Conditions full-width editor -->
+                    <block title="Portal Terms &amp; Conditions" name="kuec_wink_terms_setting_container">
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_right_pane w-100">
+                                <div class="o_form_label fw-bold">Terms &amp; Conditions Content</div>
+                                <div class="text-muted small mb-3">
+                                    HTML content displayed at <code>/terms-and-conditions</code> on the customer portal.
+                                    Shown to customers before bundle payment.
+                                </div>
+                                <field name="wink_terms_html" widget="html"
+                                       style="min-height:400px; border:1px solid #dee2e6; border-radius:6px; padding:12px;"/>
+                            </div>
+                        </div>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

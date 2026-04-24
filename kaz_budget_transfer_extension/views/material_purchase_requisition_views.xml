@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="material_purchase_requisition_form_view" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.view.form</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="inherit_id" ref="material_purchase_requisitions.material_purchase_requisition_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button class="oe_stat_button"
+                            type="object"
+                            name="show_related_transfers"
+                            invisible="budget_transfer_count == 0"
+                            icon="fa-pencil-square-o">
+                    <field name="budget_transfer_count" widget="statinfo" string="Related Transfers"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

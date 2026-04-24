@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+        View: service.backorder.confirmation (Form View)
+        Purpose:
+        This view defines the wizard popup for confirming service backorders in the SRN (Service Receipt Note) workflow.
+
+        When a user attempts to validate a service receipt with partially fulfilled quantities, this popup appears,
+        allowing the user to choose whether to create backorders for the remaining service quantities or to cancel them.
+
+        This interface is dynamically shown after validation based on quantity mismatches between 'demand' and 'done'.
+    -->
+    <record id="service_view_backorder_confirmation" model="ir.ui.view">
+        <field name="name">service.backorder.confirmation.inherit.kaz.srn.pdp.company.kuec</field>
+        <field name="model">service.backorder.confirmation</field>
+        <field name="inherit_id" ref="skit_srn_receipt.service_view_backorder_confirmation"/>
+        <field name="arch" type="xml">
+
+            <button name="service_cancel_backorder" position="after">
+                <field name="company_id" invisible="1"/>
+                <field name="company_code" invisible="1"/>
+                <button name="service_cancel_backorder" string="No Backorder" type="object"
+                        class="btn-danger text-uppercase"
+                        invisible="company_code not in ['KUEC']"
+                        data-hotkey="w"/>
+            </button>
+
+        </field>
+    </record>
+</odoo>

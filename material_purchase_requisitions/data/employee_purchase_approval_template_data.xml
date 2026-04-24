@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+         Email Template: Department Approval Notification for Material Purchase Requisition
+
+         Purpose:
+         - Notifies the employee that their purchase requisition has been approved by their department manager.
+
+         Email Details:
+         - Sender: Department Manager's work email (`approve_manager_id.work_email`)
+         - Recipient: Employee who created the request (`employee_id.work_email`)
+         - Subject: Indicates the approval status with the requisition number
+         - Auto Delete: Enabled to reduce clutter in the email queue
+         -->
+    <record id="email_purchase_requisition_iruser_custom" model="mail.template">
+        <field name="name">Department Approval Purchase Requisition - Send by Email</field>
+        <field name="email_from">{{object.approve_manager_id.work_email}}</field>
+        <field name="subject">Department Approval Purchase Requisition - {{object.name}}</field>
+        <field name="email_to">{{object.employee_id.work_email}}</field>
+        <field name="model_id" ref="material_purchase_requisitions.model_material_purchase_requisition"/>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="font-family: 'Lucida Grande', Ubuntu, Arial, Verdana, sans-serif; font-size: 12px; color: rgb(34, 34, 34); background-color: #FFF; ">
+    <p>Dear<t t-out="object.employee_id.name"/>,
+    </p>
+    <br/>
+    <p>This mail is to inform you that material requisition request number
+        <t t-out="object.name"/>
+        is approved by the department manager.
+    </p>
+    <br/>
+    <p>Do not hesitate to contact us if you have any questions.</p>
+
+    <br/>
+</div>
+        </field>
+    </record>
+</odoo>

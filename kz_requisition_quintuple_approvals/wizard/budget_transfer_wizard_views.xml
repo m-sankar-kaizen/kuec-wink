@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+        Form view definition for the transient model 'budget.transfer.wizard'.
+
+        Purpose:
+        This wizard facilitates the creation of budget transfer requests linked to a specific requisition.
+
+        Fields:
+          - requisition_id: Many2one field linking to the related requisition.
+          - date: Date of the transfer request.
+          - justification: Text field to provide reasons for the transfer.
+          - line_ids: One2many lines representing budget transfer lines, editable in list view.
+
+        Transfer Lines (line_ids):
+          - increase_budget_id: The budget account to increase.
+          - amount: The amount to transfer.
+          - decrease_budget_id: The budget account to decrease.
+          - remaining_amount: Read-only field showing remaining budget balance (assumed).
+
+        Footer Buttons:
+          - "Transfer Request": Calls the 'transfer' method on the wizard to process the transfer.
+          - "Cancel": Closes the wizard without saving.
+
+        The form uses a <sheet> for standard Odoo styling.
+    -->
+    <record id="view_transfer_wizard_form" model="ir.ui.view">
+        <field name="name">transfer.wizard.form</field>
+        <field name="model">budget.transfer.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Transfer Wizard">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="requisition_id"/>
+                            <field name="date"/>
+                            <field name="justification"/>
+                        </group>
+                        <field name="line_ids">
+                            <list editable="bottom">
+                                <field name="increase_budget_id"
+                                       domain="[('budget_analytic_id.state', 'not in', ['draft', 'canceled'])]"/>
+                                <field name="amount"/>
+                                <field name="decrease_budget_id"
+                                       domain="[('budget_analytic_state', 'not in', ['draft', 'canceled']), ('id','!=', increase_budget_id)]"/>
+                                <field name="remaining_amount"/>
+                            </list>
+                        </field>
+                    </group>
+                    <footer>
+                        <button string="Transfer Request" type="object" name="transfer" class="oe_highlight"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

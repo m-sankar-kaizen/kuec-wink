@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Delivery Progress panel removed from portal task view per latest UX spec -->
+</odoo>

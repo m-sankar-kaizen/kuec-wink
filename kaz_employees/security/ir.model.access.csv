@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_blood_type_id,access_blood_type_name,model_blood_type,,1,1,1,1
+access_emergency_data_id,access_emergency_data_name,model_emergency_data,,1,1,1,1
+access_relationship_id,access_relationship_name,model_relationship,,1,1,1,1
+access_kids_details_id,access_kids_details_name,model_kids_details,,1,1,1,1
+access_bank_branch_id,access_bank_branch_name,model_bank_branch,,1,1,1,1
+access_hr_contract_id,access_hr_contract_name,model_hr_contract,,1,1,1,1
+hr_grade,access_hr_grade,kaz_employees.model_hr_grade,,1,1,1,1
+hr_grade_benefit,access_hr_grade_benefit,kaz_employees.model_hr_grade_benefit,,1,1,1,1
+employee_unit,access_employee_unit,kaz_employees.model_employee_unit,,1,1,1,1
+employee_section,access_employee_section,kaz_employees.model_employee_section,,1,1,1,1

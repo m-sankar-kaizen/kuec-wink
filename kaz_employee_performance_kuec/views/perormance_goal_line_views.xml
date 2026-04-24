@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_performance_goal_line_form" model="ir.ui.view">
+        <field name="name">performance.goal.line.form</field>
+        <field name="model">performance.goal.line</field>
+        <field name="arch" type="xml">
+            <form string="Performance Goal Line">
+                <header>
+                    <button name="action_mid_term_done" icon="fa-check"
+                            invisible="mid_term_evaluated or performance_state != 'mid_term'"
+                            confirm="Are you sure you want to mark this goal as mid-term evaluated? This action is final and cannot be undone."
+                            class="btn btn-primary" string="Mid Term Evaluated" type="object"/>
+                    <button name="action_final_eval_done" icon="fa-check"
+                            invisible="performance_state != 'final_eval' or final_eval_done"
+                            confirm="Are you sure you want to mark this goal as Final evaluated? This action is final and cannot be undone."
+                            class="btn btn-primary" string="Final Term Evaluated" type="object"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Goal Details">
+                            <field name="performance_id" readonly="1"/>
+                            <field name="performance_state" widget="badge" readonly="1"/>
+                            <field name="evaluation_category_id" readonly="1"/>
+                            <field name="description" readonly="1"/>
+                            <field name="date_from" readonly="1"/>
+                            <field name="date_to" readonly="1"/>
+                        </group>
+                        <group string="Evaluation Scores">
+                            <div invisible="not mid_term_evaluated"
+                                 class="badge rounded-pill text-bg-success">
+                                <field name="mid_term_evaluated" invisible="1"/>
+                                <span class="d-md-inline">Mid Term Evaluated</span>
+                            </div>
+                            <div invisible="not final_eval_done"
+                                 class="badge rounded-pill text-bg-success">
+                                <field name="final_eval_done" invisible="1"/>
+                                <span class="d-md-inline">Final Score Evaluated</span>
+                            </div>
+                            <field name="weight" help="Weight of this Category" readonly="1"/>
+                            <field name="goal_weight" readonly="1"/>
+                            <field name="mid_term_score" readonly="1"/>
+                            <field name="final_rating" widget="priority" readonly="1"/>
+                            <field name="rating_text" widget="badge" readonly="1" invisible="performance_state == 'draft'"/>
+                            <field name="final_score" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Employee Goals">
+                            <field name="employee_goal_line_ids" id="draft_view"
+                                   invisible="performance_state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="performance_id" column_invisible="1"/>
+                                    <field name="goal_line_id" column_invisible="1"/>
+                                    <field name="name" required="1" readonly="performance_state != 'draft'"/>
+                                    <field name="deadline" required="1" readonly="performance_state != 'draft'"/>
+                                    <field name="expected_kpi" required="1" readonly="performance_state != 'draft'"/>
+                                    <field name="evaluation_method_id" required="1"
+                                           readonly="performance_state != 'draft'"/>
+                                    <field name="description" required="1" readonly="performance_state != 'draft'"/>
+                                    <field name="weight" readonly="performance_state != 'draft'"/>
+                                    <field name="mid_term_rating"
+                                           readonly="performance_state != 'mid_term' or mid_term_evaluated"
+                                           optional="hide"/>
+                                    <field name="mid_term_score" readonly="1" optional="hide"/>
+                                    <field name="final_rating" widget="priority"
+                                           readonly="performance_state != 'final_eval'" optional="hide"/>
+                                    <field name="final_score" readonly="1" optional="hide"/>
+                                    <field name="evaluation_category_id" readonly="1" optional="hide"/>
+                                    <field name="performance_state" optional="hide"/>
+                                    <field name="mid_term_evaluated" optional="hide"/>
+                                </list>
+                            </field>
+
+                            <field name="employee_goal_line_ids" id="after_draft_view"
+                                   invisible="performance_state == 'draft'">
+                                <list editable="bottom" create="0" delete="0">
+                                    <field name="performance_id" column_invisible="1"/>
+                                    <field name="goal_line_id" column_invisible="1"/>
+                                    <field name="name" required="1" readonly="1"/>
+                                    <field name="deadline" required="1" readonly="1"/>
+                                    <field name="expected_kpi" required="1" readonly="1"/>
+                                    <field name="evaluation_method_id" readonly="1"/>
+                                    <field name="description" required="1" readonly="1"/>
+                                    <field name="weight" readonly="1"/>
+                                    <field name="mid_term_rating"
+                                           readonly="performance_state != 'mid_term' or mid_term_evaluated"/>
+                                    <field name="mid_term_score" readonly="1" optional="hide"/>
+                                    <field name="final_rating" widget="priority"
+                                           readonly="performance_state != 'final_eval'"/>
+                                    <field name="final_score" readonly="1" optional="hide"/>
+                                    <field name="evaluation_category_id" readonly="1" optional="hide"/>
+                                    <field name="performance_state" optional="hide"/>
+                                    <field name="mid_term_evaluated" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

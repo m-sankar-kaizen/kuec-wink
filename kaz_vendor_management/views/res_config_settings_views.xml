@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.vendor.management</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Requisition" id="kaz_vendor_management"
+                     string="Requisition"
+                     name="kaz_vendor_management"
+                     logo="/material_purchase_requisitions/static/description/icon.png">
+
+                    <block title="Tender Terms &amp; Conditions" id="default_tender_terms">
+
+                        <setting string="Purchase – Material Terms">
+                            <div class="text-muted content-group mt16">
+                                <field name="purchase_material" widget="html"/>
+                            </div>
+                        </setting>
+
+                        <setting string="Purchase – Service Terms">
+                            <div class="text-muted content-group mt16">
+                                <field name="purchase_service" widget="html"/>
+                            </div>
+                        </setting>
+
+                        <setting string="Contract – Material Terms">
+                            <div class="text-muted content-group mt16">
+                                <field name="contract_material" widget="html"/>
+                            </div>
+                        </setting>
+
+                        <setting string="Contract – Service Terms">
+                            <div class="text-muted content-group mt16">
+                                <field name="contract_service" widget="html"/>
+                            </div>
+                        </setting>
+
+                        <setting string="Blanket – Material Terms">
+                            <div class="text-muted content-group mt16">
+                                <field name="blanket_material" widget="html"/>
+                            </div>
+                        </setting>
+
+                        <setting string="Blanket – Service Terms">
+                            <div class="text-muted content-group mt16">
+                                <field name="blanket_service" widget="html"/>
+                            </div>
+                        </setting>
+
+                    </block>
+                </app>
+
+            </xpath>
+        </field>
+    </record>
+
+    <record id="vendor_management_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'kaz_vendor_management', 'bin_size': False}</field>
+    </record>
+
+    <menuitem id="vendor_management_config_settings_menu" name="Settings"
+              parent="kaz_vendor_management.menu_tender_configuration" sequence="0"
+              action="vendor_management_config_settings_action"
+    />
+</odoo>

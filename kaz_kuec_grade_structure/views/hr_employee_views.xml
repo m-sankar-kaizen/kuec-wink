@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_employee_form_kaz_kuec_grade_structure" model="ir.ui.view">
+        <field name="name">hr.employee.loan.form.kaz.kuec.grade.structure</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='parent_id']" position="before">
+                <field name="kuec_grade_id"
+                       invisible="company_code != 'KUEC'"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

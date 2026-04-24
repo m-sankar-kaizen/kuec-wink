@@ -1,0 +1,699 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--    Salary Certificate -->
+
+    <!--
+        QWeb Report Template: Salary Certificate (UAE Expat)
+        This template is designed to generate a salary certificate for UAE expatriate employees.
+        It is a bilingual document (English and Arabic) and includes the employee's basic salary,
+        joining date, and other HR-related details formatted appropriately for both local and international use.
+
+        Layout:
+        - Uses 'external_layout' template from `kaz_employee_reports` module
+        - Dual-language header rows with date in English and Arabic
+        - Clean formatting for formal submission to government or external agencies
+    -->
+    <template id="salary_letter_uae_xpat_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_employee_reports.external_layout">
+                    <style>
+                        div {
+                        font-size: 16px;
+                        }
+                    </style>
+                    <div class="page">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    Date :
+                                    <span t-field="o.date"/>
+                                </div>
+                                <div class="col-5">
+                                    <div style="text-align : right; ">
+                                        التاريخ :
+                                        <span t-field="o.date"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row" t-if="o.address_type == 'entity' and o.letter_id">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    Addressed To:
+                                    <span t-field="o.letter_id.name"/>
+                                </div>
+                                <div class="col-5">
+                                    <div style="text-align : right; ">
+                                        موجهة إلى:
+                                        <span t-field="o.letter_id.arabic_name"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row" t-else="">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>To whom it may concern</strong>
+                                </div>
+                                <div class="col-5">
+                                    <div class="text-right">
+                                        <div style="text-align : right !important; float:right; ">
+                                            <strong>لمن يهمه الأمر</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <u>
+                                        <strong>Subject: Salary Certificate</strong>
+                                    </u>
+                                </div>
+                                <div class="col-5">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <u>
+                                            <strong>الموضوع: شهادة راتب</strong>
+                                        </u>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <p>This is to certify that the employee mentioned below is employed with
+                                        <t t-esc="o.sudo().company_id.company_name"/>
+                                        till date as per the details provided below:
+                                    </p>
+                                </div>
+                                <div class="col-5 text-end" style="direction:rtl;">
+                                    <p t-if="o.sudo().name.gender == 'female'">
+                                        نشهد بأن الموظفة المذكورة أدناه تعمل لدى
+                                        <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                        حتى تاريخه حسب البيانات الموضحة أدناه:
+                                    </p>
+                                    <p t-else="">
+                                        نشهد بأن الموظف المذكور أدناه يعمل لدى
+                                        <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                        حتى تاريخه حسب البيانات الموضحة أدناه:
+                                    </p>
+
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Name :</strong>
+                                    <span t-field="o.sudo().name"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>الاسم :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_name"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Employee ID :</strong>
+                                    <span t-field="o.employee_no"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.employee_no"/>
+                                    <strong>: الرقم الوظيفي</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Job Title :</strong>
+                                    <span t-field="o.job_title"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>المسمي الوظيفي :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_job_position"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Nationality :</strong>
+                                    <span t-field="o.nationality"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>الجنسية :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_nationality"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Emirates ID No :</strong>
+                                    <span t-field="o.id_no"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.id_no"/>
+                                    <strong>: رقم الهوية</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Joining Date :</strong>
+                                    <span t-field="o.join_date"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.join_date"/>
+                                    <strong>: تاريخ التعيين</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Total Monthly :</strong>
+                                    <span t-field="o.gross_salary"/>
+                                </div>
+                                <div class="col-5" style="text-align: right; direction: rtl;">
+                                    <strong>الراتب الإجمالي الشهري :</strong>
+                                    <span t-field="o.gross_salary"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-5">
+                                <div class="col-2"/>
+                                <div class="col-4">
+                                    <strong>
+                                        Yours sincerely,
+                                    </strong>
+                                </div>
+                                <div class="col-4" style="text-align : right;">
+                                    ,وتقبلوا فائق الاحترام والتقدير
+                                </div>
+                                <div class="col-2"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="text-center">
+                                    <div>
+                                        <img t-if="o.sudo().company_id.signature" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.signature)" alt="Signature"/>
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_id.name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_job_position"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.job_id.name"/>
+                                            <br/>
+                                        </strong>
+                                    </div>
+                                    <div class="mt-1">
+                                        <img t-if="o.company_id.stamp" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.stamp)" alt="Stamp"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5" style="font-size: 12px;">
+                                    <ul>
+                                        <li>This letter is valid for 30 days from the date of issuance.</li>
+                                        <li>This Letter has been issued upon the employee’s request without any
+                                            obligation to<t t-esc="o.sudo().company_id.company_name"/>.
+                                        </li>
+                                        <li>Any modification or alteration will invalidate this letter.</li>
+                                    </ul>
+                                </div>
+                                <div class="col-5 mr-2" style="font-size: 12px;">
+                                    <ul style="direction:rtl;">
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                هذه الرسالة صالحة لمدة 30 يوما من تاريخ الإصدار
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                أصدرت هذه الرسالة بناء على طلب الموظف دون أن تتحمل
+                                                <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                                أية مسؤولية تجاه الغير
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align : right; margin-bottom: 0px;">
+                                                أي تعديل أو تغيير في هذه الرسالة تعتبرها لاغية
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+
+    </template>
+
+    <!--    Detailed Salary Certificate-->
+    <!--
+        QWeb Template: Detailed Salary Certificate (UAE Expat)
+        This template is used to generate a bilingual (English/Arabic) salary certificate
+        that includes details such as the salary structure, employee details, and issuing authority.
+
+        Key Features:
+        - Bilingual layout with right-to-left alignment for Arabic content.
+        - Structured for official usage such as visa applications, bank submissions, etc.
+        - Uses external layout template for unified branding and format across reports.
+    -->
+
+    <template id="salary_detailed_letter_uae_xpat_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_employee_reports.external_layout">
+                    <style>
+                        div {
+                        font-size: 15px;
+                        }
+                    </style>
+                    <div class="page">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    Date :
+                                    <span t-field="o.date"/>
+                                </div>
+                                <div class="col-5">
+                                    <div style="text-align : right; ">
+                                        التاريخ :
+                                        <span t-field="o.date"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row" t-if="o.address_type == 'entity' and o.letter_id">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    Addressed To:
+                                    <span t-field="o.letter_id.name"/>
+                                </div>
+                                <div class="col-5">
+                                    <div style="text-align : right; ">
+                                        موجهة إلى:
+                                        <span t-field="o.letter_id.arabic_name"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row" t-else="">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>To whom it may concern</strong>
+                                </div>
+                                <div class="col-5">
+                                    <div class="text-right">
+                                        <div style="text-align : right !important; float:right; ">
+                                            <strong>لمن يهمه الأمر</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <u>
+                                        <strong>Subject: Detailed Salary Certificate</strong>
+                                    </u>
+                                </div>
+                                <div class="col-5">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <u>
+                                            <strong>الموضوع: شهادة راتب تفصيلية</strong>
+                                        </u>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <p t-if="o.sudo().name.gender == 'female'">
+                                        This is to certify that the employee mentioned below is employed with
+                                        <t t-esc="o.sudo().company_id.company_name"/>
+                                        till date and her salary details are provided below:
+                                    </p>
+                                    <p t-else="">
+                                        This is to certify that the employee mentioned below is employed with
+                                        <t t-esc="o.sudo().company_id.company_name"/>
+                                        till date and his salary details are provided below:
+                                    </p>
+                                </div>
+                                <div class="col-5 text-end" style="direction:rtl;">
+                                    <p t-if="o.sudo().name.gender == 'female'">
+                                        نشهد بأن الموظفة المذكورة أدناه تعمل لدى
+                                        <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                        حتى تاريخه حسب البيانات الموضحة أدناه:
+                                    </p>
+                                    <p t-else="">
+                                        نشهد بأن الموظف المذكور أدناه يعمل لدى
+                                        <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                        حتى تاريخه حسب البيانات الموضحة أدناه:
+                                    </p>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Name :</strong>
+                                    <span t-field="o.sudo().name"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>الاسم :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_name"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Employee ID :</strong>
+                                    <span t-field="o.employee_no"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.employee_no"/>
+                                    <strong>: الرقم الوظيفي</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Job Title :</strong>
+                                    <span t-field="o.job_title"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>المسمي الوظيفي :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_job_position"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Nationality :</strong>
+                                    <span t-field="o.nationality"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>الجنسية :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_nationality"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div t-if="o.sudo().name.kaz_employee_type == 'expat'" class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Emirates ID No :</strong>
+                                    <span t-field="o.id_no"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.id_no"/>
+                                    <strong>: رقم الهوية</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Joining Date :</strong>
+                                    <span t-field="o.join_date"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.join_date"/>
+                                    <strong>: تاريخ التعيين</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Basic Salary :</strong>
+                                    <span t-field="o.sudo().name.contract_id.wage"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.sudo().name.contract_id.wage"/>
+                                    <strong>: الراتب الأساسي</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Living Allowance :</strong>
+                                    <span t-field="o.sudo().name.contract_id.living_allowance"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.sudo().name.contract_id.living_allowance"/>
+                                    <strong>: علاوة غلاء المعيشة</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Connectivity Allowance :</strong>
+                                    <span t-field="o.sudo().name.contract_id.connectivity_allowance"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.sudo().name.contract_id.connectivity_allowance"/>
+                                    <strong>: علاوة الاتصال</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-1" t-if="o.sudo().name.contract_id.Personal_allowance">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Personal Allowance :</strong>
+                                    <span t-field="o.sudo().name.contract_id.Personal_allowance"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.sudo().name.contract_id.Personal_allowance"/>
+                                    <strong>: العلاوة الشخصية</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1" t-if="o.sudo().name.kaz_employee_type == 'local'">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Premium Allowance :</strong>
+                                    <span t-field="o.sudo().name.contract_id.Premium_allowance"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.sudo().name.contract_id.Premium_allowance"/>
+                                    <strong>: العلاوة الإضافية للمواطنين</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-1" t-if="o.sudo().name.kaz_employee_type == 'local'">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Child Allowance :</strong>
+                                    <span t-field="o.sudo().name.contract_id.kaz_child_allowance"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.sudo().name.contract_id.kaz_child_allowance"/>
+                                    <strong>: علاوة الأبناء</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-1" t-if="o.sudo().name.kaz_employee_type == 'local'">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Gross Salary :</strong>
+                                    <span t-field="o.gross_salary"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.gross_salary"/>
+                                    <strong>: إجمالي الراتب</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-1" t-if="o.sudo().name.kaz_employee_type == 'local'">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Deductions :</strong>
+                                    <span t-field="o.total_deduction"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.total_deduction"/>
+                                    <strong>: الاستقطاعات</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-1" t-if="o.sudo().name.kaz_employee_type == 'local'">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Net Monthly Salary: :</strong>
+                                    <t t-esc="o.gross_salary - o.total_deduction"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <t t-esc="o.gross_salary - o.total_deduction"/>
+                                    <strong>: الراتب الشهري الصافي</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-1" t-if="o.sudo().name.kaz_employee_type == 'expat'">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Total Monthly Salary:</strong>
+                                    <span t-field="o.gross_salary"/>
+                                </div>
+                                <div class="col-5" style="text-align: right; direction: rtl;">
+                                    <strong>إجمالي الراتب الشهري :</strong>
+                                    <span t-field="o.gross_salary"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-2"/>
+                                <div class="col-4">
+                                    <strong>
+                                        Yours sincerely,
+                                    </strong>
+                                </div>
+                                <div class="col-4" style="text-align : right;">
+                                    ,وتقبلوا فائق الاحترام والتقدير
+                                </div>
+                                <div class="col-2"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="text-center">
+                                    <div>
+                                        <img t-if="o.sudo().company_id.signature" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.signature)" alt="Signature"/>
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_id.name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_job_position"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.job_id.name"/>
+                                            <br/>
+                                        </strong>
+                                    </div>
+                                    <div class="mt-1">
+                                        <img t-if="o.company_id.stamp" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.stamp)" alt="Stamp"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5" style="font-size: 12px;">
+                                    <ul>
+                                        <li>This letter is valid for 30 days from the date of issuance.</li>
+                                        <li>This Letter has been issued upon the employee’s request without any
+                                            obligation to<t t-esc="o.sudo().company_id.company_name"/>.
+                                        </li>
+                                        <li>Any modification or alteration will invalidate this letter.</li>
+                                    </ul>
+                                </div>
+                                <div class="col-5 mr-2" style="font-size: 12px;">
+                                    <ul style="direction:rtl;">
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                هذه الرسالة صالحة لمدة 30 يوما من تاريخ الإصدار
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                أصدرت هذه الرسالة بناء على طلب الموظف دون أن تتحمل
+                                                <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                                أية مسؤولية تجاه الغير
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align : right; margin-bottom: 0px;">
+                                                أي تعديل أو تغيير في هذه الرسالة تعتبرها لاغية
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!--     Salary Certificate-->
+    <!--
+        Report Action: Salary Certificate (UAE Expat)
+        This action defines a QWeb PDF report for the `salary.letter` model,
+        which generates a formal salary certificate, typically requested for visa, banking, or housing purposes.
+
+        - `report_name` and `report_file` reference the QWeb template defined above
+        - The generated file will be named: "Salary Certificate - <employee_name>.pdf"
+    -->
+    <record id="action_report_salary_letter_uae_xpat_report" model="ir.actions.report">
+        <field name="name">Salary Letter</field>
+        <field name="model">salary.letter</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.salary_letter_uae_xpat_report</field>
+        <field name="report_file">kaz_employee_reports.salary_letter_uae_xpat_report</field>
+        <field name="print_report_name">'Salary Letter - %s - %s' % (object.name.name, object.date)</field>
+        <field name="binding_model_id" ref="model_salary_letter"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!--    Detailed Salary Certificate-->
+
+    <!--
+       Report Action: Detailed Salary Certificate
+       This action defines a QWeb PDF report for the `salary.letter` model,
+       which generates a formal salary certificate, typically requested for visa, banking, or housing purposes.
+
+       - `report_name` and `report_file` reference the QWeb template defined above
+       - The generated file will be named: "Salary Certificate - <employee_name>.pdf"
+   -->
+
+    <record id="action_report_salary_detailed_letter_uae_xpat_report" model="ir.actions.report">
+        <field name="name">Detailed Salary Certificate</field>
+        <field name="model">salary.letter</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.salary_detailed_letter_uae_xpat_report</field>
+        <field name="report_file">kaz_employee_reports.salary_detailed_letter_uae_xpat_report</field>
+        <field name="print_report_name">'Detailed Salary Certificate - %s - %s' % (object.name.name, object.date)
+        </field>
+        <field name="binding_model_id" ref="model_salary_letter"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

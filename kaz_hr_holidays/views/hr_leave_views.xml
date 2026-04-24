@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    #########################################################################
+    XML VIEW INHERITANCE FOR CUSTOM TIME OFF APPROVAL FLOW - ODOO HR LEAVE
+    #########################################################################
+
+    Module      : kaz_hr_holidays
+    View ID     : hr_leave_type_form_inherit
+    Model       : hr.leave (Time Off Request)
+    Inherits    : hr_holidays.hr_leave_view_form (standard Time Off form view)
+    Priority    : 8 (to ensure override applies after other customizations)
+
+    Purpose:
+    This view extends the default `hr.leave` form view to implement a custom
+    three-tier approval workflow, specifically designed for organizations
+    where Time Off Requests must be approved in the following sequence:
+
+        1. Line Manager (default)
+        2. Director (custom role)
+        3. CEO (final authority)
+
+    Enhancements include:
+    - A new `cycle_approve` field rendered as a statusbar showing the approval level
+    - Two new buttons: "Director" and "CEO", each with visibility rules
+    - Modifications to the standard Odoo approval and validation buttons to
+      deactivate them when custom approval logic is used
+
+    Dependencies:
+    - Field `cycle_approve` should be defined in the `hr.leave` model as a
+      Selection field tracking current approver (e.g., 'hr_director', 'ceo').
+    - Groups `kaz_hr_holidays.time_of_hr_director_group` and
+      `kaz_hr_holidays.time_of_hr_ceo_group` must be created and assigned to the
+      relevant users.
+
+    Methods Triggered by Buttons:
+    - `director_approve()` — should handle Director's approval logic
+    - `ceo_approve()` — should handle CEO's final approval logic
+
+    Author: ChatGPT for Midhun — July 2025
+-->
+<odoo>
+    <!-- Define inherited view for custom approval cycle -->
+    <record id="hr_leave_type_form_inherit" model="ir.ui.view">
+        <field name="name">hr.leave.type.form.inherit.kaz.hr.holiday</field>
+        <field name="model">hr.leave</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_view_form"/>
+        <field name="priority" eval="8"/>
+
+        <field name="arch" type="xml">
+            <!--
+                SECTION: Additional fields after the 'state' field
+                - Add a visual status bar for cycle_approve
+                - Hide the default validation_type field (not used)
+            -->
+            <field name="state" position="after">
+
+                <!-- Statusbar showing current custom approval step (Director / CEO) -->
+                <field name="cycle_approve"
+                       widget="statusbar"
+                       statusbar_visible="hr_director,ceo"/>
+
+                <!-- Hide default validation_type to reduce form clutter -->
+                <field name="validation_type" invisible="1"/>
+            </field>
+
+            <!--
+                SECTION: Approval buttons (Director & CEO)
+                - Added before 'state' field so they appear early in the form
+            -->
+            <field name="state" position="before">
+
+                <!--
+                    Button: Director Approval
+                    - Calls `director_approve` method
+                    - Only visible when `cycle_approve = 'hr_director'`
+                    - Hidden when already validated
+                    - Restricted to HR Director group
+                -->
+                <button string="Director"
+                        name="director_approve"
+                        type="object"
+                        class="oe_highlight"
+                        invisible="cycle_approve != 'hr_director' or state in ['validate']"
+                        groups="kaz_hr_holidays.time_of_hr_director_group"/>
+
+
+                <!--
+                    Button: CEO Approval
+                    - Calls `ceo_approve` method
+                    - Only visible when `cycle_approve = 'ceo'`
+                    - Hidden when already validated
+                    - Restricted to CEO group
+                -->
+                <button string="CEO"
+                        name="ceo_approve"
+                        type="object"
+                        class="oe_highlight"
+                        invisible="cycle_approve != 'ceo' or state in ['validate']"
+                        groups="kaz_hr_holidays.time_of_hr_ceo_group"/>
+
+            </field>
+
+            <!--
+                SECTION: Modify standard 'Approve' button visibility
+                - Hide default approval button when custom flow is active
+            -->
+            <button name="action_approve" position="attributes">
+                <attribute name="invisible">not cycle_approve or not can_approve or state != 'confirm'</attribute>
+            </button>
+
+            <!--
+                SECTION: Modify standard 'Validate' button visibility
+                - Hide default validate button when cycle_approve is active
+            -->
+            <button name="action_validate" position="attributes">
+                <attribute name="invisible">not cycle_approve or validation_type != 'both' or state != 'validate1'</attribute>
+            </button>
+        </field>
+    </record>
+</odoo>

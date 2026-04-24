@@ -1,0 +1,152 @@
+<odoo>
+    <record id="view_hr_disciplinary_action_tree" model="ir.ui.view">
+        <field name="name">hr.disciplinary.action.tree</field>
+        <field name="model">hr.disciplinary.action</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="action_date"/>
+                <field name="action_type_id"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_disciplinary_action_form" model="ir.ui.view">
+        <field name="name">hr.disciplinary.action.form</field>
+        <field name="model">hr.disciplinary.action</field>
+        <field name="arch" type="xml">
+            <form string="Disciplinary Action">
+                <header>
+                    <button name="action_confirm"
+                            type="object"
+                            string="Confirm"
+                            invisible="state != 'draft'"
+                            class="btn-primary"/>
+                    <button name="action_done"
+                            type="object"
+                            string="Done"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_send_disciplinary_email"
+                            type="object"
+                            string="Send Email"
+                            class="btn-primary"
+                            invisible="state != 'done'"/>
+                    <button name="action_cancel"
+                            type="object"
+                            string="Cancel"
+                            invisible="state not in ['draft', 'confirmed']"/>
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,confirmed,done,cancelled"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon"
+                            bg_color="bg-danger"
+                            title="Deducted" invisible="not is_deducted"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" string="Employee Name"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+                            <field name="manager_id"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+                            <field name="job_id"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+                            <field name="contract_id"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+
+                        </group>
+                        <group>
+                            <field name="action_date"
+                                   readonly="state == 'done'"/>
+                            <field name="issued_by"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+                            <field name="disciplinary_action_type"
+                                   readonly="state == 'done'"/>
+                            <field name="action_category_type_id"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+                            <field name="action_type_id"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+                            <field name="company_id"
+                                   options="{'no_open': True, 'no_create': True, 'no_create_edit':True}"
+                                   readonly="state == 'done'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="reason"
+                               readonly="state == 'done'"/>
+                        <field name="improvement_plan"
+                               readonly="state == 'done'"/>
+                        <field name="consequence"
+                               readonly="state == 'done'"/>
+                        <field name="deduction_required"
+                               readonly="state == 'done'"/>
+                        <field name="based_on_days"
+                               invisible="not deduction_required"
+                               readonly="state == 'done'"/>
+                        <field name="no_of_days"
+                               invisible="not based_on_days"
+                               readonly="state == 'done'"/>
+                        <field name="deduction_amount"
+                               force_save="1"
+                               required="deduction_required"
+                               readonly="state == 'done' or based_on_days"
+                               invisible="not deduction_required"/>
+                        <field name="currency_id"
+                               invisible="1"/>
+                        <field name="is_deducted"
+                               invisible="1"/>
+                        <field name="notes" readonly="state == 'done'"/>
+                        <field name="attachment_ids" widget="many2many_binary" readonly="state == 'done'"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_hr_disciplinary_warning_action" model="ir.actions.act_window">
+        <field name="name">Warning Notice</field>
+        <field name="res_model">hr.disciplinary.action</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('disciplinary_action_type', '=', 'warning')]</field>
+        <field name="context">{'create': False, 'edit': False}</field>
+    </record>
+
+    <record id="action_hr_disciplinary_complaint_action" model="ir.actions.act_window">
+        <field name="name">Complaints &amp; Audits</field>
+        <field name="res_model">hr.disciplinary.action</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('disciplinary_action_type', '=', 'complaint')]</field>
+        <field name="context">{'create': False, 'edit': False}</field>
+    </record>
+
+    <record id="action_hr_disciplinary_action" model="ir.actions.act_window">
+        <field name="name">Disciplinary Actions</field>
+        <field name="res_model">hr.disciplinary.action</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_hr_disciplinary_action_root" name="Disciplinary Actions" parent="hr.menu_hr_root" sequence="50"/>
+    <menuitem id="menu_hr_disciplinary_action" name="Manage Actions" sequence="2"
+              parent="menu_hr_disciplinary_action_root" action="action_hr_disciplinary_action"/>
+    <menuitem id="menu_hr_disciplinary_warning_action" name="HR Warning" sequence="3"
+              action="action_hr_disciplinary_warning_action"
+              parent="hr.menu_hr_employee_payroll"/>
+    <menuitem id="menu_hr_disciplinary_complaint_action" name="Complaints &amp; Audits" sequence="4"
+              action="action_hr_disciplinary_complaint_action"
+              parent="hr.menu_hr_employee_payroll"/>
+</odoo>

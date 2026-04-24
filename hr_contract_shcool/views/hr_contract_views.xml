@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<odoo>
+    <!--
+        This view extension inherits the hr.contract form view to add a new "Annual Ticket" tab.
+
+        The tab organizes fields related to annual ticket processing for the employee contract,
+        divided into logical groups:
+        - Current Year ticket amounts (adult, child, infant)
+        - Previous Year ticket amounts (adult, child, infant)
+        - Additional contract and assignment details such as assignment status,
+          organization, payroll period, ticket zone, country code, ticket class, and counts of family members.
+        - Financial summary fields including days, previous outstanding amount, year payment,
+          deductions/adjustments, and total amount.
+
+        This layout groups fields for clearer user input and review of annual ticket information
+        directly within the employee contract form.
+    -->
+    <record id="view_hr_contract_form_inherit" model="ir.ui.view">
+        <field name="name">hr.contract.form.inherit</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <!-- Add a new page (tab) -->
+                <page string="Annual Ticket">
+                    <group>
+                        <group string="Current Year">
+                            <field name="adult_ticket_amount"/>
+                            <field name="child_ticket_amount"/>
+                            <field name="infant_ticket_amount"/>
+                        </group>
+                        <group string="Previous Year">
+                            <field name="prev_adult_ticket_amount"/>
+                            <field name="prev_child_ticket_amount"/>
+                            <field name="prev_infant_ticket_amount"/>
+                        </group>
+                    </group>
+                    <br/>
+                    <group>
+                        <group>
+                            <field name="assignment_status"/>
+                            <field name="organization"/>
+                            <field name="payroll_period"/>
+                            <field name="ticket_zone"/>
+                            <field name="country_code"/>
+                            <field name="ticket_class"/>
+                            <field name="employee_count"/>
+                            <field name="spouse_count"/>
+                            <field name="assignment_category"/>
+                        </group>
+                        <group>
+                            <field name="adult_count"/>
+                            <field name="child_count"/>
+                            <field name="infant_count"/>
+                            <field name="total_count"/>
+                            <field name="days"/>
+                            <field name="previous_outstanding"/>
+                            <field name="year_payment"/>
+                            <field name="deductions_adjustments"/>
+                            <field name="total_amount"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

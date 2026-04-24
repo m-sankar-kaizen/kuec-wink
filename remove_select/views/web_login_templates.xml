@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+      Template Inheritance: web.login
+      Purpose:
+        This template customizes the standard Odoo login screen.
+
+      Modifications Performed:
+        1. Remove the "Manage Databases" button which links to /web/database/selector.
+        2. Hide the database selection dropdown that appears when multiple databases are enabled.
+
+      Use Case:
+        - Ideal for single-database production environments.
+        - Prevents end-users from viewing or switching between databases via the login screen.
+        - Enhances branding control and improves security through interface simplification.
+    -->
+    <template id="web_login_inherit" inherit_id="web.login">
+
+        <!--
+          XPath Replacement:
+          Target: The <a> tag with role="button" and link to /web/database/selector
+          Action: Completely remove the element to prevent users from accessing the database selector page.
+        -->
+        <xpath expr="//a[@role='button' and contains(@href, '/web/database/selector')]" position="replace">
+            <!-- Replaced with nothing: button removed -->
+        </xpath>
+
+        <!--
+          XPath Attribute Modification:
+          Target: <div class="mb-3"> (typically wraps the database name dropdown)
+          Action: Add t-if="False" to conditionally hide the element at render time.
+
+          Notes:
+          - This approach avoids modifying Odoo core logic and simply skips rendering in QWeb.
+          - If multiple DBs are active but should be hidden from UI, this is the correct way to suppress the selector.
+        -->
+        <xpath expr="//div[@class='mb-3']" position="attributes">
+            <attribute name="t-if">False</attribute>
+        </xpath>
+
+    </template>
+
+</odoo>

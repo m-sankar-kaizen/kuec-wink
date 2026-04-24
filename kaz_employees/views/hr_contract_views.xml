@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Extension: Add Salary & Eligibility Fields to HR Contract Form
+        Model: hr.contract
+
+        Purpose:
+            - Add additional salary components such as allowances, benefits, and classification fields.
+            - Improve structure by using tabs and grouping.
+            - Set "wage" field as readonly and relabeled.
+            - Integrate grade and employee type into the contract form.
+
+        Key Sections Modified:
+            1. Basic salary group fields
+            2. Grade & employee type
+            3. Scale basic (with input)
+            4. Eligibility benefits tab (air ticket, gratuity, retirement)
+    -->
+    <record id="add_fields_salary_employee_form" model="ir.ui.view">
+        <field name="name">employee.salary.contract.form.inherit</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Make 'wage' readonly and update label -->
+            <xpath expr="//field[@name='wage']" position="attributes">
+                <attribute name="string">Monthly Basic Salary</attribute>
+                <attribute name="readonly">1</attribute>
+                <attribute name="force_save">1</attribute>
+            </xpath>
+
+            <!-- Add scale basic field under salary_info group -->
+            <xpath expr="//group[@name='salary_info']" position="inside">
+                <group name="scale_basic">
+                    <field name="scale_basic"/>
+                </group>
+            </xpath>
+
+            <!-- Insert fields after work_entry_source -->
+            <field name='work_entry_source' position="after">
+                <field name="grade_id"/>
+                <field name="kaz_employee_type"/>
+                <field name="scale"/>
+            </field>
+
+            <!-- Add a new tab for Eligibility information -->
+            <xpath expr="//page[@name='information']" position="after">
+                <page name="eligibility" string="Eligibility">
+                    <group>
+                        <group>
+                            <field name="annual_air_ticket"/>
+                            <field name="end_of_Service_Gratuity"/>
+                            <field name="retirement_fund"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- Extend the Basic Salary tab with more allowance fields -->
+            <xpath expr="//page[@name='information']" position="inside">
+                <group name="Basic Salary">
+                    <group>
+                        <field name="Personal_allowance"/>
+                        <field name="Premium_allowance"/>
+                        <field name="living_allowance"/>
+                        <field name="living_allowance_additional" invisible="1"/>
+                        <!-- Optional fields (commented): child, vacation -->
+                        <!-- <field name="child_allowance"/> -->
+                        <field name="connectivity_allowance"/>
+                        <!-- <field name="vacation_allowance"/> -->
+                        <field name="relocation_benefit"/>
+                        <field name="social_uae_allowance"/>
+                        <field name="repatriation_allowance"/>
+                        <field name="educational_benefit"/>
+                    </group>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

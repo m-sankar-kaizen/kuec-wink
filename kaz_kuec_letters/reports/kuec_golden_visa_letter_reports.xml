@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="golden_visa_report">
+        <t t-call="web.report_layout">
+            <t t-set="body_classname" t-value="'main_page'"/>
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_kuec_report_base.external_layout">
+                    <t t-set="show_page" t-value="False"/>
+                    <div class="page main_page page-div-14px">
+                        <div class="px-2">
+                            <div class="row">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div style="text-align : right; ">
+                                        التاريخ :
+                                        <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <!--
+                           Salutation and Subject
+                       -->
+                            <div class="row mt-1">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <strong>,السادة / الهيئة الاتحادية للهوية والجنسية وأمن المنافذ المحترمين
+                                        </strong>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <strong>,تحية طيبة وبعد</strong>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <br/>
+                            <div class="row mt-4">
+
+                                <div class="col-12 arabic-geflow" style="direction: rtl;">
+                                    <div class="text-right" style="text-align: right !important;">
+                                        <u>
+                                            <strong>الموضوع:
+                                                <span t-field="o.employee_id.employee_arabic_name"/>
+                                            </strong>
+                                        </u>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        تهديكم شركة عنكبوت لتقنية المعلومات أطيب التحيات متمنين لكم دوام التوفيق
+                                        والنجاح.
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right"
+                                         style="text-align:right !important; float:right; white-space:nowrap;"
+                                         dir="rtl">
+                                        بالإشارة إلى الموضوع أعلاه، تود شركة عنكبوت لتقنية المعلومات الإفادة بأن السيد/ة
+                                        <span t-esc="o.employee_id.employee_arabic_name"/>,
+                                        جواز رقم
+                                        <span t-esc="o.employee_id.sudo().passport_id"/>،
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right" style="text-align : right !important; float:right; white-space:nowrap;">
+                                        يشغل حالياً وظيفة
+                                        <span t-esc="o.employee_id.employee_arabic_job_position"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        نود إعلامكم بعدم ممانعتنا من منح الموظف الإقامة الذهبية، وذلك تقديراً لما يمتلكه
+                                        من مؤهلات وخبرات تسهم بشكل فعال في دعم أهداف الشركة وتحقيق تطورها ونموها. وذلك،
+                                        بما يتماشي مع السياسات والضوابط المعتمدة لدى هيئتكم الموقرة.
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right" style="text-align : right !important; float:right; white-space:nowrap;">
+                                        للاستفسار والتنسيق، يرجى التواصل مع السيد /
+                                        <t t-esc="o.company_id.public_relation_manager_arabic_name"/>
+                                        –
+                                        <t t-esc="o.company_id.public_relation_manager_arabic_job_position"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <div t-field="o.company_id.public_relation_manager_id.work_phone"
+                                             style="display: inline; direction: ltr; unicode-bidi: embed;"/>
+                                        <strong class="arabic-geflow">: هاتف رقم</strong>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-1">
+
+                                <div class="col-12">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <div t-field="o.company_id.public_relation_manager_id.work_email"
+                                             style="display: inline; direction: ltr; unicode-bidi: embed;"/>
+                                        <strong class="arabic-geflow">: البريد الالكتروني</strong>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-4">
+
+                                <div class="col-12 arabic-geflow">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <strong>,وتفضلوا بقبول فائق الاحترام والتقدير</strong>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-4">
+                                <div class="text-center">
+                                    <div>
+                                        <img t-if="o.company_id.signature"
+                                             style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.company_id.signature)"
+                                             alt="Signature"/>
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>
+                                            <span class="arabic-geflow"
+                                                  t-esc="o.sudo().company_id.employee_arabic_name"/>
+                                            <br/>
+                                            <span class="english-text" t-esc="o.sudo().company_id.employee_id.name"/>
+                                            <br/>
+                                            <span class="arabic-geflow"
+                                                  t-esc="o.sudo().company_id.employee_arabic_job_position"/>
+                                            <br/>
+                                            <span class="english-text" t-esc="o.sudo().company_id.job_id.name"/>
+                                            <br/>
+                                        </strong>
+                                    </div>
+                                    <div class="mt-1">
+                                        <img t-if="o.company_id.stamp"
+                                             style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.company_id.stamp)"
+                                             alt="Stamp"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+
+                                <div class="col-12 arabic-geflow mr-2" style="font-size: 12px;">
+                                    <ul style="direction:rtl;">
+                                        <li style="direction:rtl;">
+                                            <p style="text-align : right; margin-bottom: 0px;">
+                                                هذه الرسالة صالحة لمدة 30 يوما من تاريخ الاصدار
+                                            </p>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <p style="text-align : right; margin-bottom: 0px;">
+                                                حررت هذه الرسالة بناء على طلب المذكور أعلاه دون تحمل الشركة أى مسؤولية
+                                                تجاه الغير
+                                            </p>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <p style="text-align : right; margin-bottom: 0px;">
+                                                أي تغيير فى هذه الرسالة يجعلها لاغيه
+                                            </p>
+                                        </li>
+
+                                    </ul>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_kuec_golden_visa_letter_report" model="ir.actions.report">
+        <field name="name">Golden Visa</field>
+        <field name="model">kuec.golden.visa.request</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_kuec_letters.golden_visa_report</field>
+        <field name="report_file">kaz_kuec_letters.golden_visa_report</field>
+        <field name="print_report_name">'Golden Visa - %s - %s' % (object.sequence, object.date)</field>
+        <field name="paperformat_id" ref="kaz_kuec_report_base.paperformat_kuec_letters"/>
+    </record>
+</odoo>

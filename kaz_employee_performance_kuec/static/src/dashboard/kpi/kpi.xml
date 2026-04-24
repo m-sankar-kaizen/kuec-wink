@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="KPI">
+        <div class="kpi-chart box-shadow-6 p-4 height-fit" t-att-class="props.className">
+            <div class="d-flex gap-2">
+                <div class="d-flex">
+                    <t t-slot="icon">
+                        <img style="width: 40px;"
+                             t-att-src="'/kaz_employee_performance_kuec/static/src/img/fa-user-check.svg'"
+                             alt="My Icon"/>
+                    </t>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center">
+                        <h4 t-out="props.heading"/>
+                    </div>
+                    <div>
+                        <t t-slot="content">
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </t>
+</templates>

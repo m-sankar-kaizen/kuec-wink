@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_tender_bafo_request_wizard_form" model="ir.ui.view">
+        <field name="name">tender.bafo.request.form.wizard</field>
+        <field name="model">tender.bafo.request</field>
+        <field name="arch" type="xml">
+            <form string="Request BAFO">
+                <group>
+                    <field name="bafo_type"/>
+                    <field name="reason"/>
+                    <field name="best_x_bids" invisible="bafo_type != 'best_x'" required="bafo_type == 'best_x'"/>
+                </group>
+                <footer>
+                    <button string="Request" special="save" class="btn-primary"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_purchase_order_form_inherit_kaz_vendor_management" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit.kaz.vendor.management</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button invisible="not tender_bid_id" class="oe_stat_button" type="object"
+                        name="action_open_tender_bid" icon="fa-gavel">
+                    <field name="tender_bid_id" invisible="1"/>
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Tender Bid</span>
+                    </div>
+                </button>
+                <button invisible="not contract_agreement_id" class="oe_stat_button" type="object"
+                        name="action_open_tender_contract" icon="fa-file">
+                    <field name="contract_agreement_id" invisible="1"/>
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Contract</span>
+                    </div>
+                </button>
+                <button invisible="not tender_rfq_id" class="oe_stat_button" type="object"
+                        name="action_open_tender_rfq" icon="fa-file">
+                    <field name="tender_rfq_id" invisible="1"/>
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Tender</span>
+                    </div>
+                </button>
+                <button invisible="not custom_requisition_id" class="oe_stat_button" type="object"
+                        name="action_material_purchase_requisition" icon="fa-file">
+                    <field name="custom_requisition_id" invisible="1"/>
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Purchase Requisition</span>
+                    </div>
+                </button>
+            </xpath>
+            <field name="partner_id" position="after">
+                <field name="is_vendor" invisible="1"/>
+                <field invisible="not is_vendor" name="vendor_score" readonly="1"/>
+                <field invisible="not is_vendor" name="evaluation_rating" widget="priority" readonly="1"/>
+            </field>
+            <field name="requisition_id" position="after">
+                <field name="order_type"
+                       readonly="state != 'draft' or tender_rfq_id or requisition_id or custom_requisition_id"/>
+                <!--                _________________^^^^^^^^^^^^^ is enough for contract as contract is only made from tender-->
+            </field>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,12 @@
+<odoo>
+
+<!-- [Start] Action record ######################################################################## -->
+    <record id="action_all_approvals" model="ir.actions.act_window">
+        <field name="name">All Approvals</field>
+        <field name="res_model">hiring.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'group_by': 'stage'}</field>
+    </record>
+<!-- [End] Action record ######################################################################## -->
+
+</odoo>

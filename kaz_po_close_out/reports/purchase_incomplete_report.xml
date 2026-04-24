@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="incomplete_po_report">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2 style="text-align:center;">
+                        <t t-esc="report_title"/>
+                    </h2>
+                    <p style="text-align:center;">
+                        As of:
+                        <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/>
+                    </p>
+
+                    <t t-if="not docs">
+                        <p style="margin-top: 30px; text-align:center;">No
+                            incomplete purchase orders found.
+                        </p>
+                    </t>
+                    <t t-else="">
+                        <table class="table table-sm o_main_table"
+                               style="width:100%; margin-top:20px;">
+                            <thead>
+                                <tr>
+                                    <th>PO Number</th>
+                                    <th>Creation Date</th>
+                                    <th>Status</th>
+                                    <th>Department</th>
+                                    <th style="text-align:right;">Total Value
+                                    </th>
+                                    <th>Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="docs" t-as="po">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="po['po_number']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="po['creation_date']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="po['status']"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="po['department'] or '-'"/>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <t t-esc="po['currency']"/>
+                                            <t t-esc="'{:,.2f}'.format(po['total_value'])"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="po['last_activity']"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

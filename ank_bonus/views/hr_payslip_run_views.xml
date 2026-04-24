@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    ============================================================================
+    Module        : ank_bonus
+    File          : payslip_run_form_inherit_bonus.xml
+    Purpose       : Extend Payslip Batch Form to Add "Print Bonus" Button
+    Description   :
+    This XML view extension inherits the standard `hr.payslip.run` form view
+    from the `hr_payroll` module. The objective is to inject a custom button
+    labeled "Print Bonus" into the header section of the form.
+
+    When clicked, the button will trigger the server-side method `print_bonus`,
+    defined in the corresponding Python model (see HrPayslipRun).
+
+    This report functionality is designed to generate an Excel (.xlsx) bonus
+    report that includes employee salary and bonus components.
+
+    Features:
+        - Non-destructive extension using XPath
+        - Clean integration with native Odoo UI
+        - Ensures continuity with payroll flow and reporting standards
+
+    Dependencies:
+        - hr_payroll
+
+    Author        : Kaizen Principles
+    Website       : https://www.kaizenae.com
+    License       : OPL-1
+    Last Updated  : July 2025
+    ============================================================================
+-->
+
+<odoo>
+    <!-- Inherit the Payslip Batch Form View to add a bonus report button -->
+    <record id="payslip_run_form_inherit_bonus" model="ir.ui.view">
+        <field name="name">payslip.run.form.inherit.bonus</field>
+        <field name="model">hr.payslip.run</field>
+        <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <!-- Button to trigger bonus Excel report generation -->
+                <button name="print_bonus"
+                        type="object"
+                        string="Print Bonus"
+                        class="btn-primary"
+                        icon="fa-print"
+                        context="{}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="mail_template_vendor_evaluation_reminder" model="mail.template">
+        <field name="name">Vendor Evaluation Reminder</field>
+        <field name="model_id" ref="base.model_res_company"/>
+        <field name="subject">Vendors Require Re-Evaluation for {{object.name}}</field>
+        <field name="email_from">{{ object.email }}</field>
+        <field name="description">Notify Managers to Re-Evaluate the Vendors.</field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+            <p>Dear Purchase Manager,</p>
+            <p>The following vendors require (re-)evaluation for company <strong t-esc="object.name"/>:
+            </p>
+            <table class="table table-bordered" border="1" cellpadding="5" cellspacing="0">
+                <tr>
+                    <th>Vendor</th>
+                    <th>Last Evaluated</th>
+                </tr>
+                <t t-foreach="ctx.get('notification_vendors')" t-as="vendor">
+                    <tr>
+                        <td>
+                            <t t-out="vendor.get('name')"/>
+                        </td>
+                        <td>
+                            <t t-out="vendor.get('evaluated_date') or 'Never'"/>
+                        </td>
+                    </tr>
+                </t>
+            </table>
+            <p>Please initiate the evaluation process.</p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+    Define user groups used for multi-level Purchase Order (PO) approval.
+
+    Group: First Level Approval
+    - XML ID: group_first_level_po_confirmation_approval
+    - Users in this group can approve a PO in the first approval stage.
+    - Typically includes Department Heads or Line Managers.
+    -->
+
+    <record id="group_first_level_po_confirmation_approval" model="res.groups">
+        <field name="name">Purchase Order Confirm First Level Approval</field>
+        <field name="comment">KUEC - First Level Approval User</field>
+    </record>
+
+    <!--
+    Group: Second Level Approval
+    - XML ID: group_second_level_po_confirmation_approval
+    - Users in this group are allowed to perform final approval of a PO.
+    - Typically includes Finance Heads, CFO, or the CEO.
+    -->
+
+    <record id="group_second_level_po_confirmation_approval" model="res.groups">
+        <field name="name">Purchase Order Confirm Second Level Approval</field>
+        <field name="comment">KUEC - Second Level Approval User</field>
+    </record>
+
+</odoo>

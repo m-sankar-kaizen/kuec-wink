@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_internship_certificate_wizard_form" model="ir.ui.view">
+        <field name="name">hr.internship.certificate.wizard.form</field>
+        <field name="model">hr.internship.certificate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Internship Certificate">
+                <group>
+                    <group string="Certificate Details">
+                        <field name="internship_id" invisible="1"/>
+                        <field name="certificate_number" required="1" help="Unique certificate number (auto-generated)"/>
+                        <field name="certificate_date" required="1" help="Date to appear on the certificate"/>
+                    </group>
+                    <group string="Internship Information">
+                        <field name="intern_name"/>
+                        <field name="department_name"/>
+                        <field name="date_start"/>
+                        <field name="date_end"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_generate_certificate" string="Generate Certificate" type="object" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

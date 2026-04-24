@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_credit_card_request_form" model="ir.ui.view">
+        <field name="name">credit.card.request Form</field>
+        <field name="model">credit.card.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit_request" type="object" invisible="state!='new'" class="oe_highlight" string="Submit"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,complete,return"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" no_label="1" readonly="1" force_save="1"/>
+                        </h1>
+                    </div>
+                    <group string="Request Info">
+                        <group>
+                            <field name="by_employee" readonly="state != 'new'" invisible="1"/>
+                            <field name="requester_emp_id" invisible="not by_employee" readonly="state != 'new'"/>
+                            <field name="requester_partner_id" invisible="by_employee" readonly="state != 'new'"/>
+                            <field name="narration" placeholder="Credit Card expenses of ..." readonly="state != 'new'"/>
+                        </group>
+                        <group>
+                            <field name="order_date" readonly="state != 'new'"/>
+                            <field name="approve_date" readonly="1" string="Planned Start Date"/>
+                        </group>
+                        <group>
+                            <field name="amount" readonly="state != 'new'"/>
+                        </group>
+                        <group>
+                            <field name="settlement_amount"/>
+                            <field name="different_amount"/>
+                            <field name="card_return_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="settlement"  string="Settlement" groups="account.group_account_user" invisible="state!='complete'">
+
+                            <field name="settlement_ids" widget="one2many_list" nolabel="1" colspan="4" readonly="state!='complete'">
+                                <list string="Settlement" editable="bottom">
+                                    <field name="card_request_id" column_invisible="1"/>
+                                    <field name="bill_id" width="25%"/>
+                                    <field name="expense_id" width="25%"/>
+                                    <field name="product_id"
+                                           required="bill_id and expense_id"
+                                           context="{'default_can_be_expensed': 1}"/>
+                                    <field name="name" width="30%"/>
+                                    <field name="expense_account_id"
+                                           width="25%"
+                                           readonly="bill_id or expense_id"/>
+                                    <field name="amount" width="20%"/>
+                                </list>
+                            </field>
+
+                            <field name="attachment_ids" widget="many2many_binary" string="Attach a file" class="oe_inline"/>
+
+                        </page>
+                    </notebook>
+                    <separator string="Notes" colspan="4"/>
+                    <field name="note" placeholder="Notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_credit_card_approval_form" model="ir.ui.view">
+        <field name="name">credit.card.approval Form</field>
+        <field name="model">credit.card.request</field>
+        <field name="priority">1000000</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="in_settlement" invisible="1"/>
+                <field name="settlement_state" invisible="1"/>
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state!='draft'" groups="account.group_account_user"/>
+                    <button name="action_reject" type="object" string="Reject" class="btn-default" invisible="state!='draft'" groups="account.group_account_user"/>
+                    <button name="action_draft" type="object" string="Reset to Draft" class="btn-default" invisible="state!='reject'" groups="account.group_account_user"/>
+<!--                    <button name="action_paid" type="object" string="Post" class="btn-default" invisible="state!='complete'" groups="account.group_account_user"/>-->
+                        <button name="card_cash_settlement"
+                            type="object"
+                            string="Reconcile" class="btn-primary"
+                            invisible="state!='complete' or not in_settlement"
+                            groups="account.group_account_user"/>
+                    <button name="action_return" type="object" string="Return Card" class="btn-default" invisible="state!='complete'" groups="account.group_account_user"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,complete,return"/>
+                </header>
+
+                <sheet>
+
+                    <widget name="web_ribbon" title="Partial Settlement" invisible="settlement_state != 'partial'"/>
+                    <widget name="web_ribbon" title="Full Settlement" invisible="settlement_state != 'full'"/>
+                    <div name="button_box" class="oe_button_box">
+                        <button name="open_reconcile_view" class="oe_stat_button" icon="fa-bars" type="object" invisible="state!='complete'" string="Reconciled Entries">
+                        </button>
+                    </div>
+                    <div class="col-12 oe_centered text-center">
+                        <h2>
+                            <field name="different_amount" readonly="1"/> -
+                            <field name="narration" readonly="1"/>
+                            ( <field name="name" no_label="1" readonly="1" force_save="1"/> )
+                        </h2>
+                    </div>
+
+                    <group string="Request Information">
+                        <group>
+                            <field name="by_employee" invisible="1"/>
+                            <field name="requester_emp_id" readonly="1" invisible="not by_employee"/>
+                            <field name="requester_partner_id" readonly="1" invisible="not by_employee"/>
+                        </group>
+                        <group readonly="1">
+                            <field name="order_date" readonly="1" string="Planned Start Date"/>
+                            <field name="approve_date" readonly="1"  string="Planned Start Date"/>
+                        </group>
+                        <group>
+                            <field name="amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="settlement_amount" readonly="1"/>
+                            <field name="card_return_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Accounting Information" groups="account.group_account_user">
+                            <field name="journal_id" string="Credit Card Journal" required="1" readonly="state in ('complete', 'return')"/>
+                            <field name="operation_journal_id" widget="selection" groups="account.group_account_user" invisible="1"/>
+                            <field name="operation_account_id"
+                                   readonly="1" force_save="1"
+                                   groups="account.group_account_user"/>
+                            <field name="move_id" readonly="1" groups="account.group_account_user" invisible="1"/>
+                        </group>
+<!--                        <group string="Analytic Information" groups="account.group_account_user">-->
+<!--                            <field name="use_analytic" groups="account.group_account_user"/>-->
+<!--                            <field name="analytic_distribution" widget="analytic_distribution"-->
+<!--                                   invisible="not use_analytic"-->
+<!--                                   groups="analytic.group_analytic_accounting"/>-->
+<!--                        </group>-->
+                    </group>
+                    <notebook>
+                        <page name="settlement"  string="Settlement" groups="account.group_account_user" invisible="state!='complete'">
+                            <field name="settlement_ids" widget="one2many_list" nolabel="1" colspan="4" readonly="state!='complete'">
+                                <list string="Settlement" editable="bottom">
+                                    <field name="card_request_id" column_invisible="1"/>
+                                    <field name="bill_id"/>
+                                    <field name="expense_id"/>
+                                    <field name="product_id"
+                                           required="not bill_id and not expense_id"
+                                           context="{'default_can_be_expensed': 1}"/>
+                                    <field name="name"/>
+                                    <field name="expense_account_id" force_save="1"
+                                           readonly="bill_id or expense_id"/>
+                                    <field name="amount"/>
+                                </list>
+                            </field>
+
+                            <field name="attachment_ids" widget="many2many_binary" string="Attach a file" class="oe_inline"/>
+                        </page>
+                    </notebook>
+                    <separator string="Notes" colspan="4"/>
+                    <field name="note" placeholder="Notes..."/>
+                </sheet>
+               <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_credit_card_request_list" model="ir.ui.view">
+        <field name="name">credit.card.request list</field>
+        <field name="model">credit.card.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="narration"/>
+                <field name="amount"/>
+                <field name="settlement_state" widget="badge" decoration-info="settlement_state == 'no'" decoration-warning="settlement_state == 'partial'" decoration-success="settlement_state == 'full'"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_credit_card_approval_list" model="ir.ui.view">
+        <field name="name">credit.card.approval list</field>
+        <field name="model">credit.card.request</field>
+        <field name="priority">1000000</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="narration"/>
+                <field name="amount"/>
+                <field name="settlement_amount"/>
+                <field name="different_amount"/>
+                <field name="settlement_state" widget="badge" decoration-info="settlement_state == 'no'" decoration-warning="settlement_state == 'partial'" decoration-success="settlement_state == 'full'"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_credit_card_request_open_my" model="ir.actions.act_window">
+        <field name="name">My Credit Card Requests</field>
+        <field name="res_model">credit.card.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('user_id', '=', uid)]</field>
+    </record>
+
+    <record id="action_credit_card_open_approval" model="ir.actions.act_window">
+        <field name="name">Approval</field>
+        <field name="res_model">credit.card.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '!=', 'new')]</field>
+        <field name="context">{'group_by':['requester_partner_id']}</field>
+    </record>
+
+    <record id="action_credit_card_open_approval_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_credit_card_approval_list"/>
+        <field name="act_window_id" ref="action_credit_card_open_approval"/>
+    </record>
+
+    <record id="action_credit_card_open_approval_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_credit_card_approval_form"/>
+        <field name="act_window_id" ref="action_credit_card_open_approval"/>
+    </record>
+
+    <menuitem id="menu_open_credit_card_request_my"
+              parent="expense_funding.menu_credit_card_orders"
+              action="action_credit_card_request_open_my"
+              sequence="1"/>
+
+    <menuitem id="menu_open_credit_card_approval"
+              parent="expense_funding.menu_credit_card_orders"
+              action="action_credit_card_open_approval"
+               groups="account.group_account_user"
+              sequence="2"/>
+
+</odoo>

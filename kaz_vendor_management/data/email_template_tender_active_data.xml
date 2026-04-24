@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="mail_template_tender_active" model="mail.template">
+        <field name="name">Tender Notification To Partners</field>
+        <field name="model_id" ref="kaz_vendor_management.model_tender_rfq"/>
+        <field name="subject">Tender Activated: {{ object.title }}</field>
+        <field name="email_from">{{ object.company_id.email or user.email }}</field>
+        <field name="description">A Notification Will be sent to the partners to notify them of the activated Tender</field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+            <p>Dear <span class="ms-2" t-esc="ctx.get('partner')"/>,
+            </p>
+            <p>The Tender
+                <span class="mx-1" t-esc="object.title"/>
+                is now active. Please log in to the vendor portal to view the tender and submit your
+                proposal.
+            </p>
+            <p>
+                <b>
+                    Ref:
+                    <span class="ms-1" t-esc="object.name"/>
+                </b>
+            </p>
+            <p>
+                Regards,
+                <br/>
+                Procurement Team
+            </p>
+        </field>
+    </record>
+</odoo>

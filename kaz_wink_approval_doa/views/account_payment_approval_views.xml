@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="account_payment_approval_view_form" model="ir.ui.view">
+        <field name="name">account.payment.approval.wizard.form</field>
+        <field name="model">account.payment.approval</field>
+        <field name="arch" type="xml">
+            <form string="Approval/Reject Request Action">
+                <sheet>
+                    <group>
+                        <field name="request_type" invisible="1"/>
+                        <field name="current_display_name" invisible="1"/>
+                        <field name="signature" widget="signature" required="1" invisible="signature"
+                               options="{'full_name': 'current_display_name','size': [0, 150]}"/>
+                        <field name="reason" required="1" invisible="request_type == 'approve'"/>
+                        <div invisible="request_type != 'approve'">
+                            Are you sure you want to approve this Payment?
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_confirm_request"
+                            string="Confirm"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

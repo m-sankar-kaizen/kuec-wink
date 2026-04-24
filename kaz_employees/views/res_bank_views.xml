@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+
+        <!--
+        ============================================================================
+        Inherited View: res.bank.form (Add Routing No. and BIC)
+        Model       : res.bank
+        Purpose     : Add fields to capture additional banking details.
+        Fields Added:
+          - emp_routing_no: Bank's Agent ID or routing number (used for EFT).
+          - swift_address_bic: Bank's SWIFT/BIC code for international transfers.
+        Position    : After existing communication details section.
+        ============================================================================
+        -->
+<!--        <record id="res_bank_form_inherit" model="ir.ui.view">-->
+<!--            <field name="name">res.bank.inherit.form.view</field>-->
+<!--            <field name="model">res.bank</field>-->
+<!--            <field name="inherit_id" ref="base.view_res_bank_form"/>-->
+<!--            <field name="arch" type="xml">-->
+<!--                <xpath expr="//group[@name='communication_details']" position="after">-->
+<!--                    <group string="Additional Banking Info">-->
+<!--                        <field name="iban_num"/>-->
+<!--                    </group>-->
+<!--                </xpath>-->
+<!--            </field>-->
+<!--        </record>-->
+
+        <!--
+        ============================================================================
+        Inherited View: hr.payslip.form (Add Payment Date)
+        Model       : hr.payslip
+        Purpose     : Display the actual payment date on the payslip form.
+        Field Added :
+          - payment_date: Date on which the salary was or will be paid.
+        Position    : After the salary structure (struct_id) field.
+        ============================================================================
+        -->
+<!--        <record id="hr_payslip_form_inherit" model="ir.ui.view">-->
+<!--            <field name="name">hr.payslip.inherit.form.view</field>-->
+<!--            <field name="model">hr.payslip</field>-->
+<!--            <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>-->
+<!--            <field name="arch" type="xml">-->
+<!--                <xpath expr="//field[@name='struct_id']" position="after">-->
+<!--                    <group string="Payment Info">-->
+<!--                        <field name="payment_date"/>-->
+<!--                    </group>-->
+<!--                </xpath>-->
+<!--            </field>-->
+<!--        </record>-->
+
+    </data>
+</odoo>

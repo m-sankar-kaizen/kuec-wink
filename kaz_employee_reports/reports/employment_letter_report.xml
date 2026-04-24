@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- QWeb PDF Report Template: Employment Letter
+         This template renders a bilingual (English-Arabic) employment certificate.
+         The layout includes:
+         - Date and addressing block
+         - Subject
+         - Employee and employment details
+         - Footer with company stamp, signature, and disclaimer
+    -->
+    <template id="employment_letter_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_employee_reports.external_layout">
+                    <style>
+                        div {
+                        font-size: 16px;
+                        }
+                    </style>
+                    <div class="page">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    Date :
+                                    <span t-field="o.date"/>
+                                </div>
+                                <div class="col-5">
+                                    <div style="text-align : right; ">
+                                        التاريخ :
+                                        <span t-field="o.date"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row" t-if="o.address_type == 'entity' and o.letter_id">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    Addressed To:
+                                    <span t-field="o.letter_id.name"/>
+                                </div>
+                                <div class="col-5">
+                                    <div style="text-align : right; ">
+                                        موجهة إلى:
+                                        <span t-field="o.letter_id.arabic_name"/>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row" t-else="">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>To whom it may concern</strong>
+                                </div>
+                                <div class="col-5">
+                                    <div class="text-right">
+                                        <div style="text-align : right !important; float:right; ">
+                                            <strong>لمن يهمه الأمر</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <u>
+                                        <strong>Subject: Employment Certificate</strong>
+                                    </u>
+                                </div>
+                                <div class="col-5">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <u>
+                                            <strong>الموضوع: شهادة عمل</strong>
+                                        </u>
+                                    </div>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <p>This is to certify that the employee mentioned below is employed with
+                                        <t t-esc="o.sudo().company_id.company_name"/>
+                                        till date as per the details provided below:
+                                    </p>
+                                </div>
+                                <div class="col-5 text-end" style="direction:rtl;">
+                                    <p t-if="o.sudo().name.gender == 'female'">
+                                        نشهد بأن الموظفة المذكورة أدناه تعمل لدى
+                                        <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                        حتى تاريخه حسب البيانات الموضحة أدناه:
+                                    </p>
+                                    <p t-else="">
+                                        نشهد بأن الموظف المذكور أدناه يعمل لدى
+                                        <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                        حتى تاريخه حسب البيانات الموضحة أدناه:
+                                    </p>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Name :</strong>
+                                    <span t-field="o.sudo().name"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>الاسم :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_name"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Employee ID :</strong>
+                                    <span t-field="o.employee_no"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.employee_no"/>
+                                    <strong>: الرقم الوظيفي</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Job Title :</strong>
+                                    <span t-field="o.job_title"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>المسمي الوظيفي :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_job_position"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Nationality :</strong>
+                                    <span t-field="o.nationality"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <strong>الجنسية :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_nationality"/>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Emirates ID No :</strong>
+                                    <span t-field="o.id_no"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.id_no"/>
+                                    <strong>: رقم الهوية</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Joining Date :</strong>
+                                    <span t-field="o.join_date"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.join_date"/>
+                                    <strong>: تاريخ التعيين</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                            <!-- Fields for Location and State field in Reports -->
+                            <div class="row mt-2">
+                                <div class="col-1"/>
+                                <div class="col-5">
+                                    <strong>Location :</strong>
+                                    <span t-field="o.state_id"/>
+                                </div>
+                                <div class="col-5" style="text-align : right;">
+                                    <span t-field="o.state_id"/>
+                                    <strong>: موقع</strong>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+
+                            <div class="row mt-5">
+                                <div class="col-2"/>
+                                <div class="col-4">
+                                    <strong>
+                                        Yours sincerely,
+                                    </strong>
+                                </div>
+                                <div class="col-4" style="text-align : right;">
+                                    ,وتقبلوا فائق الاحترام والتقدير
+                                </div>
+                                <div class="col-2"/>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="text-center">
+                                    <div>
+                                        <img t-if="o.sudo().company_id.signature" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.signature)" alt="Signature"/>
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_id.name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_job_position"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.job_id.name"/>
+                                            <br/>
+                                        </strong>
+                                    </div>
+                                    <div class="mt-1">
+                                        <img t-if="o.company_id.stamp" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.stamp)" alt="Stamp"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-1"/>
+                                <div class="col-5" style="font-size: 12px;">
+                                    <ul>
+                                        <li>This letter is valid for 30 days from the date of issuance.</li>
+                                        <li>This Letter has been issued upon the employee’s request without any
+                                            obligation to<t t-esc="o.sudo().company_id.company_name"/>.
+                                        </li>
+                                        <li>Any modification or alteration will invalidate this letter.</li>
+                                    </ul>
+                                </div>
+                                <div class="col-5 mr-2" style="font-size: 12px;">
+                                    <ul style="direction:rtl;">
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                هذه الرسالة صالحة لمدة 30 يوما من تاريخ الإصدار
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                أصدرت هذه الرسالة بناء على طلب الموظف دون أن تتحمل
+                                                <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                                أية مسؤولية تجاه الغير
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align : right; margin-bottom: 0px;">
+                                                أي تعديل أو تغيير في هذه الرسالة تعتبرها لاغية
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- PDF Report Action Declaration -->
+    <record id="action_report_employment_letter_report" model="ir.actions.report">
+        <field name="name">Employment Letter</field>
+        <field name="model">employment.letter</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.employment_letter_report</field>
+        <field name="report_file">kaz_employee_reports.employment_letter_report</field>
+        <field name="print_report_name">'Employment Letter - %s - %s' % (object.name.name, object.date)</field>
+        <field name="binding_model_id" ref="model_employment_letter"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

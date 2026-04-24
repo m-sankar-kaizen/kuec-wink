@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Inheritance: System Configuration Settings
+
+        Purpose:
+            This view extends the general settings form (`res.config.settings`) to introduce
+            a new option that allows system administrators to toggle visibility of the default
+            Odoo login page via a boolean field (`hide_default_login`).
+
+        UI Placement:
+            - Inserted after the "feedback motivate" block for layout consistency.
+            - Appears under "Technical Settings" or equivalent, depending on Odoo version.
+
+        Components:
+            - <field name="hide_default_login" />: A checkbox bound to a system parameter,
+              controlled from `res.config.settings`.
+            - The surrounding <div class="o_setting_box"> creates a standard setting box layout,
+              as used throughout the Odoo Settings interface.
+
+        Usage:
+            - When the box is checked, the value of `kaz_login_kuec_ank.hide_default_login` is set to True.
+            - This setting can be used in controllers or QWeb logic to restrict `/web/login` access
+              or redirect users to custom SSO/portal login mechanisms.
+
+        Related Python Field:
+            - See Python model `res.config.settings` with `_inherit = 'res.config.settings'` and
+              a Boolean field `hide_default_login` with `config_parameter` set.
+
+        Dependencies:
+            - `base_setup.res_config_settings_view_form` must be present and unmodified in your system.
+    -->
+    <record id="view_hide_default_login_setting" model="ir.ui.view">
+        <field name="name">res.config.settings.hide_default_login</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//setting[@id='feedback_motivate_setting']" position="after">
+                <setting id="hide_default_login" help="Hide default login">
+                    <field name="hide_default_login"/>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

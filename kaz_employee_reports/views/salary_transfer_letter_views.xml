@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    Tree View: salary_transfer_letter_tree_view
+    Purpose:
+        - Lists all salary transfer letters in a concise format for HR/Finance review
+    Model: salary.transfer.letter
+    -->
+    <record id="salary_transfer_letter_tree_view" model="ir.ui.view">
+        <field name="name">salary transfer letter list</field>
+        <field name="model">salary.transfer.letter</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="name"/>
+                <field name="bank_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+    Form View: salary_transfer_letter_form_view
+    Purpose:
+        - Used for viewing and editing a salary transfer letter
+        - Includes monetary data, employee info, and linked bank details
+        - Controlled access based on user group (HR Letter Manager vs Normal Employee)
+    -->
+    <record id="salary_transfer_letter_form_view" model="ir.ui.view">
+        <field name="name">salary transfer letter form</field>
+        <field name="model">salary.transfer.letter</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+
+                            <!-- Date of Letter (readonly always) -->
+                            <field name="date" readonly="1"/>
+
+                            <!-- Employee selection (editable by manager, readonly for regular users) -->
+                            <field name="name"
+                                   groups="kaz_employee_reports.group_letter_manager"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="name"
+                                   groups="base.group_user,!kaz_employee_reports.group_letter_manager"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   readonly="1"/>
+
+                            <!-- Bank Details -->
+                            <field name="bank_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+
+                            <!-- Employee Metadata -->
+                            <field name="employee_no"/>
+                            <field name="job_title"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="join_date"/>
+                            <field name="nationality"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="id_no"/>
+
+                            <!-- Company Info -->
+                            <field name="company_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+
+                            <!-- Gross Salary (shown with monetary widget) -->
+                            <field name="currency_id" invisible="1"/>
+                            <field name="gross_salary" widget="monetary"/>
+
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+    Action: action_ank_salary_transfer_letters
+    Purpose:
+        - Registers the list and form views as an actionable window
+        - Shown under HR menu
+    -->
+    <record id="action_ank_salary_transfer_letters" model="ir.actions.act_window">
+        <field name="name">Salary Transfer Letter</field>
+        <field name="res_model">salary.transfer.letter</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new salary transfer Letter
+            </p>
+        </field>
+    </record>
+
+    <!--
+    Menu Item: salary_transfer_letter_menu
+    Purpose:
+        - Adds the Salary Transfer Letter entry under the Ank Letter menu
+    -->
+    <menuitem id="salary_transfer_letter_menu"
+              name="Salary Transfer Letter"
+              parent="kaz_employee_reports.ankbot_letter_menu"
+              action="action_ank_salary_transfer_letters"/>
+
+</odoo>

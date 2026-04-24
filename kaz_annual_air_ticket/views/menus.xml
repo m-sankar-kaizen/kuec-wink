@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Main Menu Setup for Air Ticket Management
+        This section defines the menu hierarchy and actions
+        for the custom annual air ticket module.
+    -->
+
+    <!--
+        Top-level menu item under HR Payroll Configuration
+        to group all air ticket-related submenus.
+    -->
+    <menuitem id="air_ticket"
+              parent="hr_work_entry_contract_enterprise.menu_hr_payroll_configuration"
+              name="Air ticket"
+              sequence="1"/>
+
+    <!--
+        Submenu: Destination Management
+        Allows configuration of travel destinations (name & code).
+    -->
+    <menuitem id="destination"
+              action="action_destination"
+              parent="kaz_annual_air_ticket.air_ticket"
+              name="Destination"
+              sequence="5"/>
+
+    <!--
+        Submenu: Ticket Types
+        Used to define types of tickets such as Economy, Business, etc.
+    -->
+    <menuitem id="annual_ticket_type_menu"
+              name="Ticket Type"
+              parent="kaz_annual_air_ticket.air_ticket"
+              action="kaz_annual_air_ticket.ticket_type_action"
+              sequence="6"/>
+
+    <!--
+        Submenu: Ticket Price List
+        Define pricing for each ticket type, destination, and passenger category.
+    -->
+    <menuitem id="price_list_ticket_menu"
+              name="Ticket prices"
+              parent="kaz_annual_air_ticket.air_ticket"
+              action="kaz_annual_air_ticket.price_list_ticket_action"
+              sequence="7"/>
+
+    <!--
+        Submenu: Air Ticket Grant
+        Generate tickets for eligible employees based on rules.
+    -->
+    <menuitem id="ticket_grant"
+              name="Air Ticket Grant"
+              action="action_ticket_grant"
+              parent="kaz_annual_air_ticket.air_ticket"
+              sequence="8"/>
+
+</odoo>

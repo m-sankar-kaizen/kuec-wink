@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="annual_department_procurement_plan_view_form" model="ir.ui.view">
+        <field name="name">annual.department.procurement.plan.view.form</field>
+        <field name="model">annual.department.procurement.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="status"
+                           widget='statusbar'
+                           statusbar_visible='draft,submitted'/>
+                    <field name="master_plan_status"
+                           invisible="1"/>
+                    <button name="action_submit"
+                            class="oe_highlight"
+                            string="Submit"
+                            confirm="Are you sure to submit this request?"
+                            invisible="status not in ['draft'] or master_plan_status != 'open'"
+                            type="object"
+                            help="Submit"/>
+                    <button name="reset_to_draft"
+                            class="btn-secondary"
+                            invisible="(master_plan_status not in ['draft', 'open']) or (status == 'draft')"
+                            string="Reset to Draft"
+                            type="object"
+                            help="Reset to draft"/>
+                    <field name="master_plan_status" invisible="1"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon"
+                            title="Plan Closed"
+                            bg_color="text-bg-warning"
+                            invisible="master_plan_status == 'open'"/>
+
+                    <field name="used_price_percent" nolabel="1" readonly="1"/>
+
+                    <div class="alert alert-warning" invisible="not is_exceed_limit">
+                        <span>
+                            ⚠️ Warning: This request exceeds the planned quantity/cost in the Annual Procurement Plan.
+                        </span>
+                    </div>
+
+                    <div class="oe_button_box" name="button_box">
+                    </div>
+                    <div class="oe_title">
+<!--                        <field name="can_edit"/>-->
+                        <h1>
+                            <field name="name"
+                                   placeholder="New"
+                                   readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                            <field name="employee_id"
+                                   required="1"
+                                   readonly="1"/>
+                            <field name="department_id"
+                                   readonly="1"
+                                   required="1"/>
+                            <field name="master_plan_id"
+                                   domain="[('status', '=', 'open')]"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   readonly="1"
+                                   required="1" />
+                        </group>
+                        <group>
+                            <field name="date_start" string="Planned Date"
+                                   widget="daterange"
+                                   options="{&quot;end_date_field&quot;: &quot;date&quot;, &quot;always_range&quot;: &quot;1&quot;}"
+                                   required="date_start or date"/>
+                            <field name="date" invisible="1" required="date_start"/>
+                            <field name="company_id"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="is_exceed_limit" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Planned Items">
+                            <field name="planned_item_ids" readonly="status != 'draft'">
+                                <list editable="bottom"
+                                      readonly="status == 'submitted'"
+                                      decoration-danger="deviation_status == 'over'"
+                                      decoration-warning="deviation_status == 'on_target'"
+                                      decoration-success="deviation_status == 'under'">
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="department_id" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="product_id"/>
+                                    <field name="description"/>
+                                    <field name="budget_reference_id" required="1"/>
+                                    <field name="company_id"
+                                           column_invisible="True"/>
+                                    <field name="master_plan_id"
+                                           column_invisible="True"/>
+                                    <field name="master_plan_status"
+                                           column_invisible="True"/>
+                                    <field name="planned_quantity"/>
+                                    <field name="approved_planned_quantity"
+                                           column_invisible="True"/>
+                                    <field name="planned_cost"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"/>
+                                    <field name="planned_purchase_quarter"/>
+                                    <field name="uom_id"/>
+                                    <field name="sub_total"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"/>
+                                    <field name="execution_rate"
+                                           optional="hide"
+                                           placeholder="(Actual Purchased Quantity / Planned Quantity) × 100"/>
+                                    <field name="deviation_status"
+                                           optional="hide"/>
+                                    <field name="qty_deviation" optional="hide"/>
+                                    <field name="cost_deviation" optional="hide"/>
+                                    <field name="actual_purchase_price"
+                                           string="Actual Purchase Price"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"
+                                           optional="hide"/>
+                                    <field name="actual_requisition_price"
+                                           string="Actual PR Price"
+                                           widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"
+                                           optional="hide"/>
+                                    <field name="actual_bill_price" optional="hide"/>
+                                    <field name="actual_requisition_qty"
+                                           string="Actual PR Qty"
+                                           optional="hide"/>
+                                    <field name="actual_purchased_qty"
+                                           string="Actual Purchase Qty"
+                                           optional="hide"/>
+                                    <field name="actual_bill_qty" optional="hide"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total" widget='monetary'
+                                           options="{'currency_field': 'currency_id'}"
+                                           readonly="1"/>
+                                </group>
+                            </group>
+                            <div class="clearfix"/>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" readonly="status != 'draft'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="annual_department_procurement_plan_view_tree" model="ir.ui.view">
+        <field name="name">annual.department.procurement.plan.view.tree</field>
+        <field name="model">annual.department.procurement.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="annual_department_procurement_plan_view_search" model="ir.ui.view">
+        <field name="name">annual.department.procurement.plan.view.search</field>
+        <field name="model">annual.department.procurement.plan</field>
+        <field name="arch" type="xml">
+            <search string="Annual Department Procurement Plan">
+                <field name="name" string="Plan Name"/>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <filter name="group_by_employee_id" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_by_department_id" context="{'group_by': 'department_id'}"/>
+            </search>
+        </field>
+    </record>
+</odoo>

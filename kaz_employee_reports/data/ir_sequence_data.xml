@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===============================================================
+         SEQUENCE: Exit Interview
+         Purpose: Generates a unique reference number for each Exit Interview form.
+         Usage: Applied on model records like 'exit.interview' to auto-generate ID.
+         Format: EI/00001, EI/00002, etc.
+         Scope: Global (not company-specific)
+    =============================================================== -->
+    <record id="exit_interview_sequence" model="ir.sequence">
+        <field name="name">Exit Interview</field>
+        <field name="code">exit.interview</field> <!-- Technical code to reference sequence in Python or XML -->
+        <field name="prefix">EI/</field> <!-- Prefix visible in generated document reference -->
+        <field name="padding">5</field> <!-- Number of digits in the sequence -->
+        <field name="company_id" eval="False"/> <!-- Not restricted to a specific company (multi-company shared) -->
+    </record>
+
+    <!-- ===============================================================
+         SEQUENCE: Register Form
+         Purpose: Generates sequence numbers for employee register forms (e.g., joining paperwork).
+         Format: RE/00001, RE/00002, etc.
+         Scope: Global
+    =============================================================== -->
+    <record id="register_form_sequence" model="ir.sequence">
+        <field name="name">Register Form</field>
+        <field name="code">register.form</field>
+        <field name="prefix">RE/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- ===============================================================
+         SEQUENCE: Visa Request
+         Purpose: Auto-generates reference numbers for visa request applications.
+         Format: VR/00001, VR/00002, etc.
+         Use Case: Assigned when a user creates a new visa request for employee travel/immigration.
+    =============================================================== -->
+    <record id="visa_request_sequence" model="ir.sequence">
+        <field name="name">Visa Request</field>
+        <field name="code">visa.request</field>
+        <field name="prefix">VR/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- ===============================================================
+         SEQUENCE: Health Insurance
+         Purpose: Assigns a unique reference to each health insurance enrollment record.
+         Format: HI/00001, HI/00002, etc.
+         Importance: Useful for HR audit trails and cross-checking policies.
+    =============================================================== -->
+    <record id="health_insurance_sequence" model="ir.sequence">
+        <field name="name">Health Insurance</field>
+        <field name="code">health.insurance</field>
+        <field name="prefix">HI/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- ===============================================================
+         SEQUENCE: Exit Clearance
+         Purpose: Used to generate sequential references for employee clearance processes during offboarding.
+         Format: EC/00001, EC/00002, etc.
+         Application: Tracks clearances issued by various departments for resigning staff.
+    =============================================================== -->
+    <record id="exit_clearance_sequence" model="ir.sequence">
+        <field name="name">Exit Clearance</field>
+        <field name="code">exit.clearance</field>
+        <field name="prefix">EC/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

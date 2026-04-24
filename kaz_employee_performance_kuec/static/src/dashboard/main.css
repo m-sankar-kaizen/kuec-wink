@@ -1,0 +1,54 @@
+.chart-wrapper {
+    display: inline-flex;
+    background: white;
+}
+
+.box-shadow-6 {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    border-radius: 6px;
+}
+
+.height-fit {
+    height: fit-content;
+}
+
+.blue-background {
+    background: #bcbcfc;
+}
+
+.green-background {
+    background: #5da65d;
+}
+
+.purple-background {
+    background: #ac7eb7;
+}
+
+.bright-purple-background {
+    background: #d761b8;
+}
+
+.tinted-blue-background {
+    background: #6eb2c4
+}
+
+.tinted-yellow-background {
+    background: #c4bd6e
+}
+
+.tinted-red-background {
+    background: #c46e6e
+}
+
+.scrollable-container {
+    overflow: auto;        /* enables scrollbars when needed */
+    max-height: 86vh;      /* optional: limits vertical height */
+    max-width: 100%;       /* optional: horizontal scroll if content wider */
+    padding-right: 10px;   /* avoids scrollbar overlap with content */
+}
+
+.kpi-chart {
+    max-width: 360px;
+    min-width: 360px;
+}
+

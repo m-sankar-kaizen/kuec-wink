@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Inheritance: hr.payslip.run form
+        Purpose:
+            Extend the Payroll Batch (Payslip Run) form view to add buttons for generating
+            customized pension reports: one for UAE and one for GCC pension schemes.
+
+        Buttons Added:
+            - "UAE Pension Report" (`print_uae_pension_report`): Triggers backend method to generate UAE-format pension data.
+            - "GCC Pension Report" (`print_gcc_pension_report`): Triggers backend method for GCC-specific pension report.
+
+        Use Case:
+            These reports are typically required for compliance with regional pension fund
+            regulations. The reports will be exported, most likely, in Excel or PDF format
+            and will be submitted to the relevant authority or pension management system.
+    -->
+    <record id="payslip_run_form_inherit_pension_report" model="ir.ui.view">
+        <field name="name">hr.payslip.run.inherit.pension.report</field>
+        <field name="model">hr.payslip.run</field>
+        <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <!-- UAE Pension Report Button -->
+                <button name="print_uae_pension_report"
+                        type="object"
+                        string="UAE Pension Report"
+                        class="btn-primary"
+                        help="Generate the UAE-format pension report for this payslip run."/>
+
+                <!-- GCC Pension Report Button -->
+                <button name="print_gcc_pension_report"
+                        type="object"
+                        string="GCC Pension Report"
+                        class="btn-primary"
+                        help="Generate the GCC-format pension report for this payslip run."/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

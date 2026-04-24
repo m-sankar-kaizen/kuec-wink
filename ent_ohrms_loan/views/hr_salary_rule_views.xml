@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ================================================================
+        Inherited Form View: hr.salary.rule
+        Purpose:
+            - Add hidden multi-company support for salary rules by injecting
+              the `company_id` field. This allows rules to be company-specific.
+        Behavior:
+            - Field is only visible for users in multi-company group.
+            - Field is placed right after the `code` field.
+        Dependency:
+            - Original view: hr_payroll.hr_salary_rule_form
+    ================================================================= -->
+    <record model="ir.ui.view" id="hr_salary_rule_form_inherit_ent_ohrms_loan">
+        <field name="name">hr.salary.rule.form.inherit.ent.ohrms.loan</field>
+        <field name="model">hr.salary.rule</field>
+        <field name="inherit_id" ref="hr_payroll.hr_salary_rule_form"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="company_id"
+                       options="{'no_create': True}"
+                       groups="base.group_multi_company"
+                       invisible="1"/>
+            </field>
+        </field>
+    </record>
+</odoo>

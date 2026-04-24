@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="ProcurementChart">
+        <div t-attf-class="chart_canvas_{{props.type}}" t-ref="root"/>
+    </t>
+</templates>

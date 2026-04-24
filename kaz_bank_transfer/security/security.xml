@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Module Security Definitions for Bank Transfer
+
+        This XML file sets up:
+        - A dedicated security group hierarchy for bank transfer approval workflow
+        - Access rules for regular users, HR, and Payroll Officers
+        - A model category to group related access permissions
+    -->
+
+    <!-- Security category to group Bank Transfer module permissions -->
+    <record id="module_category_bank_transfer" model="ir.module.category">
+        <field name="name">Bank Transfer</field>
+        <field name="sequence" eval="1"/>
+    </record>
+
+    <!-- HR Team Group
+         Users in this group are responsible for the first level of approval -->
+    <record id="group_hr_person" model="res.groups">
+        <field name="name">HR Team</field>
+        <field name="category_id" ref="kaz_bank_transfer.module_category_bank_transfer"/>
+        <field name="comment">HR</field>
+    </record>
+
+    <!-- Payroll Officer Group
+         This group is a higher-level approver and inherits access from the HR group -->
+    <record id="group_director" model="res.groups">
+        <field name="name">Payroll Officer</field>
+        <field name="category_id" ref="kaz_bank_transfer.module_category_bank_transfer"/>
+        <!-- Inherit all permissions from HR group -->
+        <field name="implied_ids" eval="[Command.link(ref('kaz_bank_transfer.group_hr_person'))]"/>
+        <field name="comment">Director</field>
+    </record>
+
+    <!-- Access Rule: Base Users
+         Restrict visibility so users only see their own records
+         i.e., the record where the employee is linked to their user -->
+    <record id="bank_transfer_user_rule" model="ir.rule">
+        <field name="name">Bank Transfer: Base User</field>
+        <field name="model_id" ref="model_bank_transfer"/>
+        <field name="groups" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- Access Rule: Multi-company support
+         Allows users to access records belonging to their allowed companies -->
+    <record id="bank_transfer_multi_company_rule" model="ir.rule">
+        <field name="name">Bank Transfer: Company</field>
+        <field name="model_id" ref="model_bank_transfer"/>
+        <!-- Users can see records if their company is in company_ids -->
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+    <!-- Access Rule: HR and Payroll Officer Full Access
+         Grants full access to HR and Director groups on all records -->
+    <record id="bank_transfer_hr_rule" model="ir.rule">
+        <field name="name">Bank Transfer: HR</field>
+        <field name="model_id" ref="model_bank_transfer"/>
+        <field name="groups" eval="[
+            Command.link(ref('kaz_bank_transfer.group_hr_person')),
+            Command.link(ref('kaz_bank_transfer.group_director'))
+        ]"/>
+        <!-- Full access by using always-true domain -->
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+</odoo>

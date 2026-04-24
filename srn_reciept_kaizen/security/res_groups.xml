@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+
+    <!--
+        Module Category: Service Receipt Notification
+        Purpose:
+            Defines a new security category under which related user groups will be organized.
+            This category will appear as a label in the User > Access Rights tab in the UI.
+
+        Notes:
+            - Used as a visual grouping for clarity when assigning user roles.
+    -->
+    <record id="service_receipt_notification" model="ir.module.category">
+        <field name="name">Service Receipt Notification</field>
+    </record>
+
+    <!--
+        Security Group: Procurement
+        Purpose:
+            Grants access to users involved in the Procurement process related to service receipts.
+
+        Configuration:
+            - Belongs to the "Service Receipt Notification" category.
+            - Inherits base.group_user, giving general user access rights.
+            - Can be used to control visibility of menus, buttons, or record rules.
+    -->
+    <record id="service_receipt_procurement" model="res.groups">
+        <field name="name">Procurement</field>
+        <field name="category_id" ref="srn_reciept_kaizen.service_receipt_notification"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+    </record>
+
+    <!--
+        Security Group: Department Manager
+        Purpose:
+            Grants access to users who manage departments and may need to approve or view
+            service receipts from a higher level.
+
+        Configuration:
+            - Categorized under "Service Receipt Notification".
+            - Inherits base.group_user for basic access rights.
+            - Useful for defining access control or approval workflows.
+    -->
+    <record id="service_receipt_dep_manager" model="res.groups">
+        <field name="name">Department Manager</field>
+        <field name="category_id" ref="srn_reciept_kaizen.service_receipt_notification"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+    </record>
+
+</odoo>

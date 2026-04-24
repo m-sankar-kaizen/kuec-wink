@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="module_kuec_employee_management_parent" model="ir.module.category">
+        <field name="name">KUEC Employee Management</field>
+        <field name="sequence" eval="20"/>
+    </record>
+    <record id="module_kuec_employee_management" model="ir.module.category">
+        <field name="parent_id" eval="module_kuec_employee_management_parent"/>
+        <field name="name">KUEC Employee Management</field>
+        <field name="sequence" eval="11"/>
+    </record>
+    <record id="group_kuec_hr" model="res.groups">
+        <field name="name">HR</field>
+        <field name="category_id" ref="kaz_kuec_menu_hr.module_kuec_employee_management"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="comment">KUEC Group: Menu Access for: Employee Life Cycle, Master Plan, Goals Evaluation, Goal Surveys, Performance Improvement Plans, Performance Dashboard, Performance, Training, Employee Bonus, Configuration in Employee Performance &amp; Rewards, Employee Relations &amp; Compliance</field>
+    </record>
+
+    <record model="ir.rule" id="kaz_kuec_recruitment_staffing_plan.staffing_master_rule">
+        <field name="groups" eval="[Command.link(ref('kaz_kuec_recruitment_staffing_plan.group_staffing_master')), Command.link(ref('kaz_kuec_menu_hr.group_kuec_hr'))]"/>
+    </record>
+</odoo>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="FloatFilter">
+        <div class="floating-filter" t-att-class="state.open ? 'enter' : ''">
+            <i class="fa fa-filter" t-on-click="toggleFilterPanel"/>
+            <div class="filter-panel" t-att-class="state.open ? 'enter' : ''">
+                <div class="header d-flex justify-content-between align-items-center">
+                    <span class="title">Filters</span>
+                    <button t-on-click="toggleFilterPanel">
+                        <i class="fa fa-times" aria-hidden="true"/>
+                    </button>
+                </div>
+                <div class="body">
+                    <!-- Date Range -->
+                    <div class="mb-2">
+                        <label>Date Range:</label>
+                        <div class="d-flex gap-2">
+                            <input type="date" t-on-change="handleOnChangeDate" t-model="state.startDate"
+                                   class="form-control form-control-sm"/>
+                            <input type="date" t-on-change="handleOnChangeDate" t-model="state.endDate"
+                                   class="form-control form-control-sm"/>
+                        </div>
+                    </div>
+                    <!-- Requisition Type -->
+                    <t t-set="company_id" t-value="this.env.services.company.currentCompany.id"/>
+
+                    <div class="mb-2">
+                        <label>Requisition Type:</label>
+                        <MultiRecordSelector
+                                resModel="'purchase.requisition.type'"
+                                resIds="state.requisition_type || []"
+                                placeholder="'Requisition Type'"
+                                domain="[['company_id', '=', company_id]]"
+                                update.bind="onUpdateRequisitionType"
+                        />
+                    </div>
+                    <div class="mb-2">
+                        <label>Vendor:</label>
+                        <MultiRecordSelector
+                                resModel="'res.partner'"
+                                resIds="state.vendor || []"
+                                placeholder="'Vendor'"
+                                domain="['|', ['company_id', '=', company_id], ['company_id', '=', false]]"
+                                update.bind="onUpdateVendor"
+                        />
+                    </div>
+                    <div class="mb-2">
+                        <label>Department:</label>
+                        <MultiRecordSelector
+                                resModel="'hr.department'"
+                                resIds="state.departments || []"
+                                placeholder="'Department'"
+                                domain="['|', ['company_id', '=', company_id], ['company_id', '=', false]]"
+                                update.bind="onUpdateDepartment"
+                        />
+                    </div>
+                    <div class="mb-2">
+                        <label>Product:</label>
+                        <MultiRecordSelector
+                                resModel="'product.product'"
+                                resIds="state.product || []"
+                                placeholder="'Product'"
+                                domain="['|', ['company_id', '=', company_id], ['company_id', '=', false]]"
+                                update.bind="onUpdateProduct"
+                        />
+                    </div>
+                    <!-- Date Type -->
+                    <div class="mb-2">
+                        <label>Date Type:</label>
+                        <select class="form-select" t-model="state.dateType"
+                                t-on-change="handleDateTypeChange">
+                            <t t-foreach="state.dateTypes" t-as="dateType" t-key="dateType.id">
+                                <option t-att-style="dateType.id === 'custom' ? 'display: none;' : ''"
+                                        t-att-value="dateType.id">
+                                    <t t-esc="dateType.value"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+                </div>
+                <div class="footer d-flex justify-content-end">
+                    <button t-on-click="handleApply" class="btn btn-primary btn-sm">Apply</button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

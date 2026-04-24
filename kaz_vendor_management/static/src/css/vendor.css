@@ -1,0 +1,145 @@
+/* Magistral Regular/Book */
+@font-face {
+    font-family: 'Magistral';
+    src: url('/kaz_vendor_management/static/src/fonts/fonnts.com-Magistral_Book.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Magistral Italic */
+@font-face {
+    font-family: 'Magistral';
+    src: url('/kaz_vendor_management/static/src/fonts/fonnts.com-Magistral_Book_Italic.otf') format('opentype');
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Magistral Bold */
+@font-face {
+    font-family: 'Magistral';
+    src: url('/kaz_vendor_management/static/src/fonts/fonnts.com-Magistral_Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Saira English';
+    src: url('https://fonts.googleapis.com/css?family=Saira');
+}
+
+#vendor_signup_form {
+    .fa {
+        font-family: "FontAwesome" !important;
+    }
+    .secondary-text {
+        font-family: 'Saira English', sans-serif !important; /* secondary text */
+    }
+    * {
+        font-family: 'Magistral', sans-serif !important;
+    }
+}
+
+.kuec-header-text {
+    color: #1E448D
+}
+
+.background-kuec {
+    background: #1E448D !important;
+    color: white !important;
+}
+
+
+.field-required {
+    color: red;
+}
+
+.default_user {
+    width: 100px;
+    height: 100px;
+}
+
+.file-name-span {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;"
+}
+
+#tag-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 32px;
+    border: 1px solid #dddddd;
+    padding: 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+}
+
+.m2m_container {
+    border: 2px solid #00000000;
+    padding: 8px;
+    border-radius: 8px;
+}
+.border-rtl, .border-rtlb {
+    border: 1px solid #1E448D;
+}
+
+/* Style the container for the '?' */
+.tooltip-container {
+  display: inline-block;
+  background-color: #ccc; /* Gray circle */
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 5px;
+  position: relative; /* Essential for positioning the tooltip text */
+}
+
+/* Style the hidden text */
+.tooltip-container .tooltip-text {
+  visibility: hidden;
+  width: 220px;
+  background-color: #333; /* Dark background */
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: normal;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Show above the question mark */
+  left: 50%;
+  margin-left: -110px; /* Center the tooltip (half of width) */
+
+  /* Fade in effect */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Arrow for the tooltip (optional, makes it look nicer) */
+.tooltip-container .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+/* Show the text on hover */
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}

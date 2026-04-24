@@ -1,0 +1,2793 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        QWeb Report Template: Exit Interview Report
+
+        This template generates the Exit Interview report for employees as part of the offboarding process.
+        It is intended to display essential metadata such as date and reference number, and can be expanded
+        to include employee responses to exit interview questions, feedback, and HR notes.
+
+        The report loops over the `docs` variable (typically containing one or more records from `exit.interview` model),
+        and uses Odoo's standard web layout templates: `web.html_container` and `web.internal_layout`.
+    -->
+    <template id="exit_interview_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.internal_layout">
+                    <div class="page">
+                        <div class="container">
+
+                            <!--
+                            Report Title
+                        -->
+                        <h1 class="text-center">Exit Interview</h1>
+
+                        <!--
+                            Basic Interview Meta Info Table
+                            Contains: Interview Date and Reference Number (Request No)
+                            More fields like employee name, position, department, etc. can be added here.
+                        -->
+
+                            <table class="table">
+
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">
+                                            Date:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.date"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Request No:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.ref"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Employee Name:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.name"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Employee ID:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.emp_id"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Position:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.position"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Department:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.department"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Email:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.email"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Mobilr:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.mobile"/>
+                                        </td>
+
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <div class="col-10">
+                                    <h2>HR Service</h2>
+                                    <p style="color:DodgerBlue;">
+                                        Note: The system has detected that HR Services is logged in. You can initiate
+                                        End of Service Clearance
+                                        Process for any Employee. Please select the Employee.
+                                    </p>
+                                    <p style="color:DodgerBlue;">Note: You will receive all E‐Mail communication along with Employee regarding
+                                        the clearance process
+                                    </p>
+                                    <div class="row">
+                                        <div class="col-8">
+                                             <strong>Raise exit interview on behalf of someone else?</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                            <p t-if="o.exit == True">
+                                                <span style="color:red;">True</span>
+                                            </p>
+                                            <p t-else="">
+                                                <span style="color:red;">False</span>
+                                            </p>
+                                                </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-2"/>
+
+                            </div>
+                            <div class="mt-3">
+                                <p style="color:DodgerBlue;">The objective of this questionnaire is to elicit your honest feedback regarding your
+                                    experience of working at
+                                    Khalifa University. All information provided by you will be kept confidential and
+                                    used only for the purpose of
+                                    organizational improvement.
+                                </p>
+                            </div>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <h2>Reason for Leaving Khalifa University:</h2>
+                                <br/>
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            Further Study
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <p t-if="o.further_study == True">
+                                                    <span style="color:red;">True</span>
+                                                </p>
+                                                <p t-else="">
+                                                    <span style="color:red;">False</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8">
+                                            Family and/or Personal
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <p t-if="o.family == True">
+                                                    <span style="color:red;">True</span>
+                                                </p>
+                                                <p t-else="">
+                                                    <span style="color:red;">False</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8">
+                                            Better Career Opportunity
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <p t-if="o.better_career == True">
+                                                    <span style="color:red;">True</span>
+                                                </p>
+                                                <p t-else="">
+                                                    <span style="color:red;">False</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8">
+                                            Contract Non‐Renewal
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <p t-if="o.conflict_renewal == True">
+                                                    <span style="color:red;">True</span>
+                                                </p>
+                                                <p t-else="">
+                                                    <span style="color:red;">False</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            Conflict with Other Employees
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <p t-if="o.conflict == True">
+                                                    <span style="color:red;">True</span>
+                                                </p>
+                                                <p t-else="">
+                                                    <span style="color:red;">False</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8">
+                                            Conflict with Managers
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <p t-if="o.conflict_with_manager == True">
+                                                    <span style="color:red;">True</span>
+                                                </p>
+                                                <p t-else="">
+                                                    <span style="color:red;">False</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-8">
+                                            Other
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <p t-if="o.other == True">
+                                                    <span style="color:red;">True</span>
+                                                </p>
+                                                <p t-else="">
+                                                    <span style="color:red;">False</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <div class="col-12">
+                                    <h3>Questionnaire</h3>
+                                    <br/>
+                                    <p>Please rate the following questions.</p>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Physical working environment</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.physical_working_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.physical_working_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.physical_working_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.physical_working_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.physical_working_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.physical_working_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.physical_working_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.physical_working_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Opportunities for growth and enhancement</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.opportunities_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.opportunities_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.opportunities_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.opportunities_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.opportunities_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.opportunities_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.opportunities_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.opportunities_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Salary level and compensation practices</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.salary_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.salary_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.salary_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.salary_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Relationship with co‐workers</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.relation_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relation_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.relation_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relation_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.relation_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relation_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.relation_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relation_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Direction from your Supervisor / Chair</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.direction_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.direction_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.direction_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.direction_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.direction_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.direction_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.direction_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.direction_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Support from your Supervisor / Chair</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.support_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.support_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.support_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.support_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.support_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.support_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.support_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.support_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Quality of training and development</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.quality_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.quality_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.quality_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.quality_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.quality_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.quality_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.quality_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.quality_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>New employee orientation program</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.new_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.new_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.new_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.new_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.new_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.new_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.new_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.new_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Overall satisfaction with the department I worked in</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.overall_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.overall_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.overall_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.overall_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.overall_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.overall_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.overall_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.overall_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Personal job training</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.personal_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.personal_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.personal_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.personal_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.personal_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.personal_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.personal_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.personal_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Equipment provided ﴾materials, resources, facilities﴿</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.equipment_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.equipment_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.equipment_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.equipment_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.equipment_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.equipment_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.equipment_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.equipment_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Performance management process</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.performance_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.performance_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.performance_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.performance_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.performance_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.performance_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.performance_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.performance_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Overall job satisfaction</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.job_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.job_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.job_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.job_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.job_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.job_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.job_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.job_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Overall satisfaction with Khalifa University as an employer</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.Khalifa_rate == 'high'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.Khalifa_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.Khalifa_rate == 'satisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.Khalifa_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Satisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.Khalifa_rate == 'dissatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.Khalifa_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.Khalifa_rate == 'highsatisfied'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.Khalifa_rate"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Highly Dissatisfied</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <div class="col-12">
+                                    <h3>Compensation and Benefits</h3>
+                                    <br/>
+                                    <p>How did you feel about the compensation and benefits provided by Khalifa
+                                        University.
+                                    </p>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Salary Level</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.salary_level_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_level_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.salary_level_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_level_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.salary_level_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_level_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.salary_level_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_level_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.salary_level_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.salary_level_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Housing Allowance</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.housing_allowance_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.housing_allowance_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.housing_allowance_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.housing_allowance_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.housing_allowance_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.housing_allowance_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.housing_allowance_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.housing_allowance_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.housing_allowance_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.housing_allowance_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Tickets/Cash in lieu</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.ticket_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.ticket_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.ticket_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.ticket_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.ticket_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.ticket_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.ticket_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.ticket_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.ticket_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.ticket_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Medical Plan</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.medical_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.medical_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.medical_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.medical_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.medical_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.medical_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.medical_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.medical_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.medical_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.medical_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Annual Vacation</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.annual_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.annual_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.annual_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.annual_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.annual_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.annual_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.annual_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.annual_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.annual_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.annual_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Sick Leave</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.sick_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.sick_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.sick_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.sick_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.sick_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.sick_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.sick_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.sick_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.sick_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.sick_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Educational Assistance</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.educational_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.educational_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.educational_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.educational_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.educational_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.educational_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.educational_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.educational_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.educational_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.educational_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Relocation Allowance</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.relocation_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relocation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.relocation_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relocation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.relocation_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relocation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.relocation_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relocation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.relocation_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.relocation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Was consistently fair</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-2">
+                                                <div t-if="o.repatriation_benefit == 'excellent'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.repatriation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Excellent</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.repatriation_benefit == 'good'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.repatriation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Good</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.repatriation_benefit == 'fair'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.repatriation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Fair</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.repatriation_benefit == 'poor'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.repatriation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Poor</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-2">
+                                                <div t-if="o.repatriation_benefit == 'na'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.repatriation_benefit"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>N / A</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <div class="col-12">
+                                    <h3>About your Supervisor</h3>
+                                    <br/>
+                                    <p>What did you think about your supervisor on the following points.</p>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Was consistently fair</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.was_consistently_supervisor == 'almost'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_consistently_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Almost Always</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.was_consistently_supervisor == 'usually'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_consistently_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Usually</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.was_consistently_supervisor == 'sometimes'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_consistently_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Sometimes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.was_consistently_supervisor == 'never'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_consistently_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Never</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Provided recognition</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.provided_supervisor == 'almost'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.provided_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Almost Always</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.provided_supervisor == 'usually'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.provided_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Usually</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.provided_supervisor == 'sometimes'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.provided_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Sometimes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.provided_supervisor == 'never'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.provided_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Never</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Resolved complaints</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.resolved_supervisor == 'almost'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.resolved_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Almost Always</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.resolved_supervisor == 'usually'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.resolved_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Usually</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.resolved_supervisor == 'sometimes'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.resolved_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Sometimes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.resolved_supervisor == 'never'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.resolved_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Never</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Was sensitive to employees’ needs</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.was_sensitive_supervisor == 'almost'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_sensitive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Almost Always</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.was_sensitive_supervisor == 'usually'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_sensitive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Usually</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.was_sensitive_supervisor == 'sometimes'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_sensitive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Sometimes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.was_sensitive_supervisor == 'never'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.was_sensitive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Never</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Provided feedback on performance</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.feedback_supervisor == 'almost'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.feedback_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Almost Always</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.feedback_supervisor == 'usually'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.feedback_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Usually</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.feedback_supervisor == 'sometimes'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.feedback_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Sometimes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.feedback_supervisor == 'never'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.feedback_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Never</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Was receptive to open communication</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.receptive_supervisor == 'almost'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.receptive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Almost Always</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.receptive_supervisor == 'usually'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.receptive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Usually</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.receptive_supervisor == 'sometimes'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.receptive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Sometimes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.receptive_supervisor == 'never'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.receptive_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Never</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <p>Encouraged initiative and creativity</p>
+                                    </div>
+                                    <div class="col-8">
+                                        <div class="row">
+
+                                            <div class="col-3">
+                                                <div t-if="o.encouraged_supervisor == 'almost'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.encouraged_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Almost Always</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.encouraged_supervisor == 'usually'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.encouraged_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Usually</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.encouraged_supervisor == 'sometimes'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.encouraged_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Sometimes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-3">
+                                                <div t-if="o.encouraged_supervisor == 'never'">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;"
+                                                                  t-field="o.encouraged_supervisor"/>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Never</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <div class="col-12">
+                                    <h3>Working at The Khalifa University</h3>
+                                    <br/>
+                                </div>
+                                <div class="row">
+                                    <div class="col-7">
+                                        <p>Would you advise a friend to work for The Khalifa University of Science and
+                                            Technology
+                                        </p>
+                                    </div>
+                                    <div class="col-5">
+                                        <div class="row">
+
+                                            <div class="col-6">
+                                                <div t-if="o.advise == True">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;">Yes</span>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Yes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div t-if="o.advise == False">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;">No</span>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>No</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-7">
+                                        <p>Would you consider returning to work at The Khalifa University of Science and
+                                            Technology
+                                        </p>
+                                    </div>
+                                    <div class="col-5">
+                                        <div class="row">
+
+                                            <div class="col-6">
+                                                <div t-if="o.consider == True">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;">Yes</span>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Yes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div t-if="o.consider == False">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;">No</span>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>No</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-7">
+                                        <p>Did your work experience at Khalifa University add value to your knowledge
+                                            base and/or career path
+                                        </p>
+                                    </div>
+                                    <div class="col-5">
+                                        <div class="row">
+
+                                            <div class="col-6">
+                                                <div t-if="o.experience == True">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;">Yes</span>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>Yes</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div t-if="o.experience == False">
+                                                    <p>
+                                                        <strong>
+                                                            <span style="color:red;">No</span>
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                                <div t-else="">
+                                                    <p>
+                                                        <span>No</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <div class="col-12">
+                                    <h3>Regret we are Parting</h3>
+                                    <br/>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p>in your opinion what did you most enjoy of your employment at The Khalifa
+                                            University of Science and Technology
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p>
+                                            <span t-field="o.most_regret"/>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p>In your opinion what did you least enjoy of your employment at The Khalifa
+                                            University of Science and Technology
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p>
+                                            <span t-field="o.least_regret"/>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p>What suggestion do you have to make The Khalifa University of Science and
+                                            Technology a better place to work
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p>
+                                            <span t-field="o.suggestion_regret"/>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p>general comments
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <p>
+                                            <span t-field="o.general_regret"/>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="mt-3" t-if="o.attach">
+                                <h3 class="text-center">Attachment</h3>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p>Attach Approved Resignation
+                                            / Contract Non‐Renewal
+                                            letter
+                                            ﴾pdf, jpg only﴿
+                                        </p>
+                                    </div>
+                                    <div class="col-6">
+                                        <img t-att-src="image_data_uri(o.attach)"
+                                             style="height:200px; width:300px; "/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+
+    </template>
+
+<!--
+    Report Action: Exit Interview Report
+    This report action links the QWeb PDF template (`kaz_employee_reports.exit_interview_report`)
+    to the `exit.interview` model.
+
+    It enables users to generate and print Exit Interview reports directly from the form view or
+    via code (`report_action`), typically used in the HR offboarding process.
+
+    Key Fields:
+    - `name`: Display name of the report in Odoo UI
+    - `model`: The model this report applies to (`exit.interview`)
+    - `report_type`: Set to `qweb-pdf` to generate PDF output
+    - `report_name`: The internal identifier of the QWeb template
+    - `report_file`: Redundant in most recent Odoo versions but still recommended
+    - `print_report_name`: Dynamic file name when downloading/printing (uses related employee name)
+-->
+
+    <record id="action_report_exit_interview_report" model="ir.actions.report">
+        <field name="name">Exit Interview</field>
+        <field name="model">exit.interview</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.exit_interview_report</field>
+        <field name="report_file">kaz_employee_reports.exit_interview_report</field>
+        <field name="print_report_name">'Exit Interview - %s' % object.name.name</field>
+    </record>
+
+</odoo>

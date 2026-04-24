@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="service_completion_receipt_report">
+        <t t-call="web.report_layout">
+            <t t-set="body_classname" t-value="'main_page'"/>
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_kuec_report_base.external_layout">
+                    <t t-set="show_page" t-value="True"/>
+                    <t t-set="sequence_field" t-value="'name'"/>
+                    <div class="page main_page">
+                        <div class="px-2 english-text">
+
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <h3 class="fw-bold">Completion Certificate</h3>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mt-3">
+                                    <div class="col-6">
+                                        Date :
+                                        <span t-esc="o.date_approve and o.date_approve.strftime('%d %B %Y')"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mt-2">
+                                    <div class="fw-bold">To Finance Department,</div>
+                                    <div>
+                                        With reference to the details of the contract/purchase order outlined below, we
+                                        would like to
+                                        inform you that the required service has been provided by the supplier as per
+                                        the following
+                                        details:
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mt-2">
+                                    <table class="table" style="width: 100%;">
+                                        <tr>
+                                            <td style="width: 50%; padding: 10px 5px;">
+                                                <div class="d-flex">
+                                                    <div class="fw-bold">Purchase Order No:</div>
+                                                    <div class="ms-1" t-field="o.name"/>
+                                                </div>
+                                            </td>
+                                            <td style="width: 50%; padding: 10px 5px;">
+                                                <div class="d-flex">
+                                                    <div class="fw-bold">Purchase Order Date:</div>
+                                                    <div class="ms-1" t-field="o.date_approve"
+                                                         t-options='{"widget": "date"}'/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 50%; padding: 10px 5px;">
+                                                <div class="d-flex">
+                                                    <div class="fw-bold">Contract Number:</div>
+                                                    <t t-if="o.contract_agreement_id">
+                                                        <div class="ms-1" t-field="o.contract_agreement_id.name"/>
+                                                    </t>
+                                                    <t t-if="o.requisition_id">
+                                                        <div class="ms-1" t-field="o.requisition_id.name"/>
+                                                    </t>
+
+                                                </div>
+                                            </td>
+                                            <td style="width: 50%; padding: 10px 5px;">
+                                                <div class="d-flex">
+                                                    <div class="fw-bold">Contract Date:</div>
+                                                    <t t-if="o.contract_agreement_id">
+                                                        <div class="ms-1" t-field="o.contract_agreement_id.start_date"/>
+                                                    </t>
+                                                    <t t-if="o.requisition_id">
+                                                        <div class="ms-1" t-field="o.requisition_id.date_start"/>
+                                                    </t>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="width: 100%; padding: 10px 5px;">
+                                                <div class="d-flex">
+                                                    <div class="fw-bold">Supplier Name:</div>
+                                                    <div class="ms-1" t-field="o.partner_id"/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 50%; padding: 10px 5px;">
+                                                <div>
+                                                    <div class="fw-bold">Total Contract/ Purchase Order Value:</div>
+                                                    <div class="ms-1" t-field="o.amount_total"/>
+                                                </div>
+                                            </td>
+                                            <td style="width: 50%; padding: 10px 5px;">
+                                                <div>
+                                                    <div class="fw-bold">Current Payment Amount:</div>
+                                                    <div class="ms-1" t-field="o.total_paid_amount"/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 text-start mt-2">
+                                    <h6 class="fw-bold">Checklist:</h6>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mt-2">
+                                    <table class="table" style="width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 60%; padding: 10px 5px;">Name</th>
+                                                <th style="width: 20%; padding: 10px 5px;">Answer</th>
+                                                <th style="width: 20%; padding: 10px 5px;">Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="o.srn_report_line_ids" t-as="line">
+                                                <td style="width: 60%; padding: 10px 5px;">
+                                                    <div class="ms-1" t-field="line.name"/>
+                                                </td>
+                                                <td style="width: 20%; padding: 10px 5px;">
+                                                    <div class="ms-1" t-field="line.answer_selection_id"/>
+                                                </td>
+                                                <td style="width: 20%; padding: 10px 5px;">
+                                                    <div class="ms-1" t-field="line.remarks"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 text-start mt-4">
+                                    <div t-field="o.srn_scope_of_work"/>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mt-2">
+                                    <div>Best Regards,</div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <t t-set="srn" t-value="o.service_receipt_ids[-1]"/>
+                                <div class="col-4 ">
+                                    <div style="padding: 10px 5px; text-align: center;">
+                                        <img t-if="srn.end_user_signature"
+                                             t-att-src="image_data_uri(srn.end_user_signature)"
+                                             style="max-height: 50px;"
+                                             alt="Signature"/>
+                                        <div style="font-size: 12px;">
+                                            Signed By:
+                                            <span class="ms-1" t-field="srn.end_user_id"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4 ">
+                                    <div style="padding: 10px 5px; text-align: center;">
+                                        <img t-if="srn.procurement_department_signature"
+                                             t-att-src="image_data_uri(srn.procurement_department_signature)"
+                                             style="max-height: 50px;"
+                                             alt="Procurement Signature"/>
+                                        <div style="font-size: 12px;">
+                                            Signed By:
+                                            <span class="ms-1" t-field="srn.procurement_department_user_id"/>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="col-4 ">
+                                    <div style="padding: 10px 5px; text-align: center;">
+                                        <img t-if="srn.department_head_signature"
+                                             t-att-src="image_data_uri(srn.department_head_signature)"
+                                             style="max-height: 50px;"
+                                             alt="Dept. Head Signature"/>
+                                        <div style="font-size: 12px;">
+                                            Signed By:
+                                            <span class="ms-1" t-field="srn.procurement_department_user_id"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-12 mt-0">
+                                    <table class="table" style="width: 100%;">
+                                        <tr>
+                                            <th style="padding: 10px 5px;">Prepared by:</th>
+                                            <th style="padding: 10px 5px;">Accredited by:</th>
+                                            <th style="padding: 10px 5px;">Approved by:</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px 5px;">Finance Department</td>
+                                            <td style="padding: 10px 5px;">Executive Director of Commercialization
+                                            </td>
+                                            <td style="padding: 10px 5px;">Chief Commercialization Officer</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="service_completion_receipt_report_action" model="ir.actions.report">
+        <field name="name">Service Completion</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_srn_pdp_company_kuec.service_completion_receipt_report</field>
+        <field name="report_file">kaz_srn_pdp_company_kuec.service_completion_receipt_report</field>
+        <field name="print_report_name">'Service Completion - %s' % (object.name)</field>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="kaz_kuec_report_base.paperformat_kuec_general"/>
+    </record>
+</odoo>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- Petty Cash Report Wizard View -->
+    <record id="view_petty_cash_report_wizard_form" model="ir.ui.view">
+        <field name="name">petty.cash.report.wizard.form</field>
+        <field name="model">petty.cash.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Petty Cash Report">
+                <group>
+                    <field name="employee_id"/>
+                </group>
+
+                <group col="2">
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+
+                <footer>
+                    <button
+                        name="action_print_pdf_report"
+                        string="Print PDF Report"
+                        type="object"
+                        class="btn-primary"
+                    />
+                    <button
+                        name="action_print_xlsx_report"
+                        string="Print XLSX Report"
+                        type="object"
+                        class="btn-primary"
+                    />
+                    <button
+                        string="Cancel"
+                        special="cancel"
+                        class="btn-secondary"
+                    />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the Petty Cash Report Wizard -->
+    <record id="action_petty_cash_report_wizard" model="ir.actions.act_window">
+        <field name="name">Petty Cash Report</field>
+        <field name="res_model">petty.cash.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_petty_cash_report_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_petty_cash_report_wizard"
+        name="Petty Cash Report"
+        parent="expense_funding.menu_petty_orders"
+              sequence="98"
+        action="action_petty_cash_report_wizard"/>
+
+
+</odoo>

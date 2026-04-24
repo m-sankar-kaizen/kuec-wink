@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="hr_applicant_view_form" model="ir.ui.view">
+        <field name="name">hr.applicant.view.form.kaizen</field>
+        <field name="model">hr.applicant</field>
+        <field name="inherit_id" ref="hr_recruitment.hr_applicant_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='categ_ids']" position="after">
+                <field name="active" invisible="1"/>
+                <field name="allow_interview" invisible="1"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Interview Feedback">
+                    <field name="feedback_ids" widget="one2many_list" readonly="1">
+                        <list create="0" delete="0" edit="0">
+                            <field name="candidate_id"/>
+                            <field name="interview_date"/>
+                            <field name="rating" widget="priority" options="{'rating_values': [1, 2, 3, 4, 5]}" readonly="1"/>
+                            <field name="user_id"/>
+                            <field name="feedback"/>
+                            <field name="job_id"/>
+                        </list>
+                        <form string="Interview Feedback" edit="0">
+                            <sheet>
+                                <group>
+                                    <group>
+                                        <field name="candidate_id"/>
+                                        <field name="job_id"/>
+                                        <field name="rating" widget="priority" options="{'rating_values': [1, 2, 3, 4, 5]}"/>
+                                    </group>
+                                    <group>
+                                        <field name="interview_date"/>
+                                        <field name="user_id"/>
+                                    </group>
+                                </group>
+                                <notebook>
+                                    <page string="Feedback">
+                                        <field name="feedback" widget="html"/>
+                                    </page>
+                                </notebook>
+                            </sheet>
+                    </form>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

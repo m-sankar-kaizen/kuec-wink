@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_payment_register_form" model="ir.ui.view">
+        <field name="name">account.payment.register.form.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">account.payment.register</field>
+        <field name="inherit_id" ref="account.view_account_payment_register_form"/>
+        <field name="arch" type="xml">
+
+            <form position="attributes">
+                <attribute name="js_class">readonly_form_view</attribute>
+            </form>
+
+            <xpath expr="//button[@name='action_create_payments'][2]" position="after">
+                <field name="company_code" invisible="1"/>
+                <field name="is_readonly" invisible="1"/>
+                <field name="is_approved" invisible="1"/>
+                <field name="write_off_id" invisible="1"/>
+                <button string="Submit to Approve" name="action_submit_request" type="object" class="oe_highlight"
+                        data-hotkey="q" invisible="is_approved or company_code not in ['KUEC'] or not (payment_difference and payment_difference_handling == 'reconcile' and payment_type == 'inbound')"/>
+            </xpath>
+
+            <xpath expr="//button[@name='action_create_payments'][1]" position="attributes">
+                <attribute name="invisible"
+                           add="not is_approved and company_code in ['KUEC'] and payment_difference and payment_difference_handling == 'reconcile' and payment_type == 'inbound'"
+                           separator="or"/>
+            </xpath>
+
+            <xpath expr="//button[@name='action_create_payments'][2]" position="attributes">
+                <attribute name="invisible"
+                           add="not is_approved and company_code in ['KUEC'] and payment_difference and payment_difference_handling == 'reconcile' and payment_type == 'inbound'"
+                           separator="or"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

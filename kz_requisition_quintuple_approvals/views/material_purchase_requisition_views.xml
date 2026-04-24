@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit Form View to Modify it -->
+    <record id="requisition_form" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.form.view.inherit.quintuple.approvals</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="inherit_id" ref="material_purchase_requisitions.material_purchase_requisition_form_view"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//notebook/page[3]" position="replace">
+
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+
+                <page string="Approval History" name="approval_line">
+                    <field name="approval_line_ids" readonly="1">
+                        <list editable="bottom" decoration-info="state == 'request'"
+                              decoration-success="state == 'approval'" decoration-danger="state == 'rejection'">
+                            <field name="line_date"/>
+                            <field name="description"/>
+                            <field name="state"/>
+                            <field name="approver_id"/>
+                            <field name="rejecter_id"/>
+                            <field name="send_to" widget="many2many_tags"/>
+                            <field name="requester"/>
+                        </list>
+                    </field>
+                </page>
+
+            </xpath>
+            <!--            <xpath expr="//field[@name='message_follower_ids']" position="after">-->
+            <!--                   <field name="activity_ids"/>-->
+            <!--            </xpath>-->
+            <xpath expr="//field[@name='requisition_line_ids']" position="attributes">
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='requisition_line_ids']/list/field[@name='partner_id']"
+                   position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='requisition_line_ids']/list/field[@name='requisition_type']"
+                   position="attributes">
+                <attribute name="readonly">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='requisition_line_ids']/list/field[@name='qty']" position="after">
+                <field name="price_unit"/>
+                <field name="amount_incurrency"/>
+                <field name="subtotal"/>
+                <field name="change_count" invisible="1" force_save="1"/>
+            </xpath>
+
+            <xpath expr="//field[@name='requisition_line_ids']/list/field[@name='qty']" position="before">
+                <field name="account_id" required="1"/>
+                <field name="analytic_distribution" widget="analytic_distribution"/>
+            </xpath>
+
+            <xpath expr="//field[@name='requisition_line_ids']" position="after">
+                <group name="total_group" col="6" class="mt-2 mt-md-0">
+                    <group class="oe_subtotal_footer oe_right" colspan="2" name="requisition_total"
+                           style="font-weight:bold;font-size:18px">
+                        Total
+                        <field name="total_amount" colspan="2" readonly="1"/>
+                        Total in Currency
+                        <field name="amount_incurrency" colspan="2" readonly="1"/>
+                    </group>
+                    <div class="clearfix"/>
+                </group>
+            </xpath>
+
+            <xpath expr="//header" position="replace">
+
+                <header>
+                    <field name="replacement_requisition_id" invisible="1"/>
+                    <field name="show_approve" invisible="1"/>
+                    <button name="create_new_version" type="object" string="Create New Version" class="btn-primary"
+                            invisible="approvement_state != 'rejected' or replacement_requisition_id"/>
+                    <button name="submit_to_approve" type="object" string="Submit for Approval" class="btn-primary"
+                            invisible="approvement_state != 'draft'"/>
+                    <button name="%(kz_requisition_quintuple_approvals.action_vendor_requisition_wizard)d"
+                            string="Extend Requisition"
+                            type="action"
+                            class="btn-primary"
+                            groups="kz_requisition_quintuple_approvals.group_requisition_vendor_extend"
+                            invisible="approvement_state != 'completed'"/>
+                    <button name="button_approve" type="object" string="Department Head Approval"
+                            class="btn-primary"
+                            invisible="approvement_state != 'pending'"
+                            groups="kz_requisition_quintuple_approvals.department_head"
+                            context="{'approve_group':'department_head'}"/>
+                    <button name="button_approve" type="object" string="Budget Controller Approval"
+                            class="btn-primary"
+                            invisible="approvement_state != 'department_head_approval'"
+                            groups="kz_requisition_quintuple_approvals.budget_controller"
+                            context="{'approve_group':'budget_controller'}"/>
+                    <button name="button_approve" type="object" string="Head of Unit Approval" class="btn-primary"
+                            invisible="approvement_state != 'budget_controller_approval'"
+                            groups="kz_requisition_quintuple_approvals.re_head_of_unit"
+                            context="{'approve_group':'re_head_of_unit'}"/>
+                    <button name="button_approve" type="object" string="CFO Approval" class="btn-primary"
+                            invisible="approvement_state != 're_head_of_unit_approval'"
+                            groups="kz_requisition_quintuple_approvals.cfo" context="{'approve_group':'cfo'}"/>
+                    <button name="button_approve" type="object" string="CEO Approval" class="btn-primary"
+                            invisible="approvement_state != 'cfo_approval'"
+                            groups="kz_requisition_quintuple_approvals.re_ceo"
+                            context="{'approve_group':'re_ceo'}"/>
+
+                    <button name="request_stock" type="object" string="Create RFQs" class="btn-primary"
+                            invisible="approvement_state != 'approved' or po_count != 0"/>
+                    <button name="send_mail_to_vendor" type="object" string="Send Email" class="btn-secondary"
+                            invisible="approvement_state not in ['completed', 'approved']"/>
+                    <button name="action_show_budgets" type="object" string="Show Budgets" class="btn-primary"
+                            invisible="not department_ids"/>
+
+                    <button name="return_to_draft" type="object" string="Return for Correction" class="btn-Secondary"
+                            invisible="not show_approve or approvement_state in ['draft', 'approved', 'completed', 'rejected']"/>
+                    <button name="reject_requisition" type="object" string="Reject" class="btn-danger"
+                            invisible="not show_approve or approvement_state in ['draft', 'approved', 'completed', 'rejected']"/>
+
+                    <field name="approvement_state" widget="statusbar" string="state"
+                           statusbar_visible="draft,pending,department_head_approval,budget_controller_approval,re_head_of_unit_approval,cfo_approval,re_ceo_approval"/>
+                    <field name="state" invisible="1"/>
+
+                </header>
+                <div invisible="not budget_warning_message"
+                     groups="kz_requisition_quintuple_approvals.budget_controller,kz_requisition_quintuple_approvals.re_head_of_unit,kz_requisition_quintuple_approvals.cfo,kz_requisition_quintuple_approvals.re_ceo">
+                    <div class="alert alert-warning mb-1" role="alert" invisible="not budget_warning_message">
+                        Warning:
+                        <field name="budget_warning_message"/>
+                    </div>
+                </div>
+            </xpath>
+
+            <xpath expr="//notebook/page[2]" position="replace">
+
+            </xpath>
+            <xpath expr="//button[@name='show_picking']" position="replace">
+
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="original_requisition_id" invisible="1"/>
+                <field name="resubmitted_requisition_id" invisible="1"/>
+                <field name="resubmitted_original_requisition_id" invisible="1"/>
+                <button class="oe_stat_button" type="object" icon="fa-book"
+                        name="action_show_replacement" string="New Version"
+                        invisible="approvement_state != 'rejected' or not replacement_requisition_id"/>
+
+                <button class="oe_stat_button" type="object" icon="fa-book"
+                        name="action_show_original" string="Source Requisition"
+                        invisible="not original_requisition_id"/>
+
+                <button class="oe_stat_button" type="object" icon="fa-plus-square-o" style="width:200px"
+                        name="action_show_resubmitted" string="Resubmitted Requisition"
+                        invisible="not resubmitted_requisition_id">
+                    Extra Budget
+                </button>
+
+                <button class="oe_stat_button" type="object" icon="fa-th-list"
+                        name="action_show_resubmitted_original" string="Original"
+                        invisible="not resubmitted_original_requisition_id">
+                    Original PR
+                </button>
+
+            </xpath>
+
+            <xpath expr="//button[@name='action_show_po']" position="replace">
+                <button invisible="not po_count" class="oe_stat_button" type="object"
+                        name="action_show_po" icon="fa-book">
+                    <div class="o_stat_info">
+                        <field name="po_count"/>
+                        <span class="o_stat_text">Purchases</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='employee_id']" position="after">
+                <field name="type" readonly="approvement_state != 'draft'" required="1"/>
+                <field name="vendor_id"
+                       invisible="type != 'variation'"
+                       required="type == 'variation'"
+                       readonly="approvement_state != 'draft'"/>
+                <field name="purchase_id"
+                       invisible="not vendor_id"
+                       required="vendor_id"
+                       readonly="approvement_state != 'draft'"/>
+                <field name="attacchment_ids" widget="many2many_binary"/>
+
+            </xpath>
+            <xpath expr="//field[@name='employee_id']" position="before">
+                <field name="purchase_vendor_ids" readonly="approvement_state != 'draft'"
+                       string="Suggested Suppliers" widget="many2many_tags"/>
+            </xpath>
+
+            <xpath expr="//field[@name='employee_id']" position="attributes">
+                <attribute name="string">Requester</attribute>
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='requisiton_responsible_id']" position="attributes">
+                <attribute name="string">Buyer</attribute>
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='request_date']" position="attributes">
+                <attribute name="required">1</attribute>
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='receive_date']" position="attributes">
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='date_end']" position="attributes">
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='analytic_account_id']" position="attributes">
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='company_id']" position="attributes">
+                <attribute name="readonly">approvement_state != 'draft'</attribute>
+            </xpath>
+
+            <xpath expr="//field[@name='department_id']" position="replace">
+                <field name="department_id" invisible="1"/>
+                <field name="department_ids" widget="many2many_tags"
+                       readonly="approvement_state != 'draft'"/>
+
+            </xpath>
+            <xpath expr="//field[@name='analytic_account_id']" position="after">
+
+                <field name="create_uid" string="Created by"/>
+                <label for="currency_id" groups="base.group_multi_currency"/>
+                <div name="journal_div" class="d-flex"
+                     groups="base.group_multi_currency">
+                    <div name="in_and_refresh_button_div" groups="base.group_multi_currency"
+                         class="d-flex flex-column mx-3 text-center" style="width: 6ch;">
+                        <field name="expected_currency_rate" invisible="1"/>
+                        <div class="d-flex flex-column justify-content-center flex-grow-1"
+                             invisible="approvement_state != 'draft' or purchase_manual_currency_rate == expected_currency_rate">
+                            <button type="object" name="refresh_currency_rate" icon="fa-refresh"
+                                    title="Refresh currency rate to the invoice date" class="btn btn-link p-0"/>
+                        </div>
+                    </div>
+                    <div name="currency_div" groups="base.group_multi_currency" class="w-100">
+                        <div class="d-flex gap-1">
+                            <field name="currency_id" readonly="approvement_state != 'draft'" class="oe_inline"
+                                   options="{'no_create': True}"
+                                   context="{'search_default_active': 1, 'search_default_inactive': 1}"/>
+                            <widget name="pick_currency_date" update_field="purchase_manual_currency_rate"
+                                    invisible="approvement_state != 'draft' or currency_id == company_currency_id"/>
+                        </div>
+                        <div name="currency_conversion_div" class="d-flex gap-1 text-muted"
+                             invisible="currency_id == company_currency_id">
+                            <span>1</span>
+                            <field name="company_currency_id" readonly="True" options="{'no_open': True}"
+                                   class="w-auto"/>
+                            <span>=</span>
+                            <field name="purchase_manual_currency_rate" digits="[12,6]" readonly="approvement_state != 'draft'"/>
+                            <field name="currency_id" readonly="True" options="{'no_open': True}" class="w-auto"/>
+                        </div>
+                    </div>
+                </div>
+                <!--                <field name="currency_id" string="Currency"-->
+                <!--                       readonly="approvement_state != 'draft'"/>-->
+                <!--                <field name="purchase_manual_currency_rate_active" string="Allow Currency Exchange Rate"-->
+                <!--                       readonly="approvement_state != 'draft'"/>-->
+                <!--                <field name="purchase_manual_currency_rate" string="Exchange Rate"-->
+                <!--                       readonly="approvement_state != 'draft'"-->
+                <!--                       invisible="not purchase_manual_currency_rate_active"/>-->
+                <field name="over_budget_text" string="Text" invisible="1"/>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page name="Attachments" string="Attachments">
+                    <group>
+                        <group>
+                            <field name="shareholders_attacchment_ids" widget="many2many_binary"/>
+                            <field name="board_attacchment_ids" widget="many2many_binary"/>
+                        </group>
+                    </group>
+                </page>
+
+            </xpath>
+        </field>
+    </record>
+
+
+    <!-- Inherit Form View to Modify it -->
+    <record id="requisition_list_form_inherit" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.list.view.inherit.quintuple.approvals</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="inherit_id" ref="material_purchase_requisitions.material_purchase_requisition_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="after">
+                <field name="approvement_state"/>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='department_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

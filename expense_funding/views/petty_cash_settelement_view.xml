@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="expense_funding_settlement_view_form" model="ir.ui.view">
+        <field name="name">expense.funding.settlement.list</field>
+        <field name="model">expense.funding.settlement</field>
+        <field name="arch" type="xml">
+            <list string="Settlements" create="false" edit="true" expand="context.get('expand', False)" multi_edit="1" sample="1">
+                <field name="name"/>
+                <field name="petty_request_id"/>
+                <field name="bill_id"/>
+                <field name="expense_account_id" invisible="1"/>
+                <field name="amount"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_open_expense_funding_settlement" model="ir.actions.act_window">
+        <field name="name">Settlement</field>
+        <field name="res_model">expense.funding.settlement</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'group_by':['petty_request_id'], 'create':False}</field>
+    </record>
+
+    <menuitem id="menu_open_expense_funding_settlement"
+              parent="expense_funding.menu_petty_settlement"
+              action="action_open_expense_funding_settlement"
+              sequence="1"/>
+
+</odoo>

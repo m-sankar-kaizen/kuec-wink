@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    ==========================================================================
+    MODULE CATEGORY: Visa Request
+    ==========================================================================
+    Defines the security category under which all visa request groups will be
+    categorized in the Odoo UI: Settings > Users & Companies > Groups.
+    -->
+    <record id="module_category_visa_request" model="ir.module.category">
+        <field name="name">Visa Request</field>
+        <field name="sequence" eval="1"/>
+    </record>
+
+    <!--
+    ==========================================================================
+    USER GROUPS: Visa Request Access Levels
+    ==========================================================================
+    Defines 3 hierarchical groups for visa request process:
+
+    1. group_base_user_visa_request:
+       - Basic employees submitting their own visa requests.
+
+    2. group_hr_team_visa_request:
+       - HR personnel who manage and approve any request.
+
+    3. group_hr_manager_visa_request:
+       - HR managers with inherited access from HR team.
+    -->
+
+    <!-- Base group: Can create/view only their own records -->
+    <record id="group_base_user_visa_request" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="kaz_employee_reports.module_category_visa_request"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="comment">Base User</field>
+    </record>
+
+    <!-- HR Team: Can view/manage all visa requests -->
+    <record id="group_hr_team_visa_request" model="res.groups">
+        <field name="name">HR Team</field>
+        <field name="category_id" ref="kaz_employee_reports.module_category_visa_request"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_employee_reports.group_base_user_visa_request'))]"/>
+        <field name="comment">HR Team</field>
+    </record>
+
+    <!-- HR Manager: Inherits all HR Team rights -->
+    <record id="group_hr_manager_visa_request" model="res.groups">
+        <field name="name">HR Manager</field>
+        <field name="category_id" ref="kaz_employee_reports.module_category_visa_request"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_employee_reports.group_hr_team_visa_request'))]"/>
+        <field name="comment">HR Manager</field>
+    </record>
+
+    <!--
+    ==========================================================================
+    RECORD RULES: Access to visa.request model
+    ==========================================================================
+
+    1. visa_request_record_rule:
+       - Restricts basic users to only their own visa request records.
+
+    2. visa_request_hr_record_rule:
+       - Allows full access to HR team members for all records.
+
+    3. visa_company_rule:
+       - Ensures company boundary: users can access only requests tied to
+         their company or to global (False) ones.
+    -->
+
+    <!-- Basic users can only access records tied to themselves -->
+    <record id="visa_request_record_rule" model="ir.rule">
+        <field name="name">Visa Request User Rule</field>
+        <field name="model_id" ref="model_visa_request"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_base_user_visa_request'))]"/>
+        <field name="domain_force">[('name.user_id', '=', user.id)]</field>
+    </record>
+
+    <!-- HR users can access and manage all visa request records -->
+    <record id="visa_request_hr_record_rule" model="ir.rule">
+        <field name="name">Visa Request HR Rule</field>
+        <field name="model_id" ref="model_visa_request"/>
+        <field name="groups" eval="[Command.link(ref('kaz_employee_reports.group_hr_team_visa_request'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <!-- Company-wide access: ensures users operate within their company scope -->
+    <record id="visa_company_rule" model="ir.rule">
+        <field name="name">Visa: Company</field>
+        <field name="model_id" ref="model_visa_request"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+</odoo>

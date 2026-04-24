@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="no_access_tender_view_template" name="Tenders No Access">
+        <t t-call="website.layout">
+            <div class="container py-5 text-center" id="tender_view">
+                <div class="card shadow-lg p-4 rounded-4 mx-auto" style="max-width: 600px;">
+                    <div class="card-body">
+                        <i class="fa fa-lock fa-4x text-warning mb-3"/>
+                        <h2 class="mb-3 text-danger">Access Denied</h2>
+                        <p class="lead">
+                            You must be logged in to view available tenders.
+                        </p>
+                        <a href="/web/login" class="btn btn-primary mt-3">
+                            <i class="fa fa-sign-in-alt"/>Login Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

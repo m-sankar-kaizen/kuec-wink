@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+        Record ID: mail_po_notify
+        Model: mail.activity.type
+
+        Purpose:
+        This record defines a custom activity type in the mail module, used for scheduling activities or
+        notifying users on specific records (here, `purchase.order`).
+
+        Use Case:
+        - This is intended to be used in workflow automation or manual scheduling when a QFQ (Quotation for Quotation)
+          approval is required on a Purchase Order.
+        - It appears as an activity in the chatter (mail.activity) for Purchase Orders.
+
+        Fields:
+        - name: Display name of the activity (shown in the chatter and activity scheduling).
+        - icon: Font Awesome icon representing the activity.
+        - res_model: Model where this activity type can be used (purchase.order).
+    -->
+
+    <record id="mail_po_notify" model="mail.activity.type">
+        <field name="name">QFQ Approval Required</field>
+        <field name="icon">fa-file-text-o</field>
+        <field name="res_model">purchase.order</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,9 @@
+.gradient-rating-bk {
+    background: linear-gradient(
+        to right,
+        #ef4444 0%,
+        #f97316 33%,
+        #eab308 66%,
+        #22c55e 100%
+    );
+}

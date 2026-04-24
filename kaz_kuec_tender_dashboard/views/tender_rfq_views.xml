@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="tender_rfq_tree_view_inherit" model="ir.ui.view">
+        <field name="name">tender.rfq.view.list.inherit</field>
+        <field name="model">tender.rfq</field>
+        <field name="priority">15</field>
+        <field name="inherit_id" ref="kaz_vendor_management.view_tender_rfq_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="class">o_tender_rfq</attribute>
+                <attribute name="js_class">tender_rfq_dashboard_list</attribute>
+                <attribute name="sample">1</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

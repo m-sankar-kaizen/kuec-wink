@@ -1,0 +1,991 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <template id="custom_header">
+        <style>
+            .header {
+            margin-bottom: 25px !important;
+            width: 100%;
+            display: flex;
+            align-items: center; /* Vertically center items */
+            padding: 0 10px;
+            box-sizing: border-box; /* Ensure padding is included in width calculation */
+            }
+            .logo {
+            max-height: 60px; /* Adjust logo size */
+            margin-right: 10px; /* Space between logo and text */
+            }
+            .center-text {
+            flex: 1; /* Take up remaining space between logo and date */
+            text-align: center; /* Center the text */
+            }
+            .right-text {
+            margin-left: 10px; /* Space between text and date */
+            text-align: right; /* Align date to the right */
+            }
+        </style>
+        <div class="header mb8">
+            <div class="logo">
+                <img t-att-src="'/ank_payslip_report/static/src/img/logo.jpeg'"
+                     style="max-height: 100px; margin-top: 15px"
+                     alt="Static Logo"/>
+            </div>
+
+        </div>
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <template id="custom_header_company">
+        <style>
+            .header {
+            margin-bottom: 25px !important;
+            width: 100%;
+            display: flex;
+            align-items: center; /* Vertically center items */
+            padding: 0 10px;
+            box-sizing: border-box; /* Ensure padding is included in width calculation */
+            }
+            .logo {
+            max-height: 60px; /* Adjust logo size */
+            margin-right: 10px; /* Space between logo and text */
+            }
+            .center-text {
+            flex: 1; /* Take up remaining space between logo and date */
+            text-align: center; /* Center the text */
+            }
+            .right-text {
+            margin-left: 10px; /* Space between text and date */
+            text-align: right; /* Align date to the right */
+            }
+        </style>
+        <div class="header mb8">
+            <div class="logo">
+                <img t-if="doc.company_id.logo" t-att-src="image_data_uri(doc.company_id.logo)"
+                     style="max-height: 100px; margin-top: 15px" alt="Static Logo"/>
+            </div>
+
+        </div>
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <template id="ank_customized_payslip_report_template_company">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="ank_payslip_report.custom_header_company">
+                    <style>
+                        .header {
+                        margin-bottom: 25px !important;
+                        width: 100%;
+                        display: flex;
+                        align-items: center; /* Vertically center items */
+                        padding: 0 10px;
+                        box-sizing: border-box; /* Ensure padding is included in width calculation */
+                        }
+                        .logo {
+                        max-height: 60px; /* Adjust logo size */
+                        margin-right: 10px; /* Space between logo and text */
+                        }
+                        .center-text {
+                        flex: 1; /* Take up remaining space between logo and date */
+                        text-align: center; /* Center the text */
+                        }
+                        .right-text {
+                        margin-left: 10px; /* Space between text and date */
+                        text-align: right; /* Align date to the right */
+                        }
+
+
+                        .table-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        }
+
+                        .table-wrapper table {
+                        flex: 1;
+                        }
+
+                        table {
+                        width: 100%;
+                        border: 1px solid black;
+                        border-collapse: collapse;
+                        }
+
+                        .total-text {
+                        font-size: 13px;
+                        }
+                        .header-text {
+                        font-size: 14px;
+                        }
+
+                        /* Set font size and reduce padding for table headers */
+                        th {
+                        border: 1px solid black;
+                        padding: 2px; /* Further reduced padding for table headers */
+                        font-size: 12px;
+                        background-color: #d4d4d7;
+                        }
+
+                        /* Set font size and reduce padding for table data */
+                        td {
+                        border: 1px solid black;
+                        padding: 2px; /* Further reduced padding for table data */
+                        font-size: 12px;
+                        }
+
+                        /* General font size for all elements */
+                        body, .container, .body, .section, .row, .bill_section, .invoice_section, .custom-header, h6
+                        {
+                        font-size: 12px;
+                        margin: 0; /* Remove default margin */
+                        padding: 0; /* Remove default padding */
+                        }
+
+                        /* Style for the two side-by-side tables */
+                        .table-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 5px; /* Further reduced margin between rows */
+                        margin-bottom: 5px; /* Further reduced margin between rows */
+                        width: 100%;
+                        }
+
+                        .left-table, .right-table {
+                        flex: 1; /* Allow both tables to take equal space */
+                        }
+
+                        /* Reduce margin between the two tables */
+                        .left-table {
+                        margin-right: 1px; /* Further adjusted the space between the tables */
+                        }
+
+                        .right-table {
+                        margin-left: 2px; /* Further adjusted the space between the tables */
+                        }
+
+                        .center-text {
+                        flex: 1; /* Take up remaining space between logo and date */
+                        text-align: center; /* Center the text */
+                        }
+
+                        .right-text {
+                        margin-left: 10px; /* Space between text and date */
+                        text-align: right; /* Align date to the right */
+                        }
+
+                        .right-align {
+                        text-align: right;
+                        }
+
+                        /* Remove margin from section rows */
+                        .section.row {
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        }
+
+                        /* Remove unnecessary top and bottom margins from tables */
+                        .container {
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        }
+
+                        /* Specific adjustments for reducing space between 'Summary of Payment' and 'Earnings'
+                        tables */
+                        .container.mt-5 {
+                        margin-top: 0 !important; /* Remove top margin to reduce space */
+                        }
+
+                        .container.mt-4 {
+                        margin-top: 0 !important; /* Remove top margin to reduce space */
+                        }
+
+                        .row.table-row {
+                        margin-top: 0 !important; /* Remove top margin to reduce space */
+                        }
+
+                        .row {
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        }
+                    </style>
+
+                    <div>
+                        <div class="center-text">
+                            <strong class="header-text">PAYROLL DETAILS</strong>
+                        </div>
+                        <div class="right-text">
+                            <t t-esc="datetime.datetime.now().strftime('%d-%m-%Y')"/>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information Section -->
+                    <div class="container">
+                        <div class="body custom-header">
+                            <div class="section row mt-5">
+                                <div class="bill_section col-6">
+                                    <h6>
+                                        <strong class="total-text">Personal Information</strong>
+                                    </h6>
+                                    <h6>
+                                        <span>Full Name :</span>
+                                        <span t-esc="doc.employee_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Employee Number :</span>
+                                        <span t-esc="doc.employee_id.ku_number"/>
+                                    </h6>
+                                    <h6>
+                                        <spann>Emirates ID :</spann>
+                                        <span t-esc="doc.employee_id.emirates"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Nationality :</span>
+                                        <span t-esc="doc.employee_id.country_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Organization :</span>
+                                        <span t-esc="doc.company_id.name"/>
+                                    </h6>
+                                </div>
+                                <div class="invoice_section col-6">
+                                    <h6>
+                                        <span>Position :</span>
+                                        <span t-esc="doc.employee_id.job_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Grade :</span>
+                                        <span t-esc="doc.employee_id.grade_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Location :</span>
+                                        <span t-esc="doc.employee_id.work_location_id.name"/>
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payroll Information Section -->
+                    <div class="container mt-4">
+                        <div class="row">
+                            <div class="col-12 custom-header">
+                                <h6>
+                                    <strong class="total-text">Payroll Information</strong>
+                                </h6>
+                                <h6>
+                                    <span>Payroll :</span>
+                                    <span t-esc="doc.payslip_run_id.name"/>
+                                </h6>
+                                <h6>
+                                    <span>Payroll Start Date :</span>
+                                    <span t-esc="doc.date_from"/>
+                                </h6>
+                                <h6>
+                                    <span>Payroll End Date :</span>
+                                    <span t-esc="doc.date_to"/>
+                                </h6>
+                                <h6>
+                                    <span>Payment Date :</span>
+                                    <span t-esc="doc.move_id.date if doc.move_id.state == 'posted' else ''"/>
+                                </h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary of Payment Section -->
+                    <div class="container mt-5">
+                        <strong class="total-text">Summary of Payment</strong>
+                        <div class="row">
+                            <table class="table table-sm o_main_table" name="invoice_line_table">
+                                <thead>
+                                    <tr>
+                                        <th name="th_description" class="text-center">
+                                            <span>Total Earnings</span>
+                                        </th>
+                                        <th name="th_quantity" class="text-center">
+                                            <span>Total Deductions</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Net Pay</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="invoice_tbody">
+                                    <tr t-att-class="'bg-200 fw-bold o_line_section'">
+
+                                        <td>
+                                            <t t-set="total_gross" t-value="0"/>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total and (line.category_id.code == 'BASIC' or line.category_id.code == 'ALW')">
+                                                    <t t-set="total_gross" t-value="total_gross + line.total"/>
+                                                </t>
+                                            </t>
+                                            <span t-esc="total_gross"
+                                                  t-options="{&quot;widget&quot;: &quot;float&quot;, &quot;precision&quot;: 2}"/>
+                                            <span t-esc="doc.currency_id.name"/>
+                                        </td>
+
+
+                                        <td>
+                                            <t t-set="total_deductions" t-value="0"/>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and (line.category_id.code == 'DED')">
+                                                    <t t-set="total_deductions"
+                                                       t-value="total_deductions + line.total"/>
+                                                </t>
+                                            </t>
+                                            <strong t-esc="total_deductions"
+                                                    t-options="{&quot;widget&quot;: &quot;float&quot;, &quot;precision&quot;: 2}"/>
+                                            <strong t-esc="doc.currency_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and line.category_id.code == 'NET'">
+                                                    <strong t-field="line.total"/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- New Row with Two Tables -->
+                    <div class="container mt-5">
+                        <div class="row table-row">
+                            <!-- Left Table -->
+                            <div class="col-6 left-table">
+                                <h6>
+                                    <strong class="total-text">Earnings</strong>
+                                </h6> <!-- Added Earnings header -->
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Iterate through lines and display them -->
+                                        <t t-foreach="doc.line_ids" t-as="line">
+                                            <t t-if="line.total != 0 and (line.category_id.code == 'BASIC' or line.category_id.code == 'ALW')">
+                                                <tr>
+                                                    <td>
+                                                        <span t-field="line.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.total"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td>
+                                                <strong class="total-text">Total</strong>
+                                            </td>
+                                            <td>
+                                                <t t-set="total_amount" t-value="0"/>
+                                                <t t-foreach="doc.line_ids" t-as="line">
+                                                    <t t-if="line.total and (line.category_id.code == 'BASIC' or line.category_id.code == 'ALW')">
+                                                        <t t-set="total_amount" t-value="total_amount + line.total"/>
+                                                    </t>
+                                                </t>
+                                                <strong t-esc="total_amount"
+                                                        t-options="{&quot;widget&quot;: &quot;float&quot;, &quot;precision&quot;: 2}"/>
+                                                <strong t-esc="doc.currency_id.name"/>
+                                            </td>
+
+
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Right Table -->
+                            <div class="col-6 right-table">
+                                <h6>
+                                    <strong class="total-text">Deductions</strong>
+                                </h6> <!-- Added Deductions header -->
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-set="total_deductions" t-value="0"/>
+                                        <t t-foreach="doc.line_ids" t-as="line">
+                                            <t t-if="line.total != 0 and (line.category_id.code == 'DED')">
+                                                <tr>
+                                                    <td>
+                                                        <span t-field="line.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.total"/>
+                                                    </td>
+                                                </tr>
+                                                <t t-set="total_deductions" t-value="total_deductions + line.total"/>
+                                            </t>
+                                        </t>
+                                    </tbody>
+                                    <t t-set="total_deductions" t-value="0"/>
+                                    <t t-foreach="doc.line_ids" t-as="line">
+                                        <t t-if="line.total != 0 and (line.category_id.code == 'DED')">
+                                            <t t-set="total_deductions" t-value="total_deductions + line.total"/>
+                                        </t>
+                                    </t>
+                                    <t t-if="total_deductions != 0">
+                                        <tfoot>
+                                            <tr>
+                                                <td>
+                                                    <strong class="total-text">Total</strong>
+                                                </td>
+                                                <td>
+                                                    <strong t-esc="total_deductions"
+                                                            t-options="{&quot;widget&quot;: &quot;float&quot;, &quot;precision&quot;: 2}"/>
+                                                    <strong t-esc="doc.currency_id.name"/>
+
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </t>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="container mt-2">
+                        <strong class="total-text">Payment Information</strong>
+                        <div class="row">
+
+                            <table class="table table-sm o_main_table" name="invoice_line_table">
+                                <thead>
+                                    <tr>
+                                        <th name="th_description" class="text-center">
+                                            <span>Method</span>
+                                        </th>
+                                        <th name="th_quantity" class="text-center">
+                                            <span>Bank Name</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Account Number</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Amount</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="invoice_tbody">
+                                    <tr>
+                                        <td>
+                                            <span>AE Direct Deposit AED</span>
+                                        </td>
+                                        <td>
+                                            <span t-field="doc.employee_id.bank_name_id.name"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="doc.employee_id.iban_num"/>
+                                        </td>
+                                        <td>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and line.category_id.code == 'NET'">
+                                                    <strong t-field="line.total"/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right-align" colspan="3">
+                                            <strong class="total-text">Total</strong>
+                                        </td>
+                                        <td>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and line.category_id.code == 'NET'">
+                                                    <strong t-field="line.total"/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="ank_customized_payslip_report_template">
+        <t t-call="web.html_container">
+            <t t-call="ank_payslip_report.custom_header">
+                <t t-foreach="docs" t-as="doc">
+
+                    <style>
+                        .table-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        }
+
+                        .table-wrapper table {
+                        flex: 1;
+                        }
+
+                        table {
+                        width: 100%;
+                        border: 1px solid black;
+                        border-collapse: collapse;
+                        }
+
+                        .total-text {
+                        font-size: 13px;
+                        }
+                        .header-text {
+                        font-size: 14px;
+                        }
+
+                        /* Set font size and reduce padding for table headers */
+                        th {
+                        border: 1px solid black;
+                        padding: 2px; /* Further reduced padding for table headers */
+                        font-size: 12px;
+                        background-color: #d4d4d7;
+                        }
+
+                        /* Set font size and reduce padding for table data */
+                        td {
+                        border: 1px solid black;
+                        padding: 2px; /* Further reduced padding for table data */
+                        font-size: 12px;
+                        }
+
+                        /* General font size for all elements */
+                        body, .container, .body, .section, .row, .bill_section, .invoice_section, .custom-header, h6
+                        {
+                        font-size: 12px;
+                        margin: 0; /* Remove default margin */
+                        padding: 0; /* Remove default padding */
+                        }
+
+                        /* Style for the two side-by-side tables */
+                        .table-row {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 5px; /* Further reduced margin between rows */
+                        margin-bottom: 5px; /* Further reduced margin between rows */
+                        width: 100%;
+                        }
+
+                        .left-table, .right-table {
+                        flex: 1; /* Allow both tables to take equal space */
+                        }
+
+                        /* Reduce margin between the two tables */
+                        .left-table {
+                        margin-right: 1px; /* Further adjusted the space between the tables */
+                        }
+
+                        .right-table {
+                        margin-left: 2px; /* Further adjusted the space between the tables */
+                        }
+
+                        .center-text {
+                        flex: 1; /* Take up remaining space between logo and date */
+                        text-align: center; /* Center the text */
+                        }
+
+                        .right-text {
+                        margin-left: 10px; /* Space between text and date */
+                        text-align: right; /* Align date to the right */
+                        }
+
+                        .right-align {
+                        text-align: right;
+                        }
+
+                        /* Remove margin from section rows */
+                        .section.row {
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        }
+
+                        /* Remove unnecessary top and bottom margins from tables */
+                        .container {
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        }
+
+                        /* Specific adjustments for reducing space between 'Summary of Payment' and 'Earnings'
+                        tables */
+                        .container.mt-5 {
+                        margin-top: 0 !important; /* Remove top margin to reduce space */
+                        }
+
+                        .container.mt-4 {
+                        margin-top: 0 !important; /* Remove top margin to reduce space */
+                        }
+
+                        .row.table-row {
+                        margin-top: 0 !important; /* Remove top margin to reduce space */
+                        }
+
+                        .row {
+                        margin-top: 0;
+                        margin-bottom: 0;
+                        }
+                    </style>
+
+
+                    <div>
+                        <div class="center-text">
+                            <strong class="header-text">PAYROLL DETAILS</strong>
+                        </div>
+                        <div class="right-text">
+                            <t t-esc="datetime.datetime.now().strftime('%d-%m-%Y')"/>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information Section -->
+                    <div class="container">
+                        <div class="body custom-header">
+                            <div class="section row mt-5">
+                                <div class="bill_section col-6">
+                                    <h6>
+                                        <strong class="total-text">Personal Information</strong>
+                                    </h6>
+                                    <h6>
+                                        <span>Full Name :</span>
+                                        <span t-esc="doc.employee_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Employee Number :</span>
+                                        <span t-esc="doc.employee_id.ku_number"/>
+                                    </h6>
+                                    <h6>
+                                        <spann>Emirates ID :</spann>
+                                        <span t-esc="doc.employee_id.emirates"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Nationality :</span>
+                                        <span t-esc="doc.employee_id.country_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Organization :</span>
+                                        <span t-esc="doc.company_id.name"/>
+                                    </h6>
+                                </div>
+                                <div class="invoice_section col-6">
+                                    <h6>
+                                        <span>Position :</span>
+                                        <span t-esc="doc.employee_id.job_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Grade :</span>
+                                        <span t-esc="doc.employee_id.grade_id.name"/>
+                                    </h6>
+                                    <h6>
+                                        <span>Location :</span>
+                                        <span t-esc="doc.employee_id.work_location_id.name"/>
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payroll Information Section -->
+                    <div class="container mt-4">
+                        <div class="row">
+                            <div class="col-12 custom-header">
+                                <h6>
+                                    <strong class="total-text">Payroll Information</strong>
+                                </h6>
+                                <h6>
+                                    <span>Payroll :</span>
+                                    <span t-esc="doc.payslip_run_id.name"/>
+                                </h6>
+                                <h6>
+                                    <span>Payroll Start Date :</span>
+                                    <span t-esc="doc.date_from"/>
+                                </h6>
+                                <h6>
+                                    <span>Payroll End Date :</span>
+                                    <span t-esc="doc.date_to"/>
+                                </h6>
+                                <h6>
+                                    <span>Payment Date :</span>
+                                    <span t-esc="doc.move_id.date if doc.move_id.state == 'posted' else ''"/>
+                                </h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary of Payment Section -->
+                    <div class="container mt-5">
+                        <strong class="total-text">Summary of Payment</strong>
+                        <div class="row">
+                            <table class="table table-sm o_main_table" name="invoice_line_table">
+                                <thead>
+                                    <tr>
+                                        <th name="th_description" class="text-center">
+                                            <span>Total Earnings</span>
+                                        </th>
+                                        <th name="th_quantity" class="text-center">
+                                            <span>Total Deductions</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Net Pay</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="invoice_tbody">
+                                    <tr t-att-class="'bg-200 fw-bold o_line_section'">
+
+                                        <td>
+                                            <t t-set="total_gross" t-value="0"/>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total and (line.category_id.code == 'BASIC' or line.category_id.code == 'ALW')">
+                                                    <t t-set="total_gross" t-value="total_gross + line.total"/>
+                                                </t>
+                                            </t>
+                                            <span t-esc="total_gross" t-options='{"widget": "float", "precision": 2}'/>
+                                            <span t-esc="doc.currency_id.name"/>
+                                        </td>
+
+
+                                        <td>
+                                            <t t-set="total_deductions" t-value="0"/>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and (line.category_id.code == 'DED')">
+                                                    <t t-set="total_deductions"
+                                                       t-value="total_deductions + line.total"/>
+                                                </t>
+                                            </t>
+                                            <strong t-esc="total_deductions"
+                                                    t-options='{"widget": "float", "precision": 2}'/>
+                                            <strong t-esc="doc.currency_id.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and line.category_id.code == 'NET'">
+                                                    <strong t-field="line.total"/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- New Row with Two Tables -->
+                    <div class="container mt-5">
+                        <div class="row table-row">
+                            <!-- Left Table -->
+                            <div class="col-6 left-table">
+                                <h6>
+                                    <strong class="total-text">Earnings</strong>
+                                </h6> <!-- Added Earnings header -->
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Iterate through lines and display them -->
+                                        <t t-foreach="doc.line_ids" t-as="line">
+                                            <t t-if="line.total != 0 and (line.category_id.code == 'BASIC' or line.category_id.code == 'ALW')">
+                                                <tr>
+                                                    <td>
+                                                        <span t-field="line.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.total"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </t>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td>
+                                                <strong class="total-text">Total</strong>
+                                            </td>
+                                            <td>
+                                                <t t-set="total_amount" t-value="0"/>
+                                                <t t-foreach="doc.line_ids" t-as="line">
+                                                    <t t-if="line.total and (line.category_id.code == 'BASIC' or line.category_id.code == 'ALW')">
+                                                        <t t-set="total_amount" t-value="total_amount + line.total"/>
+                                                    </t>
+                                                </t>
+                                                <strong t-esc="total_amount"
+                                                        t-options='{"widget": "float", "precision": 2}'/>
+                                                <strong t-esc="doc.currency_id.name"/>
+                                            </td>
+
+
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Right Table -->
+                            <div class="col-6 right-table">
+                                <h6>
+                                    <strong class="total-text">Deductions</strong>
+                                </h6> <!-- Added Deductions header -->
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-set="total_deductions" t-value="0"/>
+                                        <t t-foreach="doc.line_ids" t-as="line">
+                                            <t t-if="line.total != 0 and (line.category_id.code == 'DED')">
+                                                <tr>
+                                                    <td>
+                                                        <span t-field="line.name"/>
+                                                    </td>
+                                                    <td>
+                                                        <span t-field="line.total"/>
+                                                    </td>
+                                                </tr>
+                                                <t t-set="total_deductions"
+                                                   t-value="total_deductions + line.total"/>
+                                            </t>
+                                        </t>
+                                    </tbody>
+                                    <t t-set="total_deductions" t-value="0"/>
+                                    <t t-foreach="doc.line_ids" t-as="line">
+                                        <t t-if="line.total != 0 and (line.category_id.code == 'DED')">
+                                            <t t-set="total_deductions" t-value="total_deductions + line.total"/>
+                                        </t>
+                                    </t>
+                                    <t t-if="total_deductions != 0">
+                                        <tfoot>
+                                            <tr>
+                                                <td>
+                                                    <strong class="total-text">Total</strong>
+                                                </td>
+                                                <td>
+                                                    <strong t-esc="total_deductions"
+                                                            t-options='{"widget": "float", "precision": 2}'/>
+                                                    <strong t-esc="doc.currency_id.name"/>
+
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </t>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="container mt-5">
+                        <strong class="total-text">Payment Information</strong>
+                        <div class="row">
+
+                            <table class="table table-sm o_main_table" name="invoice_line_table">
+                                <thead>
+                                    <tr>
+                                        <th name="th_description" class="text-center">
+                                            <span>Method</span>
+                                        </th>
+                                        <th name="th_quantity" class="text-center">
+                                            <span>Bank Name</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Account Number</span>
+                                        </th>
+                                        <th name="th_priceunit" class="text-center">
+                                            <span>Amount</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="invoice_tbody">
+                                    <tr>
+                                        <td>
+                                            <span>AE Direct Deposit AED</span>
+                                        </td>
+                                        <td>
+                                            <span t-field="doc.employee_id.bank_name_id.name"/>
+                                        </td>
+                                        <td>
+                                            <span t-field="doc.employee_id.iban_num"/>
+                                        </td>
+                                        <td>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and line.category_id.code == 'NET'">
+                                                    <strong t-field="line.total"/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="right-align" colspan="3">
+                                            <strong class="total-text">Total</strong>
+                                        </td>
+                                        <td>
+                                            <t t-foreach="doc.line_ids" t-as="line">
+                                                <t t-if="line.total != 0 and line.category_id.code == 'NET'">
+                                                    <strong t-field="line.total"/>
+                                                </t>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+     <!--
+        Report Action: Ank Payslip
+        This report generates a QWeb PDF payslip using the custom template
+        'ank_customized_payslip_report_template'. It is bound to the hr.payslip model.
+    -->
+    <record id="ank_customized_payslip_report" model="ir.actions.report">
+        <field name="name">Ankabut Payslip</field> <!-- Report name shown to user -->
+        <field name="model">hr.payslip</field> <!-- The model the report is attached to -->
+        <field name="report_type">qweb-pdf</field> <!-- Output format: PDF -->
+        <field name="report_name">ank_payslip_report.ank_customized_payslip_report_template</field> <!-- QWeb template used -->
+        <field name="report_file">ank_payslip_report.ank_customized_payslip_report_template</field> <!-- File name pattern -->
+        <field name="print_report_name">"Payslip"</field> <!-- Display name for download -->
+        <field name="binding_model_id" ref="hr_payroll.model_hr_payslip"/> <!-- Bind to hr.payslip model -->
+        <field name="binding_type">report</field> <!-- Type of binding -->
+    </record>
+
+    <!--
+        Report Action: Ank Payslip With Company Logo
+        This is a variant of the payslip report which includes the company logo.
+        Uses the 'ank_customized_payslip_report_template_company' template.
+    -->
+    <record id="ank_customized_payslip_report_ank" model="ir.actions.report">
+        <field name="name">Ankabut Payslip Company Logo</field> <!-- User-facing report name -->
+        <field name="model">hr.payslip</field> <!-- Model to which this report belongs -->
+        <field name="report_type">qweb-pdf</field> <!-- PDF output -->
+        <field name="report_name">ank_payslip_report.ank_customized_payslip_report_template_company</field>
+        <field name="report_file">ank_payslip_report.ank_customized_payslip_report_template_company</field>
+        <field name="print_report_name">"Payslip"</field> <!-- Download filename or name on print -->
+        <field name="binding_model_id" ref="hr_payroll.model_hr_payslip"/> <!-- Model linkage -->
+        <field name="binding_type">report</field> <!-- Tied as a report -->
+    </record>
+
+</odoo>
+

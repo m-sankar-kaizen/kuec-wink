@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Wizard Form View -->
+    <record id="view_contact_reject_reason_wizard" model="ir.ui.view">
+        <field name="name">contact.reject.reason.wizard.form</field>
+        <field name="model">contact.reject.reason</field>
+        <field name="arch" type="xml">
+            <form string="Reject Contact" create="false" edit="false">
+                <group>
+                    <field name="partner_id" invisible="1"/>
+                    <field name="reason" placeholder="Enter rejection reason..." required="1"/>
+                </group>
+                <footer>
+                    <button string="Reject" type="object" name="action_reject_contact" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

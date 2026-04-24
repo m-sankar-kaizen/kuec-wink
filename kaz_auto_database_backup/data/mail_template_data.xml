@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <!-- ============================================================
+         Email Template: Database Backup - Success Notification
+         ============================================================
+         This email is triggered when a scheduled database backup
+         is successfully completed. It provides:
+            - DB Name
+            - Destination (Local, Cloud, etc.)
+            - Backup path (if applicable)
+            - Format & file name
+    -->
+    <record id="mail_template_data_db_backup_successful" model="mail.template">
+        <field name="name">Database Backup: Notification Successful</field>
+        <field name="model_id" ref="kaz_auto_database_backup.model_db_backup_configure"/>
+        <field name="subject">Database Backup Successful: {{ object.db_name }}</field>
+        <field name="email_to">{{ object.user_id.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px;">
+                    <span>
+                        Dear<t t-out="object.user_id.name"/>,
+                    </span>
+                    <br/>
+                    <br/>
+                    <span style="margin-top: 8px;">
+                        Backup of the database
+                        <i>
+                            <t t-out="object.db_name"/>
+                        </i>
+                        has been successfully generated and stored to:
+                        <!-- Destination display -->
+                        <t t-if="object.backup_destination == 'local'">
+                            <i>Local</i>
+                        </t>
+                        <t t-elif="object.backup_destination == 'google_drive'">
+                            <i>Google Drive</i>
+                        </t>
+                        <t t-elif="object.backup_destination == 'ftp'">
+                            <i>FTP Server</i>
+                        </t>
+                        <t t-elif="object.backup_destination == 'sftp'">
+                            <i>SFTP Server</i>
+                        </t>
+                        <t t-elif="object.backup_destination == 'dropbox'">
+                            <i>Dropbox</i>
+                        </t>
+                        <t t-elif="object.backup_destination == 'onedrive'">
+                            <i>Onedrive</i>
+                        </t>
+                        <t t-elif="object.backup_destination == 'next_cloud'">
+                            <i>NextCloud</i>
+                        </t>
+                        <t t-elif="object.backup_destination == 'amazon_s3'">
+                            <i>Amazon S3</i>
+                        </t>
+
+                        <br/>
+                        <br/>
+                        <b>Database Name:</b>
+                        <t t-out="object.db_name"/>
+                        <br/>
+                        <b>Destination:</b>
+                        <t t-if="object.backup_destination == 'local'">Local</t>
+                        <t t-elif="object.backup_destination == 'google_drive'">Google Drive</t>
+                        <t t-elif="object.backup_destination == 'ftp'">FTP Server</t>
+                        <t t-elif="object.backup_destination == 'sftp'">SFTP Server</t>
+                        <t t-elif="object.backup_destination == 'dropbox'">Dropbox</t>
+                        <t t-elif="object.backup_destination == 'onedrive'">Onedrive</t>
+                        <t t-elif="object.backup_destination == 'next_cloud'">NextCloud</t>
+                        <t t-elif="object.backup_destination == 'amazon_s3'">Amazon S3</t>
+
+                        <!-- Conditional backup path if applicable -->
+                        <t t-if="object.backup_destination in ('local', 'ftp', 'sftp', 'dropbox', 'next_cloud', 'amazon_s3')">
+                            <br/>
+                            <b>Backup Path:</b>
+                            <t t-if="object.backup_destination == 'local'">
+                                <t t-out="object.backup_path"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'ftp'">
+                                <t t-out="object.ftp_path"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'sftp'">
+                                <t t-out="object.sftp_path"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'dropbox'">
+                                <t t-out="object.dropbox_folder"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'next_cloud'">
+                                <t t-out="object.nextcloud_folder_key"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'amazon_s3'">
+                                <t t-out="object.aws_folder_name"/>
+                            </t>
+                        </t>
+
+                        <br/>
+                        <b>Backup Type:</b>
+                        <t t-out="object.backup_format"/>
+                        <br/>
+                        <b>Backup FileName:</b>
+                        <t t-out="object.backup_filename"/>
+                    </span>
+                </p>
+            </div>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         Email Template: Database Backup - Failure Notification
+         ============================================================
+         This email is triggered when a scheduled database backup fails.
+         It provides:
+            - DB Name
+            - Destination & path (if relevant)
+            - Backup format
+            - Exception message
+    -->
+    <record id="mail_template_data_db_backup_failed" model="mail.template">
+        <field name="name">Database Backup: Notification Failed</field>
+        <field name="model_id" ref="kaz_auto_database_backup.model_db_backup_configure"/>
+        <field name="subject">Database Backup Failed: {{ object.db_name }}</field>
+        <field name="email_to">{{ object.user_id.email_formatted }}</field>
+        <field name="body_html" type="html">
+            <div style="margin: 0px; padding: 0px;">
+                <p style="margin: 0px;">
+                    <span>
+                        Dear<t t-out="object.user_id.name"/>,
+                    </span>
+                    <br/>
+                    <br/>
+                    <span style="margin-top: 8px;">
+                        Backup generation for the database
+                        <i>
+                            <t t-out="object.db_name"/>
+                        </i>
+                        has <b>failed</b>.
+                        <br/>
+                        <br/>
+                        <b>Database Name:</b>
+                        <t t-out="object.db_name"/>
+                        <br/>
+                        <b>Destination:</b>
+                        <t t-if="object.backup_destination == 'local'">Local</t>
+                        <t t-elif="object.backup_destination == 'google_drive'">Google Drive</t>
+                        <t t-elif="object.backup_destination == 'ftp'">FTP Server</t>
+                        <t t-elif="object.backup_destination == 'sftp'">SFTP Server</t>
+                        <t t-elif="object.backup_destination == 'dropbox'">Dropbox</t>
+                        <t t-elif="object.backup_destination == 'onedrive'">Onedrive</t>
+                        <t t-elif="object.backup_destination == 'next_cloud'">NextCloud</t>
+                        <t t-elif="object.backup_destination == 'amazon_s3'">Amazon S3</t>
+
+                        <!-- Show path for applicable destinations -->
+                        <t t-if="object.backup_destination in ('local', 'ftp', 'sftp', 'dropbox','next_cloud','amazon_s3')">
+                            <br/>
+                            <b>Backup Path:</b>
+                            <t t-if="object.backup_destination == 'local'">
+                                <t t-out="object.backup_path"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'ftp'">
+                                <t t-out="object.ftp_path"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'sftp'">
+                                <t t-out="object.sftp_path"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'dropbox'">
+                                <t t-out="object.dropbox_folder"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'next_cloud'">
+                                <t t-out="object.nextcloud_folder_key"/>
+                            </t>
+                            <t t-elif="object.backup_destination == 'amazon_s3'">
+                                <t t-out="object.aws_folder_name"/>
+                            </t>
+                        </t>
+
+                        <br/>
+                        <b>Backup Type:</b>
+                        <t t-out="object.backup_format"/>
+                        <br/>
+                        <br/>
+                        <b>Error Message:</b>
+                        <br/>
+                        <i>
+                            <t t-out="object.generated_exception"/>
+                        </i>
+                    </span>
+                </p>
+            </div>
+        </field>
+    </record>
+
+</odoo>

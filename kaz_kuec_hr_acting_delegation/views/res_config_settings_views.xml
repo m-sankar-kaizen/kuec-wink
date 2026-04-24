@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_config_settings_acting" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.acting</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr_holidays.res_config_settings_view_form_holidays"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='time_off']" position="inside">
+                <div class="app_settings_block" data-string="Acting Delegation Settings" string="Acting Delegation Settings">
+                    <h2>Acting Delegation Settings</h2>
+                    <group>
+                        <field name="acting_threshold_days"/>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

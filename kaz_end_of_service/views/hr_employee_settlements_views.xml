@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!--
+        Tree View: hr.employee.settlements
+        Purpose:
+        Provides a compact list view of employee settlement records for HR users.
+        Columns shown:
+        - Internal Name (Sequence)
+        - Employee
+        - Type of Separation (Resignation, Terminate, Retirement)
+        - Workflow State (Draft, Confirmed, Approved, etc.)
+    -->
+    <record id="hr_employee_settlements_view_tree" model="ir.ui.view">
+        <field name="name">hr.employee.settlements.view.list</field>
+        <field name="model">hr.employee.settlements</field>
+        <field name="arch" type="xml">
+            <list string="Employee Settlements">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="type_of_separation"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!--
+        Form View: hr.employee.settlements
+        Purpose:
+        This form allows HR users to view, confirm, approve, compute, cancel, or reject end-of-service settlements.
+        The form is structured into:
+        - Header with workflow buttons and state ribbon
+        - Core employee and employment info
+        - Tabs: Salary, Settlement, Accounting
+        - Integrated Chatter (messages, followers, activities)
+    -->
+    <record id="hr_employee_settlements_view_form" model="ir.ui.view">
+        <field name="name">hr.employee.settlement.view.form</field>
+        <field name="model">hr.employee.settlements</field>
+        <field name="arch" type="xml">
+            <form string="Employee Settlement">
+                <!-- Header Section: Workflow buttons and state badge -->
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirm,approved"
+                           statusbar_colors="{'draft': 'blue', 'confirm': 'orange', 'approved': 'green', 'cancel': 'red', 'rejected': 'red'}"/>
+
+                    <!-- Workflow Buttons with access controls -->
+                    <button name="action_confirm" type="object" string="Confirm" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            groups="kaz_end_of_service.group_hr" class="oe_highlight" invisible="state != 'confirm'"/>
+                    <button name="action_compute_settlement" type="object" string="Compute Settlement"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_cancel" type="object" string="Cancel" class="btn-secondary"
+                            invisible="state not in ['draft', 'confirm']"/>
+                    <button name="action_reject" type="object" string="Reject" class="btn-secondary"
+                            groups="kaz_end_of_service.group_hr" invisible="state != 'confirm'"/>
+                    <button name="action_reset" type="object" string="Reset to Draft" class="btn-secondary"
+                            invisible="state != 'cancel'"/>
+                    <button name="action_create_draft_entry"
+                            type="object"
+                            string="Compute Salary"
+                            class="btn-secondary"
+                            groups="kaz_end_of_service.group_hr"
+                            invisible="move_state == 'posted' or state != 'approved' or end_of_service_payslip != False"/>
+                    <field name="move_state" invisible="1"/>
+                </header>
+
+                <sheet>
+                    <!-- Ribbon for posted state -->
+                    <widget name="web_ribbon" title="Posted" invisible="move_state != 'posted'"/>
+
+                    <!-- Title -->
+                    <div class="oe_title">
+                        <h1 class="d-flex flex-row">
+                            <field name="name" style="font-size: min(4vw, 2.6rem);"/>
+                        </h1>
+                    </div>
+
+                    <!-- General Employee Info -->
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="kaz_employee_type"/>
+                            <field name="current_contract_id"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="type_of_separation" widget="radio"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="request_date" readonly="state != 'draft'"/>
+                            <field name="joined_date"/>
+                            <field name="current_month_first_date"/>
+                            <field name="last_working_date" readonly="state != 'draft'"/>
+                            <field name="relieving_date" readonly="state != 'draft'"/>
+                            <field name="years_worked"/>
+                            <field name="days_worked"/>
+                            <field name="settlement_computed" invisible="1"/>
+                            <field name="company_id"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Notebook: Tabbed UI for structured data -->
+                    <notebook>
+                        <!-- Salary Information Tab -->
+                        <page string="Salary Information">
+                            <group string="Allowances">
+                                <group>
+                                    <field name="basic_contract" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                    <field name="cost_of_living_contract"/>
+                                    <field name="vacation_allowance_contract"/>
+                                    <field name="housing_allowance"/>
+                                    <field name="child_allowance"/>
+                                    <field name="social_allowance" readonly="state != 'draft'"/>
+                                    <field name="shift_allowance" readonly="state != 'draft'"/>
+                                </group>
+                                <group>
+                                    <field name="stipend_allowance" readonly="state != 'draft'"/>
+                                    <field name="market_differential"/>
+                                    <field name="national_allowance" readonly="state != 'draft'"/>
+                                    <field name="supplemental_allowance"
+                                           readonly="state != 'draft'"/>
+                                    <field name="general_allowance" readonly="state != 'draft'"/>
+                                    <field name="mobile_allowance" readonly="state != 'draft'"/>
+                                    <field name="other_allowance" readonly="state != 'draft'"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Deduction">
+                                    <field name="other_deductions" readonly="state != 'draft'"/>
+                                </group>
+                                <group string="Earnings, Leaves and Rounding">
+                                    <field name="balance_leave_this_annum"
+                                           readonly="state != 'draft'"/>
+                                    <field name="other_earnings" readonly="state != 'draft'"/>
+                                    <field name="rounding"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Computed Settlement Values -->
+                        <page string="Settlement Amount" invisible="not settlement_computed">
+                            <group>
+                                <group string="Basic Settlement">
+                                    <field name="no_of_days"/>
+                                    <field name="basic" widget="monetary"/>
+                                    <field name="cols" widget="monetary"/>
+                                    <field name="vacation_allowance" widget="monetary"/>
+                                    <field name="total" widget="monetary"/>
+                                </group>
+
+                                <group string="Gratuity Settlement" invisible="kaz_employee_type != 'expat'">
+                                    <field name="years"/>
+                                    <field name="gratuity_amount" widget="monetary"/>
+                                </group>
+
+                                <group string="Pension Settlement" invisible="kaz_employee_type != 'local'">
+                                    <field name="pension_amount" widget="monetary"/>
+                                </group>
+
+                                <group string="Earnings and Deductions" name="earnings_and_deductions">
+                                    <field name="other_earnings_settlement" widget="monetary"/>
+                                    <field name="other_deductions_settlement" widget="monetary"/>
+                                </group>
+
+                                <group string="Annual Leaves">
+                                    <field name="balance_leave_this_annum"
+                                           readonly="state != 'draft'"/>
+                                    <field name="leave_balance_total"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group class="oe_subtotal_footer oe_right" colspan="2">
+                                    <field name="total_payable" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Accounting Integration Tab -->
+                        <page string="Accounting" groups="kaz_end_of_service.group_hr">
+                            <group>
+                                <group>
+                                    <field name="date_account"/>
+                                    <field name="journal_id"/>
+                                    <field name="id" invisible="1"/>
+                                    <field name="end_of_service_payslip" invisible="not id"/>
+                                    <field name="payroll_structure_id"
+                                           options="{'no_create':1, 'no_edit':1}" readonly="state == 'approved'"/>
+                                    <field name="move_id"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <!-- Chatter for Messaging and Activity Logging -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+</odoo>

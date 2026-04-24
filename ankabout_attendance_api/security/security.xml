@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Rule 1: Attendance Managers have full access to all log.attendance records -->
+    <record id="attendance_log_rule_attendance_manager" model="ir.rule">
+        <field name="name">Attendance Officer - Full Access to Attendance Log</field>
+        <field name="model_id" ref="model_log_attendance"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="groups" eval="[Command.link(ref('hr_attendance.group_hr_attendance_officer'))]"/>
+    </record>
+
+    <!-- Rule 2: Regular attendance users (e.g. employees) can only see their own logs -->
+    <record id="attendance_log_rule_attendance_manual" model="ir.rule">
+        <field name="name">Attendance User - Own Attendance Log Only</field>
+        <field name="model_id" ref="model_log_attendance"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="perm_read" eval="1"/>
+        <field name="perm_write" eval="0"/>
+        <field name="perm_create" eval="0"/>
+        <field name="perm_unlink" eval="0"/>
+        <field name="groups" eval="[Command.link(ref('hr_attendance.group_hr_attendance_own_reader'))]"/>
+    </record>
+
+    <!-- Rule 3: Multicompany access control for log.attendance -->
+    <record id="attendance_log_rule_employee_company" model="ir.rule">
+        <field name="name">Attendance Log - Multicompany Rule</field>
+        <field name="model_id" ref="model_log_attendance"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">
+            ['|', ('employee_id.company_id', '=', False),
+            ('employee_id.company_id', 'in', company_ids)]
+        </field>
+    </record>
+
+    <record id="group_no_attendance_access" model="res.groups">
+        <field name="name">Attendance No User</field>
+    </record>
+
+</odoo>

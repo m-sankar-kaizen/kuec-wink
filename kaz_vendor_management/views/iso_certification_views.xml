@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- ISO Certifications Form View -->
+    <record id="view_iso_certification_form" model="ir.ui.view">
+        <field name="name">iso.certification.form</field>
+        <field name="model">iso.certification</field>
+        <field name="arch" type="xml">
+            <form string="Certifications">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ISO Certifications List View -->
+    <record id="view_iso_certification_list" model="ir.ui.view">
+        <field name="name">iso.certification.list</field>
+        <field name="model">iso.certification</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_iso_certification" model="ir.actions.act_window">
+        <field name="name">Certification</field>
+        <field name="res_model">iso.certification</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_iso_certification_items" name="Certification"
+              parent="kaz_contact_approval.menu_contact_checklist_root"
+              action="action_iso_certification"
+              sequence="6"/>
+
+    <menuitem id="menu_purchase_iso_certification_items" name="Certification"
+              parent="kaz_contact_approval.menu_purchase_vendor_root"
+              action="action_iso_certification"
+              sequence="4"/>
+</odoo>

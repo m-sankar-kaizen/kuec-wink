@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- ============================================================
+    Form View: Education Fees
+    Full form for submitting, approving, and tracking education fee requests
+    ============================================================ -->
+    <record id="action_education_fees_form" model="ir.ui.view">
+        <field name="name">payroll.education.fees.form</field>
+        <field name="model">education.fees</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <!-- State Field (invisible) for logic control -->
+                    <field name="state" invisible="1"/>
+
+                    <!-- Submit buttons for each approval step -->
+                    <button name="send_to_hr_team" type="object" string="Send To HR Team"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+
+                    <button name="send_to_hr_manager" type="object" string="Send To HR Manager"
+                            invisible="state != 'hr_team'"
+                            groups="kaz_education_fees.group_hr_team"
+                            class="oe_highlight"/>
+
+                    <button name="btn_confirm" type="object" string="Confirm"
+                            invisible="state != 'hr_manager'"
+                            class="oe_highlight"
+                            groups="kaz_education_fees.group_hr_manager"/>
+
+                    <!-- Reset to Draft and Cancel buttons -->
+                    <button name="reset_draft" type="object" string="Reset to Draft"
+                            invisible="state not in ['refuse', 'cancel']"/>
+
+                    <!-- Refuse buttons (based on role/state) -->
+                    <button name="action_refuse" type="object" string="Refuse"
+                            invisible="state != 'hr_team'"
+                            groups="kaz_education_fees.group_hr_team"
+                            class="oe_highlight"/>
+
+                    <button name="action_refuse" type="object" string="Refuse"
+                            invisible="state != 'hr_manager'"
+                            groups="kaz_education_fees.group_hr_manager"
+                            class="oe_highlight"/>
+
+                    <!-- Cancel buttons for base users and HR Manager -->
+                    <button name="btn_cancel" type="object" string="Cancel"
+                            invisible="state != 'draft'"
+                            groups="kaz_education_fees.group_base_user,!kaz_education_fees.group_hr_team,!kaz_education_fees.group_hr_manager"/>
+
+                    <button name="btn_cancel" type="object" string="Cancel"
+                            invisible="state not in ['hr_team', 'hr_manager', 'confirmed', 'refuse']"
+                            groups="kaz_education_fees.group_hr_manager"/>
+
+                    <!-- Statusbar -->
+                    <field name="state" widget="statusbar" nolabel="1"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <field name="payslip_id" invisible="1"/>
+                        <button name="action_open_related_payroll" type="object"
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="not payslip_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">
+                                    Payroll
+                                </span>
+                            </div>
+                        </button>
+                    </div>
+                    <!-- Ribbon if Paid -->
+                    <widget name="web_ribbon" title="Paid" invisible="not paid"/>
+
+                    <!-- Document Sequence -->
+                    <h1>
+                        <field name="seq" placeholder="Draft"/>
+                    </h1>
+
+                    <!-- Employee Info Group -->
+                    <group string="Employee Information">
+                        <field name="paid" invisible="1"/>
+                        <field name="employee_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               groups="kaz_education_fees.group_hr_team"
+                               readonly="state != 'draft'"/>
+                        <field name="employee_id"
+                               options="{'no_create': True, 'no_create_edit': True}"
+                               groups="kaz_education_fees.group_base_user,!kaz_education_fees.group_hr_team"
+                               readonly="1"/>
+                        <field name="grade_id" options="{'no_open': True}"/>
+                        <field name="kaz_employee_type"/>
+                        <field name="contract_id" options="{'no_open': True}"/>
+                        <field name="date" readonly="1"/>
+                        <field name="year" invisible="1"/>
+                        <field name="hire_date"/>
+                    </group>
+
+                    <!-- Allowance Info -->
+                    <group>
+                        <group string="Employee Contract">
+                            <field name="max_child_eligible"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Total Allowed">
+                            <field name="child_allowance_amount" widget="monetary"/>
+                            <field name="reimburse_allowance_amount" widget="monetary"/>
+                            <field name="remaining_allowance_amount" widget="monetary"/>
+                        </group>
+                    </group>
+
+                    <!-- Child Details -->
+                    <group string="Child Details">
+                        <group>
+                            <field name="employee_id" invisible="1"/>
+                            <field name="kid_id"
+                                   domain="[('parent_id', '=', employee_id)]"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="academic_year_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="academic_semester" required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="academic_grade_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="dob"/>
+                            <field name="school_id"
+                                   string="School"
+                                   required="1"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   readonly="state != 'draft'"/>
+                            <field name="country_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="state_id"/>
+                        </group>
+                    </group>
+
+                    <!-- Fees Section -->
+                    <group>
+                        <group string="Total to Pay">
+                            <field name="book_fees" widget="monetary" readonly="state != 'draft'"/>
+                            <field name="transportation_fees" widget="monetary"
+                                   readonly="state != 'draft'"/>
+                            <field name="tuition_fees" widget="monetary"
+                                   readonly="state != 'draft'"/>
+                            <field name="other_fees" widget="monetary"
+                                   readonly="state != 'draft'"/>
+                            <field name="amount_paid" widget="monetary" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Notebook Tabs -->
+                    <notebook>
+                        <page name="supporting_documents" string="Supporting Documents">
+                            <group>
+                                <field name="supporting_document_ids" colspan="2"
+                                       nolabel="1"
+                                       readonly="state != 'draft'">
+                                    <list editable="bottom">
+                                        <field name="name"/>
+                                        <field name="attachment" widget="binary"/>
+                                        <field name="company_id" invisible="1"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+                        <page string="Refusal Reason" invisible="not refuse_reason_ids">
+                            <field name="refuse_reason_ids" readonly="1">
+                                <list string="Refusal Reason">
+                                    <field name="reason"/>
+                                    <field name="refused_by_user_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Chatter Support -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tree View: Education Fees Summary -->
+    <record id="education_fees_tree" model="ir.ui.view">
+        <field name="name">education.fees.list</field>
+        <field name="model">education.fees</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="seq"/>
+                <field name="employee_id"/>
+                <field name="max_child_eligible"/>
+                <field name="state" widget="badge"
+                       decoration-muted="state == 'draft' or state == 'cancel'"
+                       decoration-info="state == 'hr_approve' or state == 'finance_mang' or state == 'ceo'"
+                       decoration-success="state == 'confirmed'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action: Education Fees Menu Entry -->
+    <record id="payroll_education" model="ir.actions.act_window">
+        <field name="name">Education Fees</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">education.fees</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu: Education Fees -->
+    <menuitem id="payroll_education_fees" name="Education Fees"
+              parent="ent_ohrms_loan.menu_hr_housing_advance"
+              action="payroll_education"
+              sequence="70"
+              groups="kaz_education_fees.group_base_user"/>
+
+</odoo>

@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data noupdate="0">
+
+        <record id="hr_custody_return_action" model="ir.actions.act_window">
+            <field name="name">Return Custody Request</field>
+            <field name="res_model">hr.custody</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('state', 'in', ['approved'])]</field>
+            <field name="search_view_id" ref="hr_custody.hr_custody_view_search"/>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Click to Create a New Record.
+                </p>
+            </field>
+        </record>
+
+        <record id="action_view_hr_payslip_month_form" model="ir.actions.act_window">
+            <field name="name">Employee Payslips</field>
+            <field name="res_model">hr.payslip</field>
+            <field name="path">my_payslip</field>
+            <field name="view_mode">list,kanban,form,activity</field>
+            <field name="domain">[('employee_id.user_id', '=', uid), ('state', 'in', ['done', 'paid'])]</field>
+            <field name="context">{'create': False,
+                'edit': False,
+                'delete': False}
+            </field>
+            <field name="search_view_id" ref="hr_payroll.view_hr_payslip_filter"/>
+        </record>
+
+        <!--        ESS-->
+        <menuitem id="kaz_kuec_menu_ess_root"
+                  web_icon="kaz_kuec_menu_hr,static/description/ess.png"
+                  name="Employee Self-Service (ESS)"
+                  sequence="10">
+
+            <menuitem
+                    id="menu_hr_holidays_my_leaves"
+                    name="My Leave Management"
+                    sequence="1">
+                <menuitem
+                        id="hr_leave_menu_new_request"
+                        action="hr_holidays.hr_leave_action_new_request"
+                        sequence="1"/>
+                <menuitem
+                        id="hr_leave_menu_my"
+                        name="My Leave Requests"
+                        action="hr_holidays.hr_leave_action_my"
+                        sequence="2"/>
+                <menuitem
+                        id="menu_open_allocation"
+                        name="My Allocations"
+                        action="hr_holidays.hr_leave_allocation_action_my"
+                        sequence="3"/>
+            </menuitem>
+
+
+            <menuitem id="kaz_kuec_employee_letters"
+                      name="Employee Letters"
+                      sequence="10">
+                <menuitem id="employment_letter_menu"
+                          name="Employment Letter"
+                          action="kaz_kuec_letters.action_kuec_employment_letters"/>
+                <menuitem id="salary_transfer_letter_menu"
+                          name="Salary Transfer Letter"
+                          action="kaz_kuec_letters.action_kuec_salary_transfer_letters"/>
+                <menuitem id="health_insurance_letter_menu"
+                          name="Health Insurance Letter"
+                          action="kaz_kuec_letters.action_kuec_health_insurance"/>
+                <menuitem id="visa_request_letter_menu"
+                          name="Visa Request Letter"
+                          action="kaz_kuec_letters.action_kuec_visa_request"/>
+                <menuitem id="golden_visa_letter_menu"
+                          name="Golden Visa Letter"
+                          action="kaz_kuec_letters.action_kuec_golden_visa_letter"/>
+                <menuitem id="salary_letter_menu"
+                          name="Salary Letter"
+                          action="kaz_kuec_letters.action_kuec_salary_letter"/>
+            </menuitem>
+            <menuitem id="kaz_kuec_custody_request"
+                      name="Custody"
+                      sequence="20">
+                <menuitem action="hr_custody.hr_custody_action"
+                          id="hr_custody_menu"
+                          name="Custody Request"
+                          sequence="1"/>
+                <menuitem action="kaz_kuec_menu_hr.hr_custody_return_action"
+                          id="hr_return_custody_menu"
+                          name="Return Custody Request"
+                          sequence="1"/>
+            </menuitem>
+            <menuitem id="kaz_kuec_employee_benefits"
+                      name="Employee Benefits"
+                      sequence="30">
+                <menuitem id="kaz_kuec_housing_advance"
+                          name="Housing Advance"
+                          action="ent_ohrms_loan.action_hr_loan_request"
+                          sequence="1"
+                          groups="ent_ohrms_loan.hr_loan_user"/>
+                <menuitem id="kaz_kuec_child_allowance"
+                          name="Child Allowance"
+                          action="kaz_child_allowance.action_child_allowance"
+                          groups="kaz_child_allowance.group_base_user"
+                          sequence="20"/>
+                <menuitem id="kaz_kuec_education_allowance"
+                          name="Education Allowance"
+                          action="kaz_education_fees.payroll_education"
+                          sequence="30"/>
+            </menuitem>
+            <menuitem id="kaz_kuec_bank_transfer"
+                      name="Bank Transfer"
+                      action="kaz_bank_transfer.action_bank_transfer"
+                      sequence="30"/>
+            <menuitem id="kaz_kuec_payslips"
+                      name="My Payslips"
+                      action="action_view_hr_payslip_month_form"
+                      sequence="30"/>
+
+        </menuitem>
+
+        <!--        Life Cycle-->
+        <menuitem id="kaz_kuec_menu_lifecycle_root"
+                  web_icon="kaz_kuec_menu_hr,static/description/lifecycle.png"
+                  groups="kaz_kuec_menu_hr.group_kuec_hr"
+                  name="Employee Life Cycle"
+                  sequence="10">
+            <menuitem id="kaz_kuec_probation"
+                      name="Probation"
+                      action="kaz_kuec_employee_probation.action_hr_employee_probation"
+                      sequence="10"/>
+
+<!--            Secondment-->
+            <menuitem id="menu_hr_secondment_root"
+                      name="Secondments"
+                      sequence="50">
+                <menuitem id="menu_hr_secondment_all"
+                          name="All Secondments"
+                          action="hr_employee_secondment.action_hr_employee_secondment"
+                          sequence="10"/>
+
+                <menuitem id="menu_hr_secondment_my"
+                          name="My Secondments"
+                          action="hr_employee_secondment.action_hr_employee_secondment_my"
+                          sequence="5"/>
+
+                <menuitem id="menu_hr_secondment_to_approve"
+                          name="To Approve"
+                          action="hr_employee_secondment.action_hr_employee_secondment_to_approve"
+                          groups="hr.group_hr_manager"
+                          sequence="15"/>
+
+                <menuitem id="menu_hr_secondment_active"
+                          name="Active Secondments"
+                          action="hr_employee_secondment.action_hr_employee_secondment_active"
+                          sequence="20"/>
+
+            </menuitem>
+
+            <menuitem id="internship_management_menu"
+                      name="Internships"
+                      sequence="59">
+                <menuitem id="kaz_kuec_internship"
+                          name="Internships"
+                          action="hr_internship.action_hr_internship"
+                          sequence="10"/>
+
+                <menuitem id="kaz_kuec_performance_and_rewards"
+                          name="Performance &amp; Rewards"
+                          sequence="12">
+                    <menuitem id="kaz_kuec_internship_feedback"
+                          name="Feedback Records"
+                          action="hr_internship.action_hr_internship_feedback"
+                          sequence="11"/>
+                    <menuitem id="kaz_kuec_internship_reward"
+                          name="Reward Requests"
+                          action="hr_internship.action_hr_internship_reward"
+                          sequence="12"/>
+
+                </menuitem>
+                <menuitem id="kaz_kuec_onboarding_and_admin"
+                          name="Onboarding &amp; Admin"
+                          sequence="13">
+                    <menuitem id="kaz_kuec_orientation_records"
+                          name="Orientation Records"
+                          action="hr_internship.action_hr_internship_orientation"
+                          sequence="11"/>
+                </menuitem>
+                <menuitem id="kaz_kuec_freelance_management"
+                          name="Freelance Management"
+                          sequence="15">
+                    <menuitem id="menu_hr_internship_deliverable"
+                          name="Deliverables"
+                          action="hr_internship.action_hr_internship_freelance_deliverable"
+                          sequence="11"/>
+                </menuitem>
+
+            </menuitem>
+
+            <menuitem id="off_board"
+                      name="KUEC Off-boarding"
+                      action="kaz_kuec_offboarding.action_ank_register_form"/>
+        </menuitem>
+
+        <!--        Talent & Workforce-->
+
+        <menuitem id="kaz_kuec_menu_talent_workforce_root"
+                  web_icon="kaz_kuec_menu_hr,static/description/talentandworkforce.png"
+                  name="Talent &amp; Workforce Planning"
+                  sequence="10">
+            <menuitem id="kaz_kuec_master_plan"
+                      name="Master Plan"
+                      groups="kaz_kuec_menu_hr.group_kuec_hr"
+                      action="kaz_kuec_recruitment_staffing_plan.action_hr_master_staffing_plan"
+                      sequence="10"/>
+            <menuitem id="kaz_kuec_staff_plan"
+                      name="Staff Plan"
+                      action="kaz_kuec_recruitment_staffing_plan.action_hr_staffing_plan"
+                      sequence="10"/>
+            <menuitem id="recruitment_staffing"
+                      name="Recruitment Request"
+                      action="kaz_kuec_recruitment_staffing_plan.action_hr_recruitment_requests"/>
+        </menuitem>
+
+        <!--        Employee Performance & Rewards-->
+
+        <menuitem id="kaz_kuec_menu_perf_rew_root"
+                  web_icon="kaz_kuec_menu_hr,static/description/emp_perf_rew.png"
+                  name="Employee Performance &amp; Rewards"
+                  sequence="10">
+            <menuitem id="kaz_kuec_goals"
+                      name="Goals"
+                      sequence="1">
+                <menuitem id="kaz_kuec_goal_setup"
+                          name="Goals Setup"
+                          action="kaz_employee_performance_kuec.action_performance_evaluation"
+                          sequence="1"/>
+                <menuitem id="menu_done_performance_evaluation"
+                          name="My Performance Evaluation"
+                          sequence="2"
+                          action="kaz_employee_performance_kuec.action_done_performance_evaluation_eval"/>
+                <menuitem id="kaz_kuec_goal_evaluation"
+                          name="Goals Evaluation"
+                          groups="kaz_kuec_menu_hr.group_kuec_hr"
+                          action="kaz_employee_performance_kuec.action_performance_evaluation_eval"
+                          sequence="3"/>
+<!--                                          groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+-->
+
+                <menuitem id="menu_goal_survey"
+                          name="Goal Surveys"
+                          groups="kaz_kuec_menu_hr.group_kuec_hr"
+                          action="kaz_employee_performance_kuec.action_survey_form"
+                          sequence="10"/>
+<!--                                          groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+-->
+                <menuitem id="menu_performance_improvement_plan"
+                          name="Performance Improvement Plans"
+                          groups="kaz_kuec_menu_hr.group_kuec_hr"
+                          action="kaz_employee_performance_kuec.action_performance_improvement_plan"
+                          sequence="14"/>
+                <menuitem id="menu_performance_dashboard"
+                          name="Performance Dashboard"
+                          groups="kaz_kuec_menu_hr.group_kuec_hr"
+                          action="kaz_employee_performance_kuec.action_performance_dashboard"
+                          sequence="15"/>
+
+            </menuitem>
+
+            <menuitem id="kaz_kuec_performance"
+                      name="Performance"
+                      groups="kaz_kuec_menu_hr.group_kuec_hr"
+                      sequence="1">
+<!--                hrms_performance_management.group_performance_hr,hrms_performance_management.group_performance_manager,-->
+                <menuitem id="kaz_kuec_goals_assignment"
+                          name="Goals Assignment"
+                          action="hrms_performance_management.action_goals_assignment"
+                          sequence="2"/>
+                <menuitem id="kaz_kuec_self_evaluation"
+                          name="Self Evaluation"
+                          action="hrms_performance_management.action_hrms_evaluation"
+                          sequence="3"/>
+                <menuitem id="kaz_kuec_360_feedback"
+                          name="360 Feedback"
+                          action="hrms_performance_management.action_hrms_feedback360"
+                          sequence="4"/>
+            </menuitem>
+            <menuitem id="kaz_kuec_training"
+                      name="Training"
+                      groups="kaz_kuec_menu_hr.group_kuec_hr"
+                      sequence="3">
+                <menuitem id="kaz_kuec_emp_orientation"
+                          name="Employee Orientation"
+                          action="employee_orientation.employee_orientation_action"
+                          sequence="1"/>
+                <menuitem id="kaz_kuec_orient_request"
+                          name="Orientation Request"
+                          action="employee_orientation.orientation_request_action"
+                          sequence="2"/>
+                <menuitem id="kaz_kuec_training_pgm"
+                          name="Training Program"
+                          action="employee_orientation.employee_training_action"
+                          sequence="3"/>
+            </menuitem>
+
+            <menuitem id="menu_employee_bonus_root"
+                      groups="kaz_kuec_menu_hr.group_kuec_hr"
+                      name="Employee Bonus">
+
+                <menuitem id="menu_financial_award"
+                          name="Financial Awards"
+                          action="kaz_hr_employee_bonus.action_financial_award"
+                          sequence="10"/>
+                <menuitem id="menu_annual_bonus"
+                          name="Annual Bonus"
+                          action="kaz_hr_employee_bonus.action_annual_bonus"
+                            sequence="20"/>
+            </menuitem>
+
+            <menuitem id="menu_performance_reward_conf_parent"
+                      sequence="100" name="Configuration"
+                      groups="kaz_kuec_menu_hr.group_kuec_hr">
+<!--                kaz_procurement_doa_kuec.group_kuec_head_department,kaz_kuec_overall_doa_approval.group_kuec_employee_hohr,-->
+                <menuitem id="menu_goal_settings"
+                          name="Settings"
+                          action="kaz_kuec_menu_hr.performance_res_config_settings_view_form_action"
+                          sequence="1"/>
+                <menuitem id="menu_performance_evaluation_conf" sequence="2" name="Goal Evaluation Configuration">
+                    <menuitem id="menu_evaluation_category"
+                              name="Evaluation Categories"
+                              action="kaz_employee_performance_kuec.action_evaluation_category"
+                              sequence="1"/>
+                    <menuitem id="menu_evaluation_method"
+                              name="Evaluation Methods"
+                              action="kaz_employee_performance_kuec.action_evaluation_method"
+                              sequence="2"/>
+                    <menuitem id="menu_goal_template"
+                              name="Goal Templates"
+                              action="kaz_employee_performance_kuec.action_goal_template"
+                              sequence="3"/>
+                    <menuitem id="menu_year_year"
+                              name="Year"
+                              action="kaz_employee_performance_kuec.action_year_year"
+                              sequence="4"/>
+                </menuitem>
+            </menuitem>
+
+        </menuitem>
+
+        <menuitem id="kaz_kuec_menu_relation_compliance_root"
+                  web_icon="kaz_kuec_menu_hr,static/description/rel_cop.jpg"
+                  name="Employee Relations &amp; Compliance"
+                  groups="kaz_kuec_menu_hr.group_kuec_hr"
+                  sequence="10">
+            <menuitem id="kaz_kuec_discipline"
+                      name="Discipline"
+                      action="kaz_hr_memo_action.action_hr_disciplinary_action"
+                      sequence="10"/>
+        </menuitem>
+
+        <!--        Custody Reporting-->
+
+        <menuitem id="kaz_kuec_custody_reporting"
+                  name="Custody Reporting"
+                  action="hr_custody.report_custody_action"
+                  parent="hr.hr_menu_hr_reports"
+                  sequence="10"/>
+
+        <menuitem id="kaz_kuec_custody_property"
+                  name="Custody Property"
+                  action="hr_custody.custody_property_action"
+                  parent="hr.menu_config_employee"
+                  sequence="10"/>
+
+<!--        Time Off - Ony Managers and Officers (KUEC)-->
+
+        <menuitem id="kaz_kuec_menu_timeoff_root"
+                  web_icon="kaz_kuec_menu_hr,static/description/time_off.png"
+                  name="Time Off (KUEC)"
+                  sequence="45"
+                  groups="hr_holidays.group_hr_holidays_user">
+            <menuitem
+                id="menu_hr_holidays_my_leaves_2"
+                groups="hr_holidays.group_hr_holidays_user"
+                name="My Time">
+                <menuitem
+                    id="hr_leave_menu_new_request_2"
+                    action="hr_holidays.hr_leave_action_new_request"/>
+                <menuitem
+                    id="hr_leave_menu_my_2"
+                    action="hr_holidays.hr_leave_action_my"/>
+                <menuitem
+                    id="menu_open_allocation_2"
+                    name="My Allocations"
+                    action="hr_holidays.hr_leave_allocation_action_my"/>
+            </menuitem>
+
+            <menuitem
+                id="menu_hr_holidays_dashboard"
+                name="Overview"
+                action="hr_holidays.action_hr_holidays_dashboard"/>
+
+            <menuitem
+                id="menu_hr_holidays_management"
+                name="Management"
+                groups="hr_holidays.group_hr_holidays_user">
+                <menuitem
+                    id="menu_open_department_leave_approve"
+                    name="Time Off"
+                    action="hr_holidays.hr_leave_action_action_approve_department"/>
+                <menuitem id="menu_hr_leave_wfh"
+                      name="WFH Requests"
+                      action="kaz_leave_entitlement_kuec.action_hr_leave_wfh"/>
+                <menuitem
+                    id="hr_holidays_menu_manager_approve_allocations"
+                    name="Allocations"
+                    action="hr_holidays.hr_leave_allocation_action_approve_department"/>
+            </menuitem>
+
+            <menuitem
+                id="menu_hr_holidays_report"
+                name="Reporting"
+                groups="hr_holidays.group_hr_holidays_user">
+
+            <menuitem
+                id="menu_hr_available_holidays_report_tree"
+                name="by Employee"
+                action="hr_holidays.action_hr_available_holidays_report"/>
+
+            <menuitem
+                id="menu_hr_holidays_summary_all"
+                name="by Type"
+                action="hr_holidays.action_hr_leave_report"/>
+
+            <menuitem
+                id="menu_hr_holidays_balance"
+                name="Balance"
+                action="hr_holidays.action_hr_holidays_by_employee_and_type_report"/>
+
+            </menuitem>
+
+<!--            <menuitem-->
+<!--                id="menu_hr_public_holiday"-->
+<!--                name="Public Holidays"-->
+<!--                sequence="4"-->
+<!--                groups="hr_holidays.group_hr_holidays_user">-->
+
+<!--                <menuitem id="menu_action_public_holiday"-->
+<!--                          name="Public Holidays"-->
+<!--                          action="rm_hr_attendance_sheet.action_hr_public_holiday"-->
+<!--                          sequence="96"/>-->
+<!--            </menuitem>-->
+
+            <menuitem id="menu_hr_acting_root"
+                  name="Acting Delegation">
+            <menuitem id="menu_acting_delegations"
+                      name="Delegations"
+                      action="kaz_kuec_hr_acting_delegation.action_acting_delegation"/>
+            </menuitem>
+
+
+            <menuitem
+                id="menu_hr_holidays_configuration"
+                name="Configuration"
+                groups="hr_holidays.group_hr_holidays_manager">
+
+                <menuitem
+                    id="hr_holidays_status_menu_configuration"
+                    action="hr_holidays.open_view_holiday_status"
+                    name="Time Off Types"
+                    groups="hr_holidays.group_hr_holidays_manager"/>
+
+                <menuitem
+                    id="hr_holidays_accrual_menu_configuration"
+                    action="hr_holidays.open_view_accrual_plans"
+                    name="Accrual Plans"
+                    groups="hr_holidays.group_hr_holidays_manager"
+                    sequence="2"/>
+
+                <menuitem
+                    id="hr_holidays_public_time_off_menu_configuration"
+                    action="hr_holidays.open_view_public_holiday"
+                    name="Public Holidays"
+                    groups="hr_holidays.group_hr_holidays_manager"
+                    sequence="3"/>
+
+                <menuitem
+                    id="hr_holidays_mandatory_day_menu_configuration"
+                    action="hr_holidays.hr_leave_mandatory_day_action"
+                    name="Mandatory Days"
+                    groups="hr_holidays.group_hr_holidays_manager"
+                    sequence="4"/>
+
+                <menuitem id="hr_holidays_menu_config_activity_type"
+                    action="hr_holidays.mail_activity_type_action_config_hr_holidays"
+                    groups="hr_holidays.group_hr_holidays_manager"/>
+
+            </menuitem>
+
+
+
+
+        </menuitem>
+
+    </data>
+
+</odoo>

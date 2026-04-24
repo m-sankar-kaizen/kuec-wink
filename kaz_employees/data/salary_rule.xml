@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Salary Rule: Social UAE Allowance
+        This salary rule adds a fixed allowance (`contract.social_uae_allowance`)
+        to an employee's contract under the UAE payroll structure.
+        It does NOT appear on the payslip (hidden), and is intended
+        for backend calculations or reporting.
+    -->
+    <record id="hr_rule_social_allowance" model="hr.salary.rule">
+        <field name="code">SOCALW</field>
+        <field name="name">Social UAE Allowance</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="condition_select">none</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">result = contract.social_uae_allowance</field>
+        <field name="appears_on_payslip" eval="False"/>
+        <field name="sequence" eval="190"/>
+        <field name="struct_id" ref="hr_payroll.structure_002"/>
+    </record>
+</odoo>

@@ -1,0 +1,4 @@
+# system_requirements.txt
+xmlsec1
+libxml2-utils
+libxslt1-dev

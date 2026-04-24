@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+     View Inheritance: HR Department Form View
+     Purpose:
+       - Show linked analytic account (auto-created on department creation)
+       - Add stat button to view department's assigned budget
+   -->
+    <record id="department_form_inherit" model="ir.ui.view">
+        <field name="name">department_form_inherit</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_form"/>
+        <field name="arch" type="xml">
+
+            <!--
+              Addition: Display the analytic account (readonly) for the department
+              Set during create() in custom model logic, not user-editable
+            -->
+            <xpath expr="//field[@name='parent_id']" position="after">
+                <field name="analytic_account_id"
+                       invisible="company_code == 'KUEC'"
+                       readonly="1"/>
+                <field name="company_code" invisible="1"/>
+            </xpath>
+
+            <!--
+              Addition: Budget stat button
+              Appears in the department header bar only if a budget is linked
+              Triggers an `ir.actions.act_window` with a pre-filled budget form
+            -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <!-- Store budget link invisibly for view access -->
+                <field name="budget_id" invisible="1"/>
+                <!-- Budget button: visible only if budget_id is set -->
+                <button class="oe_stat_button" type="object" name="view_budget" icon="fa-usd"
+                        invisible="not budget_id">
+                    Budget
+                </button>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

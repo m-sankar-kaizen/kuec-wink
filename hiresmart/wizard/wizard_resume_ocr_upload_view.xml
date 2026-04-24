@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- [Start] Form view ############################################################################################-->
+    <record id="view_resume_ocr_upload_wizard_form" model="ir.ui.view">
+        <field name="name">resume.ocr.upload.wizard.form</field>
+        <field name="model">resume.ocr.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Upload Multiple Resumes">
+            <!-- [Start] Form content ############################################################ -->
+                <group>
+                    <field name="ocr_model"/>
+                </group>
+                <field name="file_ids">
+                    <list string="Uploaded Resumes" editable="bottom" create="1" delete="1">
+                        <field name="file" filename="filename"/>
+                        <field name="filename"/>
+                    </list>
+                </field>
+            <!-- [End] Form content ############################################################ -->
+
+            <!-- [Start] Header ######################################################WWWW###### -->
+                <footer>
+                    <button name="action_upload_ocr" type="object" string="Upload All" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            <!-- [End] Header #######################################################WWWW####### -->
+            </form>
+        </field>
+    </record>
+<!-- [End] Form view ############################################################################################-->
+
+
+
+<!-- [Start] Action ############################################################################################# -->
+    <record id="action_resume_ocr_upload_wizard" model="ir.actions.act_window">
+        <field name="name">Upload Resumes</field>
+        <field name="res_model">resume.ocr.upload.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+<!-- [End] Action ############################################################################################# -->
+
+</odoo>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_leave_form_inherit_acting" model="ir.ui.view">
+        <field name="name">hr.leave.form.inherit.acting</field>
+        <field name="model">hr.leave</field>
+        <field name="inherit_id" ref="hr_holidays.hr_leave_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <field name="company_code" invisible="1"/>
+                <group string="Acting Delegation" invisible="company_code != 'KUEC'">
+                    <field name="delegate_choice"/>
+                    <field name="delegation_ids" context="{'default_employee_id': employee_id, 'default_leave_id': id}" invisible="delegate_choice == 'no'">
+                        <list editable="bottom">
+                            <field name="acting_user_id" domain="[('share','=', False)]"/>
+                            <field name="delegation_type"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="group_ids" widget="many2many_tags" domain="[('id','in', allowed_group_ids)]"/>
+                            <field name="state" readonly="1"/>
+                            <button name="action_revoke" type="object" string="Revoke" class="btn-secondary" invisible="state != 'active'"/>
+                            <button name="action_reactivate" type="object" string="Re-Activate" class="btn-primary" invisible="not can_reactivate"/>
+                        </list>
+                    </field>
+                    <field name="acting_justification" placeholder="Reason required for revoke/cancel"/>
+                    
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

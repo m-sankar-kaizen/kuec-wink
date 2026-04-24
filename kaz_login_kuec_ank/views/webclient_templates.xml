@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--
+        Template: Login (Override)
+        Purpose:
+            - Override the default login form (`web.login`) to support conditional
+              visibility of the default username/password login form.
+            - If the system parameter `kaz_login_kuec_ank.hide_default_login` is True,
+              hide the standard form and display only the SAML / OAuth providers.
+
+        Notes:
+            - The `t-if` condition is applied to the existing login form.
+            - A secondary login form is rendered using t-else to call SAML/OAuth providers.
+    -->
+
+
+    <template id="frontend_layout" inherit_id="web.frontend_layout">
+      <xpath expr="//head" position="inside">
+
+
+
+        <style type="text/css">
+           .o_home_menu_background {
+    background-color: #08296c !important;
+    background-image: url("/kaz_login_kuec_ank/static/src/img/background.png") !important;
+    background-size: cover !important;
+}
+
+/* Login container */
+#wrapwrap .oe_website_login_container {
+    background-color: #08296c !important;
+    background-image: url("/kaz_login_kuec_ank/static/src/img/background.png") !important;
+}
+
+/* Database list card */
+.o_database_list {
+    width: fit-content;
+    min-height: 320px;
+    border-radius: 34px !important;
+    padding: 15px 0;
+    box-shadow: rgb(0, 0, 0) -15px 13px 16px -10px !important;
+    background: rgba(12, 63, 120, 0.9) !important;
+}
+
+.o_database_list > .card-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    border: 1px solid #ffffff;
+    border-radius: 25px;
+    margin: 0 15px;
+}
+
+.o_database_list > .card-body > div {
+    display: none;
+}
+
+.o_database_list label[for="login"],
+.o_database_list label[for="password"] {
+    font-size: medium;
+    font-weight: 600;
+    color: #fffefa;
+}
+
+.o_database_list div.oe_login_form.o_user_switch {
+    font-weight: 600;
+    color: #fffefa;
+}
+
+.o_database_list label[for="password"] a.btn-link {
+    margin-top: 2px;
+}
+
+.o_database_list a.btn-link,
+.o_database_list button.btn-link,
+.o_database_list div.o_login_auth {
+    color: #fffefa;
+}
+
+.o_database_list em.text-muted {
+    color: #fffefa !important;
+}
+
+/* OAuth providers */
+.o_auth_oauth_providers {
+    margin: 0 !important;
+}
+
+.o_auth_oauth_providers > a {
+    margin-top: 5px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    padding-left: 32px !important;
+    gap: 16px;
+    font-size: 27px;
+    font-weight: 700;
+    color: #1e426f;
+    border: 2px solid #0c3f78;
+    outline: 2px solid white;
+    border-radius: 10px !important;
+}
+
+/* SAML2 */
+.o_login_saml2 {
+    margin: 0 !important;
+}
+
+.o_login_saml2 > a {
+    margin-top: 5px;
+    display: flex;
+    height: 54px;
+    align-items: center;
+    gap: 16px;
+    padding-left: 32px;
+    font-size: 27px;
+    font-weight: 700;
+    color: #1e426f;
+    border: 2px solid #0c3f78;
+    outline: 2px solid white;
+    border-radius: 10px !important;
+}
+
+/* List group */
+.list-group-item:last-child {
+    box-shadow: -2px 2px 10px black;
+}
+
+.list-group-item + .list-group-item {
+    border-top-width: initial !important;
+}
+
+/* Login form */
+.oe_login_form {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.oe_login_form.no_default_login {
+    width: 92%;
+    display: flex;
+    flex-direction: column;
+    margin: 72px 0;
+}
+
+.oe_login_form .col-form-label {
+    color: #fffefa;
+}
+.oe_signup_form label {
+    color: #fffefa;
+    font-size: medium;
+    font-weight: 600;
+}
+
+/* Login auth overflow fix */
+.o_login_auth .o_login_saml2 a,
+.o_login_auth .o_auth_oauth_providers a {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.oe_login_form, .oe_signup_form, .oe_reset_password_form {
+     max-width: max-content;
+}
+
+        </style>
+    </xpath>
+
+    </template>
+
+      <template id="login" inherit_id="web.login" name="Login">
+
+        <!-- 1️⃣ Database Selector Block -->
+        <xpath expr="//div[label[@for='db']]" position="attributes">
+            <attribute name="t-attf-class">
+                mb-3 #{ 'd-none' if hide_default_login else '' }
+            </attribute>
+        </xpath>
+
+        <!-- 2️⃣ Login (Email) Field -->
+        <xpath expr="//div[contains(@class, 'field-login')]" position="attributes">
+            <attribute name="t-attf-class">
+                mb-3 field-login #{ 'd-none' if hide_default_login else '' }
+            </attribute>
+        </xpath>
+
+        <!-- 3️⃣ Password Field -->
+        <xpath expr="//label[@for='password']/.." position="attributes">
+            <attribute name="t-attf-class">
+                mb-3 #{ 'd-none' if hide_default_login else '' }
+            </attribute>
+        </xpath>
+
+    <!-- 4️⃣ Login Buttons Block -->
+        <xpath expr="//button[@type='submit']" position="attributes">
+            <attribute name="t-attf-class">
+                btn btn-primary #{ 'd-none' if hide_default_login else '' }
+            </attribute>
+        </xpath>
+          <xpath expr="//button[@name='redirect']" position="attributes">
+            <attribute name="t-attf-class">
+                btn btn-link btn-sZ #{ 'd-none' if hide_default_login else '' }
+            </attribute>
+        </xpath>
+
+</template>
+
+
+    <!--
+        Template: SAML Providers (Override)
+        Purpose:
+            - Add logo display to each SAML provider button if a logo is defined.
+            - Remove the default <i> icon when a logo exists.
+            - Center align the provider buttons visually.
+    -->
+
+    <template id="auth_saml.providers">
+        <t t-if="saml_providers">
+            <div class="o_login_saml2 list-group mt-1 mb-1 text-left">
+                <a
+                    t-foreach="saml_providers"
+                    t-as="p"
+                    class="list-group-item list-group-item-action py-2"
+                    t-att-href="p['auth_link']"
+                >
+                    <i t-att-class="p['css_class']" />
+                    <t t-out="p['body']" />
+                </a>
+            </div>
+        </t>
+    </template>
+
+    <template id="providers"
+              inherit_id="auth_saml.providers"
+              name="Auth SAML Providers">
+        <xpath expr="//i" position="attributes">
+            <attribute name="t-if">not p['logo']</attribute>
+        </xpath>
+
+        <xpath expr="//div[hasclass('o_login_saml2')]" position="attributes">
+            <attribute name="class" remove="text-left" add="text-center" separator=" " />
+        </xpath>
+
+        <xpath expr="//i" position="after">
+            <img class="me-2"
+                 t-att-src="'data:image/png;base64,' + p['logo']"
+                 t-if="p['logo']"
+                 width="40" height="40"/>
+        </xpath>
+    </template>
+
+    <!--
+        Template: OAuth Providers (Override)
+        Purpose:
+            - Mirror the same visual behavior as SAML providers.
+            - Show logo if defined, fallback to <i>/<em> otherwise.
+            - Center align layout of OAuth login buttons.
+    -->
+    <template id="oauth_providers"
+              inherit_id="auth_oauth.providers"
+              name="OAuth Providers">
+        <xpath expr="//em" position="attributes">
+            <attribute name="t-if">not hide_default_login</attribute>
+        </xpath>
+
+        <xpath expr="//div[hasclass('o_auth_oauth_providers')]" position="attributes">
+            <attribute name="class" remove="text-left" add="text-center" separator=" " />
+        </xpath>
+
+        <xpath expr="//i" position="attributes">
+            <attribute name="t-if">not p['logo']</attribute>
+        </xpath>
+
+        <xpath expr="//i" position="after">
+            <img class="me-2"
+                 t-att-src="'data:image/png;base64,' + p['logo']"
+                 t-if="p['logo']"
+                 width="40" height="40"/>
+        </xpath>
+    </template>
+
+    <!--
+        Template: Login Layout (Override)
+        Purpose:
+            - Modify the login page layout to:
+                - Hide the footer and database manager
+                - Customize spacing with a new padding class
+                - Add a custom "Powered by" logo for branding
+
+        Notes:
+            - Ensure 'powered_by.png' exists in your static directory:
+              /kaz_login_kuec_ank/static/src/img/powered_by.png
+    -->
+    <template id="login_layout" inherit_id="web.login_layout">
+        <xpath expr="//t[@t-set='no_header']" position="after">
+            <t t-set="disable_footer" t-value="True"/>
+            <t t-set="disable_database_manager" t-value="True"/>
+        </xpath>
+
+        <xpath expr="//t[@t-call='web.frontend_layout']/div[1]" position="attributes">
+            <attribute name="class" remove="py-5" add="pt128" separator=" " />
+        </xpath>
+
+        <xpath expr="//div[hasclass('container')]" position="after">
+            <div class="d-flex justify-content-center">
+                <img class="powered_by mt-5"
+                     src="/kaz_login_kuec_ank/static/src/img/powered_by.png"
+                     height="64"/>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

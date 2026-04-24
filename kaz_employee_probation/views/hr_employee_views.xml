@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Inheritance Record: Customize the standard employee form view
+        to include probation status tracking fields.
+    -->
+    <record id="view_employee_form" model="ir.ui.view">
+        <field name="name">employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='coach_id']" position="after">
+                <field name="is_under_probation"
+                       required="company_code == 'ANK'"
+                       invisible="company_code != 'ANK'"/>
+                <field name="remaining_days_to_finish_probation" invisible="is_under_probation != 'yes'"/>
+                <field name="is_extend_probation" invisible="is_under_probation != 'yes'"/>
+                <field name="extend_probation_date" invisible="not is_extend_probation" required="is_extend_probation"/>
+                <field name="extend_probation_remarks" invisible="not is_extend_probation" required="is_extend_probation"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

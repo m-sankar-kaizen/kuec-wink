@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="hr_loan_form_inherit" model="ir.ui.view">
+        <field name="name">hr.loan.form.view.inherit.kaz.ent.loan</field>
+        <field name="model">hr.loan</field>
+        <field name="inherit_id" ref="kaz_ent_loan.hr_loan_form_inherit"/>
+        <field name="priority" eval="8"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='compute_installment']" position="after">
+                <button name="close_loan"
+                        type="object" string="Close Housing Advance"
+                        invisible="closing_payslip_id == False or state != 'approve' or company_code != 'KUEC'"
+                        class="oe_highlight"/>
+                <field name="company_code" invisible="1"/>
+                <field name="closing_payslip_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//widget[@name='web_ribbon']" position="before">
+
+            </xpath>
+        </field>
+    </record>
+
+    <record id="hr_loan_form_inherit_v2" model="ir.ui.view">
+        <field name="name">Kaz.hr_loan.form.v2</field>
+        <field name="model">hr.loan</field>
+        <field name="inherit_id" ref="ent_ohrms_loan.hr_loan_form_view"/>
+        <field name="priority" eval="8"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_title')]" position="before">
+                <div class="oe_button_box" name="buttons">
+                    <field name="company_code" invisible="1"/>
+                    <button icon="fa-edit" name="go_to_closing_payslip"
+                            invisible="not closing_payslip_id"
+                            type="object" string="Go To Closing Payslip"
+                            class="oe_stat_button"
+                            help="Go to closing payslip"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

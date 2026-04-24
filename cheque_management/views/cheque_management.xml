@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="cheque_management_sequence" model="ir.sequence">
+        <field name="name">Cheque Management</field>
+        <field name="code">cheque.management</field>
+        <field name="prefix">CHEQUE-/%(range_year)s/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+        <field name="use_date_range" eval="True"/>
+    </record>
+
+    <record id="cheque_outgoing_management_form" model="ir.ui.view">
+        <field name="name">cheque.outgoing.management.form</field>
+        <field name="model">cheque.management</field>
+        <field name="arch" type="xml">
+            <form string="Outgoing Cheque">
+                <header>
+                    <button name="confirm" string="Confirm" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="reversal_entry" string="Reversal Entry" type="object" class="oe_highlight"
+                            invisible="state == 'cancel'"/>
+                    <button name="action_cashed_wizard" string="Cashed" type="object" class="oe_highlight"
+                            invisible="state not in ['confirm','return_to_partner','return_from_partner','bounced']"/>
+                    <button name="action_out_deposit_wizard" string="Deposit" type="object" class="oe_highlight"
+                            invisible="state != 'confirm'"/>
+<!--                    <button name="action_out_bounced_wizard" string="Bounced" type="object" class="oe_highlight"-->
+<!--                            invisible="state != 'confirm'"/>-->
+<!--                    <button name="cancel" string="Cancel" type="object" class="oe_highlight"-->
+<!--                            invisible="state not in ['confirm','bounced']"/>-->
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,deposit,bounced"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Reversed" invisible="state != 'cancel'"/>
+                    <div class="alert alert-warning oe_edit_only" role="alert" name="warning_tax"
+                         invisible="not same_cheque_management_id">
+                        A Cheque Number with same value already exists (<field name="same_cheque_management_id"/>), are
+                        you sure you want to create a new one?
+                    </div>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                name="action_view_account_move_line"
+                                type="object"
+                                groups="account.group_account_user"
+                                icon="fa-bars" invisible="move_line_ids == []">
+                            <field name="journal_item_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button"
+                                invisible="state not in ('cashed','deposited') or check_transfer != 'check'"
+                                name="open_payment_matching_screen" string="Payment Matching"
+                                type="object" icon="fa-university"/>
+                        <field name="move_line_ids" invisible="1"/>
+                        <field name="check_transfer" invisible="1"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="0"/>
+                        </h1>
+                        <h3>
+                            <field name="description" placeholder="Description ......."/>
+                        </h3>
+                    </div>
+                    <group>
+                        <group string="Partner Section" name="partner_section">
+                            <field name="check_transfer" string="Type" required="1"/>
+                            <field name="cheque_date"/>
+                            <field name="check_due_date" required="1"/>
+                            <field name="cheque_number" force_save="1"/>
+                            <field name="partner_id" options="{'no_create': True}"
+                                   invisible="check_transfer == 'expense'" required="check_transfer == 'check'"/>
+                            <field name="partner_type" invisible="check_transfer == 'expense'"/>
+                            <field name="purchase_order_ids" widget="many2many_tags" string="PO Ref"
+                                   invisible="check_transfer == 'expense'"
+                                   domain="[('partner_id', '=', partner_id)]"
+                                   options="{'no_edit': True,'no_create': True,'not_delete': True}"/>
+                            <field name="hr_expense_ids" widget="many2many_tags" string="Expense Ref"
+                                   invisible="check_transfer == 'check'"
+                                   options="{'no_edit': True,'no_create': True,'not_delete': True}"/>
+                            <field name="amount" invisible="1"/>
+                            <field name="currency_id" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="currency_amount" widget="monetary" readonly="check_transfer == 'expense'"
+                                   options="{'currency_field': 'company_currency_id', 'field_digits': True}"/>
+                        </group>
+                        <group string="Bank Information" name="bank_section">
+                            <field name="bank_account_id" required="1"/>
+                            <field name="beneficiary_of_the_check"/>
+                            <field name="employee_id" required="state == 'send_to_bank'"/>
+                            <field name="hand_me_the_check"/>
+                        </group>
+                    </group>
+                    <group invisible="check_transfer == 'check'">
+                        <field name="expense_allocation_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="account_id"/>
+                                <field name="amount" sum="Total"/>
+                                <field name="currency_id" column_invisible="1"/>
+                            </list>
+                        </field>    
+                    </group>
+                    <group>
+                        <group string="PDC updates" name="pdc_updates_section">
+                            <field name="cheque_received_date" string="Cheque Issued Date" readonly="1" invisible="state in ['draft','cancel']"/>
+                            <field name="deposit_date" readonly="1" invisible="state in ['draft','confirm','cancel']"/>
+                            <field name="cash_date" readonly="1" invisible="state in ['draft','confirm','deposit','cancel']"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" nolabel="1" placeholder="notes..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="cheque_management_form" model="ir.ui.view">
+        <field name="name">cheque.management.form</field>
+        <field name="model">cheque.management</field>
+        <field name="arch" type="xml">
+            <form string="Incoming Cheque">
+                <header><!---->
+                    <button name="confirm" string="Confirm" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="reversal_entry" string="Reversal Entry" type="object" class="oe_highlight"
+                            invisible="state == 'cancel'"/>
+                    <button name="action_cashed_wizard" string="Cashed" type="object" class="oe_highlight"
+                            invisible="state not in ['confirm','return_to_partner','return_from_partner','bounced']"/>
+                    <button name="action_send_to_bank_wizard" string="Send To Bank" type="object" class="oe_highlight"
+                            invisible="state != 'confirm'"/>
+                    <button name="action_in_deposit_wizard" string="Deposit" type="object" class="oe_highlight"
+                            invisible="state != 'send_to_bank'"/>
+                    <button name="action_in_bounced_wizard" string="Bounced" type="object" class="oe_highlight"
+                            invisible="state != 'send_to_bank'"/>
+                    <button name="action_return_to_partner_wizard" string="Return To Partner" type="object"
+                            class="oe_highlight" invisible="state != 'bounced'"/>
+<!--                    <button name="cancel" string="Cancel" type="object" class="oe_highlight"-->
+<!--                            invisible="state not in ['confirm','bounced']"/>-->
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,deposit,bounced"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Reversed" invisible="state != 'cancel'"/>
+                    <div class="alert alert-warning oe_edit_only" role="alert" name="warning_tax"
+                         invisible="not same_cheque_management_id">
+                        A Cheque Number with same value already exists (<field name="same_cheque_management_id"/>), are
+                        you sure you want to create a new one?
+                    </div>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                name="action_view_account_move_line"
+                                type="object"
+                                groups="account.group_account_user"
+                                icon="fa-bars" invisible="move_line_ids == []">
+                            <field name="journal_item_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" name="open_payment_matching_screen" string="Payment Matching"
+                                type="object" icon="fa-university"/>
+                        <field name="move_line_ids" invisible="1"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="0"/>
+                        </h1>
+                        <h3>
+                            <field name="description" placeholder="Description ......."/>
+                        </h3>
+                    </div>
+                    <group>
+                        <group string="Partner Section" name="partner_section">
+                            <field name="incoming_check_transfer" string="Type" required="1"/>
+                            <field name="cheque_date"/>
+                            <field name="check_due_date" required="1"/>
+                            <field name="cheque_number" force_save="1"/>
+                            <field name="partner_id" options="{'no_create': True}" required="1"/>
+                            <field name="partner_type"/>
+                            <field name="sale_order_ids" widget="many2many_tags"
+                                   options="{'no_edit': True,'no_create': True,'not_delete': True}"/>
+                            <field name="amount" invisible="1"/>
+                            <field name="currency_id" options="{'no_open': True, 'no_create': True}"/>
+                            <field name="currency_amount" widget="monetary"
+                                   options="{'currency_field': 'company_currency_id', 'field_digits': True}"/>
+                        </group>
+                        <group string="Bank Information" name="bank_section">
+                            <field name="bank_account_id" readonly="1"/>
+                            <field name="beneficiary_of_the_check"/>
+                            <field name="employee_id" required="state == 'send_to_bank'"/>
+                            <field name="hand_me_the_check"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="PDC updates" name="pdc_updates_section">
+                            <field name="cheque_received_date" readonly="1" invisible="state in ['draft','cancel']"/>
+                            <field name="cheque_send_date" readonly="1"
+                                   invisible="state in ['draft','confirm','cancel'] or cheque_send_date == False"/>
+                            <field name="deposit_date" readonly="1" invisible="state != 'deposit'"/>
+                            <field name="bounced_date" readonly="1"
+                                   invisible="state in ['draft','confirm','send_to_bank','deposit','cancel'] or bounced_date == False"/>
+                            <field name="return_to_partner_date" readonly="1"
+                                   invisible="state in ['draft','confirm','send_to_bank','deposit','bounced','cancel'] or return_to_partner_date == False"/>
+                            <field name="cash_date" readonly="1" invisible="state != 'cashed' or state == 'cancel'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" nolabel="1" placeholder="notes..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="cheque_management_tree" model="ir.ui.view">
+        <field name="name">cheque.management.tree</field>
+        <field name="model">cheque.management</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="partner_type" optional="show"/>
+                <field name="partner_id"/>
+                <field name="employee_id" optional="show"/>
+                <field name="bank_account_id" optional="show"/>
+                <field name="collected_by_another_bank_treasury" optional="show"/>
+                <field name="cheque_number" optional="show"/>
+                <field name="check_due_date" optional="show"/>
+                <field name="cheque_received_date" optional="show"/>
+                <field name="hand_me_the_check" optional="hide"/>
+                <field name="beneficiary_of_the_check" optional="hide"/>
+                <field name="drawn_bank" optional="hide"/>
+                <field name="check_back" optional="hide"/>
+                <field name="back_person_name" optional="hide"/>
+                <field name="currency_id" optional="show"/>
+                <field name="currency_amount"/>
+                <field name="amount" invisible="1"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <!--Incoming Action -->
+    <record id="action_cheque_management_incoming" model="ir.actions.act_window">
+        <field name="name">Incoming Cheque</field>
+        <field name="res_model">cheque.management</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('cheque_type', '=', 'incoming')]</field>
+        <field name="context">{'default_cheque_type': 'incoming', 'default_move_type': 'out_invoice',
+            'default_incoming_check_transfer': 'check', 'default_partner_type': 'receivable'}
+        </field>
+        <field name="view_id" ref="cheque_management.cheque_management_tree"/>
+        <field name="view_ids" eval="[Command.clear(),
+                          (0,0,{'view_mode':'list'}),
+                          (0,0,{'view_mode':'form', 'view_id': ref('cheque_management_form')})]"/>
+    </record>
+    <!--Outgoing Action -->
+    <record id="action_cheque_management_outgoing" model="ir.actions.act_window">
+        <field name="name">Outgoing Cheque</field>
+        <field name="res_model">cheque.management</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="domain">[('cheque_type', '=', 'outgoing')]</field>
+        <field name="context">{'default_cheque_type': 'outgoing', 'default_check_transfer': 'check'}</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="cheque_management.cheque_management_tree"/>
+        <field name="view_ids" eval="[Command.clear(),
+                          (0,0,{'view_mode':'list'}),
+                          (0,0,{'view_mode':'form', 'view_id': ref('cheque_outgoing_management_form')})]"/>
+    </record>
+
+    <!--Cheque Menuitem-->
+    <menuitem id='main_menu_incoming_cheque_management' name='Cheque Management' parent='account.menu_finance_entries'
+              sequence="4"/>
+    <menuitem id='menu_incoming_cheque_management' name='Incoming Cheque' parent='main_menu_incoming_cheque_management'
+              action='action_cheque_management_incoming'/>
+    <menuitem id='menu_outgoing_cheque_management' name='Outgoing Cheque' parent='main_menu_incoming_cheque_management'
+              action='action_cheque_management_outgoing'/>
+    <record id="account.menu_finance_entries" model="ir.ui.menu">
+        <field name="sequence">5</field>
+    </record>
+</odoo>

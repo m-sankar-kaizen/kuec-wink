@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_child_allowance_base,child.allowance,model_child_allowance,,1,1,1,1
+access_supporting_documents,supporting.documents,model_supporting_documents,,1,1,1,1
+access_kids_eligibility,kids.eligibility,model_kids_eligibility,,1,1,1,1

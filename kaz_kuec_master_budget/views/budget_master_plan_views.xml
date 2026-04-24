@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="budget_master_plan_view_tree" model="ir.ui.view">
+        <field name="name">budget.master.plan.view.tree</field>
+        <field name="model">budget.master.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="reference"/>
+                <field name="date_start"/>
+                <field name="date"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="budget_master_plan_view_form" model="ir.ui.view">
+        <field name="name">budget.master.plan.view.form</field>
+        <field name="model">budget.master.plan</field>
+        <field name="arch" type="xml">
+            <form string="Budget Master Plan">
+                <header>
+                    <button name="action_request"
+                            class="oe_highlight"
+                            string="Open Plan"
+                            invisible="status not in ['draft']"
+                            type="object"
+                            help="Open Plan"/>
+                    <button name="action_close"
+                            class="oe_highlight"
+                            string="Close Plan"
+                            invisible="status not in ['open']"
+                            type="object"
+                            help="Close Plan"/>
+                    <button name="action_active"
+                            class="oe_highlight"
+                            string="Activate Plan"
+                            invisible="status not in ['close']"
+                            type="object"
+                            help="Activate Plan"/>
+                    <button name="action_done"
+                            class="oe_highlight"
+                            string="Mark as Done"
+                            invisible="status not in ['active']"
+                            type="object"
+                            help="Mark as Done"/>
+                    <button name="action_cancel"
+                            class="btn btn-secondary"
+                            string="Cancel Plan"
+                            invisible="status not in ['draft']"
+                            type="object"
+                            help="Cancel Plan"/>
+                    <button name="action_reset"
+                            class="btn btn-secondary"
+                            string="Reset to Draft"
+                            invisible="status not in ['canceled']"
+                            type="object"
+                            help="Reset"/>
+
+                    <field name="status" widget='statusbar'/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="view_analytic_budgets"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-pencil-square-o">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Budgets</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="reference"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="owner_id"/>
+
+                        </group>
+                        <group>
+                            <field name="date_start" string="Planned Date"
+                                   widget="daterange"
+                                   options="{&quot;end_date_field&quot;: &quot;date&quot;, &quot;always_range&quot;: &quot;1&quot;}"
+                                   required="1"
+                                   readonly="status != 'draft'"/>
+                            <field name="date"
+                                   invisible="1"
+                                   required="1"/>
+                            <field name="created_date"/>
+                            <field name="company_id"/>
+                            <field name="currency_id"
+                                   invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Notes">
+                            <field name="notes"
+                                   readonly="status != 'draft'"/>
+                        </page>
+                        <page string="Budgets">
+                            <field name="budget_ids"
+                                   readonly="status in ['active', 'done']"/>
+                        </page>
+                        <page string="Risk Assessment">
+                            <group>
+                                <group>
+                                    <field name="total_reserved_amount"/>
+                                    <field name="total_committed_amount"/>
+                                </group>
+                                <group>
+                                    <field name="total_planned_amount"/>
+                                    <field name="total_actual_spent"/>
+                                    <field name="total_remaining"/>
+                                </group>
+                                <group>
+                                    <field name="progress"
+                                           widget="progressbar"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_budget_master_plan"
+            model="ir.actions.act_window">
+        <field name="name">Budget Master Plan</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">budget.master.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Records
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_budget_master_plan_parent"
+              name="Budget"
+              sequence="54"
+              parent="account.menu_finance_entries">
+        <menuitem id="menu_budget_master_plan"
+                  name="Budget Master Plan"
+                  sequence="56"
+                  action="kaz_kuec_master_budget.action_budget_master_plan"/>
+    </menuitem>
+    <menuitem parent="kaz_kuec_master_budget.menu_budget_master_plan_parent"
+              id="account_budget.menu_act_budget_analytic_view"
+              name="Analytic Budget"
+              action="account_budget.act_budget_analytic_view" sequence="55"
+              groups="account.group_account_manager"/>
+
+
+</odoo>

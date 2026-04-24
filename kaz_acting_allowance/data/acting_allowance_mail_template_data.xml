@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="0">
+    <!--Email template for missing document -->
+    <record id="email_template_finalise_notify" model="mail.template">
+        <field name="name">Acting Allowance: Finalise</field>
+        <field name="model_id" ref="kaz_acting_allowance.model_employee_acting_allowance"/>
+        <field name="partner_to">{{ object.hr_responsible_id.partner_id.id }}</field>
+        <field name="subject">Acting Allowances to Renew</field>
+        <field name="description">Notify HR users about acting allowances to renew</field>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Dear
+        <t t-if="object.hr_responsible_id.partner_id.name">
+            <t t-esc="object.hr_responsible_id.partner_id.name"/>,
+        </t>
+        <br/>
+        Hope you are doing well.
+        <br/>
+        <br/>
+        There is an acting allowance request to renew for
+        <strong t-out="object.employee_id.name"/>.
+        <br/>
+
+        <t t-if="ctx.get('link')">
+            Click on the button to go to the record:
+            <br/>
+            <br/>
+            <br/>
+            <div style="display: flex; justify-content: center;">
+                <a t-att-href="ctx.get('link')"
+                   type="button"
+                   class="btn btn-primary"
+                   style="background: #3a93af; font-size: 12px; color: #FFFFFF; display: block; padding: 8px 12px 11px; text-decoration: none !important; font-weight: 400;">
+                    Go to Record
+                </a>
+            </div>
+        </t>
+    </p>
+</div>
+        </field>
+    </record>
+</odoo>

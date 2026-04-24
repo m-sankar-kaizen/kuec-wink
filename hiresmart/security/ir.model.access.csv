@@ -1,0 +1,12 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+
+access_resume_ocr,resume.ocr,model_resume_ocr,base.group_user,1,1,1,1
+access_resume_ocr_page,resume.ocr.page,model_resume_ocr_page,base.group_user,1,1,1,1
+access_resume_ocr_upload_wizard,resume.ocr.upload.wizard,model_resume_ocr_upload_wizard,base.group_user,1,1,1,1
+access_resume_ocr_upload_line,resume.ocr.upload.line,model_resume_ocr_upload_line,base.group_user,1,1,1,1
+
+access_hiring_request,hiring.request,model_hiring_request,base.group_user,1,1,1,1
+access_approval_to_review,approval.to.review,model_approval_to_review,base.group_user,1,1,1,1
+access_all_approvals,all.approvals,model_all_approvals,base.group_user,1,1,1,1
+
+access_internal_job_application,internal.job.application,model_internal_job_application,base.group_user,1,1,1,1

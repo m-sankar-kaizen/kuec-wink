@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_inherit_user_form_kaz_kuec_recruitment_staffing_plan" model="ir.ui.view">
+        <field name="name">res.user.form.kaz_kuec_recruitment_staffing_plan</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="is_department_manager"
+                       invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

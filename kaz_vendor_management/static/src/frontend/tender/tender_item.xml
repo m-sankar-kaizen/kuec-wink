@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="TenderItem">
+        <div class="col-12 cursor-pointer">
+            <div class="card w-100 shadow-sm background-blue" t-on-click.stop="toggleTenderButton">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <h6 class="card-subtitle text-muted mb-0">
+                                <span t-out="props.name"/>
+                                <span class="ms-1">#</span>
+                                <span t-out="props.version"/>
+                            </h6>
+                            <!-- Exclusive label -->
+                            <span t-if="props.is_exclusive"
+                                  class="badge bg-warning text-dark d-flex align-items-center">
+                                <i t-if="!hasAccess" class="fa fa-lock me-1"/>
+                                <i t-else="" class="fa fa-unlock me-1"/>
+                                Exclusive
+                            </span>
+                        </div>
+                        <div class="dropup" t-on-click.stop="toggleTenderButton">
+                            <button class="btn" type="button">
+                                <i class="fa fa-caret-up" t-if="!state.open"/>
+                                <i class="fa fa-caret-down" t-if="state.open"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <h5 class="card-title" t-out="props.title"/>
+                    <p class="card-text mb-1">
+                        State:
+                        <span class="fw-bold" t-attf-class="tender-state-{{props.state}}"
+                              t-out="getState(props.state)"/>
+                    </p>
+                    <p class="card-text mb-1">
+                        Created on:
+                        <span t-out="props.submission_date.split(' ')[0]"/>
+                    </p>
+                    <p class="card-text mb-1">
+                        Bid Start Date:
+                        <span t-out="props.bid_start_date.split(' ')[0]"/>
+                    </p>
+                    <p class="card-text mb-2">
+                        Bid End Date:
+                        <span t-out="props.bid_end_date.split(' ')[0]"/>
+                    </p>
+
+                    <!-- Category badges -->
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        <t t-foreach="props.partner_category_ids" t-as="cat_id" t-key="cat_id_index">
+                            <t t-set="category" t-value="props.categories.find(c => c.id === cat_id)"/>
+                            <t t-if="category">
+                                <span class="badge bg-secondary" t-out="category.name"/>
+                            </t>
+                        </t>
+                    </div>
+                    <t t-if="state.open">
+                        <a t-if="hasAccess" t-on-click.stop="() => {}" t-att-href="'/get/tender/' + props.id"
+                           class="btn btn-primary mt-auto">
+                            View Tender
+                        </a>
+                        <t t-else="">
+                            <span class="text-danger text-align-center fw-bold mt-auto d-block">
+                                You do not have access to this tender.
+                            </span>
+                        </t>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

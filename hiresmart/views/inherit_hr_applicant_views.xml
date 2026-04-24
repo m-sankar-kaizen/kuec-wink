@@ -1,0 +1,14 @@
+<odoo>
+    <data>
+
+<!-- [Start] [Model: hr.applicant] Add new domain for filtering records that were created from 'hiring.request' model ############ -->
+        <record id="hr_recruitment.crm_case_categ0_act_job" model="ir.actions.act_window">
+            <field name="name">Applicants</field>
+            <field name="res_model">hr.applicant</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('is_hiring_request_record', '=', False)]</field>
+        </record>
+<!-- [End] [Model: hr.applicant] Add new domain for filtering records that were created from 'hiring.request' model ############ -->
+
+    </data>
+</odoo>

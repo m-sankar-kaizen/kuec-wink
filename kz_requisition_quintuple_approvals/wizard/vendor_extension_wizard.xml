@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Form view for the transient model 'vendor.requisition.wizard'.
+
+        Purpose:
+        This wizard allows selection of multiple vendors (suppliers) to associate with a specific requisition.
+
+        Fields:
+          - vendor_ids: Many2many field displaying vendors with the 'many2many_tags' widget for easy multi-selection.
+          - requisition_id: Read-only field showing the related requisition for context.
+
+        Footer Buttons:
+          - "Apply": Calls the 'apply_vendors' method on the wizard to process the selected vendors.
+          - "Cancel": Closes the wizard without action.
+
+        The wizard opens as a modal dialog (target="new").
+    -->
+    <record id="view_vendor_requisition_wizard_form" model="ir.ui.view">
+        <field name="name">vendor.requisition.wizard.form</field>
+        <field name="model">vendor.requisition.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Select Vendors">
+                <group>
+                    <field name="vendor_ids" widget="many2many_tags"/>
+                    <field name="requisition_id" readonly="1"/>
+                </group>
+                <footer>
+                    <button string="Apply" type="object" name="apply_vendors" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        Action to open the vendor requisition wizard as a modal form.
+
+        - Name: Vendor Requisition Wizard
+        - Model: vendor.requisition.wizard
+        - View Mode: form only
+        - Opens in modal dialog (target="new")
+    -->
+    <record id="action_vendor_requisition_wizard" model="ir.actions.act_window">
+        <field name="name">Vendor Requisition Wizard</field>
+        <field name="res_model">vendor.requisition.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

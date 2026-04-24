@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_budget_post_form" model="ir.ui.view">
+        <field name="name">view.budget.post.form.inherit.progress</field>
+        <field name="model">account.budget.post</field>
+        <field name="inherit_id" ref="kz_budget_custom.view_budget_post_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="company_code" invisible="1"/>
+                <field name="budgetary_position_tag_id"
+                       required="company_code == 'KUEC'"
+                       invisible="company_code != 'KUEC'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,7 @@
+<templates>
+    <t t-name="kaz_kuec_tender_dashboard.TenderRfqListView" t-inherit="web.ListRenderer" t-inherit-mode="primary">
+        <xpath expr="//div[hasclass('o_list_renderer')]/*[1]" position="before">
+            <TenderRfqDashBoard/>
+        </xpath>
+    </t>
+</templates>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="kaz_kuec_procurement_plan_monitoring.Dashboard">
+        <div class="o_dashboard">
+        <FloatFilter t-props="filterProps"/>
+
+        <div class="dash-scrollable">
+            <div class="d-flex justify-content-center px-3 mx-3">
+                <div class="table-container kuec-dash d-flex flex-column pb-3">
+                    <h2 class="mb-3 mt-3">Annual Procurement Plan Monitoring - Overview</h2>
+                    <div class="row">
+                    <t t-foreach="state.departments" t-as="department" t-key="department.id">
+                        <div class="col-md-4 my-2">
+                            <div class="card shadow-sm dash-card hover-shadow"
+                                 style="cursor:pointer;"
+                                 t-on-click="() => this.openDepartment(department.id)">
+                                <div t-attf-class="card-body text-center">
+                                    <h5 class="mb-1 mt-1">
+                                        Department:
+                                        <t t-esc="department.name"/>
+                                    </h5>
+                                    <h5 class="d-flex align-items-center justify-content-center">
+                                        Planned vs Actual Quantity:
+                                        <t t-esc="department.planned_vs_actual.actual_qty"/>
+                                        /
+                                        <t t-esc="department.planned_vs_actual.planned_qty"/>
+
+                                        <span
+                                            t-att-class="
+                                                'kpi-dot ' +
+                                                (department.planned_vs_actual.qty_percentage &lt; 80
+                                                    ? 'kpi-green'
+                                                    : department.planned_vs_actual.qty_percentage &lt;= 90
+                                                        ? 'kpi-yellow'
+                                                        : 'kpi-red')
+                                            "
+                                            title="Quantity status"
+                                        />
+                                    </h5>
+
+                                    <h5 class="d-flex align-items-center justify-content-center">
+                                        Planned vs Actual Price:
+                                        <t t-esc="department.planned_vs_actual.actual_price"/>
+                                        /
+                                        <t t-esc="department.planned_vs_actual.planned_price"/>
+
+                                        <span
+                                            t-att-class="
+                                                'kpi-dot ' +
+                                                (department.planned_vs_actual.price_percentage &lt; 80
+                                                    ? 'kpi-green'
+                                                    : department.planned_vs_actual.price_percentage &lt;= 90
+                                                        ? 'kpi-yellow'
+                                                        : 'kpi-red')
+                                            "
+                                            title="Price status"
+                                        />
+                                    </h5>
+
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-scrollable">
+            <div class="d-flex justify-content-center px-3 mx-3">
+                <div class="table-container kuec-dash d-flex flex-column pb-3">
+                    <div class="row">
+                        <TopVendorCard vendors="state.data.top_10_vendors"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-scrollable">
+            <div class="d-flex justify-content-center px-3 mx-3">
+                <div class="table-container kuec-dash d-flex flex-column pb-3">
+                    <div class="row">
+                        <DashboardTopRequestTypesCard top_request_types="state.data.top_10_request_types"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-scrollable">
+            <div class="d-flex justify-content-center px-3 mx-3">
+                <div class="table-container kuec-dash d-flex flex-column pb-3">
+                    <div class="row">
+                        <DashboardTopDepartmentsCard top_departments="state.data.top_departments"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-scrollable">
+            <div class="d-flex justify-content-center px-3 mx-3">
+                <div class="table-container kuec-dash d-flex flex-column pb-3">
+                    <div class="row">
+                    <DashboardCard
+                        title="'Total Purchase Requests'"
+                        value="state.data.total_pr_created || 0"
+                    />
+                    <DashboardCard
+                        title="'Total Approved Purchase Requests'"
+                        value="state.data.total_pr_approved || 0"
+                    />
+                    <DashboardCard
+                        title="'Total Quotations'"
+                        value="state.data.total_quotations || 0"
+                    />
+                    <DashboardCard
+                        title="'Total Purchase Orders'"
+                        value="state.data.total_po || 0"
+                    />
+                    <DashboardCard
+                        title="'% of PR Confirmed'"
+                        value="state.data.per_total_pr_confirmed || 0"
+                    />
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dash-scrollable">
+            <div class="d-flex justify-content-center px-3 mx-3">
+                <div class="table-container kuec-dash d-flex flex-column pb-3">
+                    <div class="row">
+                        <t t-log="state.data"/>
+                    <DashboardCard
+                        title="'Repeat Procurement - Warnings Triggered'"
+                        value="state.data.warning_triggered || 0"
+                    />
+                    <DashboardCard
+                        title="'Pending PR Approvals'"
+                        value="state.data.not_approved_requisitions || 0"
+                    />
+                    <DashboardCard
+                        title="'Tenders in Progress'"
+                        value="state.data.tenders || 0"
+                    />
+                    <DashboardCard
+                        title="'Average PR to PO Approval Time (Days)'"
+                        value="state.data.average_days || 0"
+                    />
+                    <DashboardCardMulti
+                        title="'Total PRs/ Total RFQs/ Total POs'"
+                        value="state.data.total_pr_rfq_po"
+                    />
+                    <DashboardCard
+                        title="'Non Planned Procurements'"
+                        value="state.data.non_master_plan_requisition || 0"
+                    />
+                    <DashboardCardMultiPeriod
+                        title="'Top Procurement Periods'"
+                        value="state.data.top_procurement_period"
+                    />
+                </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        </div>
+    </t>
+
+</templates>

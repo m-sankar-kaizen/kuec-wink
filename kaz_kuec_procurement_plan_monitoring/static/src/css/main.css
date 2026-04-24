@@ -1,0 +1,134 @@
+.kpi-icon {
+    float: right;
+    font-size: 500%;
+    position: absolute;
+    top: 0rem;
+    right: -0.3rem;
+    opacity: .16;
+}
+
+#kpi-container {
+    width: 1200px;
+    display: flex;
+}
+
+.kpi-grey-dark {
+    background: #495057;
+    color: #efefef;
+}
+
+.kpi-red-gradient {
+    background: linear-gradient(180deg, rgba(207, 82, 82, 1) 0%, rgba(121, 9, 9, 1) 80%);
+    color: #fff;
+}
+
+.kpi-red {
+    background: #a83b3b;
+    color: #fff;
+}
+
+.kpi-blue {
+    background: #30a5ff;
+    color: #fff;
+}
+
+.kpi-brown {
+    background: #9f622a;
+    color: #fff;
+}
+
+
+.kpi-purple {
+    background: #886ab5;
+    color: #fff;
+}
+
+.kpi-orange {
+    background: #ffc241;
+    color: #fff;
+}
+
+.kpi-card {
+    overflow: hidden;
+    position: relative;
+    /*box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.75);*/
+    display: inline-block;
+    float: left;
+    padding: 1em;
+    border-radius: 0.3em;
+    font-family: sans-serif;
+    /*width: 100%;
+    max-width: 190px;*/
+    min-width: 180px;
+    margin-left: 0.5em;
+    margin-top: 0.5em;
+}
+
+.kpi-card-value {
+    display: block;
+    font-size: 200%;
+    font-weight: bolder;
+}
+
+.kpi-card-text {
+    display: block;
+    font-size: 14px;
+    padding-left: 0.2em;
+}
+
+.dash-scrollable {
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    padding: 0.5rem;
+}
+
+.table-container {
+    padding: 16px 40px 0 40px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    border-radius: 8px;
+    margin: 12px;
+    background: beige;
+}
+
+.max-30 {
+    max-width: 30%;
+}
+
+.chart_canvas_bar {
+    width: 100%;
+}
+
+.chart_canvas_pie {
+    width: 60%;
+}
+
+.min-w-80 {
+    min-width: 80px !important;
+}
+
+.compare-icon {
+    width: 16px;
+    vertical-align: text-bottom;
+}
+
+/*.top-unit-class {
+    background: red !important;
+}
+
+.top-sales-class {
+    background: red !important;
+}*/
+
+.top_10_container {
+    background: #9f622a;
+    border-radius: 0.3em;
+}
+
+.avatar_view {
+    width: 30px;
+    border-radius: 6px;
+    max-width: 30px;
+    height: 30px;
+    max-height: 30px;
+}

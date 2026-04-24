@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    ============================================================================
+    View Inheritance: Add Fields to HR Job Form View
+    Model: hr.job
+    Purpose:
+      - Adds three additional fields to the Job Position form:
+        1. job_code: Internal or external job classification code.
+        2. grade_id: Links the job to an HR grade (e.g., pay band).
+        3. employee_arabic_job_position: Arabic translation of job title.
+    Location:
+      - Fields are added just after the job name/title section (oe_title).
+    ============================================================================
+    -->
+    <record id="add_job_code_employee_form" model="ir.ui.view">
+        <field name="name">job.code</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="hr.view_hr_job_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert fields after the job title section -->
+            <xpath expr="//div[hasclass('oe_title')]" position="after">
+                <group string="Additional Job Info">
+                    <!-- Unique job classification code for internal reference -->
+                    <field name="job_code"/>
+
+                    <!-- HR grade associated with this job -->
+                    <field name="grade_id"/>
+
+                    <!-- Arabic translation of the job title -->
+                    <field name="employee_arabic_job_position"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

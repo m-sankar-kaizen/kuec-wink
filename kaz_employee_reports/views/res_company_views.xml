@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    View Inheritance: tab_in_res_company
+    Model: res.company
+    Purpose:
+        - Extends the default company form view (`base.view_company_form`)
+        - Adds a custom tab named "Ank Letter"
+        - The tab includes additional fields used for letter printing/signature configurations:
+            - Company name (in English and Arabic)
+            - Default employee and job details for letters
+            - Signature and stamp fields
+
+    Use Case:
+        - This customization is likely used to configure default values for printed documents like employment letters,
+          exit forms, or other HR documents where standard signatories and stamps are needed.
+    -->
+    <record id="tab_in_res_company" model="ir.ui.view">
+        <field name="name">res company</field> <!-- View name -->
+        <field name="model">res.company</field> <!-- Target model -->
+        <field name="inherit_id" ref="base.view_company_form"/> <!-- Inherits the base company form view -->
+
+        <field name="arch" type="xml">
+            <!-- Insert the new tab after the 'General Information' page -->
+            <xpath expr="//page[@name='general_info']" position="after">
+                <page name="ank_letter" string="Letter">
+                    <group>
+                        <group>
+                            <!-- Company name fields -->
+                            <field name="company_name"/> <!-- English name to be used on letters -->
+                            <field name="company_name_arabic"/> <!-- Arabic version of the name -->
+
+                            <!-- Employee & job-related fields used as default signatory -->
+                            <field name="employee_id"/> <!-- Default employee for letters -->
+                            <field name="employee_arabic_name"/> <!-- Arabic name for printed documents -->
+                            <field name="job_id"/> <!-- Default job position -->
+                            <field name="employee_arabic_job_position"/> <!-- Arabic version of the job title -->
+
+                            <!-- Signature & stamp configuration -->
+                            <field name="signature"/> <!-- Binary field for scanned signature -->
+                            <field name="stamp"/> <!-- Binary field for company stamp -->
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

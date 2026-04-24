@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Security Category -->
+    <record id="category_contact_approval" model="ir.module.category">
+        <field name="name">Contact Approval</field>
+        <field name="description">Groups responsible for approving, qualifying, and managing contact approvals.</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- Group: Pre-Approver -->
+    <record id="group_contact_pre_approver" model="res.groups">
+        <field name="name">Pre-Approver</field>
+        <field name="category_id" ref="category_contact_approval"/>
+    </record>
+
+    <!-- Group: Qualifier -->
+    <record id="group_contact_qualifier" model="res.groups">
+        <field name="name">Qualifier</field>
+        <field name="category_id" ref="category_contact_approval"/>
+        <field name="implied_ids" eval="[Command.link(ref('group_contact_pre_approver'))]"/>
+    </record>
+
+    <!-- Group: Admin -->
+    <record id="group_contact_admin" model="res.groups">
+        <field name="name">Administrator</field>
+        <field name="category_id" ref="category_contact_approval"/>
+        <field name="implied_ids" eval="[Command.link(ref('group_contact_qualifier'))]"/>
+    </record>
+</odoo>

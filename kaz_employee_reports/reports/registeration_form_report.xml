@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        QWeb Template: Resignation Form Report
+        This template generates a resignation form PDF for an employee,
+        capturing essential details such as:
+        - Personal details (name, email, employee number)
+        - Organizational info (business group)
+        - Resignation specifics (reason, notification date, last working date, remarks)
+
+        The layout uses a simple internal structure from Odoo's `web.internal_layout`
+        and displays a header image, structured columns, and clean spacing.
+    -->
+    <template id="register_form_report">
+        <t t-call="web.html_container">
+            <!-- Loop through each document (usually one) passed to the report -->
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.internal_layout">
+                    <div class="page">
+                        <div class="container">
+                            <div class="row">
+                                <!-- Header Row with Logo -->
+                                <div class="col-1"/>
+                                <div class="col-3">
+                                    <img t-attf-src="/kaz_employee_reports/static/image/image.png"
+                                         style="height:100%; width:100%; "/>
+                                </div>
+                                <div class="col-8"/>
+                            </div>
+                            <br/>
+                            <br/>
+                            <h1>Resignation</h1>
+                            <br/>
+                            <div class="row mt-3">
+                                <div class="col-1"/>
+                                <div class="col-6">
+                                    <p><strong>Employee Name :  </strong><span t-field="o.name" /></p>
+                                    <p><strong>Employee Email :  </strong><span t-field="o.emp_email" /></p>
+                                    <p><strong>Leaving Reason :  </strong><span t-field="o.reason_id" /></p>
+                                    <p><strong>Notify On :  </strong><span t-field="o.notify" /></p>
+                                    <p><strong>Last Working Date :  </strong><span t-field="o.notify" /></p>
+                                    <p><strong>Remarks :  </strong><span t-field="o.remarks" /></p>
+                                </div>
+                                <div class="col-5">
+                                     <p><strong>Employee Number :  </strong><span t-field="o.emp_number" /></p>
+                                    <p><strong>Business Group :  </strong><span t-field="o.emp_company_id" /></p>
+                                </div>
+                                <div class="col-1"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!--
+        Report Action: Resignation Form
+        - Binds the QWeb template to the `register.form` model
+        - Enables printing from buttons, form views, and menus
+        - File will be named as: "Resignation Form - <employee_name>.pdf"
+    -->
+
+    <record id="action_report_register_form_report" model="ir.actions.report">
+        <field name="name">Resignation Form</field>
+        <field name="model">register.form</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.register_form_report</field>
+        <field name="report_file">kaz_employee_reports.register_form_report</field>
+        <field name="print_report_name">'Resignation Form - %s' % object.name.name</field>
+    </record>
+
+</odoo>

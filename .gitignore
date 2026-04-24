@@ -1,0 +1,13 @@
+# Modules excluded from version control
+kaz_ai_trust/
+
+# Local dev / temp files
+*.log
+*.pyc
+__pycache__/
+.DS_Store
+
+# Stray files — expense reports, exports dumped into static/description
+**/static/description/*.pdf
+**/static/description/*.xlsx
+**/static/description/*.html

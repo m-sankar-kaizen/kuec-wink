@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+        Inherited View: hr.salary.rule.form.inherit.kaz
+        Model: hr.salary.rule
+        Inherits: hr_payroll.hr_salary_rule_form
+
+        Purpose:
+        Adds two custom fields: `is_end_of_service` (Boolean) and `eos_categories` (Many2many) to the salary rule form view.
+
+        Functional Use:
+        - `is_end_of_service`: Marks the rule as being applicable only for End of Service (EOS) settlements.
+        - `eos_categories`: Categorizes EOS-specific salary rules (e.g., Basic, COLA, Gratuity, etc.).
+
+        UX Behavior:
+        - The `eos_categories` field is only shown when `is_end_of_service` is checked.
+        - It is also **required** in that case to ensure proper classification.
+
+        Dependencies:
+        - Field `is_end_of_service` must be defined on `hr.salary.rule` as a Boolean.
+        - Field `eos_categories` must be defined as a Many2many or Selection field on `hr.salary.rule`.
+    -->
+    <record id="hr_salary_rule_form_inherit_kaz" model="ir.ui.view">
+        <field name="name">hr.salary.rule.form.inherit.kaz.eos</field>
+        <field name="model">hr.salary.rule</field>
+        <field name="inherit_id" ref="hr_payroll.hr_salary_rule_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='struct_id']" position="after">
+                <field name="is_end_of_service"/>
+                <field name="eos_categories" invisible="not is_end_of_service" required="is_end_of_service"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!--
+        Inherited View: hr.salary.rule.form.inherit.kaz (second layer)
+        Model: hr.salary.rule
+        Inherits: hr_payroll_account.hr_salary_rule_view_form
+
+        Purpose:
+        Enforces that `account_debit` and `account_credit` fields are required
+        if the salary rule is marked as `is_end_of_service = True`.
+
+        Functional Justification:
+        This ensures that all EOS-related salary rules have valid accounting configurations
+        to prevent errors during payslip generation or posting.
+
+        Notes:
+        - This only affects rules specifically tagged as `is_end_of_service = True`.
+        - For regular salary rules, this requirement remains unchanged.
+    -->
+    <record id="hr_salary_rule_view_form" model="ir.ui.view">
+        <field name="name">hr.salary.rule.form.inherit.kaz.eos</field>
+        <field name="model">hr.salary.rule</field>
+        <field name="inherit_id" ref="hr_payroll_account.hr_salary_rule_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='account_debit']" position="attributes">
+                <attribute name="required">is_end_of_service</attribute>
+            </xpath>
+            <xpath expr="//field[@name='account_credit']" position="attributes">
+                <attribute name="required">is_end_of_service</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

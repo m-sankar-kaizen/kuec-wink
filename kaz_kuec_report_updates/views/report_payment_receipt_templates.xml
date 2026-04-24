@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="report_payment_receipt_document"
+              inherit_id="account.report_payment_receipt_document">
+        <xpath expr="//div[@t-if='o.amount']" position="after">
+            <t t-set="report_lang"
+                t-value="o.partner_id.lang or o.company_id.partner_id.lang or env.lang or 'en_US'"/>
+                <div class="col-6" t-if="o.amount">
+                    Payment Amount (In Words): <span t-esc="o._num2words(o.amount, report_lang)"/>
+                 </div>
+        </xpath>
+    </template>
+</odoo>

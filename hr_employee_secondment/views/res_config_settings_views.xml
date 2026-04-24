@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_res_config_settings_inherit_secondment" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.secondment</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="hr.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@name='employee_rights_setting_container']" position="after">
+                    <block title="Secondment Management" name="secondment_management">
+
+                        <setting id="secondment_max_duration_months"
+                                 title="Maximum Secondment Duration"
+                                 help="Maximum duration in months for a single secondment period"
+                                 string="Maximum Secondment Duration">
+                            <field name="secondment_max_duration_months"/>
+
+                        </setting>
+
+                        <setting id="secondment_allow_extensions"
+                                 help="Enable one-time extension for secondment periods"
+                                 title="Allow Secondment Extensions">
+                            <field name="secondment_allow_extensions"/>
+                            <div class="d-flex mt-1" invisible="not secondment_allow_extensions">
+                                <field name="secondment_max_extension_months" class="ml16"/>
+                                <label for="secondment_max_extension_months" class="o_light_label"/>
+                            </div>
+                        </setting>
+
+                        <setting id="secondment_allowance_threshold_months"
+                                 help="Minimum months required to qualify for allowance"
+                                 string="Allowance Eligibility Threshold"
+                                 title="Allowance Eligibility Threshold">
+                            <field name="secondment_allowance_threshold_months"/>
+                        </setting>
+
+                        <setting id="secondment_allowance_percentage"
+                                 help="Percentage of seconded position basic salary"
+                                 string="Secondment Allowance Percentage"
+                                 title="Secondment Allowance Percentage">
+                            <field name="secondment_allowance_percentage"/>
+                        </setting>
+
+                        <setting id="secondment_requires_original_duties"
+                                 help="Allowance only applies if employee maintains original duties"
+                                 title="Secondment Original Duties"
+                                 string="Secondment Original Duties">
+                            <field name="secondment_requires_original_duties"/>
+                        </setting>
+                        <setting id="secondment_max_grade_difference"
+                                 help="Maximum grades above current grade"
+                                 title="Maximum Grade Difference"
+                                 string="Maximum Grade Difference">
+                            <field name="secondment_max_grade_difference"/>
+                        </setting>
+
+                        <setting id="secondment_notification_days_before_end"
+                                 help="Days before end date to notify HR Manager"
+                                 title="End Date Notification"
+                                 string="End Date Notification">
+                            <field name="secondment_notification_days_before_end"/>
+                        </setting>
+
+                        <setting id="secondment_auto_complete_on_end"
+                                 help="Automatically complete on end date"
+                                 title="Auto Compute on End Date"
+                                 string="Auto Compute on End Date">
+                            <field name="secondment_auto_complete_on_end"/>
+                        </setting>
+
+
+
+
+
+<!--                    <div class="o_settings_container">-->
+<!--                        <div class="row">-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane"/>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_max_duration_months" string="Maximum Secondment Duration"/>-->
+<!--                                        <div class="text-muted">Maximum duration in months for a single secondment period</div>-->
+<!--                                        <field name="secondment_max_duration_months" class="o_light_label"/>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane">-->
+<!--                                        <field name="secondment_allow_extensions"/>-->
+<!--                                    </div>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_allow_extensions"/>-->
+<!--                                        <div class="text-muted">Enable one-time extension for secondment periods</div>-->
+<!--                                        <div class="content-group">-->
+<!--                                            <label for="secondment_max_extension_months" string="Max Extension Duration"/>-->
+<!--                                            <field name="secondment_max_extension_months"/>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="row">-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane"/>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_allowance_threshold_months" string="Allowance Eligibility Threshold"/>-->
+<!--                                        <div class="text-muted">Minimum months required to qualify for allowance</div>-->
+<!--                                        <field name="secondment_allowance_threshold_months"/>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane"/>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_allowance_percentage" string="Secondment Allowance Percentage"/>-->
+<!--                                        <div class="text-muted">Percentage of seconded position basic salary</div>-->
+<!--                                        <field name="secondment_allowance_percentage"/>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="row">-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane">-->
+<!--                                        <field name="secondment_requires_original_duties"/>-->
+<!--                                    </div>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_requires_original_duties"/>-->
+<!--                                        <div class="text-muted">Allowance only applies if employee maintains original duties</div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane"/>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_max_grade_difference" string="Maximum Grade Difference"/>-->
+<!--                                        <div class="text-muted">Maximum grades above current grade</div>-->
+<!--                                        <field name="secondment_max_grade_difference"/>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div class="row">-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane"/>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_notification_days_before_end" string="End Date Notification"/>-->
+<!--                                        <div class="text-muted">Days before end date to notify HR Manager</div>-->
+<!--                                        <field name="secondment_notification_days_before_end"/>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="col-12 col-lg-6">-->
+<!--                                <div class="o_setting_box">-->
+<!--                                    <div class="o_setting_left_pane">-->
+<!--                                        <field name="secondment_auto_complete_on_end"/>-->
+<!--                                    </div>-->
+<!--                                    <div class="o_setting_right_pane">-->
+<!--                                        <label for="secondment_auto_complete_on_end"/>-->
+<!--                                        <div class="text-muted">Automatically complete on end date</div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+                    </block>
+            </xpath>
+        </field>
+    </record>
+    
+</odoo>

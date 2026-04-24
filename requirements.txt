@@ -1,0 +1,12 @@
+pysaml2==7.5.2
+dropbox==12.0.2
+pyncclient==0.7
+boto3==1.39.11
+nextcloud-api-wrapper==0.2.3
+paramiko==3.5.1
+openupgradelib==3.11.1
+mechanize==0.4.10
+linkedin==0.1.5
+humanize==4.14.0
+pandas==2.3.2
+gTTS==2.5.4

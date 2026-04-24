@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_hr_job_form" model="ir.ui.view">
+        <field name="name">hr.job.form.kaizen</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="kaz_employees.add_job_code_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='grade_id']" position="attributes">
+                <attribute name="string">Ankabut Grade</attribute>
+                <attribute name="invisible">company_code != 'ANK'</attribute>
+            </xpath>
+            <xpath expr="//field[@name='grade_id']" position="after">
+                <field name="kuec_grade_id"
+                       invisible="company_code != 'KUEC'"/>
+                <field name="company_code" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

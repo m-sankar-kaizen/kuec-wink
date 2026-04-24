@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Definition: Dropbox OAuth Authentication Wizard
+
+        Model: dropbox.auth.code
+        Purpose:
+        This transient wizard is used to allow the user to:
+        - Retrieve the Dropbox OAuth 2.0 authorization code
+        - Paste the code into the form
+        - Trigger token exchange and storage
+
+        The context variable `dropbox_auth` is used to control the visibility of fields and buttons.
+        This allows the wizard to behave conditionally based on the operation it's invoked for.
+    -->
+    <record id="dropbox_auth_code_view_form" model="ir.ui.view">
+        <field name="name">dropbox.auth.code.view.form</field>
+        <field name="model">dropbox.auth.code</field>
+        <field name="arch" type="xml">
+            <form string="Dropbox Authentication">
+                <!--
+                    Section: Authorization Link Display
+                    - This group is shown only when context variable `dropbox_auth` is True
+                    - Provides the user with a clickable link to obtain the Dropbox authorization code
+                -->
+                <group invisible="not context.get('dropbox_auth')">
+                    <span>
+                        Get an authorization code by clicking the link below,
+                        then copy and paste it into the field provided.
+                    </span>
+                    <field name="dropbox_auth_url"
+                           class="fa fa-arrow-right"
+                           widget="url"
+                           text="Get Authorization Code"
+                           nolabel="1"
+                           readonly="1"/>
+                </group>
+
+                <!--
+                    Section: Authorization Code Input
+                    - User pastes the Dropbox-provided authorization code into this field
+                    - Required only when `dropbox_auth` is active
+                -->
+                <group>
+                    <field name="dropbox_authorization_code"
+                           required="context.get('dropbox_auth')"
+                           invisible="not context.get('dropbox_auth')"
+                           placeholder="Paste the authorization code here"/>
+                </group>
+
+                <!--
+                    Section: Action Buttons
+                    - 'Confirm' triggers the token setup method to store the refresh token
+                    - 'Cancel' closes the wizard without making changes
+                -->
+                <footer>
+                    <button string="Confirm"
+                            type="object"
+                            name="action_setup_dropbox_token"
+                            class="btn-primary"
+                            invisible="not context.get('dropbox_auth')"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

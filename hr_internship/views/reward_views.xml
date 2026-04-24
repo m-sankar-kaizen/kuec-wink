@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_internship_reward_form" model="ir.ui.view">
+        <field name="name">hr.internship.reward.form</field>
+        <field name="model">hr.internship.reward</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit_for_approval" string="Submit for Approval" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve" type="object" class="oe_highlight" invisible="state != 'pending_approval'"/>
+                    <button name="action_reject" string="Reject" type="object" invisible="state != 'pending_approval'"/>
+                    <button name="action_notify_accounting" string="Notify Accounting" type="object" class="oe_highlight" invisible="state != 'approved'"/>
+                    <button name="action_mark_as_paid" string="Mark as Paid" type="object" class="oe_highlight" invisible="state != 'in_payment'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved,in_payment,paid"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Reward Information">
+                            <field name="internship_id" readonly="1" help="The internship for which this reward is being nominated"/>
+                            <field name="name" required="1" readonly="state != 'draft'" help="Title or name of the reward"/>
+                            <field name="reward_type" required="1" readonly="state != 'draft'" help="Select reward type: Monetary (cash), Gift (physical reward), or Both"/>
+                        </group>
+                        <group string="Reward Amount">
+                            <field name="amount" invisible="reward_type == 'gift'" readonly="state != 'draft'" string="Monetary Amount (AED)" help="Amount in AED (maximum AED 10,000). Hidden for gift-only rewards"/>
+                            <field name="max_amount" invisible="1"/>
+                            <field name="gift_description" invisible="reward_type not in ['gift', 'both']" readonly="state != 'draft'" help="Description of the gift (e.g., tablet, certificate, trophy)"/>
+                        </group>
+                    </group>
+
+                    <field name="reason" required="1" readonly="state != 'draft'" placeholder="Explain the reason for this reward..." help="Detailed justification for nominating this intern for a reward"/>
+
+                    <group string="Payment Details" name="payment_detail" invisible="state not in ['in_payment', 'paid']">
+                        <field name="payment_reference" readonly="state == 'paid'" help="Reference number for payment tracking in accounting/payroll system"/>
+                        <field name="payment_date" readonly="1" help="Date when reward was paid to the intern"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_internship_reward_list" model="ir.ui.view">
+        <field name="name">hr.internship.reward.list</field>
+        <field name="model">hr.internship.reward</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="internship_id"/>
+                <field name="reward_type" widget="badge"/>
+                <field name="amount"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_internship_reward_search" model="ir.ui.view">
+        <field name="name">hr.internship.reward.search</field>
+        <field name="model">hr.internship.reward</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="internship_id"/>
+                <separator/>
+                <filter name="pending" string="Pending Approval" domain="[('state', '=', 'pending_approval')]"/>
+                <filter name="approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <filter name="paid" string="Paid" domain="[('state', '=', 'paid')]"/>
+                <filter name="rejected" string="Rejected" domain="[('state', '=', 'rejected')]"/>
+                <separator/>
+                <filter name="monetary" string="Monetary" domain="[('reward_type', '=', 'monetary')]"/>
+                <filter name="gift" string="Gift" domain="[('reward_type', '=', 'gift')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_internship_reward" model="ir.actions.act_window">
+        <field name="name">Rewards</field>
+        <field name="res_model">hr.internship.reward</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

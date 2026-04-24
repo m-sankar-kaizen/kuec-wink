@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="mail_template_tender_awarded" model="mail.template">
+        <field name="name">Tender Awarded Notification</field>
+        <field name="model_id" ref="kaz_vendor_management.model_tender_bid"/>
+        <field name="subject">Congratulations! Your bid for Tender {{ object.tender_rfq_id.name }} has been awarded</field>
+        <field name="email_from">{{ object.company_id.email or user.email }}</field>
+        <field name="description">Notify vendors that their bid has been awarded for the tender.</field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+            <p>Dear <span t-esc="object.partner_id.name"/>,</p>
+
+            <p>We are pleased to inform you that your bid for the tender
+                <strong t-esc="object.tender_rfq_id.title"/>, Ref
+                <strong t-esc="object.tender_rfq_id.name"/>
+                has been <strong>awarded</strong>.
+            </p>
+
+            <p><strong>(BID Ref: <span t-esc="object.name"/>).</strong></p>
+
+            <p>Please log in to the vendor portal for further instructions and next steps regarding this awarded tender.</p>
+
+            <p>Congratulations and thank you for your participation!</p>
+
+            <p>Regards,<br/>
+               Procurement Team
+            </p>
+        </field>
+    </record>
+
+</odoo>

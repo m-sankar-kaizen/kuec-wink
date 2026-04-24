@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="kaz_kuec_tender_dashboard.TenderRfqDashboard">
+        <div class="o_purchase_dashboard container-fluid py-4 border-bottom bg-view">
+            <div class="row justify-content-between gap-3 gap-lg-0">
+                <div class="col-12 col-lg-12 flex-grow-1 flex-lg-grow-0 flex-shrink-0">
+                    <div class="grid gap-4">
+                        <div class="g-col-3 g-col-sm-2 d-flex align-items-center py-2 justify-content-end text-end justify-content-lg-start text-lg-start text-break">
+                            All Tenders
+                        </div>
+                        <div class="g-col-9 g-col-sm-10 grid gap-1">
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Open Tenders" filter_name="draft_rfqs">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="tenderRfqData['open_tenders']"/>Open Tenders
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Active Tenders" filter_name="waiting_rfqs">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="tenderRfqData['active_tenders']"/>Active Tenders
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Tenders Under Review" filter_name="late_rfqs">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="tenderRfqData['under_review_tenders']"/>Tenders Under Reveiew
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Awarded Tenders" filter_name="late_rfqs">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="tenderRfqData['awarded_tenders']"/>Awarded Tenders
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="o_purchase_dashboard container-fluid py-4 border-bottom bg-view">
+            <div class="row justify-content-between gap-3 gap-lg-0">
+                <div class="col-12 col-lg-12 flex-grow-1 flex-lg-grow-0 flex-shrink-0">
+                    <div class="grid gap-4">
+                        <div class="g-col-3 g-col-sm-2 d-flex align-items-center py-2 justify-content-end text-end justify-content-lg-start text-lg-start text-break">
+                            My Activities
+                        </div>
+                        <div class="g-col-9 g-col-sm-10 grid gap-1">
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Today" filter_name="activity_today">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="tenderRfqData['activity_today']"/>Today
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Due" filter_name="activity_due">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="tenderRfqData['activity_due']"/>Due
+                                </a>
+                            </div>
+                            <div class="g-col-3 p-0" t-on-click="setSearchContext" title="Upcoming" filter_name="activity_upcoming">
+                                <a href="#" class="btn btn-primary w-100 h-100 border-0 rounded-0 text-capitalize text-break fw-normal">
+                                    <div class="fs-2" t-out="tenderRfqData['activity_upcoming']"/>Upcoming
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </t>
+</templates>

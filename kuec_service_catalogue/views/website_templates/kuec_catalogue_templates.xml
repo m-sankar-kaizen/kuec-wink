@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Task 1.6: Service Description (HTML) on Product Detail Page -->
+    <template id="kuec_service_detail" inherit_id="website_sale.product" name="KUEC Service Details">
+        <xpath expr="//div[@id='product_detail_main']" position="after">
+            <t t-if="product.available_on_wink">
+                <div class="row mt-5">
+                    <div class="col-12 col-lg-8 offset-lg-2">
+                        
+                        <!-- 1. Service Overview -->
+                        <div t-if="product.wink_description" class="mb-5">
+                            <h3 class="mb-3">Service Overview</h3>
+                            <div t-field="product.wink_description" class="oe_structure"/>
+                        </div>
+
+                        <!-- 2. Scope & Delivery Model -->
+                        <div t-if="product.delivery_model" class="mb-5">
+                            <h3 class="mb-3">Delivery Model</h3>
+                            <p>
+                                <t t-if="product.delivery_model == 'project'">Project-Based (One-time delivery)</t>
+                                <t t-if="product.delivery_model == 'retainer'">Retainer (Recurring service)</t>
+                            </p>
+                        </div>
+
+                        <!-- 3. Required Documents -->
+                        <div t-if="product.kuec_document_ids" class="mb-5">
+                            <h3 class="mb-3">Required Documents</h3>
+                            <ul class="list-group">
+                                <t t-foreach="product.kuec_document_ids" t-as="doc">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <t t-esc="doc.name"/>
+                                        <span t-attf-class="badge rounded-pill #{'bg-danger' if doc.requirement == 'required' else 'bg-secondary'}">
+                                            <t t-if="doc.requirement == 'required'">Required</t>
+                                            <t t-else="">Optional</t>
+                                        </span>
+                                    </li>
+                                </t>
+                            </ul>
+                        </div>
+
+                        <!-- 4. FAQs -->
+                        <div t-if="product.wink_faq_ids" class="mb-5">
+                            <h3 class="mb-3">Frequently Asked Questions</h3>
+                            <div class="accordion" id="kuecFaqAccordion">
+                                <t t-foreach="product.wink_faq_ids" t-as="faq">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" t-attf-id="headingFaq#{faq.id}">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" t-attf-data-bs-target="#collapseFaq#{faq.id}" aria-expanded="false" t-attf-aria-controls="collapseFaq#{faq.id}">
+                                                <t t-esc="faq.question"/>
+                                            </button>
+                                        </h2>
+                                        <div t-attf-id="collapseFaq#{faq.id}" class="accordion-collapse collapse" t-attf-aria-labelledby="headingFaq#{faq.id}" data-bs-parent="#kuecFaqAccordion">
+                                            <div class="accordion-body" t-field="faq.answer"/>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Task 1.7: Tags and Ribbons on Service Cards -->
+    <template id="kuec_service_ribbons" inherit_id="website_sale.products_item" name="KUEC Custom Ribbons">
+        <xpath expr="//div[hasclass('oe_product_image')]" position="inside">
+            <t t-if="product.wink_ribbon_tag_id">
+                <span class="o_ribbon wink-ribbon" t-esc="product.wink_ribbon_tag_id.name" t-att-style="product.wink_ribbon_tag_id.color_html and ('background: %s !important;' % product.wink_ribbon_tag_id.color_html) or 'background: var(--wink-primary);'" style="position: absolute; top: 0; right: 0; padding: 6px 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #fff !important; transform-origin: 100% 0; transform: rotate(45deg); box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10;"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Task 1.8: Price Visibility Control (Catalogue Card) -->
+    <template id="kuec_price_hidden_card" inherit_id="website_sale.products_item" name="KUEC Price Hidden on Cards">
+        <xpath expr="//div[hasclass('product_price')]" position="replace">
+            <div class="product_price" itemprop="offers" itemscope="itemscope" itemtype="http://schema.org/Offer">
+                <t t-if="product.price_visibility == 'hidden'">
+                    <span class="text-muted small fw-bold" t-esc="product.price_hidden_label"/>
+                </t>
+                <t t-else="">
+                    <span class="h6 mb-0"
+                          t-if="template_price_vals['price_reduce'] or not website.prevent_zero_price_sale"
+                          t-out="template_price_vals['price_reduce']"
+                          t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                    <span class="h6 mb-0" t-elif="any(ptav.price_extra for ptav in product.attribute_line_ids.product_template_value_ids)">&amp;nbsp;</span>
+                    <span class="h6 mb-0" t-else="" t-field="website.prevent_zero_price_sale_text"/>
+                    <t t-if="'base_price' in template_price_vals and (template_price_vals['base_price'] &gt; template_price_vals['price_reduce']) and (template_price_vals['price_reduce'] or not website.prevent_zero_price_sale)">
+                        <del t-attf-class="text-muted me-1 h6 mb-0" style="white-space: nowrap;">
+                            <em class="small" t-esc="template_price_vals['base_price']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}" />
+                        </del>
+                    </t>
+                    <span itemprop="price" style="display:none;" t-esc="template_price_vals['price_reduce']" />
+                    <span itemprop="priceCurrency" style="display:none;" t-esc="website.currency_id.name" />
+                </t>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Task 1.8: Price Visibility Control (Product Page Add to Cart) -->
+    <template id="kuec_price_hidden_product" inherit_id="website_sale.product_price" name="KUEC Price Hidden on Details">
+        <xpath expr="//div[@itemprop='offers']" position="replace">
+            <div itemprop="offers" itemscope="itemscope" itemtype="http://schema.org/Offer" class="product_price mt-2 mb-3">
+                <t t-if="product.price_visibility == 'hidden'">
+                    <h3 class="css_editable_mode_hidden d-inline-block">
+                        <span class="text-muted fw-bold" t-esc="product.price_hidden_label"/>
+                    </h3>
+                </t>
+                <t t-else="">
+                    <h3 class="css_editable_mode_hidden">
+                        <span class="oe_price" style="white-space: nowrap;" t-esc="combination_info['price']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                        <span itemprop="price" style="display:none;" t-esc="combination_info['price']"/>
+                        <span itemprop="priceCurrency" style="display:none;" t-esc="website.currency_id.name"/>
+                        <span t-attf-class="text-danger oe_default_price ms-1 h5 {{'' if combination_info['has_discounted_price'] else 'd-none'}}" style="text-decoration: line-through; white-space: nowrap;" t-esc="combination_info['list_price']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                    </h3>
+                    <h3 class="css_non_editable_mode_hidden decimal_precision" t-att-data-precision="str(website.currency_id.decimal_places)">
+                        <span t-field="product.list_price" t-options="{'widget': 'monetary', 'display_currency': product.currency_id}"/>
+                    </h3>
+                </t>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Task 1.8: Block Checkout (Cart Summary) -->
+    <template id="kuec_cart_summary" inherit_id="website_sale.navigation_buttons" name="KUEC Block Checkout on Hidden Prices">
+        <xpath expr="//a[@name='website_sale_main_button']" position="attributes">
+            <attribute name="t-if">not any(l.product_id.product_tmpl_id.price_visibility == 'hidden' for l in website_sale_order.order_line) and website_sale_order and website_sale_order.website_order_line</attribute>
+        </xpath>
+        <xpath expr="//a[@name='website_sale_main_button']" position="after">
+            <t t-if="any(l.product_id.product_tmpl_id.price_visibility == 'hidden' for l in website_sale_order.order_line) and not website_sale_order.wink_price_confirmed">
+                <div class="alert alert-warning mt-3 w-100" role="alert">
+                    One or more services require a custom quote. Please wait for your coordinator to finalize pricing before proceeding to payment.
+                </div>
+                <button type="button" class="btn btn-secondary w-100 disabled" href="#">Waiting for Coordinator</button>
+            </t>
+            <t t-if="website_sale_order.wink_price_confirmed">
+                <div class="alert alert-success mt-3 w-100" role="alert">
+                    Your quote has been finalized. You may proceed to payment.
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

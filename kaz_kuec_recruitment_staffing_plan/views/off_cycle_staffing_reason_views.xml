@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_off_cycle_staffing_reason_views_list" model="ir.ui.view">
+        <field name="name">off_cycle.staffing.reason.views.list</field>
+        <field name="model">off_cycle.staffing.reason</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_staffing_reason_views_form" model="ir.ui.view">
+        <field name="name">off_cycle.staffing.reason.views.form</field>
+        <field name="model">off_cycle.staffing.reason</field>
+        <field name="arch" type="xml">
+            <form string="Off-Cycle Staffing Reason">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" nolabel="1"/>
+                            <field name="company_id" invisible="1"/>
+                        </h1>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

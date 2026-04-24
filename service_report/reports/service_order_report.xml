@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Template: service_order_header
+        Purpose:
+            This reusable template renders the top header section of the service order report.
+            It displays the company logo centered at the top and includes margin/padding styling.
+
+        Usage:
+            Called via t-call from the main report template (service_order_report_temp).
+    -->
+
+    <template id="service_order_header">
+        <style>
+            .header {
+            margin-bottom: 25px !important;
+            }
+        </style>
+        <div class="header mb8" style="margin-top:0px">
+            <div class="row col-12 mb8" style="padding:0 10px; font-size: 14px">
+                <div class="text-center col-12">
+                    <img t-if="user.company_id.logo" t-att-src="image_data_uri(user.company_id.logo)"
+                         style="max-height: 100px; margin-top: 15px"
+                         alt="Logo"/>
+                </div>
+            </div>
+        </div>
+        <div class="article o_report_layout_standard">
+            <t t-out="0"/>
+        </div>
+    </template>
+
+    <!--
+       Template: service_order_report_temp
+       Purpose:
+           This is the main QWeb PDF report layout for rendering detailed service orders (purchase.order).
+           Includes: basic contract metadata, pricing, scope, schedule, contact information,
+           approval blocks, signature lines, and legal terms & conditions.
+
+       Called via:
+           ir.actions.report -> report_name = "service_report.service_order_report_temp"
+   -->
+
+    <template id="service_order_report_temp">
+        <t t-call="web.html_container">
+            <t t-call="service_report.service_order_header">
+                <t t-foreach="docs" t-as="po">
+                    <div class="container">
+                        <style>
+                            h3 {
+                            color: #343a40;
+                            font-size: 20px; /* Reduced font size */
+                            font-weight: 600;
+                            margin-bottom: 10px; /* Reduced margin */
+                            }
+                            .o_main_table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 10px; /* Reduced margin */
+                            font-size: 12px; /* Reduced font size */
+                            }
+                            .o_main_table th, .o_main_table td {
+                            border: 1px solid #dee2e6;
+                            padding: 8px; /* Reduced padding */
+                            text-align: left;
+                            vertical-align: top;
+                            }
+                            .o_main_table th {
+                            background-color: #f8f9fa;
+                            font-weight: 700;
+                            color: #495057;
+                            }
+                            .o_main_table td {
+                            background-color: #ffffff;
+                            }
+                            .contract-header {
+                            font-weight: 700;
+                            background-color: #007bff;
+                            color: white;
+                            text-align: center;
+                            padding: 8px; /* Reduced padding */
+                            }
+                            .o_main_table tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                            }
+                            .table-title {
+                            font-size: 18px; /* Reduced font size */
+                            font-weight: bold;
+                            margin-bottom: 15px; /* Reduced margin */
+                            text-align: center;
+                            }
+                            .small-text {
+                            font-size: 10px; /* Reduced font size */
+                            color: #6c757d;
+                            }
+                            .ms-5 {
+                            margin-left: 20px; /* Reduced margin */
+                            }
+                            .table-wrapper {
+                            width: 100%;
+                            overflow-x: auto;
+                            }
+                            .signature-row td {
+                            height: 40px; /* Reduced height */
+                            text-align: center;
+                            vertical-align: bottom;
+                            }
+                            .signature-label {
+                            padding-bottom: 5px; /* Reduced padding */
+                            font-weight: bold;
+                            }
+                            p {
+                            margin: 1px; /* Reduced margin */
+                            }
+                        </style>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <table class="table table-bordered table-sm o_main_table">
+                                    <tr>
+                                        <td colspan="4" class="h4 w-25 text-white text-center bg-dark">
+                                            Service Order (SO)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4" class="w-25">1. CONTRACT / SO DETAILS</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row" class="w-25">SO No:</th>
+                                        <td colspan="3">
+                                            <t t-esc="po.name"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">SO Title:</th>
+                                        <td colspan="3">
+                                            <t t-esc="po.so_title"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Contract Ref:</th>
+                                        <td colspan="3">
+                                            <t t-esc="po.contract_ref"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="2">2. SCHEDULE</th>
+                                        <th colspan="2">3. CONTRACTOR/CONSULTANT DETAILS</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Date of Issue:</td>
+                                        <td>
+                                            <t t-esc="po.date_approve and po.date_approve.strftime('%y%m%d') or ''"/>
+                                        </td>
+                                        <td>Contractor:</td>
+                                        <td>
+                                            <t t-esc="po.partner_id.name"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Effective Date:</td>
+                                        <td>
+                                            <t t-esc="po.effective_date"/>
+                                        </td>
+                                        <td>Address:</td>
+                                        <td>
+                                            <t t-esc="po.partner_id.contact_address_complete"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>End Date:</td>
+                                        <td>
+                                            <t t-esc="po.end_date"/>
+                                        </td>
+                                        <td>Email:</td>
+                                        <td>
+                                            <t t-esc="po.partner_id.email"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="4">4. BRIEF SCOPE</th>
+                                    </tr>
+                                    <tr>
+                                        <td class="ms-5" colspan="4">Detailed Scope</td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="4">5. TERMS AND CONDITIONS</th>
+                                    </tr>
+                                    <tr>
+                                        <td class="ms-5" colspan="4">
+                                            5.1 The Terms &amp; Conditions of this SO will apply as printed
+                                            overleaf. The CONTRACTOR shall in no event, perform work of a value
+                                            in excess of the amount stated herein without authorization from
+                                            ANKABUT.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="4">6. NOTES &amp; ATTACHMENTS</th>
+                                    </tr>
+                                    <tr>
+                                        <td class="ms-5" colspan="4">
+                                            6.1 All the required attachments such as Bill of Quantities,
+                                            Reference Contract, Reference Quotations, and other documentation
+                                            relevant to this Service Order have been attached herewith.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="4">7. PRICING SCHEDULE</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">7.1
+                                            <t t-esc="po.amount_total"/>
+                                            <t t-esc="po.currency_id.name"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">7.4
+                                            <t t-esc="po.currency_id.with_context(lang='en_US').amount_to_text(po.amount_total)"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="4">8. CONTACT PERSONNEL</th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="2">ANKABUT</th>
+                                        <th colspan="2">CONTRACTOR</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Name:</td>
+                                        <td>
+                                            <t t-esc="po.employee_id.name"/>
+                                        </td>
+                                        <td>Name:</td>
+                                        <td>
+                                            <t t-esc="po.partner_id.name"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tel/e-mail:</td>
+                                        <td>
+                                            <t t-esc="po.employee_id.work_phone or po.employee_id.mobile_phone"/>
+                                            /
+                                            <t t-esc="po.employee_id.work_email"/>
+                                        </td>
+                                        <td>Tel/e-mail:</td>
+                                        <td>
+                                            <t t-esc="po.partner_id.mobile"/>
+                                            /
+                                            <t t-esc="po.partner_id.email"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="4">9. PAYMENT TERMS</th>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">
+                                            <p>9.1 Payment to be made as mentioned overleaf in the terms and
+                                                conditions.
+                                            </p>
+                                            <p>9.2 In case of any other payment terms, please refer to the
+                                                remarks in the PO or the scope document.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="page-break-before: always;"/>
+                    <table class="table table-bordered table-sm o_main_table">
+                        <tr>
+                            <th colspan="4">10. DOCUMENT PREPARED BY</th>
+                        </tr>
+                        <tr class="signature-row">
+                            <td class="signature-label">Prepared by:</td>
+                            <td>
+                                <t t-esc="po.confirm_uid.name"/>
+                            </td>
+                            <td class="signature-label">Reviewed by:</td>
+                            <td></td>
+                        </tr>
+                        <tr class="signature-row">
+                            <td class="signature-label">Signature:</td>
+                            <td></td>
+                            <td class="signature-label">Signature:</td>
+                            <td></td>
+                        </tr>
+                        <tr class="signature-row">
+                            <td class="signature-label">Date:</td>
+                            <td></td>
+                            <td class="signature-label">Date:</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th colspan="4">11. SIGNED BY</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2">ANKABUT</th>
+                            <th colspan="2">CONTRACTOR</th>
+                        </tr>
+
+                        <tr class="signature-row">
+                            <td class="signature-label">Name:</td>
+                            <td></td>
+                            <td class="signature-label">Name:</td>
+                            <td></td>
+                        </tr>
+                        <tr class="signature-row">
+                            <td class="signature-label">Title:</td>
+                            <td></td>
+                            <td class="signature-label">Title:</td>
+                            <td></td>
+                        </tr>
+                        <tr class="signature-row">
+                            <td class="signature-label">Signature:</td>
+                            <td></td>
+                            <td class="signature-label">Signature:</td>
+                            <td></td>
+                        </tr>
+                        <tr class="signature-row">
+                            <td class="signature-label">Date:</td>
+                            <td></td>
+                            <td class="signature-label">Date:</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <div style="page-break-before: always;"/>
+                    <div class="container no-page-break">
+                        <div class="col-12" style="font-size:9px; line-height:1.2;">
+
+                            <h2 style="font-size:15px;">TERMS AND CONDITIONS FOR SERVICE ORDER</h2>
+                            <br/>
+
+                            <p>
+                                1. Whereas, ANKABUT desires to have certain works/services “Services” performed as
+                                specified in the Scope of Work/ Services subject to the terms and conditions
+                                hereinafter contained. The Contractor confirms to have the necessary competence to
+                                perform such Services. Both ANKABUT and the Contractor have signed this Service
+                                Order (SO).
+                            </p>
+
+                            <p>
+                                2. The performance by the Contractor of the Services under the Scope of Work/
+                                Services, as may be amended by mutual agreement of the Parties hereto, shall be
+                                governed by the following terms and conditions:
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                a. The Services shall be performed by the Contractor in accordance with the
+                                description as specified in the Scope of Work/ Services.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                b. The Contractor shall commence performing the Services as of the Commencement Date
+                                and complete it, to the satisfaction of ANKABUT, by the Completion Date. Such
+                                completion shall be evidenced by a Completion Certificate signed by ANKABUT’s
+                                Authorized Representative.
+                            </p>
+
+                            <p>
+                                3. ANKABUT shall pay the Contractor the agreed consideration subject to the
+                                submission of valid invoices with all the supporting documents, as may be reasonably
+                                required by ANKABUT, including the Completion Certificate of the relevant Services
+                                against which the payment is to be made (Substantiated Invoice).
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                a. ANKABUT shall pay the Contractor within thirty (30) days from the date of receipt
+                                of Substantiated Invoice.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                b. In case ANKABUT considers the invoice to be incorrect, ANKABUT shall notify the
+                                Contractor of the amendments or additional supporting documents required within (15)
+                                Fifteen days.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                c. All payments shall be made by direct transfer to the bank nominated by the
+                                Contractor and acceptable to ANKABUT. All invoices shall quote SO number and specify
+                                the bank account details.
+                            </p>
+
+                            <p>
+                                4. Contractor warrants that the performance of the Services shall be in accordance
+                                with good customarily employed practices and skills and shall be free from defects
+                                and failure and fit for the purpose thereof.
+                            </p>
+
+                            <p>
+                                5. Contractor shall comply with all ANKABUT’s Safety Rules and Regulations as well
+                                as relevant laws and regulations of Abu Dhabi and the UAE.
+                            </p>
+
+                            <p>
+                                6. Indemnification:
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                a. Contractor shall exercise all reasonable skill, care and diligence in carrying
+                                out his obligations, under this SO and shall indemnify ANKABUT and hold ANKABUT
+                                harmless against any claims, damages, law suites, and losses which ANKABUT might
+                                suffer as a result of the Contractor’s breach of this SO, negligence, willful
+                                misconduct, infringement of any valid patent or copyright, disclosure of information
+                                obtained by the Contractor during the performance of this SO, or otherwise.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                b. Without prejudice to ANKABUT’S indemnification under Article 6 (a) above, if the
+                                Contractor is found liable to ANKABUT for any extra cost, ANKABUT shall be entitled
+                                to deduct such sums from the Contractor’s financial entitlement, or seek any other
+                                formal remedial procedure to cover such liability.
+                            </p>
+
+                            <p>
+                                7. The Contractor herein shall be solely responsible for ensuring that appropriate
+                                insurance exists for Workmen’s Compensation and Employer’s Liability, third party
+                                liability, Motor Vehicles and Public Liability and that adequate cover extends to
+                                the risks and events associated with the Services.
+                            </p>
+
+                            <p>
+                                8. The insurance policies obtained by Contractor shall include ANKABUT as an
+                                additional beneficiary and contain a waiver of Insurer’s rights of subrogation
+                                against ANKABUT, its Agents, all Employees, Engineers, Contractors/Sub-Contractors
+                                rendering services for ANKABUT at the same site/location as the Contractor.
+                            </p>
+
+                            <p>
+                                9. ANKABUT may suspend partly or as a whole at any time the performance of the
+                                Services. In such event, ANKABUT shall pay to Contractor for the Services already
+                                satisfactorily performed up to the suspension.
+                            </p>
+
+                            <p>
+                                10. Notwithstanding any dispute arising between the Parties during the performance
+                                of the SO, the Contractor shall continue to perform the Services and shall not
+                                suspend or delay it whether fully or partly for any reason without the prior written
+                                consent of ANKABUT.
+                            </p>
+
+                            <p>
+                                11. Termination:
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                a. Without any prejudice to any other compensation, remedy or recourse that ANKABUT
+                                might have against the Contractor, should the Contractor breach any of the agreed
+                                terms or fail to perform the Services or any part thereof in accordance with the
+                                provisions of this SO, ANKABUT shall have the right to terminate this SO by giving a
+                                30 days written notice. In such event, Contractor shall be liable to ANKABUT for any
+                                losses or costs it might have incurred.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                b. ANKABUT may, at its absolute discretion and without the need to provide reasons,
+                                terminate this SO by giving a 30 days written notice to the Contractor. In such
+                                event, ANKABUT shall pay the Contractor for the approved work already performed
+                                and/or any mutually substantiated and verified costs up to termination date
+                                communicated in the notice.
+                            </p>
+
+                            <p>
+                                12. The Contractor and his employees, consultants, subcontractors, agents and
+                                representatives shall be subject to confidentiality obligation and undertake not to
+                                disclose or make available to any person(s) any information of confidential nature
+                                pertaining to ANKABUT which they have acquired in the course of performing the
+                                Services.
+                            </p>
+
+                            <p>
+                                13. The Contractor may not assign this SO or any part thereof without the prior
+                                written consent of ANKABUT. Notwithstanding any assignment to which ANKABUT has
+                                given consent, Contractor shall remain responsible to ANKABUT for the proper
+                                performance by the assignee of the Services.
+                            </p>
+
+                            <p>
+                                14. Contractor may not sub-contract any part of this SO without the prior written
+                                consent of ANKABUT. Such consent shall not relieve Contractor of any of his
+                                obligations under this SO or create any contractual relationship between ANKABUT and
+                                his Sub-Contractors.
+                            </p>
+
+                            <p>
+                                15. Variations:
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                a. ANKABUT shall initiate any variations by sending the Contractor a Variation Order
+                                (VO) describing the variation required whether it being addition or omission of
+                                services or introduction of new services.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                b. Upon receiving ANKABUT’s VO referenced in point (a) above the Contractor shall
+                                within 7 days submit to ANKABUT the additional costs/savings associated with such
+                                VO.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                c. If the Contractor believes that there is a variation to the services provided, or
+                                that the Contractor started to suffer from additional costs due to a change to the
+                                services or otherwise for which it is entitled to reimbursement, the Contractor
+                                shall submit a notice with this regard associated with VO within 48 hrs.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                d. If the Contractor fails to provide the required notice in point (c) above, then
+                                the Contractor is not entitled to, and ANKABUT shall not pay against, any additional
+                                costs claimed thereafter.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                e. At all times the Contractor shall use the unit rates and/or the price breakdown
+                                of this SO while evaluating the costs/price of the services described by the VO.
+                            </p>
+
+                            <p style="margin-top:0; margin-bottom:0;">
+                                f. In case of disagreement to the costs/savings of the variation, ANKABUT shall fix
+                                a price to be added or savings to be deducted in order to process the Contractor’s
+                                invoices.
+                            </p>
+
+                            <p>
+                                16. Within fifteen (15) days from the acknowledgement date of this SO, Contractor
+                                shall submit a Performance Bond of a value equal to 10% of the total SO value, valid
+                                for 6 months and which shall be released on issuance of Completion Certificate.
+                            </p>
+
+                            <p>
+                                17.Warranties
+                                <br/>
+                                a.Any written or oral statement or representation made by either Party prior to or
+                                during the performance of this SO shall not be deemed to be binding unless agreed in
+                                writing.
+                            </p>
+
+                            <p>
+                                18.Audit
+                                <br/>
+                                a.This SO shall be governed by and construed in accordance with the laws of Abu
+                                Dhabi and the UAE.
+                            </p>
+
+                            <p>
+                                19.Intellectual Property:
+                                <br/>
+                                a.Any disputes arising under or in connection with this SO shall be subject to the
+                                exclusive jurisdiction of the Courts of Abu Dhabi, UAE.
+                            </p>
+                            <p>
+                                20.Liquidated Damages:
+                                <br/>
+                                a.In case of delay on part of the Contractor in completing the Services within the
+                                agreed timing, the Contractor shall be liable to pay to ANKABUT as liquidated
+                                damages a sum equivalent to 1% of the total SO value per day or part thereof up to a
+                                maximum of 10% of the value of the SO. Should delay continue for a period exceeding
+                                the above ANKABUT, without prejudice to any other remedy available under the Law,
+                                may terminate the SO without the need of any official or judicial action or assign
+                                the Services to another provider and charge any cost differences to the Contractor.
+                            </p>
+                            <p>
+                                21.Governing Law and Jurisdiction
+                                <br/>
+                                a.This SO is subject to the laws of the Emirate of Abu Dhabi including, without
+                                limitation, the laws and regulations governing procurement for Abu Dhabi Government
+                                entities as applicable to ANKABUT, and the laws of the United Arab Emirates as
+                                applied in Abu Dhabi.
+                                <br/>
+                                b.Any dispute or claim arising out of or in relation to this SO shall first be
+                                referred to the Parties for an amicable settlement and shall, in the event such
+                                referral fails within two weeks from referral, be finally settled by Abu Dhabi
+                                courts in accordance with the Abu Dhabi Law.
+                            </p>
+                            <p>
+                                22. Assignment:
+                                <br/>
+                                a. ANKABUT has the right to transfer this SO partially or as a whole to any other
+                                local or federal entity without the need for the Contractor’s consent.
+
+                            </p>
+
+                        </div>
+                    </div>
+
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+    <!--
+       Report Action Definition:
+       This binds the above QWeb template to the Purchase Order model for PDF export.
+       It becomes available in the Print menu of purchase orders.
+
+       report_name: internal template reference
+       report_file: file path (used for PDF rendering)
+       binding_model_id: model on which this report will be available
+   -->
+
+    <record id="action_service_order_report_temp_report" model="ir.actions.report">
+        <field name="name">Service Order</field>
+        <field name="model">purchase.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">service_report.service_order_report_temp</field>
+        <field name="report_file">service_report.service_order_report_temp</field>
+        <field name="print_report_name">'Service Order - %s' % object.name</field>
+        <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

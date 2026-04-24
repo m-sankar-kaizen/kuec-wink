@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_change_lock_date_account_monthly_closing" model="ir.ui.view">
+        <field name="name">account.change.lock.date.account.monthly.closing</field>
+        <field name="model">account.change.lock.date</field>
+        <field name="inherit_id" ref="account_accountant.view_account_change_lock_date"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert inside Lock Dates Wizard -->
+            <xpath expr="//form/sheet/group[1]/div[4]" position="after">
+                <label for="br_gl_lock_date"/>
+                <div class="d-flex">
+                    <field name="br_gl_lock_date" placeholder="Not locked"
+                           class="oe_inline"
+                           readonly="1"
+                           groups="!kaz_account_monthly_closing.group_dg_approver"
+                           decoration-info="exception_needed_fields and 'br_gl_lock_date' in exception_needed_fields"
+                           options="{'warn_future': true}"/>
+                    <field name="br_gl_lock_date" placeholder="Not locked"
+                           class="oe_inline"
+                           groups="kaz_account_monthly_closing.group_dg_approver"
+                           decoration-info="exception_needed_fields and 'br_gl_lock_date' in exception_needed_fields"
+                           options="{'warn_future': true}"/>
+                    <span class="text-muted o_form_label"
+                          invisible="not min_br_gl_lock_date_exception_for_me_id">
+                        For me:
+                        <field name="br_gl_lock_date_for_me" nolabel="1" class="oe_inline"
+                               invisible="not br_gl_lock_date_for_me"/>
+                        <a type="object"
+                           class="oe_link fw-bold"
+                           name="action_revoke_min_br_gl_lock_date_exception_for_me">
+                            Revoke
+                        </a>
+                    </span>
+                    <span class="text-muted o_form_label"
+                          invisible="not min_br_gl_lock_date_exception_for_me_id
+                                        or not min_br_gl_lock_date_exception_for_everyone_id">
+                        <span style="white-space: pre">;</span>
+                    </span>
+                    <span class="text-muted o_form_label"
+                          invisible="not min_br_gl_lock_date_exception_for_everyone_id">
+                        For everyone:
+                        <field name="br_gl_lock_date_for_everyone" nolabel="1" class="oe_inline"
+                               invisible="not br_gl_lock_date_for_everyone"/>
+                        <a type="object"
+                           class="oe_link fw-bold"
+                           name="action_revoke_min_br_gl_lock_date_exception_for_everyone">
+                            Revoke
+                        </a>
+                    </span>
+                </div>
+            </xpath>
+
+            <field name="sale_lock_date" position="replace">
+                <field name="sale_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       readonly="1"
+                       groups="!kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'sale_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+                <field name="sale_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       groups="kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'sale_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+            </field>
+
+            <field name="purchase_lock_date" position="replace">
+                <field name="purchase_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       readonly="1"
+                       groups="!kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'purchase_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+                <field name="purchase_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       groups="kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'purchase_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+            </field>
+
+            <field name="tax_lock_date" position="replace">
+                <field name="tax_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       readonly="1"
+                       groups="!kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'tax_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+                <field name="tax_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       groups="kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'tax_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+            </field>
+
+            <field name="fiscalyear_lock_date" position="replace">
+                <field name="fiscalyear_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       readonly="1"
+                       groups="!kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'fiscalyear_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+                <field name="fiscalyear_lock_date" placeholder="Not locked"
+                       class="oe_inline"
+                       groups="kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'fiscalyear_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+            </field>
+
+            <field name="hard_lock_date" position="replace">
+                <field name="hard_lock_date" placeholder="Not locked"
+                       class="oe_inline mx-3"
+                       readonly="1"
+                       groups="!kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'hard_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+                <field name="hard_lock_date" placeholder="Not locked"
+                       class="oe_inline mx-3"
+                       groups="kaz_account_monthly_closing.group_dg_approver"
+                       decoration-info="exception_needed_fields and 'hard_lock_date' in exception_needed_fields"
+                       options="{'warn_future': true}"/>
+            </field>
+
+
+        </field>
+    </record>
+</odoo>

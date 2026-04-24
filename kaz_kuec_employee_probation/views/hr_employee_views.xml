@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_employee_form" model="ir.ui.view">
+        <field name="name">employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='coach_id']" position="after">
+                <field name="probation_end_date"
+                       invisible="company_code != 'KUEC'"/>
+            </xpath>
+            <widget name="web_ribbon" position="after">
+                <widget name="web_ribbon" title="Under Probation" bg_color="text-bg-warning"
+                        invisible="employee_employment_status != 'probation'"/>
+                <widget name="web_ribbon" title="Under Employment" bg_color="text-bg-success"
+                        invisible="employee_employment_status != 'employment'"/>
+                <field name="employee_employment_status"
+                       invisible="1"/>
+            </widget>
+        </field>
+    </record>
+
+
+    <record id="view_employee_form_primary" model="ir.ui.view">
+        <field name="name">employee.form</field>
+        <field name="model">hr.employee</field>
+        <field name="mode">primary</field>
+        <field name="priority">50</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_feedback_on_probation"
+                        type="object"
+                        string="Feedback"
+                        class="oe_highlight"/>
+                <button name="action_terminate_on_probation"
+                        invisible="resignation_id"
+                        type="object"
+                        string="Terminate"/>
+                <button name="action_extend_probation"
+                        invisible="employee_employment_status != 'probation' or is_extended"
+                        type="object"
+                        string="Extend Probation"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="open_related_resignation"
+                        type="object"
+                        string="Resignation Form"
+                        invisible="not resignation_id"
+                        class="oe_stat_button"
+                        icon="fa-edit">
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Probation Feedback" groups="hr.group_hr_user">
+                    <field name="probation_feedback_ids"
+                           nolabel="1"
+                           context="{
+                               'form_view_ref': 'kaz_kuec_employee_probation.view_hr_internship_feedback_form_primary'
+                           }"
+                           mode="list,form">
+                            <list>
+                                <field name="feedback_date"/>
+                                <field name="probation_employee_id"/>
+                                <field name="feedback_type"/>
+                                <field name="performance_score"/>
+                                <field name="mentor_id"/>
+                            </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

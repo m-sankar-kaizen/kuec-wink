@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+
+    <record id="account_asset_inherit_cwip" model="ir.ui.view">
+        <field name="name">account.asset.view.form.inherit.cwip</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="account_asset.view_account_asset_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button class="oe_stat_button"
+                            type="object"
+                            name="show_cwip_journal_entry"
+                            string="CWIP Journal Entry"
+                            invisible="not cwip_move_id"
+                            icon="fa-pencil-square-o">
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="account_move_inherit_from_cwip" model="ir.ui.view">
+        <field name="name">account.move.view.form.inherit.cwip</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button class="oe_stat_button"
+                            type="object"
+                            string="CWIP Asset"
+                            name="show_cwip_asset"
+                            invisible="not cwip_asset_id"
+                            icon="fa-pencil-square-o">
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_move_line_tree" model="ir.ui.view">
+        <field name="name">account.move.line.list</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account_asset.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='turn_as_asset']" position="replace">
+                <button name="turn_as_asset_cwip"
+                        type="object"
+                        string="Create Asset"
+                        groups="account.group_account_user"
+                        data-hotkey="c"/>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record model="ir.actions.server" id="account_asset.action_account_aml_to_asset">
+        <field name="code">
+if records:
+    action = records.turn_as_asset_cwip()
+        </field>
+    </record>
+</odoo>

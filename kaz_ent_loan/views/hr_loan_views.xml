@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+    View Inheritance: hr_loan_form_inherit
+    Purpose:
+    This view overrides the header of the inherited loan form (from ent_loan_accounting.hr_loan_inherited)
+    to define a custom approval workflow with clearly staged buttons for HR Team, Branch Manager,
+    HR Manager, and Super Admin.
+
+    Key Features:
+    - Custom buttons:
+        * Compute Installment: only in draft
+        * Submit to HR Team: triggers validation and forwards to next stage
+        * Send to HR Manager: visible only to Branch Managers during HR Team state
+        * Approve: visible to Super Admin at HR Manager stage
+        * Reset to Draft: only when in refused or canceled state
+    - Enhanced access control using group restrictions.
+    -->
+
+    <record id="hr_loan_form_inherit" model="ir.ui.view">
+        <field name="name">hr.loan.form.view.inherit.kaz.ent.loan</field>
+        <field name="model">hr.loan</field>
+        <field name="inherit_id" ref="ent_loan_accounting.hr_loan_inherited"/>
+        <field name="priority" eval="8"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="replace">
+                <header>
+                    <!-- Compute Installment: only in draft state -->
+                    <button name="compute_installment" type="object" string="Compute Installment"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+
+                    <!-- First approval: HR team forwards to Branch Manager -->
+                    <button name="action_submit" type="object" string="Send To HR Team"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+
+                    <!-- Second stage: Branch Manager reviews HR's request -->
+                    <button name="send2_hr_manager" type="object"
+                            string="Send To HR Manager"
+                            class="oe_highlight"
+                            invisible="state != 'hr_team'"
+                            groups="ent_ohrms_loan.group_loan_branch_manager"/>
+
+                    <!-- Final approval by Super Admin -->
+                    <button name="action_approve" type="object" string="Approve"
+                            invisible="state != 'hr_manager'" class="oe_highlight"
+                            groups="ent_ohrms_loan.group_loan_super_admin"/>
+
+                    <!-- Refuse options at both approval levels -->
+                    <button name="action_refuse" type="object" string="Refuse"
+                            invisible="state != 'hr_team'"
+                            groups="ent_ohrms_loan.group_loan_branch_manager"
+                            class="oe_highlight"/>
+
+                    <button name="action_refuse" type="object" string="Refuse"
+                            invisible="state != 'hr_manager'"
+                            groups="ent_ohrms_loan.group_loan_super_admin"
+                            class="oe_highlight"/>
+
+                    <!-- Cancel by original requester in draft state only -->
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state != 'draft'"
+                            groups="ent_ohrms_loan.hr_loan_user,!ent_ohrms_loan.group_loan_branch_manager,!ent_ohrms_loan.group_loan_super_admin"/>
+
+                    <!-- Cancel by super admin at any state -->
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state not in ['hr_team', 'hr_manager', 'approve', 'refuse']"
+                            groups="ent_ohrms_loan.group_loan_super_admin"/>
+
+                    <!-- Reset to draft only if previously refused or canceled -->
+                    <button name="reset_draft" type="object"
+                            string="Reset to Draft"
+                            invisible="state not in ['refuse', 'cancel']"/>
+
+                    <!-- Statusbar showing lifecycle -->
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,hr_team,hr_manager,approve,refuse"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+
+    <!--
+    View Inheritance: hr_loan_form_inherit_v2
+
+    Purpose:
+    This secondary view enhances the standard loan form view by:
+    - Displaying the `loan_granted` Boolean field (invisible to user, for backend logic).
+    - Adding a visual ribbon indicating that the loan has been granted.
+
+    Business Use:
+    - The ribbon provides an immediate visual cue to HR and Payroll that the loan was granted
+      and deductions may be active.
+    - `loan_granted` is used in logic such as payslip computation and activity tracking.
+    -->
+
+    <record id="hr_loan_form_inherit_v2" model="ir.ui.view">
+        <field name="name">hr.loan.form.view.inherit.kaz.ent.loan.v2</field>
+        <field name="model">hr.loan</field>
+        <field name="inherit_id" ref="ent_ohrms_loan.hr_loan_form_view"/>
+        <field name="priority" eval="8"/>
+        <field name="arch" type="xml">
+            <!-- Add loan_granted field for backend logic (invisible) -->
+            <xpath expr="//field[@name='fully_paid']" position="after">
+                <field name="loan_granted" invisible="1"/>
+            </xpath>
+
+            <!-- Visual ribbon indicator when loan is granted -->
+            <xpath expr="//sheet/div" position="before">
+                <widget name="web_ribbon" title="Granted" invisible="not loan_granted"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

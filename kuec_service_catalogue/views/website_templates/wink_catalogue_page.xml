@@ -1,0 +1,1611 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- CAT-6 Service card: dept strip, POPULAR badge, Details / Request -->
+    <template id="wink_service_card" name="WINK Service Card">
+        <t t-set="dept_slug" t-value="dept_slug if dept_slug else ''"/>
+        <t t-set="strip_class" t-value="(' wink-dept-strip wink-dept-' + dept_slug) if dept_slug else ''"/>
+        <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative' + strip_class">
+            <!-- UI-TAG-001 (FB-001h): Diagonal ribbon on card; backend color + visible folded-corner -->
+            <t t-if="product.wink_ribbon_tag_id">
+                <div class="wink-ribbon-wrapper">
+                    <span class="wink-ribbon" t-att-style="product.wink_ribbon_tag_id.color_html and ('background: %s !important;' % product.wink_ribbon_tag_id.color_html) or ''" t-esc="product.wink_ribbon_tag_id.name"/>
+                </div>
+            </t>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title fw-bold mb-2">
+                    <a t-attf-href="/services/#{product.id}" class="text-dark text-decoration-none"><t t-esc="product.name"/></a>
+                </h5>
+                
+                <p class="card-text text-muted small flex-grow-1 mb-3 wink-line-clamp-2">
+                    <t t-if="short_descs and product.id in short_descs">
+                        <t t-esc="short_descs.get(product.id, '')"/>
+                    </t>
+                    <t t-else="">
+                        <t t-esc="product.wink_description"/>
+                    </t>
+                </p>
+
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    <t t-if="entitlement_map and entitlement_map.get(product.id)">
+                        <t t-set="_ent_card" t-value="entitlement_map.get(product.id)"/>
+                        <t t-if="_ent_card.state == 'fully_activated'">
+                            <span class="badge rounded-pill fw-semibold" style="background:#155724;color:#fff;font-size:0.72rem;">
+                                <i class="fa fa-check-circle me-1"/>Activated
+                            </span>
+                        </t>
+                        <t t-else="">
+                            <span class="badge rounded-pill fw-semibold" style="background:#d4edda;color:#155724;font-size:0.72rem;">
+                                <i class="fa fa-check me-1"/>In Your Bundle
+                            </span>
+                        </t>
+                    </t>
+                    <t t-if="product.department_ids">
+                        <span class="badge border text-dark"><t t-esc="product.department_ids[0].name"/></span>
+                    </t>
+                    <t t-if="product.delivery_model == 'project'">
+                        <span class="badge border text-dark">Project-Based</span>
+                    </t>
+                    <t t-if="product.delivery_model == 'retainer'">
+                        <span class="badge border text-dark">Retainer-Based</span>
+                    </t>
+                    <t t-if="product.commercial_structure == 'standalone'">
+                        <span class="badge border text-dark">Standalone</span>
+                    </t>
+                    <t t-if="product.commercial_structure == 'bundled' or product.wink_is_bundle">
+                        <span class="badge border text-dark">Bundled</span>
+                    </t>
+                    <t t-if="product.commercial_structure == 'flexible'">
+                        <span class="badge border text-dark">Flexible</span>
+                    </t>
+                </div>
+
+                <!-- UI-TAG-002 -->
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                    <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
+                        <span t-att-class="'badge wink-tag-badge' + ('' if tag.color_html else ' bg-secondary')" t-att-style="tag.color_html and ('background-color: %s; color: #fff; border: none;' % tag.color_html) or ''"><t t-esc="tag.name"/></span>
+                    </t>
+                </div>
+
+                <div class="mb-3 mt-auto">
+                    <t t-if="product.price_visibility == 'hidden'">
+                        <span class="text-muted fst-italic fw-bold small" t-esc="product.price_hidden_label"/>
+                    </t>
+                    <t t-else="">
+                        <h6 class="mb-0 fw-bold">
+                            <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                        </h6>
+                    </t>
+                </div>
+
+                <t t-set="card_ent" t-value="entitlement_map.get(product.id) if entitlement_map else False"/>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a t-attf-href="/services/#{product.id}" class="btn btn-wink-ghost btn-sm">Details</a>
+                    <t t-if="card_ent">
+                        <a t-attf-href="/services/#{product.id}/activate/#{card_ent.id}"
+                           class="btn btn-sm fw-semibold"
+                           style="background:#1a5f1a;color:#fff;border:none;">
+                            <i class="fa fa-check-circle me-1"/>Activate
+                        </a>
+                    </t>
+                    <t t-elif="request.env.user._is_public()">
+                        <button type="button" class="btn btn-wink-primary btn-sm wink-request-btn" t-att-data-product-id="product.id" data-bs-toggle="modal" data-bs-target="#winkLoginModal">Request <i class="fa fa-arrow-right ms-1"/></button>
+                    </t>
+                    <t t-else="">
+                        <a t-attf-href="/my/requests/new?product_id=#{product.id}" class="btn btn-wink-primary btn-sm wink-request-btn" t-att-data-product-id="product.id">Request <i class="fa fa-arrow-right ms-1"/></a>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Login Modal Snippet -->
+    <template id="wink_login_modal_snippet" name="WINK Login Modal Snippet">
+        <div class="modal fade" id="winkLoginModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold">Sign in to Request This Service</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <p class="text-muted mb-4">Please sign in or create an account to request this service.</p>
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-primary wink-signin-link">Sign In</a>
+                            <a href="#" class="btn btn-outline-primary wink-signup-link">Create Account</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Catalogue Page Details -->
+    <!-- CAT-1, CAT-2, CAT-10 Service Catalogue: hero (kuec-gradient), search, container, filters, empty state -->
+    <template id="wink_catalogue_page" name="WINK Service Catalogue">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure oe_empty">
+                <div class="wink-catalogue-container">
+                    <!-- CAT-1, CAT-2 Hero: gradient, optional pattern overlay -->
+                    <div class="wink-catalogue-hero kuec-gradient rounded-2xl wink-hero-pattern position-relative">
+                        <!-- Quick link: My Dashboard (logged-in users only) -->
+                        <t t-if="not request.env.user._is_public()">
+                            <div class="d-flex gap-2" style="position:absolute;top:1rem;right:1rem;z-index:10;">
+                                <a href="/my/dashboard" class="btn btn-light btn-sm rounded-pill fw-semibold shadow-sm">
+                                    <i class="fa fa-th-large me-1" title="My Dashboard"/>My Dashboard
+                                </a>
+                            </div>
+                        </t>
+                        <h1 class="page-header text-white mb-2">Service Catalogue</h1>
+                        <p class="page-subtitle text-white opacity-90 mb-4">Browse and request professional services tailored for your business needs.</p>
+                        <form method="get" action="/services" class="d-flex w-100 flex-column flex-md-row gap-2" style="max-width: 520px;">
+                            <t t-foreach="current_filters.get('department_ids', [])" t-as="d_id">
+                                <input type="hidden" name="department_ids" t-att-value="d_id"/>
+                            </t>
+                            <t t-if="current_filters.get('nature_id')">
+                                <input type="hidden" name="nature_id" t-att-value="current_filters.get('nature_id')"/>
+                            </t>
+                            <input type="hidden" name="delivery_model" t-att-value="current_filters.get('delivery_model')" t-if="current_filters.get('delivery_model')"/>
+                            <input type="hidden" name="bundle_included" value="1" t-if="bundle_included"/>
+                            <div class="input-group flex-grow-1">
+                                <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
+                                <input type="text" name="search" placeholder="Search services by name or keyword..." class="form-control border-start-0" t-att-value="search or ''"/>
+                            </div>
+                            <button type="submit" class="btn btn-light btn-md rounded-xl">Search</button>
+                        </form>
+                    </div>
+
+                    <!-- CAT-3, CAT-9 Mobile filter trigger: opens offcanvas drawer (bottom sheet) -->
+                    <div class="d-md-none mb-3">
+                        <button class="btn btn-outline-secondary w-100 touch-target" type="button" data-bs-toggle="offcanvas" data-bs-target="#winkFilterOffcanvas" aria-controls="winkFilterOffcanvas">
+                            <i class="fa fa-sliders me-2"/> Filters
+                            <t t-if="active_filter_count > 0">
+                                <span class="badge bg-primary ms-2" t-esc="active_filter_count"/>
+                            </t>
+                        </button>
+                    </div>
+
+                    <!-- CAT-9 Mobile filter offcanvas (same FilterContent as sidebar) -->
+                    <div class="offcanvas offcanvas-bottom wink-filter-offcanvas d-md-none" tabindex="-1" id="winkFilterOffcanvas" aria-labelledby="winkFilterOffcanvasLabel">
+                        <div class="offcanvas-header border-bottom">
+                            <h6 class="offcanvas-title fw-bold" id="winkFilterOffcanvasLabel"><i class="fa fa-filter me-1"/> Filters</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"/>
+                        </div>
+                        <div class="offcanvas-body">
+                            <form method="get" action="/services" id="wink-filter-form-mobile">
+                                <input type="hidden" name="search" t-att-value="search or ''"/>
+                                <div class="wink-filter-group mb-4">
+                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
+                                    <t t-foreach="request.env['kuec.service.nature'].sudo().search([])" t-as="nature">
+                                        <div class="form-check my-2 d-flex align-items-center">
+                                            <input type="radio" class="form-check-input" t-att-id="'filter_nature_mob_%s' % nature.id" name="nature_id" t-att-value="nature.id" t-att-checked="nature.id == current_filters.get('nature_id')"/>
+                                            <label class="form-check-label ms-2" t-att-for="'filter_nature_mob_%s' % nature.id" t-esc="nature.name"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="wink-filter-group mb-4">
+                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
+                                    <t t-foreach="departments" t-as="dept">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" t-att-id="'filter_dept_mob_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
+                                            <label class="form-check-label text-muted" t-att-for="'filter_dept_mob_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="wink-filter-group mb-4">
+                                    <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Delivery Model</h6>
+                                    <t t-foreach="delivery_models" t-as="dm">
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" t-att-id="'filter_delivery_mob_%s' % dm[0]" name="delivery_model" t-att-value="dm[0]" t-att-checked="current_filters.get('delivery_model') == dm[0]"/>
+                                            <label class="form-check-label text-muted" t-att-for="'filter_delivery_mob_%s' % dm[0]"><t t-esc="dm[1]"/></label>
+                                        </div>
+                                    </t>
+                                </div>
+                                <!-- In Your Bundle filter (logged-in users with a bundle only) -->
+                                <t t-if="not request.env.user._is_public() and entitlement_map">
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">My Bundle</h6>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input"
+                                                   id="filter_bundle_included_mob"
+                                                   name="bundle_included"
+                                                   value="1"
+                                                   t-att-checked="'checked' if bundle_included else None"/>
+                                            <label class="form-check-label text-muted" for="filter_bundle_included_mob">
+                                                In Your Bundle <span class="text-muted small">(<t t-esc="len(entitlement_map)"/>)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-if="active_filter_count > 0">
+                                    <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear All Filters (<t t-esc="active_filter_count"/>)</a>
+                                </t>
+                                <t t-else="">
+                                    <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear Filters</a>
+                                </t>
+                                <button type="submit" class="btn btn-primary w-100 mt-2">Apply Filters</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- CAT-4 Desktop sidebar: card-premium, counts, Clear All Filters (N); hidden on mobile (filter in offcanvas) -->
+                        <div class="col-md-3 wink-filter-sidebar d-none d-md-block" id="winkSidebarCollapse">
+                            <div class="card-premium rounded-2xl p-4 sticky-top">
+                                <form method="get" action="/services" id="wink-filter-form">
+                                    <input type="hidden" name="search" t-att-value="search or ''"/>
+                                    <h6 class="fw-bold mb-3 border-bottom pb-2"><i class="fa fa-filter me-1"/> Filters</h6>
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Service Nature</h6>
+                                        <t t-foreach="natures" t-as="nature">
+                                            <div class="form-check">
+                                            <input type="radio" class="form-check-input wink-filter-checkbox" t-att-id="'filter_nature_%s' % nature.id" name="nature_id" t-att-value="nature.id" t-att-checked="nature.id == current_filters.get('nature_id')"/>
+                                                <label class="form-check-label text-muted" t-att-for="'filter_nature_%s' % nature.id"><t t-esc="nature.name"/></label>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Department</h6>
+                                        <t t-foreach="departments" t-as="dept">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input wink-filter-checkbox" t-att-id="'filter_dept_%s' % dept.id" name="department_ids" t-att-value="dept.id" t-att-checked="dept.id in current_filters.get('department_ids', [])"/>
+                                                <label class="form-check-label text-muted" t-att-for="'filter_dept_%s' % dept.id"><t t-esc="dept.name"/> <span class="text-muted small" t-esc="'(%s)' % dept_counts.get(dept.id, 0)"/></label>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="wink-filter-group mb-4">
+                                        <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">Delivery Model</h6>
+                                        <t t-foreach="delivery_models" t-as="dm">
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" t-att-id="'filter_delivery_%s' % dm[0]" name="delivery_model" t-att-value="dm[0]" t-att-checked="current_filters.get('delivery_model') == dm[0]"/>
+                                                <label class="form-check-label text-muted" t-att-for="'filter_delivery_%s' % dm[0]"><t t-esc="dm[1]"/></label>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <!-- In Your Bundle filter (logged-in users with a bundle only) -->
+                                    <t t-if="not request.env.user._is_public() and entitlement_map">
+                                        <div class="wink-filter-group mb-4">
+                                            <h6 class="fw-bold mb-2 border-bottom pb-2 small text-uppercase text-muted">My Bundle</h6>
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input wink-filter-checkbox"
+                                                       id="filter_bundle_included"
+                                                       name="bundle_included"
+                                                       value="1"
+                                                       t-att-checked="'checked' if bundle_included else None"
+                                                       onchange="this.form.submit()"/>
+                                                <label class="form-check-label text-muted" for="filter_bundle_included">
+                                                    In Your Bundle <span class="text-muted small">(<t t-esc="len(entitlement_map)"/>)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </t>
+                                    <t t-if="active_filter_count > 0">
+                                        <a href="/services" class="btn btn-outline-secondary btn-sm w-100 mb-2">Clear All Filters (<t t-esc="active_filter_count"/>)</a>
+                                    </t>
+                                    <t t-else="">
+                                        <a href="/services" class="btn btn-outline-secondary btn-sm w-100">Clear Filters</a>
+                                    </t>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="col-md-9 pt-3 pt-md-0 space-y-6">
+                            <!-- Fix 4: Packages Only toggle + In Your Bundle filter -->
+                            <!-- Pill hrefs preserve department/nature/delivery/search so toggling
+                                 between "All Services" and "In Your Bundle" keeps the rest of the
+                                 user's filter selection intact. -->
+                            <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                                <a t-attf-href="/services#{('?' + pill_qs_base) if pill_qs_base else ''}"
+                                   t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if not bundles_only and not bundle_included else 'btn-outline-secondary'}">
+                                    All Services
+                                </a>
+                                <a href="/wink/packages"
+                                   t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-primary' if bundles_only else 'btn-outline-secondary'}">
+                                    <i class="fa fa-th-large me-1"/> Packages Only
+                                </a>
+                                <!-- Only show for logged-in users who have bundle entitlements -->
+                                <t t-if="not request.env.user._is_public() and entitlement_map">
+                                    <a t-attf-href="/services?bundle_included=1#{('&amp;' + pill_qs_base) if pill_qs_base else ''}"
+                                       t-attf-class="btn btn-sm rounded-pill px-3 #{'btn-success' if bundle_included else 'btn-outline-success'}">
+                                        <i class="fa fa-check me-1"/>In Your Bundle
+                                    </a>
+                                </t>
+                            </div>
+                            <p class="text-muted small mb-3">Showing <t t-esc="len(products)"/> service<t t-if="len(products) != 1">s</t></p>
+                            <div class="row g-4" id="wink-services-grid">
+                                <t t-if="products">
+                                    <t t-foreach="products" t-as="product">
+                                        <t t-set="dept_slug" t-value="product_dept_slugs.get(product.id, '')"/>
+                                        <div class="col-md-4 col-sm-6 col-12">
+                                            <t t-call="kuec_service_catalogue.wink_service_card">
+                                                <t t-set="product" t-value="product"/>
+                                                <t t-set="dept_slug" t-value="dept_slug"/>
+                                            </t>
+                                        </div>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <!-- CAT-8 Empty state — bundle-aware message when "In Your Bundle" is on -->
+                                    <div class="col-12">
+                                        <div class="wink-empty-state card-premium rounded-2xl p-6">
+                                            <i class="fa fa-search d-block"/>
+                                            <t t-if="bundle_included">
+                                                <h6 class="fw-bold text-dark mb-2">No services in your bundle match these filters</h6>
+                                                <p class="text-muted mb-3">Your bundle entitlements don't intersect with the active department, nature, delivery model, or search filters.</p>
+                                                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                                    <a href="/services?bundle_included=1" class="btn btn-outline-success">Show all bundle services</a>
+                                                    <a href="/services" class="btn btn-outline-primary">Clear all filters</a>
+                                                </div>
+                                            </t>
+                                            <t t-else="">
+                                                <h6 class="fw-bold text-dark mb-2">No services found</h6>
+                                                <p class="text-muted mb-3">Try adjusting your search or filters.</p>
+                                                <a href="/services" class="btn btn-outline-primary">Clear all filters</a>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modals -->
+            <t t-call="kuec_service_catalogue.wink_login_modal_snippet"/>
+        </t>
+    </template>
+
+    <!-- Service Detail Page - Enhanced -->
+    <template id="wink_service_detail_page" name="WINK Service Detail Page">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure oe_empty wink-service-detail-wrap">
+                <!-- is_bundle: true if wink_is_bundle OR commercial_structure == bundled -->
+                <t t-set="is_bundle" t-value="product.wink_is_bundle or product.commercial_structure == 'bundled'"/>
+
+                <!-- ── Hero Header ── -->
+                <div class="wink-detail-hero">
+                    <div class="container">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb wink-detail-breadcrumb mb-3">
+                                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+                                <li class="breadcrumb-item"><a href="/services" class="text-decoration-none">Services</a></li>
+                                <li class="breadcrumb-item active" aria-current="page"><t t-esc="product.name"/></li>
+                            </ol>
+                        </nav>
+                        <div class="position-relative">
+                            <!-- Diagonal ribbon -->
+                            <t t-if="product.wink_ribbon_tag_id">
+                                <div class="wink-ribbon-wrapper">
+                                    <span class="wink-ribbon"
+                                          t-att-style="product.wink_ribbon_tag_id.color and ('background: %s !important;' % product.wink_ribbon_tag_id.color) or ''"
+                                          t-esc="product.wink_ribbon_tag_id.name"/>
+                                </div>
+                            </t>
+                            <h1 class="wink-detail-title mb-3"><t t-esc="product.name"/></h1>
+                            <!-- Meta badges row -->
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <t t-if="product.department_ids">
+                                    <span class="wink-detail-badge">
+                                        <i class="fa fa-building-o fa-fw"/>
+                                        <t t-esc="product.department_ids[0].name"/>
+                                    </span>
+                                </t>
+                                <t t-if="product.delivery_model == 'project'">
+                                    <span class="wink-detail-badge"><i class="fa fa-tasks fa-fw"/> Project-Based</span>
+                                </t>
+                                <t t-if="product.delivery_model == 'retainer'">
+                                    <span class="wink-detail-badge wink-badge-retainer"><i class="fa fa-refresh fa-fw"/> Retainer-Based</span>
+                                </t>
+                                <t t-if="product.commercial_structure">
+                                    <span class="wink-detail-badge">
+                                        <t t-esc="dict(product._fields['commercial_structure'].selection).get(product.commercial_structure, '')"/>
+                                    </span>
+                                </t>
+                                <t t-foreach="product.product_tag_ids.filtered(lambda t: t.id != product.wink_ribbon_tag_id.id)" t-as="tag">
+                                    <span class="wink-detail-badge"
+                                          t-att-style="tag.color_html and ('background-color: %s22; border-color: %s55; color: %s;' % (tag.color_html, tag.color_html, tag.color_html)) or ''">
+                                        <t t-esc="tag.name"/>
+                                    </span>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Activation feedback banners ── -->
+                <div class="container mt-3">
+                    <t t-if="bundle_requested">
+                        <div class="alert border-0 shadow-sm d-flex align-items-center gap-3 p-3 rounded-3 text-white mb-0"
+                             style="background:#1a5f1a;">
+                            <i class="fa fa-check-circle fa-lg flex-shrink-0"/>
+                            <div>
+                                <strong>Service activated successfully!</strong>
+                                Your request has been submitted and our team will process it shortly.
+                            </div>
+                        </div>
+                    </t>
+                    <t t-if="activation_error">
+                        <div class="alert alert-danger d-flex align-items-center gap-3 p-3 rounded-3 mb-0">
+                            <i class="fa fa-exclamation-circle fa-lg flex-shrink-0"/>
+                            <div><strong>Activation failed:</strong> <t t-esc="activation_error"/></div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- ── Main Content ── -->
+                <div class="container wink-detail-main">
+                    <div class="row">
+
+                        <!-- Left: Content -->
+                        <div class="col-lg-8 pe-lg-5">
+
+                            <!-- Service Description -->
+                            <section class="wink-detail-section mb-5">
+                                <div class="wink-prose">
+                                    <t t-out="product.wink_description"/>
+                                </div>
+                            </section>
+
+                            <!-- Required Documents -->
+                            <t t-if="product.kuec_document_ids">
+                                <section class="wink-detail-section mb-5">
+                                    <h4 class="wink-section-heading">Required Documents</h4>
+                                    <div class="wink-doc-list">
+                                        <t t-foreach="product.kuec_document_ids" t-as="doc">
+                                            <div class="wink-doc-item">
+                                                <div class="wink-doc-icon-box">
+                                                    <i class="fa fa-file-text-o"/>
+                                                </div>
+                                                <span class="wink-doc-name flex-grow-1"><t t-esc="doc.name"/></span>
+                                                <span t-attf-class="badge rounded-pill #{'wink-badge-required' if doc.requirement == 'required' else 'wink-badge-optional'}">
+                                                    <t t-if="doc.requirement == 'required'">Required</t>
+                                                    <t t-else="">Optional</t>
+                                                </span>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </section>
+                            </t>
+
+                            <!-- FAQs -->
+                            <t t-if="product.wink_faq_ids">
+                                <section class="wink-detail-section mb-5">
+                                    <h4 class="wink-section-heading">Frequently Asked Questions</h4>
+                                    <div class="accordion accordion-flush wink-faq-accordion" id="kuecFaqAccordion">
+                                        <t t-foreach="product.wink_faq_ids" t-as="faq">
+                                            <div class="accordion-item wink-faq-item">
+                                                <h2 class="accordion-header" t-attf-id="headingFaq#{faq.id}">
+                                                    <button class="accordion-button collapsed wink-faq-btn" type="button"
+                                                            data-bs-toggle="collapse"
+                                                            t-attf-data-bs-target="#collapseFaq#{faq.id}"
+                                                            aria-expanded="false"
+                                                            t-attf-aria-controls="collapseFaq#{faq.id}">
+                                                        <t t-esc="faq.question"/>
+                                                    </button>
+                                                </h2>
+                                                <div t-attf-id="collapseFaq#{faq.id}"
+                                                     class="accordion-collapse collapse"
+                                                     t-attf-aria-labelledby="headingFaq#{faq.id}"
+                                                     data-bs-parent="#kuecFaqAccordion">
+                                                    <div class="accordion-body wink-faq-body">
+                                                        <t t-out="faq.answer"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </section>
+                            </t>
+
+                        </div>
+
+                        <!-- Right: Pricing Sidebar -->
+                        <div class="col-lg-4 d-none d-lg-block">
+                            <div class="wink-pricing-card sticky-top">
+
+                                <!-- Gradient header -->
+                                <div class="wink-pricing-header kuec-gradient">
+                                    <t t-if="is_subscription_service and subscription_plans and not is_bundle">
+                                        <span class="wink-pricing-starting-label">Starting at</span>
+                                        <span class="wink-pricing-header-price">
+                                            AED <t t-esc="'{:,.2f}'.format(subscription_plans[0]['price'])"/>
+                                        </span>
+                                    </t>
+                                    <t t-elif="entitlement">
+                                        <span class="wink-pricing-header-price" style="font-size: 1.25rem;">
+                                            <i class="fa fa-check-circle me-1"/>Activate Service
+                                        </span>
+                                    </t>
+                                    <t t-elif="entitlement_activated">
+                                        <t t-set="_is_one_time_hdr" t-value="entitlement_activated.service_product_id.request_frequency == 'one_time'"/>
+                                        <span class="wink-pricing-header-price" style="font-size: 1.25rem;">
+                                            <i class="fa fa-check-circle me-1"/>
+                                            <t t-if="_is_one_time_hdr">Service Activated</t>
+                                            <t t-else="">Activate Again</t>
+                                        </span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="wink-pricing-header-price" style="font-size: 1.25rem;">Request This Service</span>
+                                    </t>
+                                </div>
+
+                                <div class="wink-pricing-body">
+
+                                    <!-- Live price display -->
+                                    <div class="wink-price-display" id="wink-detail-price">
+                                        <t t-if="product.price_visibility == 'hidden'">
+                                            <div class="wink-price-display-amount text-muted fst-italic" style="font-size: 1.1rem;">
+                                                <t t-esc="product.price_hidden_label"/>
+                                            </div>
+                                        </t>
+                                        <t t-elif="is_subscription_service and subscription_plans and not is_bundle">
+                                            <div class="wink-price-display-amount" id="wink-detail-price-amount">
+                                                <t t-if="display_plan">AED <t t-esc="'{:,.2f}'.format(display_plan['price'])"/></t>
+                                            </div>
+                                            <div class="wink-price-display-period" id="wink-detail-price-period">
+                                                <t t-if="display_plan"><t t-esc="display_plan['period_label']"/></t>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="wink-price-display-amount">
+                                                <t t-esc="product.list_price" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                                            </div>
+                                        </t>
+                                    </div>
+
+                                    <!-- Plan selector: multiple subscription plans -->
+                                    <t t-if="is_subscription_service and len(subscription_plans) > 1 and not is_bundle">
+                                        <div class="mb-3">
+                                            <!-- Period toggle: server-side rendered when multiple billing periods exist -->
+                                            <t t-if="len(unique_periods) > 1">
+                                                <div class="wink-period-toggle mb-3" id="wink-period-toggle">
+                                                    <t t-foreach="unique_periods" t-as="up">
+                                                        <button type="button"
+                                                                t-attf-class="wink-period-btn #{'active' if up['label'] == active_period else ''}"
+                                                                t-att-data-period="up['label']">
+                                                            <t t-esc="up['nice']"/>
+                                                            <t t-if="up['has_savings']">
+                                                                <span class="wink-period-save-badge">Save</span>
+                                                            </t>
+                                                        </button>
+                                                    </t>
+                                                </div>
+                                            </t>
+                                            <div id="wink-plan-cards" class="d-flex flex-column gap-2">
+                                                <t t-foreach="subscription_plans" t-as="plan">
+                                                    <label t-attf-class="wink-plan-card #{'selected' if plan['recurrence_id'] == selected_plan_id else ''}"
+                                                           t-att-data-price="'{:,.2f}'.format(plan['price'])"
+                                                           t-att-data-period="plan['period_label']"
+                                                           t-att-data-recurrence-id="plan['recurrence_id_str']"
+                                                           t-att-data-savings="plan.get('savings_pct', 0)"
+                                                           t-att-data-monthly-equiv="'{:,.2f}'.format(plan.get('monthly_equivalent') or plan['price'])"
+                                                           t-att-style="'' if plan['period_label'] == active_period else 'display:none'">
+                                                        <input type="radio" name="selected_plan_recurrence_id"
+                                                               class="d-none"
+                                                               t-att-value="plan['recurrence_id_str']"
+                                                               t-att-checked="'checked' if plan['recurrence_id'] == selected_plan_id else None"/>
+                                                        <div class="wink-plan-name"><t t-esc="plan['plan_name']"/></div>
+                                                        <t t-if="plan.get('is_most_popular') or plan.get('show_savings')">
+                                                            <div class="d-flex gap-1 mb-1 flex-wrap">
+                                                                <t t-if="plan.get('is_most_popular')">
+                                                                    <span class="badge rounded-pill" style="background:#B8960C;color:white;font-size:10px;">Most Popular</span>
+                                                                </t>
+                                                                <t t-if="plan.get('show_savings')">
+                                                                    <span class="badge rounded-pill" style="background:#375623;color:white;font-size:10px;">Save <t t-esc="plan['savings_pct']"/>%</span>
+                                                                </t>
+                                                            </div>
+                                                        </t>
+                                                        <div class="d-flex align-items-baseline gap-1 mt-1">
+                                                            <span class="wink-plan-price">AED <t t-esc="'{:,.2f}'.format(plan['price'])"/></span>
+                                                            <span class="wink-plan-period"><t t-esc="plan['period_label']"/></span>
+                                                        </div>
+                                                        <t t-if="plan.get('monthly_equivalent') and plan['monthly_equivalent'] != plan['price']">
+                                                            <div class="mt-1" style="font-size: 0.72rem; color: #375623;">
+                                                                ≈ AED <t t-esc="'{:,.2f}'.format(plan['monthly_equivalent'])"/> per month
+                                                            </div>
+                                                        </t>
+                                                        <t t-if="plan.get('features')">
+                                                            <ul class="list-unstyled mt-2 mb-0 wink-plan-features">
+                                                                <t t-foreach="plan['features'][:4]" t-as="feat">
+                                                                    <li class="d-flex align-items-start gap-1 mb-1">
+                                                                        <i class="fa fa-check wink-plan-feature-check"/>
+                                                                        <span><t t-esc="feat"/></span>
+                                                                    </li>
+                                                                </t>
+                                                                <t t-if="len(plan.get('features', [])) > 4">
+                                                                    <li class="text-muted">+ <t t-esc="len(plan['features']) - 4"/> more</li>
+                                                                </t>
+                                                            </ul>
+                                                        </t>
+                                                    </label>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+
+                                    <!-- No plans edge case -->
+                                    <t t-if="is_subscription_service and not subscription_plans and not is_bundle">
+                                        <div class="alert alert-warning py-2 mb-3 text-start" role="alert">
+                                            <small>This retainer cannot be requested yet because no billing plan is configured. Add at least one line on the product's <strong>Recurring Prices</strong> tab first.</small>
+                                        </div>
+                                    </t>
+
+                                    <!-- Bundle info -->
+                                    <t t-if="is_bundle">
+                                        <div class="wink-bundle-info-box mb-3">
+                                            <p class="mb-1 fw-semibold" style="color: #1F3864; font-size: 0.88rem;">
+                                                <i class="fa fa-sliders me-2"/>Select your tier and billing cycle on the next step.
+                                            </p>
+                                            <p class="mb-0 text-muted" style="font-size: 0.78rem;">
+                                                This service is offered in different tiers. Review the options and configure your package during checkout.
+                                            </p>
+                                        </div>
+                                    </t>
+
+                                    <!-- CTA Button -->
+                                    <div class="d-grid mt-3">
+                                        <t t-if="request.env.user._is_public()">
+                                            <t t-if="is_subscription_service and not subscription_plans and not is_bundle">
+                                                <button type="button"
+                                                        class="wink-cta-btn wink-request-btn"
+                                                        disabled="disabled"
+                                                        style="opacity:0.55;pointer-events:none;">
+                                                    Unavailable until billing plan is configured
+                                                </button>
+                                            </t>
+                                            <t t-else="">
+                                                <button type="button"
+                                                        class="wink-cta-btn wink-request-btn"
+                                                        t-att-data-product-id="product.id"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#winkLoginModal">
+                                                    Request Service <i class="fa fa-arrow-right ms-1"/>
+                                                </button>
+                                            </t>
+                                        </t>
+                                        <t t-elif="entitlement">
+                                            <!-- User has an available entitlement — link to dedicated activation page -->
+                                            <a t-attf-href="/services/#{product.id}/activate/#{entitlement.id}"
+                                               class="wink-cta-btn w-100 text-center"
+                                               style="background:#1a5f1a;border-color:#1a5f1a;display:block;">
+                                                <i class="fa fa-check-circle me-2"/>Activate Service
+                                            </a>
+                                            <div class="text-center mt-2">
+                                                <small class="text-muted">
+                                                    <i class="fa fa-tag me-1"/>Included in your active bundle —
+                                                    <a t-attf-href="/my/requests/#{entitlement.order_id.id}" class="text-decoration-none">view bundle</a>
+                                                </small>
+                                            </div>
+                                        </t>
+                                        <t t-elif="entitlement_activated">
+                                            <!-- Service fully activated — show status + optionally allow re-activation -->
+                                            <t t-set="_is_one_time" t-value="entitlement_activated.service_product_id.request_frequency == 'one_time'"/>
+                                            <div class="rounded-3 p-3 mb-3"
+                                                 style="background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.3);">
+                                                <div class="fw-semibold mb-1" style="color:#155724;">
+                                                    <i class="fa fa-check-circle me-1"/>This service is active
+                                                </div>
+                                                <div class="text-muted small mb-2">
+                                                    <t t-if="_is_one_time">
+                                                        This is a one-time service and has already been activated.
+                                                    </t>
+                                                    <t t-else="">
+                                                        Activated from your bundle.
+                                                    </t>
+                                                </div>
+                                                <a t-attf-href="/my/requests/#{entitlement_activated.order_id.id}"
+                                                   class="btn btn-sm btn-outline-success rounded-pill">
+                                                    <i class="fa fa-eye me-1"/>View Bundle
+                                                </a>
+                                            </div>
+                                            <!-- Re-activation button for non-one-time services -->
+                                            <t t-if="not _is_one_time">
+                                                <a t-attf-href="/services/#{product.id}/activate/#{entitlement_activated.id}"
+                                                   class="wink-cta-btn w-100 text-center"
+                                                   style="background:#1a5f1a;border-color:#1a5f1a;display:block;">
+                                                    <i class="fa fa-refresh me-2"/>Activate Again
+                                                </a>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-if="is_bundle">
+                                                <a t-attf-href="/services/#{product.id}/request"
+                                                   class="wink-cta-btn">Configure Package <i class="fa fa-arrow-right ms-1"/></a>
+                                            </t>
+                                            <t t-elif="is_subscription_service and len(subscription_plans) == 1">
+                                                <a t-attf-href="/services/#{product.id}/request?plan=#{subscription_plans[0]['recurrence_id']}"
+                                                   class="wink-cta-btn">Request Service <i class="fa fa-arrow-right ms-1"/></a>
+                                            </t>
+                                            <t t-elif="is_subscription_service and subscription_plans">
+                                                <a href="#"
+                                                   class="wink-cta-btn"
+                                                   id="wink-detail-request-btn"
+                                                   t-att-data-product-id="product.id"
+                                                   t-att-data-service-id="product.id">
+                                                    Request Service<i class="fa fa-arrow-right ms-1"/>
+                                                </a>
+                                            </t>
+                                            <t t-elif="is_subscription_service and not subscription_plans">
+                                                <button type="button"
+                                                        class="wink-cta-btn"
+                                                        disabled="disabled"
+                                                        style="opacity:0.55;pointer-events:none;">
+                                                    Unavailable until billing plan is configured
+                                                </button>
+                                            </t>
+                                            <t t-else="">
+                                                <a t-attf-href="/my/requests/new?product_id=#{product.id}"
+                                                   class="wink-cta-btn"
+                                                   t-att-data-product-id="product.id">
+                                                    Request Service <i class="fa fa-arrow-right ms-1"/>
+                                                </a>
+                                            </t>
+                                        </t>
+                                    </div>
+
+                                </div><!-- /.wink-pricing-body -->
+                            </div><!-- /.wink-pricing-card -->
+
+                            <!-- Plan selection JS: period filter + card select + URL routing -->
+                            <script>
+                                (function() {
+                                    var cards = Array.prototype.slice.call(document.querySelectorAll('#wink-plan-cards .wink-plan-card'));
+                                    var priceEl = document.getElementById('wink-detail-price-amount');
+                                    var periodEl = document.getElementById('wink-detail-price-period');
+                                    var btn = document.getElementById('wink-detail-request-btn');
+
+                                    if (!cards.length) return;
+
+                                    /* ── 1. Update live price display ── */
+                                    function updatePrice(card) {
+                                        var price = card.getAttribute('data-price');
+                                        var period = card.getAttribute('data-period');
+                                        if (priceEl &amp;&amp; price) priceEl.textContent = 'AED ' + price;
+                                        if (periodEl &amp;&amp; period) periodEl.textContent = period;
+                                    }
+
+                                    /* ── 2. Show/hide cards by period; auto-select first visible ── */
+                                    function filterCards(period) {
+                                        var first = null;
+                                        cards.forEach(function(c) {
+                                            var match = c.getAttribute('data-period') === period;
+                                            c.style.display = match ? '' : 'none';
+                                            if (match &amp;&amp; !first) first = c;
+                                        });
+                                        cards.forEach(function(c) { c.classList.remove('selected'); });
+                                        if (first) { first.classList.add('selected'); updatePrice(first); }
+                                    }
+
+                                    /* ── 3. Period toggle buttons (server-rendered) ── */
+                                    document.querySelectorAll('#wink-period-toggle .wink-period-btn').forEach(function(pbtn) {
+                                        pbtn.addEventListener('click', function() {
+                                            var period = pbtn.getAttribute('data-period');
+                                            document.querySelectorAll('#wink-period-toggle .wink-period-btn').forEach(function(b) {
+                                                b.classList.toggle('active', b === pbtn);
+                                            });
+                                            filterCards(period);
+                                        });
+                                    });
+
+                                    /* ── 4. Card click: select + update price ── */
+                                    cards.forEach(function(card) {
+                                        card.addEventListener('click', function() {
+                                            cards.forEach(function(c) { c.classList.remove('selected'); });
+                                            card.classList.add('selected');
+                                            updatePrice(card);
+                                        });
+                                    });
+
+                                    /* ── 5. Request button routing ── */
+                                    if (btn) {
+                                        btn.addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            var sel = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
+                                            var rid = sel ? sel.getAttribute('data-recurrence-id') : null;
+                                            var sid = btn.getAttribute('data-service-id');
+                                            if (sid) window.location.href = '/services/' + sid + '/request' + (rid ? '?plan=' + rid : '');
+                                        });
+                                    }
+
+                                    /* ── 6. Initialise price from currently selected card ── */
+                                    var initCard = document.querySelector('#wink-plan-cards .wink-plan-card.selected');
+                                    if (initCard) updatePrice(initCard);
+                                })();
+                            </script>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Mobile Sticky CTA Bar -->
+                <div class="wink-cta-bar-mobile d-lg-none">
+                    <t t-if="request.env.user._is_public()">
+                        <button type="button"
+                                class="btn btn-light btn-lg fw-bold wink-request-btn"
+                                t-att-data-product-id="product.id"
+                                data-bs-toggle="modal"
+                                data-bs-target="#winkLoginModal">
+                            Request Service
+                        </button>
+                    </t>
+                    <t t-else="">
+                        <a t-attf-href="/my/requests/new?product_id=#{product.id}"
+                           class="btn btn-light btn-lg fw-bold"
+                           t-att-data-product-id="product.id">Request Service</a>
+                    </t>
+                </div>
+
+            </div>
+
+            <!-- Modals -->
+            <t t-call="kuec_service_catalogue.wink_login_modal_snippet"/>
+        </t>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Dedicated Bundle Service Activation Page
+         Route: GET/POST /services/<product_id>/activate/<entitlement_id>
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="wink_service_activate_page" name="WINK Service Activate Page">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure oe_empty">
+
+                <!-- Hero -->
+                <div class="wink-detail-hero">
+                    <div class="container">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb wink-detail-breadcrumb mb-3">
+                                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+                                <li class="breadcrumb-item"><a href="/services" class="text-decoration-none">Services</a></li>
+                                <li class="breadcrumb-item">
+                                    <a t-attf-href="/services/#{product.id}" class="text-decoration-none"><t t-esc="product.name"/></a>
+                                </li>
+                                <li class="breadcrumb-item active">Activate</li>
+                            </ol>
+                        </nav>
+                        <h1 class="wink-detail-title mb-2"><t t-esc="product.name"/></h1>
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge rounded-pill fw-semibold px-3 py-2"
+                                  style="background:#d4edda;color:#155724;font-size:0.8rem;">
+                                <i class="fa fa-check me-1"/>Included in Your Bundle —
+                                <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none" style="color:#155724;">
+                                    <t t-esc="order.name"/>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container py-5" style="max-width:900px;">
+
+                    <!-- Error banner -->
+                    <t t-if="error">
+                        <div class="alert alert-danger d-flex align-items-center gap-3 mb-4 rounded-3">
+                            <i class="fa fa-exclamation-circle fa-lg flex-shrink-0"/>
+                            <div><strong>Activation failed:</strong> <t t-esc="error"/></div>
+                        </div>
+                    </t>
+
+                    <form t-attf-action="/services/#{product.id}/activate/#{entitlement.id}"
+                          method="post" enctype="multipart/form-data" id="wink-activation-form">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                        <div class="row g-4">
+
+                            <!-- ── LEFT: Service Info + Employee + Docs ── -->
+                            <div class="col-lg-7">
+
+                                <!-- Service Description -->
+                                <t t-if="product.wink_description">
+                                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                        <div class="card-body p-4">
+                                            <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                                <i class="fa fa-info-circle me-2"/>Service Information
+                                            </h5>
+                                            <div class="wink-prose">
+                                                <t t-out="product.wink_description"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+
+                                <!-- Required Documents -->
+                                <t t-if="product.kuec_document_ids">
+                                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                        <div class="card-body p-4">
+                                            <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                                <i class="fa fa-file-text-o me-2"/>Required Documents
+                                            </h5>
+                                            <div class="wink-doc-list">
+                                                <t t-foreach="product.kuec_document_ids" t-as="doc">
+                                                    <div class="wink-doc-item flex-column align-items-start gap-2 pb-3 mb-3 border-bottom">
+                                                        <!-- Row 1: icon + name + badge -->
+                                                        <div class="d-flex align-items-center gap-2 w-100">
+                                                            <div class="wink-doc-icon-box flex-shrink-0">
+                                                                <i class="fa fa-file-text-o"/>
+                                                            </div>
+                                                            <span class="wink-doc-name flex-grow-1"><t t-esc="doc.name"/></span>
+                                                            <span t-attf-class="badge rounded-pill #{'wink-badge-required' if doc.requirement == 'required' else 'wink-badge-optional'}">
+                                                                <t t-if="doc.requirement == 'required'">Required</t>
+                                                                <t t-else="">Optional</t>
+                                                            </span>
+                                                        </div>
+                                                        <!-- Row 2: custom multi-file picker with individual remove -->
+                                                        <div class="w-100 ps-1 wink-file-picker"
+                                                             t-att-data-input-id="'wink_doc_input_%d' % doc.id">
+                                                            <!-- Hidden input submitted with the form.
+                                                                 required is NOT set here because the input is display:none —
+                                                                 browsers cannot focus hidden inputs for native validation.
+                                                                 Required enforcement is handled by the JS submit validator below. -->
+                                                            <input type="file"
+                                                                   t-att-name="'doc_file_%d' % doc.id"
+                                                                   t-att-id="'wink_doc_input_%d' % doc.id"
+                                                                   multiple="multiple"
+                                                                   t-att-data-required="'1' if doc.requirement == 'required' else None"
+                                                                   t-att-data-doc-name="doc.name"
+                                                                   class="wink-file-real-input"
+                                                                   style="display:none;"/>
+                                                            <!-- File chips list -->
+                                                            <div t-att-id="'wink_doc_list_%d' % doc.id"
+                                                                 class="wink-doc-file-list d-flex flex-wrap gap-1 mb-2"
+                                                                 style="min-height:4px;"/>
+                                                            <!-- Attach button -->
+                                                            <label t-att-for="'wink_doc_input_%d' % doc.id"
+                                                                   class="btn btn-outline-secondary btn-sm rounded-pill"
+                                                                   style="cursor:pointer;font-size:0.78rem;">
+                                                                <i class="fa fa-paperclip me-1"/>Attach files
+                                                            </label>
+                                                            <div class="text-muted mt-1" style="font-size:0.72rem;">
+                                                                Click to select one or more files. Use <i class="fa fa-times"/> to remove individual files.
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+
+                                <!-- Employee Assignment -->
+                                <t t-if="requires_employees">
+                                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+                                        <div class="card-body p-4">
+                                            <h5 class="fw-bold mb-1" style="color:#1F3864;">
+                                                <i class="fa fa-users me-2"/>Assign Employees
+                                            </h5>
+                                            <p class="text-muted small mb-3">
+                                                Select one or more employees to assign to this service. You can also add a new employee below.
+                                            </p>
+
+                                            <!-- Existing employees (multi-select checkboxes) -->
+                                            <t t-if="employees">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold small">Select from your employees</label>
+                                                    <div class="border rounded-3 p-3" style="max-height:220px;overflow-y:auto;">
+                                                        <t t-foreach="employees" t-as="emp">
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                       name="employee_ids"
+                                                                       t-att-value="emp.id"
+                                                                       t-att-id="'emp_' + str(emp.id)"/>
+                                                                <label class="form-check-label" t-att-for="'emp_' + str(emp.id)">
+                                                                    <span class="fw-semibold"><t t-esc="emp.name"/></span>
+                                                                    <t t-if="emp.job_title">
+                                                                        <span class="text-muted small ms-1">— <t t-esc="emp.job_title"/></span>
+                                                                    </t>
+                                                                </label>
+                                                            </div>
+                                                        </t>
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- Add new employees (multiple rows supported) -->
+                                            <div class="border rounded-3 p-3 bg-light">
+                                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                                    <div class="fw-semibold small">
+                                                        <i class="fa fa-plus-circle me-1 text-primary"/>Add New Employee(s)
+                                                    </div>
+                                                    <button type="button" id="wink-add-emp-row"
+                                                            class="btn btn-outline-primary btn-sm rounded-pill"
+                                                            style="font-size:0.75rem;">
+                                                        <i class="fa fa-plus me-1"/>Add Another
+                                                    </button>
+                                                </div>
+                                                <!-- New employee rows container — JS appends more rows -->
+                                                <div id="wink-new-emp-rows">
+                                                    <!-- Row 0 (always present — clear-only if it is the last row) -->
+                                                    <div class="wink-new-emp-row row g-2 mb-2 align-items-center">
+                                                        <div class="col-sm-6">
+                                                            <input type="text" name="new_emp_name[]" class="form-control form-control-sm"
+                                                                   placeholder="Full name *"/>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <input type="text" name="new_emp_job[]" class="form-control form-control-sm"
+                                                                   placeholder="Job title (optional)"/>
+                                                        </div>
+                                                        <div class="col-sm-5">
+                                                            <input type="email" name="new_emp_email[]" class="form-control form-control-sm"
+                                                                   placeholder="Email (optional)"/>
+                                                        </div>
+                                                        <div class="col-sm-5">
+                                                            <input type="text" name="new_emp_mobile[]" class="form-control form-control-sm"
+                                                                   placeholder="Mobile (optional)"/>
+                                                        </div>
+                                                        <div class="col-sm-2 d-flex justify-content-end">
+                                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill wink-rm-emp-row" title="Remove row">
+                                                                <i class="fa fa-times"/>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-muted" style="font-size:0.72rem;margin-top:4px;">
+                                                    Leave <em>Full name</em> blank to skip adding a new employee.
+                                                </div>
+                                            </div>
+                                            <script>
+                                            (function(){
+                                                var container = document.getElementById('wink-new-emp-rows');
+
+                                                // Remove row if multiple rows exist; clear all inputs if it is the last row
+                                                function removeOrClear(row) {
+                                                    var rows = container.querySelectorAll('.wink-new-emp-row');
+                                                    if (rows.length > 1) {
+                                                        container.removeChild(row);
+                                                    } else {
+                                                        row.querySelectorAll('input').forEach(function(inp) {
+                                                            inp.value = '';
+                                                            inp.dispatchEvent(new Event('input', {bubbles: true}));
+                                                        });
+                                                    }
+                                                }
+
+                                                // Bind existing Row 0 remove button
+                                                container.querySelectorAll('.wink-rm-emp-row').forEach(function(btn) {
+                                                    var row = btn.closest('.wink-new-emp-row');
+                                                    btn.addEventListener('click', function() { removeOrClear(row); });
+                                                });
+
+                                                // Add Another — append a new row with its own remove button
+                                                document.getElementById('wink-add-emp-row').addEventListener('click', function(){
+                                                    var row = document.createElement('div');
+                                                    row.className = 'wink-new-emp-row row g-2 mb-2 align-items-center';
+                                                    row.innerHTML = [
+                                                        '<div class="col-sm-6"><input type="text" name="new_emp_name[]" class="form-control form-control-sm" placeholder="Full name *"/></div>',
+                                                        '<div class="col-sm-6"><input type="text" name="new_emp_job[]" class="form-control form-control-sm" placeholder="Job title (optional)"/></div>',
+                                                        '<div class="col-sm-5"><input type="email" name="new_emp_email[]" class="form-control form-control-sm" placeholder="Email (optional)"/></div>',
+                                                        '<div class="col-sm-5"><input type="text" name="new_emp_mobile[]" class="form-control form-control-sm" placeholder="Mobile (optional)"/></div>',
+                                                        '<div class="col-sm-2 d-flex justify-content-end"><button type="button" class="btn btn-sm btn-outline-danger rounded-pill wink-rm-emp-row" title="Remove row"><i class="fa fa-times"/></button></div>'
+                                                    ].join('');
+                                                    row.querySelector('.wink-rm-emp-row').addEventListener('click', function() { removeOrClear(row); });
+                                                    container.appendChild(row);
+                                                });
+                                            })();
+                                            </script>
+
+                                        </div>
+                                    </div>
+                                </t>
+
+                            </div><!-- /col-lg-7 -->
+
+                            <!-- ── RIGHT: Summary + Gov Charge + Activate ── -->
+                            <div class="col-lg-5">
+                                <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top:100px;">
+                                    <div class="card-body p-0">
+
+                                        <!-- Header -->
+                                        <div class="p-4 rounded-top-3"
+                                             style="background:linear-gradient(135deg,#1a5f1a 0%,#2e8b2e 100%);color:#fff;">
+                                            <div class="fw-bold" style="font-size:1.1rem;">
+                                                <i class="fa fa-check-circle me-2"/>Activation Summary
+                                            </div>
+                                            <div class="opacity-75 small mt-1">
+                                                Bundle: <t t-esc="order.name"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4">
+
+                                            <!-- Service row -->
+                                            <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+                                                <div>
+                                                    <div class="fw-semibold text-dark"><t t-esc="product.name"/></div>
+                                                    <div class="text-muted small">
+                                                        <t t-esc="str(entitlement.qty_activated)"/> of
+                                                        <t t-esc="str(entitlement.qty_entitled)"/> activations used
+                                                    </div>
+                                                </div>
+                                                <span class="badge rounded-pill"
+                                                      style="background:#d4edda;color:#155724;font-size:0.72rem;">
+                                                    Included
+                                                </span>
+                                            </div>
+
+                                            <!-- Government charges — known amount (invoice will be created) -->
+                                            <t t-if="has_gov_charge and gov_charge_is_known">
+                                                <div class="rounded-3 p-3 mb-3"
+                                                     style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);"
+                                                     id="wink-gov-charge-box"
+                                                     t-att-data-gov-base="gov_charge_base"
+                                                     t-att-data-gov-per-unit="gov_charge_per_unit">
+                                                    <div class="fw-semibold mb-1" style="color:#856404;">
+                                                        <i class="fa fa-credit-card me-1"/>Government Charges Required
+                                                    </div>
+                                                    <div class="small mb-2" style="color:#856404;">
+                                                        Amount: <strong>AED <span id="wink-gov-amount-display"><t t-esc="'{:,.2f}'.format(gov_charge_per_emp)"/></span></strong>
+                                                        <span id="wink-gov-emp-note" class="text-muted ms-2" style="font-size:0.75rem;display:none;">
+                                                            (<span id="wink-gov-emp-count">1</span> employee<span id="wink-gov-emp-plural"></span>)
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        After clicking "Submit", an invoice will be created and you will be taken directly
+                                                        to the payment page. Activation is completed once payment is received.
+                                                    </div>
+                                                </div>
+                                                <!-- Dynamic gov charge calculation script -->
+                                                <script t-ignore="1">
+                                                (function() {
+                                                    var box = document.getElementById('wink-gov-charge-box');
+                                                    if (!box) return;
+                                                    var govBase = parseFloat(box.dataset.govBase || '0');
+                                                    var govPerUnit = parseFloat(box.dataset.govPerUnit || '0');
+                                                    var amountEl = document.getElementById('wink-gov-amount-display');
+                                                    var noteEl = document.getElementById('wink-gov-emp-note');
+                                                    var countEl = document.getElementById('wink-gov-emp-count');
+                                                    var pluralEl = document.getElementById('wink-gov-emp-plural');
+
+                                                    function countEmployees() {
+                                                        var n = 0;
+                                                        // Count checked existing employees
+                                                        document.querySelectorAll('input[name="employee_ids"]:checked').forEach(function() { n++; });
+                                                        // Count new employee rows with a non-empty name
+                                                        document.querySelectorAll('input[name="new_emp_name[]"]').forEach(function(inp) {
+                                                            if ((inp.value || '').trim()) n++;
+                                                        });
+                                                        return Math.max(n, 1);
+                                                    }
+
+                                                    function updateGovAmount() {
+                                                        var n = countEmployees();
+                                                        var total = govBase + govPerUnit * n;
+                                                        amountEl.textContent = total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                                        if (n > 1 || countEl) {
+                                                            countEl.textContent = n;
+                                                            pluralEl.textContent = n === 1 ? '' : 's';
+                                                            noteEl.style.display = '';
+                                                        }
+                                                    }
+
+                                                    // Listen on existing employee checkboxes
+                                                    document.querySelectorAll('input[name="employee_ids"]').forEach(function(cb) {
+                                                        cb.addEventListener('change', updateGovAmount);
+                                                    });
+
+                                                    // Delegate new-row name inputs (rows added dynamically)
+                                                    var container = document.getElementById('wink-new-emp-rows');
+                                                    if (container) {
+                                                        container.addEventListener('input', function(e) {
+                                                            if (e.target &amp;&amp; e.target.name === 'new_emp_name[]') updateGovAmount();
+                                                        });
+                                                        // Also recalculate when rows are removed (MutationObserver)
+                                                        new MutationObserver(updateGovAmount).observe(container, {childList: true});
+                                                    }
+
+                                                    updateGovAmount();
+                                                })();
+                                                </script>
+                                            </t>
+
+                                            <!-- Government charges — amount to be confirmed by coordinator -->
+                                            <t t-if="has_gov_charge and not gov_charge_is_known">
+                                                <div class="rounded-3 p-3 mb-3"
+                                                     style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);">
+                                                    <div class="fw-semibold mb-1" style="color:#856404;">
+                                                        <i class="fa fa-info-circle me-1"/>Government Charges Apply
+                                                    </div>
+                                                    <div class="text-muted small mb-1">
+                                                        This service involves government fees. The exact charge amount will be
+                                                        confirmed by our coordinator after submission.
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        You will be contacted with the payment details before any charge is made.
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- No extra charges -->
+                                            <t t-if="not has_gov_charge">
+                                                <div class="rounded-3 p-3 mb-3"
+                                                     style="background:rgba(40,167,69,0.07);border:1px solid rgba(40,167,69,0.2);">
+                                                    <div class="fw-semibold small" style="color:#155724;">
+                                                        <i class="fa fa-check me-1"/>No additional charges
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        This service is fully covered by your bundle.
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- Activate button -->
+                                            <button type="submit" class="btn w-100 fw-bold py-3 rounded-3"
+                                                    style="background:#1a5f1a;color:#fff;font-size:1rem;border:none;">
+                                                <i class="fa fa-check-circle me-2"/>
+                                                <t t-if="has_gov_charge and gov_charge_is_known">Submit &amp; Pay Government Charges</t>
+                                                <t t-elif="has_gov_charge">Submit Activation Request</t>
+                                                <t t-else="">Activate Service</t>
+                                            </button>
+
+                                            <div class="text-center mt-3">
+                                                <a t-attf-href="/services/#{product.id}" class="text-muted small text-decoration-none">
+                                                    <i class="fa fa-arrow-left me-1"/>Back to service
+                                                </a>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- /col-lg-5 -->
+
+                        </div><!-- /row -->
+                    </form>
+
+                    <!-- ── Custom file picker: individual file remove chips ── -->
+                    <script t-ignore="1">
+                    (function() {
+                        function escHtml(s) {
+                            return String(s)
+                                .replace(/&amp;/g, '&amp;amp;')
+                                .replace(/&lt;/g, '&amp;lt;')
+                                .replace(/&gt;/g, '&amp;gt;')
+                                .replace(/"/g, '&amp;quot;');
+                        }
+
+                        document.querySelectorAll('.wink-file-picker').forEach(function(picker) {
+                            var inputId = picker.dataset.inputId;
+                            var input   = document.getElementById(inputId);
+                            var listId  = inputId.replace('wink_doc_input_', 'wink_doc_list_');
+                            var listEl  = document.getElementById(listId);
+                            if (!input || !listEl) return;
+
+                            // DataTransfer holds the managed file collection submitted by the hidden input.
+                            var dt = new DataTransfer();
+
+                            function syncInputFiles() {
+                                try { input.files = dt.files; } catch(e) {}
+                            }
+
+                            picker._winkSyncFiles = syncInputFiles;
+
+                            function renderFiles() {
+                                listEl.innerHTML = '';
+                                for (var i = 0; i &lt; dt.items.length; i++) {
+                                    (function(idx) {
+                                        var f = dt.items[idx].getAsFile();
+                                        var chip = document.createElement('span');
+                                        chip.className = 'd-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill';
+                                        chip.style.cssText = 'background:#e9ecef;color:#495057;font-size:0.75rem;max-width:200px;';
+
+                                        var icon = document.createElement('i');
+                                        icon.className = 'fa fa-file-o flex-shrink-0';
+
+                                        var nameSpan = document.createElement('span');
+                                        nameSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;display:inline-block;';
+                                        nameSpan.textContent = f.name;
+                                        nameSpan.title = f.name;
+
+                                        var rmBtn = document.createElement('button');
+                                        rmBtn.type = 'button';
+                                        rmBtn.title = 'Remove ' + f.name;
+                                        rmBtn.style.cssText = 'background:none;border:none;padding:0 0 0 2px;cursor:pointer;color:#6c757d;font-size:0.85rem;line-height:1;flex-shrink:0;';
+                                        rmBtn.innerHTML = '&amp;times;';
+                                        rmBtn.addEventListener('click', function() {
+                                            dt.items.remove(idx);
+                                            syncInputFiles();
+                                            renderFiles();
+                                        });
+
+                                        chip.appendChild(icon);
+                                        chip.appendChild(nameSpan);
+                                        chip.appendChild(rmBtn);
+                                        listEl.appendChild(chip);
+                                    })(i);
+                                }
+                            }
+
+                            input.addEventListener('change', function(e) {
+                                Array.from(e.target.files || []).forEach(function(f) {
+                                    // Skip duplicates by name
+                                    var dup = false;
+                                    for (var j = 0; j &lt; dt.items.length; j++) {
+                                        if (dt.items[j].getAsFile().name === f.name) { dup = true; break; }
+                                    }
+                                    if (!dup) dt.items.add(f);
+                                });
+                                syncInputFiles();
+                                renderFiles();
+                            });
+
+                            renderFiles();
+                        });
+
+                        // ── Submit validator: required doc enforcement ──
+                        // Hidden inputs cannot receive browser focus for native validation.
+                        // Block submit and show an inline error if a required doc has no files.
+                        var _form = document.getElementById('wink-activation-form');
+                        if (_form) {
+                            _form.addEventListener('submit', function(ev) {
+                                document.querySelectorAll('.wink-file-picker').forEach(function(picker) {
+                                    if (typeof picker._winkSyncFiles === 'function') {
+                                        picker._winkSyncFiles();
+                                    }
+                                });
+                                var missing = [];
+                                document.querySelectorAll('.wink-file-real-input[data-required="1"]').forEach(function(inp) {
+                                    if (!inp.files || inp.files.length === 0) {
+                                        missing.push(inp.dataset.docName || inp.name);
+                                        var picker = inp.closest('.wink-file-picker');
+                                        if (picker) picker.style.outline = '2px solid #dc3545';
+                                    }
+                                });
+                                if (missing.length > 0) {
+                                    ev.preventDefault();
+                                    var errEl = document.getElementById('wink-doc-val-err');
+                                    if (!errEl) {
+                                        errEl = document.createElement('div');
+                                        errEl.id = 'wink-doc-val-err';
+                                        errEl.className = 'alert alert-danger rounded-3 mb-3';
+                                        errEl.style.fontSize = '0.875rem';
+                                        var docList = document.querySelector('.wink-doc-list');
+                                        if (docList) {
+                                            docList.parentNode.insertBefore(errEl, docList);
+                                        }
+                                    }
+                                    errEl.textContent = 'Please attach a file for: ' + missing.join(', ');
+                                    errEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+                                } else {
+                                    var old = document.getElementById('wink-doc-val-err');
+                                    if (old) old.remove();
+                                }
+                            });
+                            // Clear error outline when user attaches a file
+                            document.addEventListener('change', function(ev) {
+                                if (ev.target &amp;&amp; ev.target.classList.contains('wink-file-real-input')) {
+                                    var p = ev.target.closest('.wink-file-picker');
+                                    if (p) p.style.outline = '';
+                                    var old2 = document.getElementById('wink-doc-val-err');
+                                    if (old2) old2.remove();
+                                }
+                            });
+                        }
+                    })();
+                    </script>
+
+                </div><!-- /container -->
+            </div><!-- /wrap -->
+        </t>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Activation Success Page (no payment required)
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="wink_service_activate_success" name="WINK Service Activation Success">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure oe_empty">
+                <div class="container py-5" style="max-width:680px;">
+
+                    <!-- ── Variant A: Gov charges pending (coordinator must confirm amount) ── -->
+                    <t t-if="gov_charges_pending">
+                        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+
+                            <!-- Amber header -->
+                            <div class="p-4 text-white text-center"
+                                 style="background:linear-gradient(135deg,#b45309 0%,#d97706 100%);">
+                                <div class="mb-3">
+                                    <i class="fa fa-clock-o" style="font-size:3.5rem;opacity:0.9;"/>
+                                </div>
+                                <h3 class="fw-bold mb-1">Request Submitted!</h3>
+                                <p class="mb-0 opacity-80">
+                                    <t t-esc="product.name"/> — Government charges are pending confirmation.
+                                </p>
+                            </div>
+
+                            <div class="p-4">
+
+                                <!-- Important notice box -->
+                                <div class="rounded-3 p-3 mb-4"
+                                     style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);">
+                                    <div class="fw-semibold mb-2" style="color:#856404;">
+                                        <i class="fa fa-info-circle me-1"/>What this means for you
+                                    </div>
+                                    <p class="small mb-1" style="color:#6b5a00;">
+                                        This service requires <strong>government charges</strong> that vary depending on your specific situation.
+                                        Our coordinator will contact you with the exact amount before any payment is processed.
+                                    </p>
+                                    <p class="small mb-0" style="color:#6b5a00;">
+                                        <strong>You will not be charged anything right now.</strong>
+                                    </p>
+                                </div>
+
+                                <!-- What happens next -->
+                                <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                    <i class="fa fa-list-ol me-2"/>What Happens Next
+                                </h5>
+
+                                <div class="d-flex flex-column gap-3 mb-4">
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#28a745;">
+                                            <i class="fa fa-check text-white" style="font-size:0.8rem;"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Request received</div>
+                                            <div class="text-muted small">Your activation request for <t t-esc="product.name"/> has been received.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#d97706;">
+                                            <span class="text-white fw-bold" style="font-size:0.75rem;">2</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Coordinator confirms charges</div>
+                                            <div class="text-muted small">Our coordinator will check the exact government fees and contact you directly — usually within 1 business day.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#0055b7;">
+                                            <span class="text-white fw-bold" style="font-size:0.75rem;">3</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">You pay the government fees</div>
+                                            <div class="text-muted small">Once confirmed, you will receive a payment link via your portal. You can pay using your eWallet balance or by card.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#dee2e6;">
+                                            <span class="text-muted fw-bold" style="font-size:0.75rem;">4</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Service delivered</div>
+                                            <div class="text-muted small">After payment is received, our team will process your service and notify you when it is complete.</div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Bundle reference -->
+                                <div class="rounded-3 p-3 mb-4"
+                                     style="background:rgba(0,85,183,0.05);border-left:4px solid #0055b7;">
+                                    <div class="small text-muted mb-1">Bundle Order Reference</div>
+                                    <div class="fw-semibold text-dark">
+                                        <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none">
+                                            <t t-esc="order.name"/>
+                                        </a>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        You can track this activation and view your payment link from your bundle order page.
+                                    </div>
+                                </div>
+
+                                <!-- Action buttons -->
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a t-attf-href="/my/requests/#{order.id}"
+                                       class="btn fw-semibold px-4 py-2"
+                                       style="background:#0055b7;color:#fff;border:none;">
+                                        <i class="fa fa-eye me-1"/>View Bundle Order
+                                    </a>
+                                    <a href="/services"
+                                       class="btn btn-outline-secondary fw-semibold px-4 py-2">
+                                        <i class="fa fa-th-large me-1"/>Back to Services
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ── Variant B: Clean activation (no gov charges) ── -->
+                    <t t-else="">
+                        <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+
+                            <!-- Green header -->
+                            <div class="p-4 text-white text-center"
+                                 style="background:linear-gradient(135deg,#1a5f1a 0%,#2e8b2e 100%);">
+                                <div class="mb-3">
+                                    <i class="fa fa-check-circle" style="font-size:3.5rem;opacity:0.9;"/>
+                                </div>
+                                <h3 class="fw-bold mb-1">Service Activated!</h3>
+                                <p class="mb-0 opacity-80">
+                                    <t t-esc="product.name"/> has been submitted for processing.
+                                </p>
+                            </div>
+
+                            <div class="p-4">
+
+                                <!-- What happens next -->
+                                <h5 class="fw-bold mb-3" style="color:#1F3864;">
+                                    <i class="fa fa-list-ol me-2"/>What Happens Next
+                                </h5>
+
+                                <div class="d-flex flex-column gap-3 mb-4">
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#28a745;">
+                                            <i class="fa fa-check text-white" style="font-size:0.8rem;"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Request submitted</div>
+                                            <div class="text-muted small">Your service activation has been received and is queued for processing.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#0055b7;">
+                                            <span class="text-white fw-bold" style="font-size:0.75rem;">2</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Coordinator review</div>
+                                            <div class="text-muted small">Our team will review your request and prepare the necessary documentation. No action needed from you at this stage.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle"
+                                             style="width:34px;height:34px;min-width:34px;background:#dee2e6;">
+                                            <span class="text-muted fw-bold" style="font-size:0.75rem;">3</span>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">Service delivered</div>
+                                            <div class="text-muted small">You will be notified once the service is fully processed and delivered. You can also check the status below.</div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- Bundle reference -->
+                                <div class="rounded-3 p-3 mb-4"
+                                     style="background:rgba(0,85,183,0.05);border-left:4px solid #0055b7;">
+                                    <div class="small text-muted mb-1">Bundle Order Reference</div>
+                                    <div class="fw-semibold text-dark">
+                                        <a t-attf-href="/my/requests/#{order.id}" class="text-decoration-none">
+                                            <t t-esc="order.name"/>
+                                        </a>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        Track your activation status from your bundle order page.
+                                    </div>
+                                </div>
+
+                                <!-- Action buttons -->
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a t-attf-href="/my/requests/#{order.id}"
+                                       class="btn fw-semibold px-4 py-2"
+                                       style="background:#0055b7;color:#fff;border:none;">
+                                        <i class="fa fa-eye me-1"/>View Bundle Order
+                                    </a>
+                                    <a href="/services"
+                                       class="btn btn-outline-secondary fw-semibold px-4 py-2">
+                                        <i class="fa fa-th-large me-1"/>Back to Services
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </t>
+
+                </div><!-- /container -->
+            </div><!-- /wrap -->
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    Activity Type: Approve Request
+    This activity type is used to send approval notifications or reminders
+    related to `hr.loan` model records. It can be used in automation (e.g.,
+    scheduled activities or workflow reminders).
+
+    Attributes:
+    - name: User-facing label for the activity
+    - icon: Font Awesome icon to visually represent the activity (envelope in this case)
+    - res_model: Associated model for which this activity will be triggered
+    -->
+    <record id="mail_activity_send_note2_approve" model="mail.activity.type">
+        <field name="name">Approve Request</field>
+        <field name="icon">fa-envelope</field>
+        <field name="res_model">hr.loan</field>
+    </record>
+
+    <!--
+    Activity Type: Loan Approval Request
+    A more specific activity type for approving loan requests, tied directly
+    to the `hr.loan` model. This can be useful when multiple types of approval
+    activities are needed (e.g., HR Loan, Travel Advance, etc.)
+
+    Attributes:
+    - name: Distinct name for better identification in workflow assignment
+    - icon: Envelope symbol for email-based action
+    - res_model: 'hr.loan' model which manages employee loan applications
+    -->
+    <record id="mail_activity_loan_approve" model="mail.activity.type">
+        <field name="name">Loan: Approve Request</field>
+        <field name="icon">fa-envelope</field>
+        <field name="res_model">hr.loan</field>
+    </record>
+</odoo>

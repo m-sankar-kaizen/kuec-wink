@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_account_journal_form" model="ir.ui.view">
+        <field name="name">account.journal.form.inherit.kaz.ent.loan</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='bank_source']" position="after">
+
+                <group string="Petty Cash">
+                   <field name="is_petty_cash"/>
+                   <field name="annual_limit" invisible="is_petty_cash==False"/>
+                   <field name="single_transaction_limit" invisible="is_petty_cash==False"/>
+                </group>
+            </xpath>
+            <xpath expr="//group[@name='bank_source']" position="inside">
+                <field name="credit_card" invisible="type!='credit'" required="type=='credit'"/>
+                <field name="maximum_credit_card" invisible="type!='credit'" required="type=='credit'"/>
+                <field name="card_responsible_uid" invisible="type!='credit'" required="type=='credit'"/>
+                <field name="card_holder_uid" invisible="type!='credit'" readonly="1"/>
+                <field name="single_transaction_limit" invisible="type!='credit'"/>
+                <field name="annual_limit" invisible="type!='credit'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

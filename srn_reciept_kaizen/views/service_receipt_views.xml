@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherit form view for service.receipt to:
+        1. Add unit price and subtotal columns in operations tab when state is 'done'.
+        2. Add end user signature-related fields before the signature block.
+        3. Add buttons to notify different roles (end user, procurement, department head).
+    -->
+    <record id="service_receipt_view_form" model="ir.ui.view">
+        <field name="name">service_receipt_form</field>
+        <field name="model">service.receipt</field>
+        <field name="inherit_id" ref="skit_srn_receipt.service_receipt_view_form"/>
+        <field name="arch" type="xml">
+            <!--
+                Extend the operations list view tab to show price fields,
+                only visible when parent state is 'done'.
+            -->
+            <xpath expr="//page[@name='operations']//list//field[@name='quantity_done']" position="after">
+                <field name="price_unit" column_invisible="parent.state != 'done'"/>
+                <field name="price_subtotal" column_invisible="parent.state != 'done'"/>
+            </xpath>
+
+            <!--
+                Add fields to track end user involvement and signature flags,
+                displayed before the existing signature group.
+            -->
+            <xpath expr="//group[@class='o_signature_group']" position="before">
+                <group name="end_users">
+                    <field name="ens_users_ids" widget="many2many_tags"/>
+                    <field name="first_sign_sent" invisible="1"/>
+                    <field name="second_sign_sent" invisible="1"/>
+                    <field name="third_sign_sent" invisible="1"/>
+                    <field name="show_end_user_button" invisible="1"/>
+                </group>
+            </xpath>
+
+            <!--
+                Notify End Users button:
+                Visible only when show_end_user_button is True and first_sign_sent is False.
+            -->
+            <xpath expr="//button[@id='clear_end_user']" position="before">
+                <button name="notify_end_users" type="object" string="Notify End Users"
+                        invisible="not show_end_user_button or first_sign_sent"
+                        class="oe_highlight" style="width:300px;margin-left:5px"/>
+                <span invisible="not show_end_user_button or first_sign_sent">
+                    --
+                </span>
+            </xpath>
+
+            <!--
+                Notify Procurement button:
+                Visible when:
+                  - end_user_signature is True
+                  - first_sign_sent is True
+                  - second_sign_sent is False
+            -->
+            <xpath expr="//button[@id='clear_proc']" position="before">
+                <button name="notify_procurement" type="object" string="Notify Procurement"
+                        invisible="not show_end_user_button or not first_sign_sent or second_sign_sent"
+                        class="oe_highlight" style="width:300px;margin:2px"/>
+                <span invisible="not show_end_user_button or not first_sign_sent or second_sign_sent">
+                    --
+                </span>
+            </xpath>
+
+            <!--
+                Notify Department Head button:
+                Visible when:
+                  - procurement_department_signature is True
+                  - third_sign_sent is False
+                  - second_sign_sent is True
+            -->
+            <xpath expr="//button[@id='clear_dep_head']" position="before">
+                <button name="notify_dep_head" type="object" string="Notify Department Head"
+                        invisible="not procurement_department_signature or third_sign_sent or not second_sign_sent"
+                        class="oe_highlight" style="width:300px;margin:2px"/>
+                <span invisible="not procurement_department_signature or third_sign_sent or not second_sign_sent">
+                    --
+                </span>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_account_form_inherit_related_party_balances" model="ir.ui.view">
+        <field name="name">account.account.form.inherit.related.party.balances</field>
+        <field name="model">account.account</field>
+        <field name="inherit_id" ref="account.view_account_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='group_id']" position="after">
+                <field name="is_related_party"/>
+                <field name="related_company_id"
+                       invisible="not is_related_party"
+                       required="is_related_party"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

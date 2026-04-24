@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="employee_promotion_comp_rule" model="ir.rule">
+        <field name="name">Employee Promotion multi-company</field>
+        <field name="model_id" ref="model_employee_promotion"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="promotion_type_comp_rule" model="ir.rule">
+        <field name="name">Promotion Type multi-company</field>
+        <field name="model_id" ref="model_promotion_type"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Scheduled Action (Cron Job): Check for Probation End
+
+        This scheduled job automatically runs daily to check whether any employee's probation period has ended.
+        It calls the `check_probation()` method on the hr.employee model.
+        Intended use case: auto-update employee statuses or notify HR upon probation completion.
+    -->
+    <record id="ir_cron_check_for_probation_end" model="ir.cron">
+        <field name="name">Check: Probation End</field>
+        <field name="model_id" ref="hr.model_hr_employee"/>
+        <field name="state">code</field>
+        <field name="code">model.check_probation()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

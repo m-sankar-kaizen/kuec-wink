@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherited View: HR Payslip Form
+        Purpose: Add custom readonly fields to display values like
+        Ticket Total Price, Education Fees, Housing Advance Grant and Deduction
+        on the employee payslip form for HR visibility.
+    -->
+
+    <record id="view_hr_payslip_form_inherit" model="ir.ui.view">
+        <field name="name">view_hr_payslip_form_inherit</field>
+        <field name="model">hr.payslip</field>
+        <!-- Reference to the base HR Payslip form view -->
+        <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+
+        <field name="arch" type="xml">
+
+            <!--
+                First custom page added after the third tab (typically Summary or Worked Days).
+                This tab displays inputs that contribute positively to payslip calculations.
+            -->
+            <xpath expr="//page[3]" position="after">
+                <page name="inputs" string="Inputs">
+                    <group>
+                        <!-- Total value of tickets granted to the employee in this payslip period -->
+                        <field name="ticket_total_price" readonly="True"/>
+                        <!-- Education-related reimbursements (readonly for display only) -->
+                        <field name="education_fees" readonly="True"/>
+                        <!-- Housing advance amount granted in this period -->
+                        <field name="housing_advance_grant" readonly="True"/>
+                    </group>
+                </page>
+            </xpath>
+
+            <!--
+                Second custom page, also inserted after the third tab.
+                Displays deductions applied to the payslip, especially housing loan EMI deductions.
+            -->
+            <xpath expr="//page[3]" position="after">
+                <page name="deduction" string="Deduction">
+                    <group>
+                        <!-- Housing advance monthly installment deduction -->
+                        <field name="housing_advance_deduction" readonly="True"/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

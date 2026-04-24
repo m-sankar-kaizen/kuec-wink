@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+     <!-- Active Secondments -->
+    <record id="action_hr_employee_secondment_active" model="ir.actions.act_window">
+        <field name="name">Active Secondments</field>
+        <field name="res_model">hr.employee.secondment</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="search_view_id" ref="view_hr_employee_secondment_search"/>
+    </record>
+
+    <!-- My Secondments -->
+    <record id="action_hr_employee_secondment_my" model="ir.actions.act_window">
+        <field name="name">My Secondments</field>
+        <field name="res_model">hr.employee.secondment</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{'search_default_my_secondments': 1}</field>
+        <field name="search_view_id" ref="view_hr_employee_secondment_search"/>
+    </record>
+
+    <!-- To Approve -->
+    <record id="action_hr_employee_secondment_to_approve" model="ir.actions.act_window">
+        <field name="name">To Approve</field>
+        <field name="res_model">hr.employee.secondment</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{'search_default_to_approve': 1}</field>
+        <field name="search_view_id" ref="view_hr_employee_secondment_search"/>
+    </record>
+    
+    <!-- Main Menu -->
+    <menuitem id="menu_hr_secondment_root"
+              name="Secondments"
+              parent="hr.menu_hr_root"
+              sequence="50"/>
+    
+    <!-- Secondments Menu -->
+    <menuitem id="menu_hr_secondment_all"
+              name="All Secondments"
+              parent="menu_hr_secondment_root"
+              action="action_hr_employee_secondment"
+              sequence="10"/>
+    
+
+    
+    <menuitem id="menu_hr_secondment_my"
+              name="My Secondments"
+              parent="menu_hr_secondment_root"
+              action="action_hr_employee_secondment_my"
+              sequence="5"/>
+    
+
+    
+    <menuitem id="menu_hr_secondment_to_approve"
+              name="To Approve"
+              parent="menu_hr_secondment_root"
+              action="action_hr_employee_secondment_to_approve"
+              groups="hr.group_hr_manager"
+              sequence="15"/>
+    
+
+    
+    <menuitem id="menu_hr_secondment_active"
+              name="Active Secondments"
+              parent="menu_hr_secondment_root"
+              action="action_hr_employee_secondment_active"
+              sequence="20"/>
+    
+    <!-- Configuration Menu -->
+    <menuitem id="menu_hr_secondment_config"
+              name="Configuration"
+              parent="menu_hr_secondment_root"
+              groups="hr.group_hr_manager"
+              sequence="100"/>
+    
+</odoo>

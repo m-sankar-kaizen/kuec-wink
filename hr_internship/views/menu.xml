@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Main Internship Menu -->
+        <record id="menu_hr_internship_root" model="ir.ui.menu">
+            <field name="name">Internships</field>
+            <field name="parent_id" ref="hr.menu_hr_root"/>
+            <field name="sequence">100</field>
+        </record>
+        
+        <!-- Internship Management -->
+        <record id="menu_hr_internship" model="ir.ui.menu">
+            <field name="name">Internships</field>
+            <field name="parent_id" ref="menu_hr_internship_root"/>
+            <field name="action" ref="action_hr_internship"/>
+            <field name="sequence">10</field>
+        </record>
+        
+        <!-- Performance & Rewards -->
+        <record id="menu_hr_internship_performance" model="ir.ui.menu">
+            <field name="name">Performance &amp; Rewards</field>
+            <field name="parent_id" ref="menu_hr_internship_root"/>
+            <field name="sequence">20</field>
+        </record>
+        
+        <record id="menu_hr_internship_feedback" model="ir.ui.menu">
+            <field name="name">Feedback Records</field>
+            <field name="parent_id" ref="menu_hr_internship_performance"/>
+            <field name="action" ref="action_hr_internship_feedback"/>
+            <field name="sequence">21</field>
+        </record>
+        
+        <record id="menu_hr_internship_reward" model="ir.ui.menu">
+            <field name="name">Reward Requests</field>
+            <field name="parent_id" ref="menu_hr_internship_performance"/>
+            <field name="action" ref="action_hr_internship_reward"/>
+            <field name="sequence">22</field>
+        </record>
+        
+        <!-- Onboarding & Administration -->
+        <record id="menu_hr_internship_admin" model="ir.ui.menu">
+            <field name="name">Onboarding &amp; Admin</field>
+            <field name="parent_id" ref="menu_hr_internship_root"/>
+            <field name="sequence">30</field>
+        </record>
+        
+        <record id="menu_hr_internship_orientation" model="ir.ui.menu">
+            <field name="name">Orientation Records</field>
+            <field name="parent_id" ref="menu_hr_internship_admin"/>
+            <field name="action" ref="action_hr_internship_orientation"/>
+            <field name="sequence">31</field>
+        </record>
+        
+        <!-- Freelance Management -->
+        <record id="menu_hr_internship_freelance" model="ir.ui.menu">
+            <field name="name">Freelance Management</field>
+            <field name="parent_id" ref="menu_hr_internship_root"/>
+            <field name="sequence">40</field>
+        </record>
+        
+        <record id="menu_hr_internship_deliverable" model="ir.ui.menu">
+            <field name="name">Deliverables</field>
+            <field name="parent_id" ref="menu_hr_internship_freelance"/>
+            <field name="action" ref="action_hr_internship_freelance_deliverable"/>
+            <field name="sequence">41</field>
+        </record>
+    </data>
+</odoo>

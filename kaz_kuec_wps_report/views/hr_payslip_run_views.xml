@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="payslip_run_form_inherit" model="ir.ui.view">
+        <field name="name">hr.payslip.run.form.inherit.wps.kuec</field>
+        <field name="model">hr.payslip.run</field>
+        <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="print_xlsx_report2_kuec" type="object" string="Print Non WPS Report (KUEC)"/>
+                <button name="print_xlsx_report_kuec" type="object" string="Print WPS Report (KUEC)"/>
+                <button name="print_registration_report_kuec" type="object" string="Print Payroll Register (KUEC)"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

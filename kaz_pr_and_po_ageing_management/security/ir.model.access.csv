@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_purchase_requisition_manager_pa,access.purchase.requisition.manager.pa,purchase_requisition.model_purchase_requisition,group_purchase_agreement_manager_kuec,1,1,1,1
+access_purchase_agreement_manager_extend,access.purchase.agreement.manager.extend,model_extend_agreement,group_purchase_agreement_manager_kuec,1,1,1,1
+access_base_user_extend,access.base.user.extend,model_extend_agreement,base.group_user,1,0,0,0
+access_purchase_user_extend,access.purchase.user.extend,model_extend_agreement,purchase.group_purchase_user,1,1,1,0

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+
+    <!-- Research And Development Activity Type -->
+    <record id="mail_activity_type_r_and_d" model="mail.activity.type">
+        <field name="name">Research And Development</field>
+        <field name="res_model">research.development</field>
+        <field name="icon">fa-check-circle</field>
+        <field name="summary">Review and approve R&amp;D Request</field>
+    </record>
+
+</odoo>

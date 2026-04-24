@@ -1,0 +1,38 @@
+{
+    'name': "KUEC Letters",
+    'depends': [
+        'kaz_employee_reports',
+        'hr',
+        'sign',
+        'kaz_kuec_grade_structure',
+        'kaz_company_restriction_base',
+        'kaz_kuec_report_base'
+    ],
+    'author': "Kaizen",
+    'website': "https://www.kaizenae.com",
+    'category': 'Hidden',
+    'version': '1.0',
+    'data': [
+        'data/sequence.xml',
+        'security/ir.model.access.csv',
+        'reports/kuec_employment_letter_reports.xml',
+        'reports/kuec_salary_transfer_letter_reports.xml',
+        'reports/kuec_health_insurance_letter_report.xml',
+        'reports/kuec_salary_letter_reports.xml',
+        'reports/kuec_golden_visa_letter_reports.xml',
+        'reports/kuec_visa_request_letter_report.xml',
+        'views/employment_letter_views.xml',
+        'views/health_insurance_letter_views.xml',
+        'views/salary_letter_views.xml',
+        'views/salary_transfer_letter_views.xml',
+        'views/visa_request_letter_views.xml',
+        'views/golden_visa_request_letter_views.xml',
+        'views/kuec_menu.xml',
+        'views/res_company_views.xml',
+    ],
+
+    'license': 'LGPL-3',
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}

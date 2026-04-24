@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+        <!-- ==============================
+             Inherit Budget Form View
+             ==============================
+             This view inherits from an existing `crossovered.budget` form
+             and adds two new fields to the budget line list view:
+             - reserved_amount
+             - committed_amount
+
+             It also adds summary fields at the group level for:
+             - total_reserved_amount
+             - total_committed_amount
+        -->
+        <record id="budget_form_inherit_budget_custom" model="ir.ui.view">
+            <field name="name">budget.analytic.form.inherit.quintuple.approvals</field>
+            <field name="model">budget.analytic</field>
+            <!-- Inherit from the custom form view defined in kz_budget_custom -->
+            <field name="inherit_id" ref="kz_budget_custom.budget_form_inherit_budget_custom"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='budget_line_ids']/list/field[@name='committed_amount']" position="replace"/>
+                <!-- Inject new fields before 'masked_planned_amount' in the budget line list -->
+                <xpath expr="//field[@name='budget_line_ids']/list/field[@name='masked_planned_amount']" position="before">
+                    <field name="reserved_amount"/>
+                    <field name="committed_amount" />
+                </xpath>
+
+                <!-- Add total reserved and committed fields inside the 'requisition_total' group -->
+                <xpath expr="//group[@name='requisition_total']" position="inside">
+                    Total Reserved<field name="total_reserved_amount" colspan="2" readonly="1"/>
+                    Total Committed<field name="total_committed_amount" colspan="2" readonly="1"/>
+                </xpath>
+
+            </field>
+        </record>
+
+
+        <!-- ==============================
+             Wizard Tree View for Budget Lines
+             ==============================
+             Used in a wizard-like context (e.g. pop-up), this list view shows
+             budget line fields including custom totals for:
+             - reserved_amount
+             - committed_amount
+             - masked_planned/practical/theoretical_amount
+        -->
+        <record id="budget_line_view_tree_wizard" model="ir.ui.view">
+            <field name="name">budget.line.list.view.wizard</field>
+            <field name="model">budget.line</field>
+            <field name="arch" type="xml">
+                <list string="Budget Lines" create="0">
+                    <header>
+                        <button name="select_line" type="object" string="Select"/>
+                    </header>
+                    <field name="display_name"/>
+                    <field name="budget_analytic_id"/>
+                    <field name="general_budget_id"/>
+                    <field name="account_id"/>
+                    <field name="reserved_amount"  sum="Total Reserved Amount"/>
+                    <field name="committed_amount" sum="Total Committed Amount"/>
+                    <field name="masked_planned_amount" sum="Total Masked Planned Amount"/>
+<!--                    <field name="masked_practical_amount" sum="Total Masked Practical Amount"/>-->
+                    <field name="achieved_amount" sum="Total Achieved Amount"/>
+                    <field name="masked_theoritical_amount" sum="Total Masked Theoretical Amount"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Action to open the wizard list view for budget.line -->
+        <record id="action_budget_lines_wizard" model="ir.actions.act_window">
+            <field name="name">Budget Lines</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">budget.line</field>
+            <field name="view_mode">list</field>
+            <field name="view_id" ref="budget_line_view_tree_wizard"/>
+        </record>
+
+
+        <!-- ==============================
+             Standard Tree View for Budget Lines
+             ==============================
+             Displays all budget lines with date range and expense,
+             plus custom fields (reserved, committed, masked amounts).
+        -->
+        <record id="budget_line_view_tree" model="ir.ui.view">
+            <field name="name">budget.line.list.view</field>
+            <field name="model">budget.line</field>
+            <field name="arch" type="xml">
+                <list string="Budget Lines" create="0">
+                    <field name="display_name"/>
+                    <field name="budget_analytic_id"/>
+                    <field name="general_budget_id"/>
+                    <field name="account_id"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="expense"/>
+                    <field name="reserved_amount" sum="Total Reserved Amount"/>
+                    <field name="committed_amount" sum="Total Committed Amount"/>
+                    <field name="masked_planned_amount" sum="Total Masked Planned Amount"/>
+<!--                    <field name="masked_practical_amount" sum="Total Masked Practical Amount"/>-->
+                    <field name="achieved_amount" sum="Total Achieved Amount"/>
+                    <field name="masked_theoritical_amount" sum="Total Masked Theoretical Amount"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Action to open the standard list view of crossovered.budget.lines -->
+        <record id="action_budget_lines" model="ir.actions.act_window">
+            <field name="name">Budget Lines</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">budget.line</field>
+            <field name="view_mode">list</field>
+            <field name="view_id" ref="budget_line_view_tree"/>
+        </record>
+
+        <!-- Menu item to access the budget lines list from the Accounting > Management menu -->
+        <menuitem
+            id="budget_lines"
+            name="Budget Lines"
+            parent="account.menu_finance_entries"
+            action="action_budget_lines"
+            sequence="4"/>
+</odoo>

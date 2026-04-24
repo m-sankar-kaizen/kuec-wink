@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        QWeb Report Template: Exit Clearance Report
+        This report displays detailed employee exit clearance information,
+        divided by departmental sections (HR, IT, EHS, Research Services),
+        including communication contacts, return of assets, and employee confirmation.
+
+        Report uses t-foreach to iterate over `docs`, which are instances of the `exit.clearance` model.
+    -->
+    <template id="exit_clearance_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.internal_layout">
+                    <div class="page">
+                        <div class="container">
+                            <!--
+                                Report Header: Exit Clearance title and employee basic info
+                            -->
+                            <h1 class="text-center">Exit Clearance</h1>
+                            <br/>
+                            <!--
+                                Basic Employee Info Table
+                                Shows date, request reference number, name, ID, position, department, email, and mobile.
+                            -->
+                            <table class="table">
+
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">
+                                            Date:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.date"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Request No:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.ref"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Employee Name:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.name"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Employee ID:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.emp_id"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Position:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.position"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Department:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.department"/>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            Email:
+                                        </th>
+
+                                        <td>
+
+                                            <span t-field="o.email"/>
+
+                                        </td>
+                                        <th scope="row">
+                                            Mobilr:
+                                        </th>
+                                        <td>
+
+                                            <span t-field="o.mobile"/>
+                                        </td>
+
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <div class="col-10">
+                                    <h2>HR Service</h2>
+                                    <p>
+                                        Note: The system has detected that HR Services is logged in. You can initiate
+                                        End of Service Clearance
+                                        Process for any Employee. Please select the Employee.
+                                    </p>
+                                    <p>Note: You will receive all E‐Mail communication along with Employee regarding
+                                        the clearance process
+                                    </p>
+                                    <p>
+                                        <span t-field="o.exit"/>
+                                        <strong>Raise exit interview on behalf of someone else?</strong>
+                                    </p>
+                                </div>
+                                <div class="col-2"/>
+                            </div>
+                            <div class="row mt-5" style="border:1px solid black;">
+                                <h2>Information Required for Communication</h2>
+                                <br/>
+                                <p>Provide your e‐mail and mobile no. that will be used for communication during Exit
+                                    Clearance.
+                                </p>
+                                <div class="col-6 mt-2">
+                                    <p>
+                                        <strong>Email :</strong>
+                                        <span t-field="o.communication_email"/>
+                                    </p>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <p>
+                                        <strong>Mobile (UAE) :</strong>
+                                        <span t-field="o.communication_Mobile"/>
+                                    </p>
+                                    <p>﴾Please Use Format 05xxxxxxxx, where 'xx' is the
+                                        desired mobile number﴿.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row mt-5" style="border:1px solid black;">
+                                <h2>Information Required for Human Resource</h2>
+                                <br/>
+                                <div class="col-6 mt-2">
+                                    <p>
+                                        <strong>Phone :</strong>
+                                        <span t-field="o.personal_telephone"/>
+                                    </p>
+                                    <hr/>
+                                    <p>
+                                        <strong>Personal Address :</strong>
+                                        <span t-field="o.personal_address"/>
+                                    </p>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <p>
+                                        <strong>Email :</strong>
+                                        <span t-field="o.personal_email"/>
+                                    </p>
+                                </div>
+                                <br/>
+                                <h5>Provide your dependents information ﴾Spouse / Children﴿ who are under your
+                                    Sponsorship.
+                                </h5>
+                                <br/>
+                                <div class="col-6 mt-2 text-center">
+                                    <p>
+                                        <strong>Full Name as per Passport :</strong>
+                                        <br/>
+                                        <span t-field="o.passport_name"/>
+                                    </p>
+
+                                </div>
+                                <div class="col-6 mt-2 text-center">
+                                    <p>
+                                        <strong>Date of Birth ﴾mm/dd/yyyy﴿ :</strong>
+                                        <br/>
+                                        <span t-field="o.passport_date"/>
+                                    </p>
+                                </div>
+                            </div>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <div class="row mt-3" style="border:1px solid black;">
+                                <h2>Information Required for IT</h2>
+                                <br/>
+                                <p>Please make sure you have submitted all IT equipment, any hardware, and software to
+                                    IT Service
+                                    Delivery and Support Services
+                                </p>
+                                <div class="col-4">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <p>I would like to
+                                                Request Email
+                                                Forwarding
+                                            </p>
+                                        </div>
+                                        <div class="col-4">
+                                            <span t-field="o.email_it"></span>
+                                        </div>
+                                    </div>
+                                    <hr/>
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <p>I would like to keep
+                                                IT equipments
+                                                ﴾Laptop, Hard Drive
+                                                etc﴿ till my Last Day
+                                                of Work
+                                            </p>
+                                        </div>
+                                        <div class="col-4">
+                                            <span t-field="o.equipment_it"></span>
+                                        </div>
+                                    </div>
+                                    <hr/>
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <p>Have you ever
+                                                Requested for
+                                                Generic Accounts
+                                                from IT ﴾eg.
+                                                Ask@ku.ac.ae﴿ that is
+                                                no longer required?
+                                            </p>
+                                        </div>
+                                        <div class="col-4">
+                                            <span t-field="o.request_it"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-8">
+                                    <div class="row">
+                                        <div class="col-12">Note: In exceptional circumstances and upon management
+                                            approval, you can request to forward emails for 30 days after
+                                            your last day of work. The e‐mails will be forwarded to your
+                                            personal email.
+                                        </div>
+                                    </div>
+                                    <br/>
+                                    <br/>
+                                    <div class="row">
+                                        <div class="col-12">Note: In exceptional circumstances where you would like to
+                                            keep
+                                            IT equipment till your last day of work, IT requires approval and
+                                            an acceptance from your manager that he / she accepts the
+                                            responsibility to get all IT equipment from employee, and will
+                                            return it to Service Delivery and Support Services on your last day
+                                            of work. The system will initiate this approval process
+                                            automatically
+                                        </div>
+                                    </div>
+                                    <br/>
+                                    <br/>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            Note: Generic accounts are created for services that are not
+                                            linked to a personal account ﴾i.e. a University username﴿. These
+                                            accounts are created by IT Services to meet various business
+                                            needs.
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="row mt-5" style="border:1px solid black;">
+                                <h5>Information Required for Facilities, Administration and EHS</h5>
+                                <div class="col-4">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <p>
+                                                I would like to keep
+                                                EHSS materials till my
+                                                Last Day of Work
+                                            </p>
+                                        </div>
+                                        <div class="col-4">
+                                            <span t-field="o.ehss_facilites"/>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                                <div class="col-8">
+                                    <p>
+                                        Note: In exceptional circumstances where you would like to keep
+                                        EHSS equipment till your last day of work, EHSS requires
+                                        approval and an acceptance from your manager that he / she
+                                        accepts the responsibility to get all EHSS equipment from
+                                        employee, and will return it to EHSS on your last day of work.
+                                        The system will initiate this approval process automatically
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row mt-5" style="border:1px solid black;">
+                                <h5>Information Required for Research Services</h5>
+                                <br/>
+                                <p>Information required from Faculty:</p>
+                                <div class="col-6 text-center">
+
+                                    <p>
+                                        Are you a Principal Investigator / Co‐
+                                        Investigator on an active research Project?
+                                    </p>
+                                </div>
+
+                                <div class="col-6 text-center">
+                                    <span t-field="o.ehss_facilites"/>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <p>
+                                    <span t-field="o.confirm_data"/>
+                                    <strong>I confirm and acknowledge that I have read and understood End of Service
+                                        Exit Clearance Process and
+                                        agree to the terms and conditions. Also, I acknowledge that I will be submitting
+                                        all the assets and the
+                                        items owned by Khalifa University to the HR department at the time of final
+                                        clearance and will return
+                                        the books to the Library and IT equipment to the IT department
+                                    </strong>
+                                </p>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!--
+        Report Action Definition: Exit Clearance Report
+        Associates the QWeb template with a report action for the model `exit.clearance`.
+        Enables printing of the report from the form view or via code using `report_action`.
+    -->
+
+    <record id="action_report_exit_clearance_report" model="ir.actions.report">
+        <field name="name">Exit Clearance</field>
+        <field name="model">exit.clearance</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.exit_clearance_report</field>
+        <field name="report_file">kaz_employee_reports.exit_clearance_report</field>
+        <field name="print_report_name">'Exit Clearance - %s' % object.name.name</field>
+    </record>
+
+</odoo>

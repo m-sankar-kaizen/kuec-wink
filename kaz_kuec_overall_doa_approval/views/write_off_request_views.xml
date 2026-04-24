@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_write_off_request_list" model="ir.ui.view">
+        <field name="name">write.off.request.list</field>
+        <field name="model">write.off.request</field>
+        <field name="arch" type="xml">
+            <list string="Write Off Requests" decoration-info="kuec_approval_state == 'draft'"
+                  decoration-success="kuec_approval_state == 'approved'"
+                  decoration-muted="kuec_approval_state == 'cancel'">
+                <field name="name"/>
+                <field name="payment_date"/>
+                <field name="account_move_id"/>
+                <field name="payment_type"/>
+                <field name="partner_bank_id" optional="hide"/>
+                <field name="amount" sum="Total Amount"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="writeoff_label" optional="show"/>
+                <field name="kuec_approval_state" widget="badge"
+                       decoration-info="kuec_approval_state == 'draft'"
+                       decoration-warning="kuec_approval_state in ('finance_procurement_approval', 'ccoe_approval', 'ceo_approval', 'board_approval')"
+                       decoration-success="kuec_approval_state == 'approved'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_write_off_request_form" model="ir.ui.view">
+        <field name="name">write.off.request.form</field>
+        <field name="model">write.off.request</field>
+        <field name="arch" type="xml">
+            <form string="Write Off Request">
+                <header>
+                    <button name="submit_to_approve" string="Submit for Approval" type="object" class="oe_highlight"
+                            invisible="kuec_approval_state != 'draft'"/>
+
+                    <button name="action_head_fin_approval"
+                            string="Head of Finance &amp; Procurement Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                            invisible="kuec_approval_state != 'finance_procurement_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'finance_procurement_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'finance_procurement_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_ccoe_approval"
+                            string="CCOE Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            invisible="kuec_approval_state != 'ccoe_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'ccoe_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'ccoe_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ccoe"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_ceo_approval"
+                            string="CEO Approve" type="object" class="oe_highlight"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            invisible="kuec_approval_state != 'ceo_approval'"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'ceo_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'ceo_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_board_approval"
+                            invisible="kuec_approval_state != 'board_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_board"
+                            class="btn btn-primary" string="Board Approve" type="object"/>
+                    <button name="action_reject_request"
+                            invisible="kuec_approval_state != 'board_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_board"
+                            class="btn btn-danger" string="Reject" type="object"/>
+                    <button name="action_rfc_request"
+                            invisible="kuec_approval_state != 'board_approval'"
+                            groups="kaz_procurement_doa_kuec.group_kuec_board"
+                            class="btn" string="Return for Correction" type="object"/>
+
+                    <button name="action_register_payment" string="Register Payment" type="object" class="oe_highlight"
+                            invisible="kuec_approval_state != 'approved' or account_payment_ids"/>
+
+                    <field name="kuec_approval_state" widget="statusbar" statusbar_visible="draft,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_payments" class="oe_stat_button" icon="fa-usd" type="object"
+                                invisible="not account_payment_ids">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Payment</span>
+                            </div>
+                        </button>
+                    </div>
+                    <field name="is_readonly" invisible="1"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Payment Details">
+                            <field name="account_move_id" readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="journal_id" readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="payment_method_line_id"
+                                   readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="partner_bank_id" readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="payment_type" widget="radio" options="{'horizontal': true}"
+                                   readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                        </group>
+                        <group string="Amount &amp; Dates">
+                            <field name="payment_date" readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="amount" widget="monetary"
+                                   readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="currency_id" readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="communication" readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <group string="Write-Off Details">
+                        <group>
+                            <field name="payment_difference" widget="monetary"
+                                   readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                            <field name="writeoff_account_id" options="{'no_create': True}"
+                                   readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="writeoff_label" readonly="is_readonly or kuec_approval_state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="write_off_approval" string="Signed Approval History"
+                              invisible="not write_off_approval_ids">
+                            <field name="write_off_approval_ids">
+                                <list editable="bottom" create="0" edit="0" delete="0">
+                                    <field name="current_display_name" column_invisible="1"/>
+                                    <field name="sequence"/>
+                                    <field name="parent_state_at_request" optional="show"/>
+                                    <field name="request_type"/>
+                                    <field name="create_uid" string="Signed By"/>
+                                    <field name="create_date" string="Signed At" optional="hide"/>
+                                    <field name="signature" widget="signature"
+                                           options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                                    <field name="reason"/>
+                                    <field name="company_id" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="kuec_board_attachment" string="KUEC Board Approval Attachment"
+                              invisible="hide_board_approval_attachment">
+                            <field name="hide_board_approval_attachment" invisible="1"/>
+                            <group>
+                                <group>
+                                    <field name="kuec_board_attachment"
+                                           readonly="kuec_approval_state != 'board_approval'"
+                                           widget="binary"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_write_off_request_search" model="ir.ui.view">
+        <field name="name">write.off.request.search</field>
+        <field name="model">write.off.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="account_move_id"/>
+                <field name="payment_type"/>
+                <field name="communication"/>
+                <filter string="Draft" name="draft" domain="[('kuec_approval_state', '=', 'draft')]"/>
+                <filter string="To Approve" name="to_approve"
+                        domain="[('kuec_approval_state', 'in', ('finance_procurement_approval', 'ccoe_approval', 'ceo_approval', 'board_approval'))]"/>
+                <filter string="Receivable" name="to_receive" domain="[('payment_type', '=', 'inbound')]"/>
+                <filter string="Payable" name="to_pay" domain="[('payment_type', '=', 'outbound')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="State" name="group_by_state" context="{'group_by': 'kuec_approval_state'}"/>
+                    <filter string="Journal" name="group_by_journal" context="{'group_by': 'journal_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_write_off_request" model="ir.actions.act_window">
+        <field name="name">Write Off Requests</field>
+        <field name="res_model">write.off.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{ 'search_default_to_receive': 1, 'create': 0 }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Write-Off Request
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_write_off_request"
+              name="Write-Off Requests"
+              parent="account.menu_finance_receivables"
+              action="action_write_off_request"
+              sequence="20"/>
+
+</odoo>

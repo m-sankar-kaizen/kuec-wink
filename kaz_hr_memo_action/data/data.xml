@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="sequence_disciplinary_warning_action" model="ir.sequence">
+        <field name="name">Disciplinary Action Warning SEQ</field>
+        <field name="code">disciplinary.action.warning.seq</field>
+        <field name="active">TRUE</field>
+        <field name="prefix">HRA-%(y)s-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id"/>
+
+    </record>
+
+    <record id="sequence_disciplinary_complaint_action" model="ir.sequence">
+        <field name="name">Disciplinary Action Complaint SEQ</field>
+        <field name="code">disciplinary.action.complaint.seq</field>
+        <field name="active">TRUE</field>
+        <field name="prefix">DPA-%(y)s-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id"/>
+    </record>
+</odoo>

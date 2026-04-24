@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_lease_lessor_contract_tree" model="ir.ui.view">
+        <field name="name">lease.lessor.contract.tree</field>
+        <field name="model">lease.lessor.contract</field>
+        <field name="arch" type="xml">
+            <list string="Lessor Contracts">
+                <field name="name"/>
+                <field name="lease_type"/>
+                <field name="lessee_id"/>
+                <field name="asset_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="lease_term_years"/>
+                <field name="payment_frequency"/>
+                <field name="present_value" widget="monetary"/>
+                <field name="state"/>
+                <field name="currency_id" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_lease_lessor_contract_form" model="ir.ui.view">
+        <field name="name">lease.lessor.contract.form</field>
+        <field name="model">lease.lessor.contract</field>
+        <field name="arch" type="xml">
+            <form string="Lessor Contract">
+                <header>
+                    <button name="action_submit" string="Submit to Approve" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_confirm" type="object" string="Confirm" class="oe_highlight"
+                            invisible="state != 'pending'"/>
+                    <button name="action_cancel" type="object" string="Cancel" class="btn-secondary"
+                            invisible="state != 'running'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" class="btn-secondary"
+                            invisible="state != 'closed'"/>
+                    <button name="action_compute_schedule" type="object" string="Compute Schedule"
+                            class="btn-secondary"
+                            invisible="lease_type != 'finance' or state != 'draft'"/>
+                    <button name="action_create_operating_invoice" type="object" string="Generate Payment Schedule"
+                            class="btn-secondary"
+                            invisible="lease_type != 'operating' or state != 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,running,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_initial_recognition" type="object" class="oe_stat_button"
+                                icon="fa-book" invisible="initial_recognition_move_count == 0">
+                            <field name="initial_recognition_move_count" widget="statinfo" string="Initial Entry"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Contract Details">
+                            <field name="lease_type" readonly="state != 'draft'"/>
+                            <field name="lessee_id" readonly="state != 'draft'"/>
+                            <field name="asset_id" readonly="state != 'draft'"/>
+                            <field name="date_start" readonly="state != 'draft'"/>
+                            <field name="date_end" readonly="state != 'draft'"/>
+                            <field name="lease_term_years" readonly="1"/>
+                            <field name="payment_frequency" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <group string="Amounts - Operating Lease" invisible="lease_type != 'operating'">
+                        <field name="operating_payment_amount" widget="monetary" readonly="state != 'draft'"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+
+                    <group string="Amounts - Finance Lease" invisible="lease_type != 'finance'">
+                        <field name="total_lease_payments" widget="monetary" readonly="state != 'draft'"/>
+                        <field name="present_value" widget="monetary"/>
+                        <field name="asset_book_value" widget="monetary" readonly="1"/>
+                        <field name="discount_rate" readonly="state != 'draft'"/>
+                        <field name="deferred_interest_total" widget="monetary" readonly="1"/>
+                        <field name="initial_recognition_move_id" readonly="1"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Terms &amp; Conditions">
+                            <field name="terms_html" placeholder="Enter lease terms and conditions"
+                                   readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Accounting Setup - Operating Lease" invisible="lease_type != 'operating'">
+                            <group>
+                                <field name="account_rental_income_id" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Accounting Setup - Finance Lease" invisible="lease_type != 'finance'">
+                            <group>
+                                <group string="Initial Recognition (IFRS 16 Commencement)">
+                                    <field name="account_lease_receivable_id" readonly="state != 'draft'"/>
+                                    <field name="account_fixed_asset_id"/>
+                                    <field name="account_selling_profit_id" readonly="state != 'draft'"/>
+                                    <field name="journal_lease_id" readonly="state != 'draft'"/>
+                                </group>
+                                <group string="Ongoing Recognition (Interest Income)">
+                                    <field name="account_interest_income_id" readonly="state != 'draft'"/>
+                                    <field name="account_deferred_interest_id" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Operating Payment Schedule" invisible="lease_type != 'operating'">
+                            <field name="operating_payment_line_ids" nolabel="1">
+                                <list string="Operating Payment Schedule" editable="bottom" create="false"
+                                      delete="false">
+                                    <field name="payment_index"/>
+                                    <field name="payment_date"/>
+                                    <field name="payment_amount" widget="monetary"/>
+                                    <field name="invoice_id"/>
+                                    <button name="action_create_rental_invoice" type="object" string="Create Invoice"
+                                            icon="fa-file-text-o"
+                                            modifiers="{'invisible': [['invoice_id', '!=', False]]}"/>
+                                    <button name="action_view_invoice" type="object" string="View Invoice" icon="fa-eye"
+                                            modifiers="{'invisible': [['invoice_id', '=', False]]}"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Finance Payment Schedule" invisible="lease_type != 'finance'">
+                            <field name="payment_line_ids" nolabel="1">
+                                <list string="Finance Payment Schedule" editable="bottom" create="false" delete="false">
+                                    <field name="year_index"/>
+                                    <field name="payment_date"/>
+                                    <field name="opening_receivable" widget="monetary"/>
+                                    <field name="interest_amount" widget="monetary"/>
+                                    <field name="principal_amount" widget="monetary"/>
+                                    <field name="total_payment" widget="monetary"/>
+                                    <field name="closing_receivable" widget="monetary"/>
+                                    <field name="invoice_id"/>
+                                    <button name="action_create_customer_invoice" type="object" string="Create Invoice"
+                                            icon="fa-file-text-o"
+                                            modifiers="{'invisible': [['invoice_id', '!=', False]]}"/>
+                                    <button name="action_view_invoice" type="object" string="View Invoice" icon="fa-eye"
+                                            modifiers="{'invisible': [['invoice_id', '=', False]]}"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_lease_lessor_contract_search" model="ir.ui.view">
+        <field name="name">lease.lessor.contract.search</field>
+        <field name="model">lease.lessor.contract</field>
+        <field name="arch" type="xml">
+            <search string="Search Lessor Contracts">
+                <field name="name"/>
+                <field name="lessee_id"/>
+                <field name="asset_id"/>
+                <field name="lease_type"/>
+                <filter string="Operating" name="operating" domain="[('lease_type', '=', 'operating')]"/>
+                <filter string="Finance" name="finance" domain="[('lease_type', '=', 'finance')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Lessee" name="group_lessee" context="{'group_by': 'lessee_id'}"/>
+                    <filter string="Type" name="group_type" context="{'group_by': 'lease_type'}"/>
+                    <filter string="Start Year" name="group_start" context="{'group_by': 'date_start'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_lease_lessor_contract" model="ir.actions.act_window">
+        <field name="name">Lessor Contracts</field>
+        <field name="res_model">lease.lessor.contract</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Operating Payment Line Views -->
+    <record id="view_lease_lessor_operating_payment_tree" model="ir.ui.view">
+        <field name="name">lease.lessor.operating.payment.tree</field>
+        <field name="model">lease.lessor.operating.payment</field>
+        <field name="arch" type="xml">
+            <list string="Operating Payments">
+                <field name="contract_id"/>
+                <field name="payment_index"/>
+                <field name="payment_date"/>
+                <field name="payment_amount" widget="monetary"/>
+                <field name="invoice_id"/>
+                <field name="currency_id" invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lease_lessor_operating_payment_form" model="ir.ui.view">
+        <field name="name">lease.lessor.operating.payment.form</field>
+        <field name="model">lease.lessor.operating.payment</field>
+        <field name="arch" type="xml">
+            <form string="Operating Payment">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="contract_id"/>
+                            <field name="payment_index"/>
+                            <field name="payment_date"/>
+                        </group>
+                        <group>
+                            <field name="payment_amount" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="invoice_id"/>
+                        </group>
+                    </group>
+                    <button name="action_create_rental_invoice" type="object" string="Create Rental Invoice"
+                            class="btn-primary" invisible="invoice_id != False"/>
+                    <button name="action_view_invoice" type="object" string="View Invoice" class="btn-secondary"
+                            invisible="invoice_id == False"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_lease_lessor_operating_payment_search" model="ir.ui.view">
+        <field name="name">lease.lessor.operating.payment.search</field>
+        <field name="model">lease.lessor.operating.payment</field>
+        <field name="arch" type="xml">
+            <search string="Search Operating Payments">
+                <field name="contract_id"/>
+                <field name="payment_date"/>
+                <filter string="Invoiced" name="invoiced" domain="[('invoice_id', '!=', False)]"/>
+                <filter string="Not Invoiced" name="not_invoiced" domain="[('invoice_id', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_lease_lessor_operating_payment" model="ir.actions.act_window">
+        <field name="name">Operating Payments</field>
+        <field name="res_model">lease.lessor.operating.payment</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+    </record>
+
+</odoo>

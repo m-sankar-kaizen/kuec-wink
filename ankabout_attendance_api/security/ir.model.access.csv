@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ankabout_log_attendance_user,log.attendance.user,model_log_attendance,hr_attendance.group_hr_attendance_own_reader,1,0,0,0
+access_ankabout_log_attendance_officer,log.attendance.officer,model_log_attendance,hr_attendance.group_hr_attendance_manager,1,1,1,1

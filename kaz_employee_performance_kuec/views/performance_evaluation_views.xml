@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- FORM VIEW -->
+    <record id="view_performance_evaluation_form" model="ir.ui.view">
+        <field name="name">performance.evaluation.form</field>
+        <field name="model">performance.evaluation</field>
+        <field name="arch" type="xml">
+            <form string="Performance Evaluation">
+                <header>
+                    <button name="action_confirm"
+                            invisible="state != 'pending'"
+                            groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                            confirm="Are you sure you want to confirm this Goal?"
+                            class="btn btn-primary" string="Approve" type="object"/>
+
+                     <button name="action_mid_term_done"
+                            invisible="state != 'mid_term' or mid_term_evaluated"
+                            class="btn btn-primary" string="Mid Term Evaluated" type="object"/>
+
+                    <button name="action_create_performance_improvement"
+                            invisible="state != 'done' or final_score &gt; 50"
+                            groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                            confirm="Are you sure you want to create a Performance Improvement Plan for this Goal?"
+                            class="btn btn-primary" title="Performance Improvement Plan"
+                            string="Create PIP" type="object"/>
+                    <button name="action_create_survey"
+                            invisible="state != 'final_eval'"
+                            groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                            confirm="Are you sure you want to create a Survey for this Goal?"
+                            class="btn btn-primary" string="Create Survey" type="object"/>
+                    <button name="action_rfc"
+                            invisible="state != 'pending'"
+                            groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                            class="btn btn-secondary" string="Return for Correction" type="object"/>
+                    <button name="action_cancel"
+                            invisible="state != 'pending'"
+                            groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                            class="btn btn-secondary" string="Cancel" type="object"/>
+                    <button name="action_reset_to_draft"
+                            invisible="state != 'cancel'"
+                            groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                            class="btn btn-secondary" string="Reset to Draft" type="object"/>
+
+                    <button name="action_request_revision"
+                            confirm="Are you sure you want to revise this goal?"
+                            invisible="state != 'confirmed' or performance_ids or performance_id"
+                            class="btn" string="Request Goal Revision" type="object"/>
+
+                    <button name="action_generate_lines"
+                            invisible="state != 'draft' or goal_line_ids"
+                            class="btn btn-primary" string="Generate Goal Lines" type="object"/>
+                    <button name="action_submit"
+                            invisible="state != 'draft' or not goal_line_ids"
+                            confirm="Please verify all information before submitting."
+                            class="btn btn-primary" string="Submit" type="object"/>
+                    <button name="action_user_cancel"
+                            invisible="state != 'draft'"
+                            confirm="Are you sure you want to cancel this draft Goal?"
+                            class="btn" string="Cancel" type="object"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done"/>
+                </header>
+                <sheet>
+                    <div name="button_box" class="oe_button_box">
+                        <button groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                                invisible="not performance_improvement_ids" class="oe_stat_button" type="object"
+                                name="action_open_performance_improvements" icon="fa-tachometer">
+                            <field name="performance_improvement_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Performance Improvement Plans</span>
+                            </div>
+                        </button>
+                        <button groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"
+                                invisible="not survey_ids" class="oe_stat_button" type="object"
+                                name="action_open_surveys" icon="fa-check-square-o">
+                            <field name="survey_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Surveys</span>
+                            </div>
+                        </button>
+                        <button invisible="not performance_ids" class="oe_stat_button" type="object"
+                                name="action_open_revised_goal" icon="fa-list">
+                            <field name="performance_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Revised Goal</span>
+                            </div>
+                        </button>
+                        <button invisible="not performance_id" class="oe_stat_button" type="object"
+                                name="action_open_parent_goal" icon="fa-file">
+                            <field name="performance_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Parent Goal</span>
+                            </div>
+                        </button>
+                    </div>
+                    <h1>
+                        <field name="name" readonly="state != 'draft'"
+                               placeholder="Increase sales by 15% by end of Q2"/>
+                    </h1>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="1"
+                                   groups="kaz_employee_performance_kuec.group_kuec_performance_eval_user"/>
+                            <field name="employee_id" readonly="state != 'draft'"
+                                   groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"/>
+                            <field name="employee_hod_id"/>
+                            <field name="goal_template_id" required="1" domain="[('state', '=', 'active')]"
+                                   readonly="1"
+                                   groups="kaz_employee_performance_kuec.group_kuec_performance_eval_user"/>
+                            <field name="goal_template_id" required="1" domain="[('state', '=', 'active')]"
+                                   readonly="state != 'draft'"
+                                   groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"/>
+                        </group>
+                        <group>
+                            <div invisible="not mid_term_evaluated"
+                                 class="badge rounded-pill text-bg-success">
+                                <span class="d-md-inline">Mid Term Evaluated</span>
+                            </div>
+                            <field name="year_id" widget="selection" required="1" readonly="state != 'draft'"/>
+                            <field name="date_from" force_save="1" readonly="1"/>
+                            <field name="date_to" force_save="1" readonly="1"/>
+                            <field name="company_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="mid_term_rating"
+                                   readonly="1"
+                                   groups="kaz_employee_performance_kuec.group_kuec_performance_eval_user"/>
+                            <field name="mid_term_rating" string="Add Mid Term Evaluation"
+                                   required="state == 'mid_term'"
+                                   readonly="state != 'mid_term'"
+                                   groups="!kaz_employee_performance_kuec.group_kuec_performance_eval_user"/>
+                            <field name="mid_term_score"/>
+                            <field name="final_rating" widget="priority" readonly="1"/>
+                            <field name="final_score"/>
+                            <field name="rating_text" widget="badge" readonly="1" invisible="state == 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Goal Lines" name="user_goal_line">
+                            <field name="goal_line_ids" readonly="state != 'draft'">
+                                <list delete="0" create="0" decoration-danger="goal_weight &lt; 100">
+                                    <field name="sequence" force_save="1" readonly="1"/>
+                                    <field name="evaluation_category_id" force_save="1" readonly="1"/>
+                                    <field name="description" force_save="1" readonly="1"/>
+                                    <field name="goal_weight" force_save="1" readonly="1"/>
+                                    <field name="final_rating" widget="priority" optional="hide"/>
+                                    <field name="mid_term_score" optional="hide"/>
+                                    <field name="final_score" widget="priority" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Modification Reason" invisible="not goal_modified_reason_ids"
+                              name="goal_modified_reason">
+                            <field name="goal_modified_reason_ids" readonly="1">
+                                <list editable="bottom" delete="0" create="0">
+                                    <field name="action_type"/>
+                                    <field name="name"/>
+                                    <field name="user_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- LIST VIEW -->
+    <record id="view_performance_evaluation_list" model="ir.ui.view">
+        <field name="name">performance.evaluation.list</field>
+        <field name="model">performance.evaluation</field>
+        <field name="arch" type="xml">
+            <list string="Performance Evaluations">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="employee_hod_id"/>
+                <field name="state" widget="badge" />
+                <field name="mid_term_evaluated" optional="hide"/>
+                <field name="mid_term_score"/>
+                <field name="final_rating" widget="priority"/>
+                <field name="final_score"/>
+                <field name="rating_text" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_performance_evaluation_kanban" model="ir.ui.view">
+        <field name="name">performance.evaluation.kanban</field>
+        <field name="model">performance.evaluation</field>
+        <field name="arch" type="xml">
+            <kanban records_draggable="0" default_group_by="state" class="o_kanban_small_column">
+                <!-- Fields used in kanban -->
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="employee_hod_id"/>
+                <field name="state"/>
+                <field name="year_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click o_kanban_card p-2">
+
+                            <!-- Title -->
+                            <div class="fw-bold mb-1">
+                                <t t-esc="record.name.value"/>
+                            </div>
+
+                            <!-- Employee -->
+                            <div class="mb-1 d-flex">
+                                 <div class="fw-bold">Employee:</div>
+                                <span class="ms-1" t-esc="record.employee_id.value"/>
+                            </div>
+
+                            <!-- HOD -->
+                            <div class="mb-1 d-flex" t-if="record.employee_hod_id.raw_value">
+                                <div class="fw-bold">HOD:</div>
+                                <div class="ms-1" t-esc="record.employee_hod_id.value"/>
+                            </div>
+
+                            <!-- Year -->
+                            <div class="mb-1 d-flex justify-content-between align-items-center">
+                                <div class="d-flex">
+                                    <div class="fw-bold">Year:</div>
+                                    <div class="ms-1" t-esc="record.year_id.value"/>
+                                </div>
+                                <div>
+                                    <field name="state" widget="badge"/>
+                                </div>
+
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="small text-muted">
+                                <t t-esc="record.date_from.value"/>
+                                —
+                                <t t-esc="record.date_to.value"/>
+                            </div>
+                            <div class="mt-2 d-flex align-items-center">
+                                <div class="fw-bold me-1">
+                                    Mid Term Rating:
+                                </div>
+                                <field name="mid_term_rating" widget="badge"/>
+                            </div>
+                            <div class="mt-2 d-flex align-items-center">
+                                <div class="fw-bold me-1">
+                                    Final Rating:
+                                </div>
+                                <field name="final_rating" widget="priority"/>
+
+                            </div>
+                            <div class="mt-2">
+                                <field name="rating_text" widget="badge"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_performance_evaluation_calendar" model="ir.ui.view">
+        <field name="name">performance.evaluation.calendar</field>
+        <field name="model">performance.evaluation</field>
+        <field name="arch" type="xml">
+            <calendar
+                    string="Performance Evaluations"
+                    date_start="date_from"
+                    date_stop="date_to"
+                    color="state">
+
+                <!-- Display fields -->
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="state"/>
+                <field name="year_id"/>
+
+            </calendar>
+        </field>
+    </record>
+
+    <!-- SEARCH VIEW -->
+    <record id="view_performance_evaluation_search" model="ir.ui.view">
+        <field name="name">performance.evaluation.search</field>
+        <field name="model">performance.evaluation</field>
+        <field name="arch" type="xml">
+            <search string="Performance Evaluation">
+                <!-- Search fields -->
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="employee_hod_id"/>
+                <field name="state"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="year_id"/>
+                <field name="mid_term_evaluated"/>
+
+                <separator/>
+
+                <!-- State filters -->
+                <filter string="Draft"
+                        name="state_draft"
+                        domain="[('state', '=', 'draft')]"/>
+
+                <filter string="Pending Confirmation"
+                        name="state_pending"
+                        domain="[('state', '=', 'pending')]"/>
+
+                <filter string="Confirmed"
+                        name="state_confirmed"
+                        domain="[('state', '=', 'confirmed')]"/>
+
+                <filter string="Mid Term Evaluation"
+                        name="state_mid_term"
+                        domain="[('state', '=', 'mid_term')]"/>
+
+                <filter string="Final Evaluation"
+                        name="state_final_eval"
+                        domain="[('state', '=', 'final_eval')]"/>
+
+                <filter string="Revised"
+                        name="state_revised"
+                        domain="[('state', '=', 'revised')]"/>
+
+                <filter string="Done"
+                        name="state_done"
+                        domain="[('state', '=', 'done')]"/>
+
+                <filter string="Cancelled"
+                        name="state_cancel"
+                        domain="[('state', '=', 'cancel')]"/>
+
+                <filter string="My Evaluations"
+                        name="my_evaluations"
+                        domain="[('employee_id.user_id', '=', uid)]"/>
+
+                <filter string="My Done Evaluations"
+                        name="my_done_evaluations"
+                        domain="[('employee_id.user_id', '=', uid),('state', '=', 'done')]"/>
+
+                <!-- Optional grouping -->
+                <group expand="0" string="Group By">
+                    <filter string="Status"
+                            name="group_by_state"
+                            context="{'group_by': 'state'}"/>
+                    <filter string="Employee"
+                            name="group_by_employee"
+                            context="{'group_by': 'employee_id'}"/>
+                    <filter string="Year"
+                            name="group_by_year"
+                            context="{'group_by': 'year_id'}"/>
+                </group>
+
+            </search>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_performance_evaluation" model="ir.actions.act_window">
+        <field name="name">Performance Evaluations</field>
+        <field name="res_model">performance.evaluation</field>
+        <field name="view_mode">list,kanban,form,activity,calendar</field>
+        <field name="search_view_id" ref="view_performance_evaluation_search"/>
+        <field name="context">{'search_default_state_draft': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first performance evaluation
+            </p>
+        </field>
+    </record>
+
+    <record id="action_performance_evaluation_eval" model="ir.actions.act_window">
+        <field name="name">Performance Evaluations</field>
+        <field name="res_model">performance.evaluation</field>
+        <field name="view_mode">list,kanban,form,activity,calendar</field>
+        <field name="search_view_id" ref="view_performance_evaluation_search"/>
+        <field name="domain">[('state', 'not in', ['draft', 'pending'])]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first performance evaluation
+            </p>
+        </field>
+    </record>
+
+    <record id="action_done_performance_evaluation_eval" model="ir.actions.act_window">
+        <field name="name">Performance Evaluations</field>
+        <field name="res_model">performance.evaluation</field>
+        <field name="view_mode">list,kanban,form,activity,calendar</field>
+        <field name="search_view_id" ref="view_performance_evaluation_search"/>
+        <field name="context">{'search_default_group_by_year': 1, 'search_default_my_done_evaluations': 1, 'create': False, 'edit': False, 'delete': False}
+        </field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first performance evaluation
+            </p>
+        </field>
+    </record>
+
+    <!-- MENU ITEM -->
+
+
+    <menuitem id="menu_performance_evaluation_root" sequence="10" name="Goal Evaluation"
+              web_icon="kaz_employee_performance_kuec,static/description/logo.png"/>
+    <menuitem id="menu_performance_evaluation_conf_parent" sequence="10" name="Configuration"
+              parent="menu_performance_evaluation_root"/>
+    <menuitem id="menu_performance_evaluation_conf" sequence="2" name="Goal Evaluation Configuration"
+              parent="menu_performance_evaluation_conf_parent"/>
+
+    <menuitem id="menu_performance_evaluation_goal_root"
+              name="Goals"
+              sequence="1"
+              parent="menu_performance_evaluation_root"/>
+
+    <menuitem id="menu_performance_evaluation"
+              name="Goals Setup"
+              sequence="1"
+              parent="menu_performance_evaluation_goal_root"
+              action="action_performance_evaluation"/>
+    <menuitem id="menu_done_performance_evaluation"
+              name="My Performance Evaluation"
+              sequence="2"
+              parent="menu_performance_evaluation_goal_root"
+              action="action_done_performance_evaluation_eval"/>
+    <menuitem id="menu_performance_evaluation_eval"
+              name="Goals Evaluation"
+              sequence="3"
+              groups="kaz_procurement_doa_kuec.group_kuec_head_department"
+              parent="menu_performance_evaluation_goal_root"
+              action="action_performance_evaluation_eval"/>
+</odoo>

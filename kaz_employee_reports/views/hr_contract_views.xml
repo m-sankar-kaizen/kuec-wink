@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    View Inheritance: hr_contract_field
+    Purpose:
+        - Extends the default HR Contract form view (hr_contract.hr_contract_view_form).
+        - Adds new fields: `total_salary`, `pension_deduction`, and `pension_deduction_oman`.
+
+    Modifications:
+        1. After the `connectivity_allowance` field, insert the `total_salary` field with monetary widget.
+        2. Inside the "information" tab (page), add a new group titled "Pension Deduction"
+           that includes:
+            - `pension_deduction`: General pension deduction field.
+            - `pension_deduction_oman`: Pension deduction specific to Oman.
+
+    Notes:
+        - Fields like `total_salary`, `pension_deduction`, and `pension_deduction_oman`
+          must be defined in the `hr.contract` model.
+        - This inheritance ensures the base contract view remains intact while enhancing it
+          with payroll-related data.
+    -->
+    <record id="hr_contract_field" model="ir.ui.view">
+        <field name="name">hr contract</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Insert `total_salary` field after existing `connectivity_allowance` -->
+            <xpath expr="//field[@name='connectivity_allowance']" position="after">
+                <field name="total_salary" widget="monetary"/>
+            </xpath>
+
+            <!-- Inside the information page, add a pension deduction section -->
+            <page name="information" position="inside">
+                <group string="Pension Deduction">
+                    <field name="pension_deduction"/>
+                    <field name="pension_deduction_oman"/>
+                </group>
+            </page>
+
+        </field>
+    </record>
+
+</odoo>

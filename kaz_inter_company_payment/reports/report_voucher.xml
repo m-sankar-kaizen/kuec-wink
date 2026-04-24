@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <template id="report_voucher_template">
+        <t t-call="web.external_layout">
+        <t t-set="o" t-value="o.with_context(lang=lang)"/>
+        <t t-set="values" t-value="o._get_payment_receipt_report_values()"/>
+       <div class="page">
+           <br/>
+           <h3><strong><span><t t-if="o.payment_type == 'inbound'">RECEIPT</t><t t-else="">PAYMENT</t> VOUCHER</span></strong></h3>
+             <div class="row mt-2 mb-2" style="border-bottom: 1px solid black; padding: 4px;">
+                <table style="width: 100%; border-color: transparent;">
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;"><t t-if="o.payment_type == 'inbound'">Receipt</t><t t-else="">Payment</t> Date:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;"><t t-esc="o.date.strftime('%d %B %Y')"/></p>
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;"><t t-if="o.payment_type == 'inbound'">Receipt</t><t t-else="">Payment Document</t> Number:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;"><t t-esc="o.name"/></p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="row mt-2" style="border-bottom: 1px solid black; padding: 4px;">
+                <p style="padding-top: 2px; font-weight: normal; margin-bottom: 0; font-size: 1.2rem;">TRANSACTION DETAILS</p>
+            </div>
+             <div class="row mt-2" style="border-bottom: 1px solid black;">
+                <table style="width: 100%; border-color: transparent;">
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;">Date:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;"><t t-esc="o.date.strftime('%d %B %Y')"/></p>
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;">Bank Name:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <t t-if="o.journal_id.is_intercompany_payment"><p style="margin: 0;" t-field="o.intercompany_journal_id"/></t>
+                            <t t-else=""><p style="margin: 0;" t-field="o.journal_id"/></t>
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;">Mode of Payment:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;" t-field="o.payment_method_line_id"/>
+                        </td>
+                    </tr>
+
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;">Memo:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;" t-field="o.memo"/>
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;">Total Amount:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;" t-field="o.amount"/>
+                        </td>
+                    </tr>
+                    <tr style="border: none;">
+                        <td style="width: 40%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;">Total Amount in Words:</p>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; padding: 2px 4px; border: none; line-height: 1.2;">
+                            <p style="margin: 0;" ><t t-esc="o._num2words(o.amount, lang)"/></p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="row mt-2 mb-2" style="border-bottom: 1px solid black; padding: 2px;">
+                <p style="padding-top: 2px; font-weight: normal; margin-bottom: 0; font-size: 1.2rem;">TERMS AND CONDITIONS</p>
+            </div>
+            <div class="row mt-1" style="">
+                <ul>
+                    <li style="margin: 0; padding: 0;">All transactions are subject to realization.</li>
+                </ul>
+            </div>
+        </div>
+        </t>
+        
+
+        <div class="footer" style="margin-left: 1rem; margin-right: 1rem;">
+            <div class="row mt-1" style="display: flex; justify-content: space-between;">
+                <div style="width: 45%; text-align: left;" t-if="o.payment_type == 'outbound'">
+                    <p style="margin: 0; font-weight: bold;">Authorized By:</p>
+                </div>
+                <div style="width: 45%; text-align: right;" t-if="o.payment_type == 'outbound'">
+                    <p style="margin: 0; font-weight: bold;">Received By:</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+   <template id="report_voucher">
+       <t t-call="web.html_container">
+           <t t-foreach="docs" t-as="o">
+               <t t-set="lang" t-value="o.partner_id.lang or o.company_id.partner_id.lang"/>
+               <t t-call="kaz_inter_company_payment.report_voucher_template" t-value="o"/>
+           </t>
+       </t>
+   </template>
+</odoo>

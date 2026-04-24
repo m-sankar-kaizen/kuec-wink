@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_employee_disciplinary_print" model="ir.actions.report">
+        <field name="name">Notice</field>
+        <field name="model">hr.disciplinary.action</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_hr_memo_action.report_disciplinary_warning_document</field>
+        <field name="report_file">kaz_hr_memo_action.report_disciplinary_warning_document</field>
+        <field name="print_report_name">'Notice - %s' % (object.name or '')</field>
+        <field name="binding_model_id" ref="model_hr_disciplinary_action"/>
+        <field name="binding_type">report</field>
+        <field name="binding_view_types">form</field>
+    </record>
+
+    <record id="email_template_hr_disciplinary_action" model="mail.template">
+        <field name="name">Disciplinary Action Notification</field>
+        <field name="model_id" ref="kaz_hr_memo_action.model_hr_disciplinary_action"/>
+        <field name="subject">{{ object.company_id.name }} - Disciplinary Action for {{ object.employee_id.name}}
+        </field>
+        <field name="email_from">{{ (object.issued_by.email_formatted or user.email_formatted) }}</field>
+        <field name="email_to">{{ object.employee_id.work_email }}</field>
+        <field name="body_html" type="html">
+<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+        Hello <t t-esc="object.employee_id.name"/>,
+        <br/>
+        <br/>
+        This is to inform you that a disciplinary action has been issued on <strong><t t-esc="object.action_date"/>
+    </strong> regarding the following matter:
+        <br/>
+        <br/>
+        <strong>Infraction Decision:</strong>
+        <br/>
+        <t t-esc="object.reason"/>
+        <br/>
+        <br/>
+        Please refer to the attached document for complete details.
+        <br/>
+        <br/>
+        Regards,
+        <br/>
+        <t t-esc="object.issued_by.name"/>
+    </p>
+</div>
+        </field>
+        <field name="auto_delete" eval="False"/>
+        <field name="report_template_ids" eval="[(4, ref('kaz_hr_memo_action.hr_employee_disciplinary_print'))]"/>
+
+    </record>
+
+    <template id="report_disciplinary_warning_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <div class="page">
+                        <h2 style="text-align:center; margin-top: 20px;">Notice</h2>
+                        <table style="width: 100%; margin-top: 20px;">
+                            <tr>
+                                <td>
+                                    <strong>Created Date :</strong>
+                                </td>
+                                <td>
+                                    <t t-esc="doc.action_date"/>
+                                </td>
+                                <td>
+                                    <strong>Created By :</strong>
+                                </td>
+                                <td>
+                                    <t t-esc="doc.issued_by.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Employee :</strong>
+                                </td>
+                                <td>
+                                    <t t-esc="doc.employee_id.name"/>
+                                </td>
+                                <td>
+                                    <strong>Job :</strong>
+                                </td>
+                                <td>
+                                    <t t-esc="doc.job_id.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Department :</strong>
+                                </td>
+                                <td colspan="1">
+                                    <t t-esc="doc.employee_id.department_id.complete_name or doc.employee_id.department_id.name"/>
+                                </td>
+                                <td>
+                                    <strong>Manager :</strong>
+                                </td>
+                                <td>
+                                    <t t-esc="doc.manager_id.name"/>
+                                </td>
+                            </tr>
+                        </table>
+                        <br/>
+                        <br/>
+
+                        <p>
+                            <strong>Decision of Infraction :</strong>
+                            <br/>
+                        </p>
+                        <ul>
+                            <li>
+                                <t t-esc="doc.reason"/>
+                            </li>
+                        </ul>
+                        <p>
+                            <strong>Action Improvement Plan :</strong>
+                            <br/>
+                            <t t-esc="doc.improvement_plan"/>
+                        </p>
+                        <p>
+                            <strong>Consequence of Future Infraction :</strong>
+                            <br/>
+                            <t t-esc="doc.consequence"/>
+                        </p>
+                        <p>
+                            <strong>Notes :</strong>
+                            <br/>
+                            <t t-esc="doc.notes"/>
+                        </p>
+                        <div style="text-align: right;">
+                            <br/>
+                            <br/>
+                            <br/>
+                            <p>_________________________<br/>Employee
+                            </p>
+
+                            <br/>
+                            <br/>
+                            <p>_________________________<br/>HR
+                            </p>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

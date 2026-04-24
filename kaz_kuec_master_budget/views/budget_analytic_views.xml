@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_budget_analytic_form" model="ir.ui.view">
+        <field name="name">budget.analytic.view.form.inherit.kuec.master.budget</field>
+        <field name="model">budget.analytic</field>
+        <field name="inherit_id" ref="account_budget.view_budget_analytic_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="master_plan_id"
+                       required="company_code == 'KUEC'"
+                       invisible="company_code != 'KUEC'"
+                       readonly="state != 'draft'"/>
+            </xpath>
+            <field name="company_id" position="attributes">
+                <attribute name="readonly">state != 'draft'</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>

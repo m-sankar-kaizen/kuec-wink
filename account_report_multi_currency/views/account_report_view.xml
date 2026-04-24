@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Inherits the Account Report form view to add multi-currency controls -->
+    <record id="account_report_form_inherit_knk" model="ir.ui.view">
+        <field name="name">account.report.form.inherit.knk</field>
+        <field name="model">account.report</field>
+        <field name="inherit_id" ref="account_reports.account_report_form"/>
+        <field name="arch" type="xml">
+            <!-- Inserts a new group for currency settings after the last group on the last page -->
+            <xpath expr="//page[last()]/group//group[last()]" position="after">
+                <group string="Multi Currency">
+                    <!-- Boolean field to enable/disable currency conversion -->
+                    <field name="curr_conversation"/>
+                    <!-- Currency selection field: required only if conversion is enabled -->
+                    <field name="curr_currency_id" invisible="not curr_conversation" required="curr_conversation"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    ============================================================================
+    MODULE CATEGORY DEFINITION
+    This section defines a custom module category named "Child Allowance".
+    It helps in logically grouping all the access rights and groups related to
+    child allowance features under the same umbrella in the user interface.
+    ============================================================================
+    -->
+    <record id="module_category_child_allowance" model="ir.module.category">
+        <field name="name">Child Allowance</field>
+        <field name="sequence" eval="1"/>
+        <field name="description">Ankabut Group for child Allowance.</field>
+    </record>
+
+    <!--
+    ============================================================================
+    USER GROUP: Base User
+    - Intended for regular employees (non-HR users).
+    - Members of this group can only create and view their own child allowance
+      requests.
+    - It inherits from Odoo's built-in 'base.group_user' to ensure basic system access.
+    - This group serves as the base level for child allowance workflows.
+    ============================================================================
+    -->
+    <record id="group_base_user" model="res.groups">
+        <field name="name">Base User</field>
+        <field name="category_id" ref="kaz_child_allowance.module_category_child_allowance"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+        <field name="comment">USER GROUP: Base User
+                        - Intended for regular employees (non-HR users).
+                        - Members of this group can only create and view their own child allowance
+                          requests.
+                        - It inherits from Odoo's built-in 'base.group_user' to ensure basic system access.
+                        - This group serves as the base level for child allowance workflows.</field>
+    </record>
+
+    <!--
+    ============================================================================
+    USER GROUP: Hr Team (Line Managers)
+    - This group is for direct supervisors or line managers.
+    - Members of this group can review, approve, or reject child allowance
+      requests from employees under their department.
+    - Inherits from 'group_base_user' to get employee-level permissions.
+    ============================================================================
+    -->
+    <record id="group_line_manager" model="res.groups">
+        <field name="name">Hr Team</field>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_child_allowance.group_base_user'))]"/>
+        <field name="category_id" ref="kaz_child_allowance.module_category_child_allowance"/>
+        <field name="comment">USER GROUP: Hr Team (Line Managers)
+    - This group is for direct supervisors or line managers.
+    - Members of this group can review, approve, or reject child allowance
+      requests from employees under their department.
+    - Inherits from 'group_base_user' to get employee-level permissions.</field>
+    </record>
+
+    <!--
+    ============================================================================
+    USER GROUP: Hr Manager
+    - This group is for senior HR personnel who have complete control over
+      the child allowance process.
+    - Members of this group can access all records, finalize approvals,
+      and perform administrative actions.
+    - Inherits from 'group_line_manager' to get both base user and line manager permissions.
+    ============================================================================
+    -->
+    <record id="group_hr_person" model="res.groups">
+        <field name="name">Hr Manager</field>
+        <field name="category_id" ref="kaz_child_allowance.module_category_child_allowance"/>
+        <field name="implied_ids" eval="[Command.link(ref('kaz_child_allowance.group_line_manager'))]"/>
+        <field name="comment">Hr Manager
+    - This group is for senior HR personnel who have complete control over
+      the child allowance process.
+    - Members of this group can access all records, finalize approvals,
+      and perform administrative actions.
+    - Inherits from 'group_line_manager' to get both base user and line manager permissions.</field>
+    </record>
+
+    <!--
+    ============================================================================
+    RECORD RULE: Admin Child Allowance
+    - Grants full access to all child allowance records for HR Team (line managers).
+    - This allows them to view and manage records submitted by their employees.
+    - Rule domain is unrestricted ([(1, '=', 1)]) meaning full access.
+    - Bound to the 'group_line_manager' group.
+    ============================================================================
+    -->
+    <record id="admin_child_allowance" model="ir.rule">
+        <field name="name">Admin Child Allowance</field>
+        <field name="model_id" ref="model_child_allowance"/>
+        <field name="domain_force">[(1,'=', 1)]</field>
+        <field name="groups" eval="[Command.link(ref('kaz_child_allowance.group_line_manager'))]"/>
+    </record>
+
+    <!--
+    ============================================================================
+    RECORD RULE: Personal Child Allowance (Self-view)
+    - Restricts access so that Base Users can only see their own child
+      allowance requests.
+    - Works by checking if the logged-in user is the owner of the employee
+      record (`employee_id.user_id == user.id`).
+    - Attached to 'group_base_user'.
+    ============================================================================
+    -->
+    <record id="personal_child_allowance" model="ir.rule">
+        <field name="name">Base Child Allowance</field>
+        <field name="model_id" ref="model_child_allowance"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[Command.link(ref('kaz_child_allowance.group_base_user'))]"/>
+    </record>
+
+    <!--
+    ============================================================================
+    RECORD RULE: Company Scope (Multi-company Compatibility)
+    - Ensures that users can access only records tied to their current company
+      or allowed companies in multi-company setups.
+    - Useful for centralized HR management across companies.
+    - Not tied to any specific group, applies globally.
+    ============================================================================
+    -->
+    <record id="company_child_allowance" model="ir.rule">
+        <field name="name">Company Child Allowance</field>
+        <field name="model_id" ref="model_child_allowance"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+</odoo>

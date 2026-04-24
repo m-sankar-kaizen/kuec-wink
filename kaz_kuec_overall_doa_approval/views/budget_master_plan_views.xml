@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="budget_master_plan_view_form" model="ir.ui.view">
+        <field name="name">budget.master.plan.form.inherit.kaz.kuec.overall.doa.approval</field>
+        <field name="model">budget.master.plan</field>
+        <field name="inherit_id" ref="kaz_kuec_master_budget.budget_master_plan_view_form"/>
+        <field name="arch" type="xml">
+
+            <form position="attributes">
+                <attribute name="js_class">readonly_form_view</attribute>
+            </form>
+
+            <field name="status" position="before">
+                <field name="is_readonly" invisible="1"/>
+                <field name="kuec_approval_state" widget='statusbar' statusbar_visible="draft,approved"/>
+            </field>
+
+            <button name="action_active" position="attributes">
+                <attribute name="invisible" add="kuec_approval_state != 'approved'" separator="or"/>
+            </button>
+
+            <button name="action_active" position="after">
+                <button name="submit_for_approval"
+                        class="oe_highlight"
+                        string="Submit for Approval"
+                        invisible="kuec_approval_state != 'draft' or status != 'close'"
+                        type="object"/>
+                <button name="action_lock"
+                        class="btn"
+                        string="Lock"
+                        icon="fa-lock"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        invisible="kuec_approval_state != 'approved' or is_readonly"
+                        type="object"/>
+                <button name="action_unlock"
+                        class="btn"
+                        icon="fa-unlock"
+                        string="Unlock"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        invisible="kuec_approval_state != 'approved' or not is_readonly"
+                        type="object"/>
+
+                <button name="action_head_fin_approval"
+                        string="Head of Finance &amp; Procurement Approve" type="object" class="oe_highlight"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        invisible="kuec_approval_state != 'finance_procurement_approval'"/>
+                <button name="action_reject_request"
+                        invisible="kuec_approval_state != 'finance_procurement_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        class="btn btn-danger" string="Reject" type="object"/>
+                <button name="action_rfc_request"
+                        invisible="kuec_approval_state != 'finance_procurement_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_head_fin_procurement"
+                        class="btn" string="Return for Correction" type="object"/>
+
+                <button name="action_coe_approval"
+                        string="COE Approve" type="object" class="oe_highlight"
+                        groups="kaz_kuec_overall_doa_approval.group_coe_kuec"
+                        invisible="kuec_approval_state != 'coe_approval'"/>
+                <button name="action_reject_request"
+                        invisible="kuec_approval_state != 'coe_approval'"
+                        groups="kaz_kuec_overall_doa_approval.group_coe_kuec"
+                        class="btn btn-danger" string="Reject" type="object"/>
+                <button name="action_rfc_request"
+                        invisible="kuec_approval_state != 'coe_approval'"
+                        groups="kaz_kuec_overall_doa_approval.group_coe_kuec"
+                        class="btn" string="Return for Correction" type="object"/>
+
+                <button name="action_ceo_approval"
+                        string="CEO Approve" type="object" class="oe_highlight"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                        invisible="kuec_approval_state != 'ceo_approval'"/>
+                <button name="action_reject_request"
+                        invisible="kuec_approval_state != 'ceo_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                        class="btn btn-danger" string="Reject" type="object"/>
+                <button name="action_rfc_request"
+                        invisible="kuec_approval_state != 'ceo_approval'"
+                        groups="kaz_procurement_doa_kuec.group_kuec_ceo"
+                        class="btn" string="Return for Correction" type="object"/>
+            </button>
+
+            <xpath expr="//page[last()]" position="after">
+                <page name="master_plan_approval" string="Signed Approval History"
+                      invisible="not master_plan_approval_ids">
+                    <field name="master_plan_approval_ids">
+                        <list editable="bottom" create="0" edit="0" delete="0">
+                            <field name="current_display_name" column_invisible="1"/>
+                            <field name="sequence"/>
+                            <field name="parent_state_at_request" optional="show"/>
+                            <field name="request_type"/>
+                            <field name="create_uid" string="Signed By"/>
+                            <field name="create_date" string="Signed At" optional="hide"/>
+                            <field name="signature" widget="signature"
+                                   options="{'full_name': 'current_display_name','size': [150, 50]}"/>
+                            <field name="reason"/>
+                            <field name="company_id" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

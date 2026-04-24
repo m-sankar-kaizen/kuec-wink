@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Inheritance: SAML Provider Form
+        Purpose:
+            Extend the `auth.saml.provider` form view to include a logo field.
+            This logo is displayed using the 'image' widget, which allows users to
+            upload and preview an image directly from the form.
+
+        Technical Details:
+            - Field: logo (Char or Binary)
+            - Widget: image (for file upload and preview)
+            - Class: oe_avatar (standard styling class for round image)
+            - Position: Inserted before the first <group> in the form layout
+    -->
+    <record id="kaz_saml_provider_form_view_inherit" model="ir.ui.view">
+        <field name="name">kaz.saml.provider.form.view.inherit</field>
+        <field name="model">auth.saml.provider</field>
+        <field name="inherit_id" ref="auth_saml.view_saml_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[1]" position="before">
+                <field name="logo"
+                       widget="image"
+                       class="oe_avatar"
+                       options="{'preview_image':'image_128'}"
+                       force_save="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

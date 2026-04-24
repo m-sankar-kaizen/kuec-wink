@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="material_purchase_requisition_tree_view_inherit" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.view.list.inherit</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="priority">15</field>
+        <field name="inherit_id" ref="material_purchase_requisitions.material_purchase_requisition_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="class">o_material_purchase_requisition</attribute>
+                <attribute name="js_class">material_purchase_requisition_dashboard_list</attribute>
+                <attribute name="sample">1</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="material_purchase_requisition_kuec_view_list_inherit" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.view.list.inherit</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="priority">20</field>
+
+        <field name="inherit_id" ref="kaz_vendor_contact_company_restriction.material_purchase_requisition_kuec_view_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="class">o_material_purchase_requisition</attribute>
+                <attribute name="js_class">material_purchase_requisition_dashboard_list</attribute>
+                <attribute name="sample">1</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="material_purchase_requisition_search" model="ir.ui.view">
+        <field name="name">material.purchase.requisition.search</field>
+        <field name="model">material.purchase.requisition</field>
+        <field name="arch" type="xml">
+            <search string="Purchase Requisition">
+
+                <filter name="draft_rfqs"
+                        string="Open PRs"
+                        domain="[('kuec_approval_state', 'not in', ('approved','rejected','cancel'))]"/>
+
+                <filter name="waiting_rfqs"
+                        string="Waiting Approval"
+                        domain="[('kuec_approval_state', 'not in', ('draft','approved','rejected','cancel'))]"/>
+
+                <filter name="late_rfqs"
+                        string="Waiting for PO"
+                        domain="[('kuec_approval_state', '=', 'approved'), ('purchase_ids', '=', False)]"/>
+
+                <filter name="prs_converted_po"
+                        string="Converted to PO"
+                        domain="[('kuec_approval_state', '=', 'approved'), ('purchase_ids', '!=', False)]"/>
+
+                <filter name="activity_today"
+                        string="Activity Today"
+                        domain="[('activity_ids.date_deadline', '=', context_today())]"/>
+
+                <filter name="activity_due"
+                        string="Activity Due"
+                        domain="[('activity_ids.date_deadline', '&lt;', context_today())]"/>
+
+                <filter name="activity_upcoming"
+                        string="Activity Upcoming"
+                        domain="[('activity_ids.date_deadline', '&gt;', context_today())]"/>
+            </search>
+        </field>
+    </record>
+
+</odoo>

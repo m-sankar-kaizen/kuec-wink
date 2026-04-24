@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="mail.mail_activity_action_my" model="ir.actions.act_window">
+            <field name="domain">[('user_id', '=', uid)]</field>
+        </record>
+    </data>
+</odoo>

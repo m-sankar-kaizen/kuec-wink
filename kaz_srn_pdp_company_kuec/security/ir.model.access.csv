@@ -1,0 +1,12 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_srn_report_template_readonly,srn.report.template.readonly,model_srn_report_template,skit_srn_receipt.srn_end_user,1,0,0,0
+access_srn_report_template_line_readonly,srn.report.template.line.readonly,model_srn_report_template_line,skit_srn_receipt.srn_end_user,1,0,0,0
+access_answer_selection_readonly,answer.selection.readonly,model_answer_selection,skit_srn_receipt.srn_end_user,1,0,0,0
+access_srn_report_line_readonly,srn.report.line.readonly,model_srn_report_line,skit_srn_receipt.srn_end_user,1,1,1,0
+
+
+access_srn_report_template_admin,srn.report.template.admin,model_srn_report_template,skit_srn_receipt.srn_admin,1,1,1,1
+access_srn_report_template_line_admin,srn.report.template.line.admin,model_srn_report_template_line,skit_srn_receipt.srn_admin,1,1,1,1
+access_answer_selection_admin,answer.selection.admin,model_answer_selection,skit_srn_receipt.srn_admin,1,1,1,1
+access_answer_selection_admin,answer.selection.admin,model_answer_selection,skit_srn_receipt.srn_admin,1,1,1,1
+access_srn_report_line_admin,srn.report.line.admin,model_srn_report_line,skit_srn_receipt.srn_admin,1,1,1,0

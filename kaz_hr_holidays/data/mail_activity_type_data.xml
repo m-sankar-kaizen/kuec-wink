@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!--
+        This XML defines a custom Mail Activity Type for use within the Odoo HR Leave (Time Off) module.
+
+        Purpose:
+            To create a new activity type that can be used to notify and track approval actions related to employee holiday (leave) requests.
+
+        Details:
+            - ID: `mail_activity_holidays_approve`
+              This is a unique technical identifier used to reference this activity type in Python (e.g., `activity_schedule(...)`), workflows, or automated actions.
+
+            - Model: `mail.activity.type`
+              The model in which the activity type is created.
+
+            - Fields:
+                * name: "Holiday"
+                    The display name of the activity type. This label appears in the activity list shown in the chatter of the related record (here, `hr.leave`).
+                    Consider renaming to "Leave Approval Request" or "Review Holiday Request" for clarity.
+
+                * icon: "fa-sun-o"
+                    The icon from Font Awesome to visually represent the activity in the UI. This icon represents sun/holiday context.
+
+                * res_model: "hr.leave"
+                    This activity type is specifically tied to the `hr.leave` model, meaning it can only be scheduled for records of that model (employee time off requests).
+
+        Usage:
+            This activity type can be used to manually or programmatically schedule an activity for a manager or HR officer to approve or review a leave request.
+
+            Example (in Python):
+                self.activity_schedule(
+                    'your_module.mail_activity_holidays_approve',
+                    user_id=manager.id,
+                    note="Please review and approve this leave request."
+                )
+
+        noupdate="1":
+            This ensures the record is not updated or deleted during module updates (protects manual edits if ever needed).
+
+        Best Practices:
+            - Use clear and action-based names (e.g., "Approve Leave Request").
+            - Use descriptive tooltips and colors (if applicable) to enhance user experience.
+
+    -->
+    <record id="mail_activity_holidays_approve" model="mail.activity.type">
+        <field name="name">Holiday</field>
+        <field name="icon">fa-sun-o</field>
+        <field name="res_model">hr.leave</field>
+    </record>
+</odoo>

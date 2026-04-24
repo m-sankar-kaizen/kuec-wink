@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- =============================================
+         Menu Structure: School Information Hierarchy
+         This defines a School Info parent menu with
+         submenus for School, Academic Year, and Grade.
+         ============================================= -->
+
+    <!-- Parent Menu for School Information under HR Configuration -->
+    <menuitem
+            name="School Info"
+            id="school_info_menu"
+            parent="hr.menu_human_resources_configuration"
+    />
+
+    <!-- Submenu: School (opens School records) -->
+    <menuitem
+            name="School"
+            id="res_school_menu"
+            parent="kaz_education_fees.school_info_menu"
+            action="res_school_act_window"
+    />
+
+    <!-- Submenu: Academic Year (opens Year records) -->
+    <menuitem
+            name="Academic Year"
+            id="academic_year_menu"
+            parent="kaz_education_fees.school_info_menu"
+            action="academic_year_act_window"
+    />
+
+    <!-- Submenu: Academic Grade (opens Grade records) -->
+
+    <menuitem
+            name="Academic Grade"
+            id="academic_grade_menu"
+            parent="kaz_education_fees.school_info_menu"
+            action="academic_grade_act_window"/>
+</odoo>

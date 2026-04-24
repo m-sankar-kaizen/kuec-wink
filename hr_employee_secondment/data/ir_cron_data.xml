@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Cron Job: Check Ending Secondments -->
+        <record id="ir_cron_check_ending_secondments" model="ir.cron">
+            <field name="name">Secondments: Check Ending Soon</field>
+            <field name="model_id" ref="model_hr_employee_secondment"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_check_ending_secondments()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+        
+        <!-- Cron Job: Auto-Complete Secondments -->
+        <record id="ir_cron_auto_complete_secondments" model="ir.cron">
+            <field name="name">Secondments: Auto-Complete on End Date</field>
+            <field name="model_id" ref="model_hr_employee_secondment"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_auto_complete_secondments()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+        
+    </data>
+</odoo>

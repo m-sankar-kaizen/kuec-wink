@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="kuec_employment_letter_multi_company" model="ir.rule">
+        <field name="name">Employment Letter Multi-Company</field>
+        <field name="model_id" ref="model_kuec_employment_letter"/>
+        <field name="domain_force">[('company_id', '=', company_id)]</field>
+    </record>
+    <record id="kuec_golden_visa_letter_multi_company" model="ir.rule">
+        <field name="name">Golden Visa Letter Multi-Company</field>
+        <field name="model_id" ref="model_kuec_golden_visa_request"/>
+        <field name="domain_force">[('company_id', '=', company_id)]</field>
+    </record>
+    <record id="kuec_health_insurance_letter_multi_company" model="ir.rule">
+        <field name="name">Health Insurance Letter Multi-Company</field>
+        <field name="model_id" ref="model_kuec_health_insurance"/>
+        <field name="domain_force">[('company_id', '=', company_id)]</field>
+    </record>
+    <record id="kuec_salary_letter_multi_company" model="ir.rule">
+        <field name="name">Salary Letter Multi-Company</field>
+        <field name="model_id" ref="model_kuec_salary_letter"/>
+        <field name="domain_force">[('company_id', '=', company_id)]</field>
+    </record>
+    <record id="kuec_salary_transfer_letter_multi_company" model="ir.rule">
+        <field name="name">Salary Transfer Letter Multi-Company</field>
+        <field name="model_id" ref="model_kuec_salary_transfer_letter"/>
+        <field name="domain_force">[('company_id', '=', company_id)]</field>
+    </record>
+    <record id="kuec_visa_request_letter_multi_company" model="ir.rule">
+        <field name="name">Visa Request Letter Multi-Company</field>
+        <field name="model_id" ref="model_kuec_visa_request"/>
+        <field name="domain_force">[('company_id', '=', company_id)]</field>
+    </record>
+
+</odoo>

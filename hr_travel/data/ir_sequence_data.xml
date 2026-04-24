@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_hr_travel" model="ir.sequence">
+            <field name="name">HR Travel Sequence</field>
+            <field name="code">hr.travel</field>
+            <field name="prefix">TRVL/%(year)s/</field>
+            <field name="padding">4</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <!--    Cashflow report template    -->
+    <t t-name="CashFlowReportTemplate" owl="1">
+        <table class="table table-hover">
+            <thead>
+                <tr style="font-weight: bold;font-size: 18px;background-color: #8080801f;">
+                    <th>Name</th>
+                    <th>Cash In</th>
+                    <th>Cash Out</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="state.data" t-as="line" t-key="line_index">
+                    <tr>
+                        <td colspan="4" style="padding: 0;">
+                            <!-- Account Row -->
+                            <div class="d-flex justify-content-between p-2" t-on-click="() => this.toggleAccount(line.code)" style="cursor: pointer; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+                                <div style="flex: 1;">
+                                    <span t-att-class="state.expandedAccounts.has(line.code) ? 'fa fa-caret-down' : 'fa fa-caret-right'" class="me-2"/>
+                                    <t t-esc="line.code"/> <t t-esc="line.account"/>
+                                </div>
+                                <div style="width: 15%; text-align: right;"><t t-esc="line.total_debit"/></div>
+                                <div style="width: 15%; text-align: right;"><t t-esc="line.total_credit"/></div>
+                                <div style="width: 15%; text-align: right;"><t t-esc="line.total_debit - line.total_credit"/></div>
+                            </div>
+                            
+                            <!-- Journal Rows -->
+                            <t t-if="state.expandedAccounts.has(line.code)">
+                                <t t-foreach="line.journal_lines" t-as="journal" t-key="journal.id">
+                                    <div class="ps-4 p-2 d-flex justify-content-between" t-on-click="() => this.toggleJournal(journal.id)" style="cursor: pointer; background-color: #fff; border-bottom: 1px dotted #dee2e6;">
+                                         <div style="flex: 1;">
+                                            <span t-att-class="state.expandedJournals.has(journal.id) ? 'fa fa-caret-down' : 'fa fa-caret-right'" class="me-2"/>
+                                            <t t-esc="journal.name"/>
+                                         </div>
+                                        <div style="width: 15%; text-align: right;"><t t-esc="journal.total_debit"/></div>
+                                        <div style="width: 15%; text-align: right;"><t t-esc="journal.total_credit"/></div>
+                                        <div style="width: 15%; text-align: right;"></div>
+                                    </div>
+
+                                    <!-- Move Lines -->
+                                    <t t-if="state.expandedJournals.has(journal.id)">
+                                        <div class="ps-5 p-2" style="background-color: #fdfdfd;">
+                                            <table class="table table-sm table-borderless mb-0">
+                                            <t t-foreach="line.move_lines.filter(move => move.name === journal.name)" t-as="move" t-key="move.id">
+                                                <tr>
+                                                    <td><t t-esc="move.move_name"/></td>
+                                                    <td class="text-end"><t t-esc="move.total_debit"/></td>
+                                                    <td class="text-end"><t t-esc="move.total_credit"/></td>
+                                                    <td class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-link" t-on-click="() => this.gotoJournalEntry(move)">
+                                                            Show Journal Entry <i class="fa fa-arrow-right ms-1"/>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            </table>
+                                        </div>
+                                    </t>
+                                </t>
+                            </t>
+                        </td>
+                    </tr>
+                </t>
+                <tr class="table-primary">
+                    <td>
+                        <strong>Total</strong>
+                    </td>
+                    <td class="text-end">
+                        <strong>
+                            <t t-esc="state.data.reduce((sum, line) => sum + line.total_debit, 0).toFixed(4)"/>
+                        </strong>
+                    </td>
+                    <td class="text-end">
+                        <strong>
+                            <t t-esc="state.data.reduce((sum, line) => sum + line.total_credit, 0).toFixed(4)"/>
+                        </strong>
+                    </td>
+                    <td class="text-end">
+                        <strong>
+                            <t t-esc="state.data.reduce((sum, line) => sum + (line.total_debit - line.total_credit), 0).toFixed(4)"/>
+                        </strong>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </t>
+</templates>

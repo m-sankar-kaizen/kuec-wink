@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="kuec_employment_letter_tree_view" model="ir.ui.view">
+        <field name="name">kuec.employment.letter.list</field>
+        <field name="model">kuec.employment.letter</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="name"/>
+                <field name="address_type"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="kuec_employment_letter_form_view" model="ir.ui.view">
+        <field name="name">Kuec.employment.letter.form</field>
+        <field name="model">kuec.employment.letter</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button string="Submit" name="action_submit"
+                            invisible="state != 'draft'" type="object"
+                            class="oe_highlight"/>
+                    <button string="Reset to Draft" name="action_reset"
+                            invisible="state != 'submitted'" type="object"
+                            class="btn btn_secondary"/>
+                    <button string="Print" name="action_print"
+                            invisible="state != 'submitted'" type="object"
+                            class="oe_highlight"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="sequence"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date" readonly="1"/>
+                            <field name="address_type"/>
+
+                            <!-- Shown only if address_type is 'entity', and required in that case -->
+                            <field name="letter_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   invisible="address_type != 'entity'" required="address_type == 'entity'"/>
+
+                            <!-- Name field: editable for HR managers only -->
+                            <field name="name"
+                                   groups="kaz_employee_reports.group_letter_manager"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   readonly="state != 'draft'"/>
+
+                            <!-- Name field: read-only for regular users -->
+                            <field name="name"
+                                   groups="base.group_user,!kaz_employee_reports.group_letter_manager"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"
+                                   readonly="1"/>
+                        </group>
+                        <group>
+
+                            <field name="employee_no"/>
+                            <field name="job_title"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="join_date"/>
+                            <field name="nationality"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="id_no"/>
+                            <field name="company_id"
+                                   options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
+                            <field name="country_id" invisible="1"/>
+                            <field name="state_id" domain="[('country_id', '=', country_id)]" options="{'no_create': True, 'no_open': True}" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="justification"
+                              string="Justification">
+                            <field name="justification" placeholder="Add a justification..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            <chatter/>
+            </form>
+        </field>
+    </record>
+
+
+</odoo>

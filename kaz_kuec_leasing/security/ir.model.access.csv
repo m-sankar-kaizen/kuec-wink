@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_lease_lessor_contract,access_lease_lessor_contract,model_lease_lessor_contract,,1,1,1,1
+access_lease_lessor_payment_line,access_lease_lessor_payment_line,model_lease_lessor_payment_line,,1,1,1,1
+access_lease_lessor_operating_payment,access_lease_lessor_operating_payment,model_lease_lessor_operating_payment,,1,1,1,1
+access_lease_lessee_contract_user,lease.lessee.contract.user,model_lease_lessee_contract,account.group_account_user,1,1,1,0
+access_lease_lessee_contract_manager,lease.lessee.contract.manager,model_lease_lessee_contract,account.group_account_manager,1,1,1,1
+access_lease_lessee_depreciation_line_user,lease.lessee.depreciation.line.user,model_lease_lessee_depreciation_line,account.group_account_user,1,1,1,0
+access_lease_lessee_depreciation_line_manager,lease.lessee.depreciation.line.manager,model_lease_lessee_depreciation_line,account.group_account_manager,1,1,1,1
+access_lease_lessee_payment_line_user,lease.lessee.payment.line.user,model_lease_lessee_payment_line,account.group_account_user,1,1,1,0
+access_lease_lessee_payment_line_manager,lease.lessee.payment.line.manager,model_lease_lessee_payment_line,account.group_account_manager,1,1,1,1

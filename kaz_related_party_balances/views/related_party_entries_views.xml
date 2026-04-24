@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_related_party_entries_form" model="ir.ui.view">
+        <field name="name">related.party.entries.form</field>
+        <field name="model">related.party.entries</field>
+        <field name="arch" type="xml">
+            <form string="Related Party Entries">
+                <header>
+                    <button name="submit_for_approval"
+                            class="oe_highlight"
+                            string="Submit for Approval"
+                            invisible="state != 'draft'"
+                            type="object"
+                            help="Submit"/>
+                    <button name="action_confirm"
+                            class="oe_highlight"
+                            string="Confirm"
+                            invisible="state != 'pending'"
+                            type="object"
+                            help="Approve"/>
+                    <button name="action_cancel"
+                            class="btn btn-secondary"
+                            string="Cancel"
+                            invisible="state not in ['draft', 'pending']"
+                            type="object"
+                            help="Cancel"/>
+                    <field name="state" widget='statusbar'/>
+                </header>
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button"
+                                type="object"
+                                name="show_journal_entry_ids"
+                                invisible="not journal_entry_ids"
+                                icon="fa-pencil-square-o">
+                            <field name="journal_entry_ids"
+                                   string="Journal Entries"
+                                   class="oe_stat_button_text"
+                                   widget="statinfo"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="type" readonly="state != 'draft'"/>
+                            <field name="default_company_id" invisible="1"/>
+                            <field name="journal_entry_ids" invisible="1"/>
+                            <field name="parent_currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Parent">
+                            <field name="parent_company_id"
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="related_subsidiary_company_account_id"
+                                   invisible="type == 'cost_allocation'"
+                                   context="{'default_is_related_party': True,'default_company_id': subsidiary_company_id}"
+                                   required="type != 'cost_allocation'"
+                                   readonly="state != 'draft'"/>
+
+                            <field name="related_party_parent_journal_id"
+                                   context="{'default_company_id': parent_company_id,'default_type': 'cash'}"
+                                   required="type in ['lending', 'investment']"
+                                   invisible="type not in ['lending', 'investment']"
+                                   readonly="state != 'draft'"/>
+
+                            <field name="parent_company_miscellaneous_journal_id"
+                                   context="{'default_company_id': parent_company_id,'default_type': 'general'}"
+                                   required="type == 'cost_allocation'"
+                                   invisible="type != 'cost_allocation'"
+                                   readonly="state != 'draft'"/>
+
+                            <field name="parent_company_expense_account_id"
+                                   options="{'no_create': True}"
+                                      required="type == 'cost_allocation'"
+                                        invisible="type != 'cost_allocation'"
+                                        readonly="state != 'draft'"/>
+
+                            <field name="amount"
+                                   required="1"
+                                   widget="monetary"
+                                   options="{'currency_field': 'parent_currency_id'}"
+                                   readonly="state != 'draft'"/>
+
+                        </group>
+                        <group string="Subsidiary" invisible="type == 'cost_allocation'">
+                            <field name="subsidiary_company_id"
+                                   required="type != 'cost_allocation'"
+                                   readonly="state != 'draft'"/>
+                            <field name="related_parent_company_account_id"
+                                   context="{'default_is_related_party': True,'default_company_id': parent_company_id}"
+                                   required="type != 'cost_allocation'"
+                                   readonly="state != 'draft'"/>
+                            <field name="related_party_subsidiary_journal_id"
+                                   context="{'default_company_id': subsidiary_company_id,'default_type': 'cash'}"
+                                   required="type != 'cost_allocation'"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Cost Allocation" invisible="type != 'cost_allocation'">
+                            <field name="cost_allocation_ids"
+                                   nolabel="1" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="parent_company_id" column_invisible="1"/>
+                                    <field name="total_amount" column_invisible="1"/>
+
+                                    <field name="company_id"/>
+                                    <field name="percentage"/>
+                                    <field name="amount"/>
+                                    <field name="debit_account_id"/>
+                                    <field name="account_child_in_parent_id"/>
+                                    <field name="account_parent_in_child_id"/>
+                                    <field name="miscellaneous_journal_id"/>
+                                </list>
+                            </field>
+                        </group>
+                    </group>
+                    <notebook>
+
+                    </notebook>
+                </sheet>
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+    <record id="view_related_party_entries_list" model="ir.ui.view">
+        <field name="name">related.party.entries.list</field>
+        <field name="model">related.party.entries</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="type"/>
+                <field name="parent_company_id"/>
+                <field name="subsidiary_company_id"/>
+                <field name="amount"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+
+    <record id="action_related_party_entries"
+            model="ir.actions.act_window">
+        <field name="name">Related Party Entries</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">related.party.entries</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Records
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_related_party_entry"
+              name="Related Party Entries"
+              sequence="101"
+              parent="account.menu_finance_entries"
+              action="kaz_related_party_balances.action_related_party_entries"/>
+
+</odoo>

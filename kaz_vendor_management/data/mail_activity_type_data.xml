@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <record id="mail_activity_type_tender" model="mail.activity.type">
+        <field name="name">Tender Evaluation</field>
+        <field name="res_model">tender.rfq</field>
+        <field name="icon">fa-gavel</field>
+        <field name="summary">You have pending actions to evaluate tender bids. Please review and provide your input.</field>
+    </record>
+
+    <record id="mail_activity_type_tender_bafo" model="mail.activity.type">
+        <field name="name">Tender BAFO</field>
+        <field name="res_model">tender.rfq</field>
+        <field name="icon">fa-file</field>
+        <field name="summary">BAFO Request Notification</field>
+    </record>
+</odoo>

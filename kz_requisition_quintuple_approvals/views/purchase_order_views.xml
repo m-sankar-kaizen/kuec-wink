@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    ===========================================================================
+    FORM VIEW EXTENSION: purchase.order
+    ===========================================================================
+    Purpose:
+        This inherited view adds custom buttons, requisition-related attachments,
+        and conditional readonly/invisible logic based on `custom_requisition_id`,
+        `state`, and other context. It's tailored for managing PO derived from
+        material requisitions with custom constraints and UI elements.
+    -->
+    <record id="purchase_form_inherit" model="ir.ui.view">
+        <field name="name">purchase.order.view.form.inherit.kz.requisition.quintuple.approvals</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <!--
+            Add additional buttons to the stat button box:
+            - Advance Payments (visible only if payments_count > 0)
+            - Resubmitted Requisition (visible only if replaced_requisition_id exists)
+            -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+
+                <!-- Hidden field used in conditional button visibility -->
+                <field name="custom_requisition_id" invisible="1"/>
+                <field name="payments_count" invisible="1"/>
+
+                <!-- Button to show linked payments -->
+                <button class="oe_stat_button" type="object" icon="fa-usd"
+                        name="show_purchase_payments" string="Advance Payments"
+                        invisible="payments_count == 0">
+                    <field name="payments_count"/>
+                    Payments
+                </button>
+
+                <!-- Hidden field indicating this PO replaces a previous requisition -->
+                <field name="replaced_requisition_id" invisible="1"/>
+
+                <!-- Button to access replaced requisition -->
+                <button class="oe_stat_button" type="object" icon="fa-plus-square-o"
+                        name="action_show_replacement" string="Resubmitted Requisition"
+                        invisible="not replaced_requisition_id">
+                    Extra Budget
+                </button>
+            </xpath>
+
+            <!--
+            Add a new tab to the notebook: "Requisition Attachments"
+            Includes multiple categorized many2many_binary fields.
+            -->
+            <xpath expr="//notebook" position="inside">
+                <page name="Requisition Attachments" string="Requisition Attachments">
+                    <group>
+                        <!-- Invisible link to originating requisition -->
+                        <field name="custom_requisition_id" invisible="1"/>
+                        <!-- Scope of Work documents -->
+                        <field name="scope_of_work_attacchment_ids" widget="many2many_binary"/>
+                        <!-- Shareholder-related attachments -->
+                        <field name="shareholders_attacchment_ids" widget="many2many_binary"/>
+                        <!-- Board approval documents -->
+                        <field name="board_attacchment_ids" widget="many2many_binary"/>
+                    </group>
+                </page>
+            </xpath>
+
+            <!--
+            Insert analytic account field beside the product description in PO line.
+            Editable only in draft state and if not linked to a requisition.
+            -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
+                <field name="account_id" readonly="state != 'draft' or custom_requisition_id"/>
+            </xpath>
+
+            <!--
+            Set product field readonly:
+                - If PO state is not editable (approved/done/cancel)
+                - OR if linked to a requisition
+            -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_id']" position="attributes">
+                <attribute name="readonly">state in ['purchase', 'to approve', 'done', 'cancel'] or custom_requisition_id</attribute>
+                <attribute name="required">not display_type</attribute>
+            </xpath>
+
+            <!-- Set analytic distribution readonly if linked to requisition -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='analytic_distribution']" position="attributes">
+                <attribute name="readonly">custom_requisition_id</attribute>
+            </xpath>
+
+            <!-- Set taxes field readonly if linked to requisition -->
+            <xpath expr="//field[@name='order_line']/list/field[@name='taxes_id']" position="attributes">
+                <attribute name="readonly">custom_requisition_id</attribute>
+            </xpath>
+
+            <!-- Partner reference field readonly if linked to requisition -->
+            <xpath expr="//field[@name='partner_ref']" position="attributes">
+                <attribute name="readonly">custom_requisition_id</attribute>
+            </xpath>
+
+            <!--
+            Vendor (partner_id) field readonly if:
+                - PO is in approved/cancelled state
+                - OR linked to a requisition
+            -->
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="readonly">custom_requisition_id or state in ['purchase', 'done', 'cancel']</attribute>
+            </xpath>
+
+            <!--
+            Scheduled date (date_planned) readonly if:
+                - Linked to a requisition
+                - OR PO state is not editable
+            -->
+            <xpath expr="//field[@name='date_planned']" position="attributes">
+                <attribute name="readonly">custom_requisition_id or state not in ['draft', 'sent', 'to approve', 'purchase']</attribute>
+            </xpath>
+
+            <!-- Approval date (date_approve) readonly and invisible if not in purchase/done -->
+            <xpath expr="//field[@name='date_approve']" position="attributes">
+                <attribute name="readonly">custom_requisition_id</attribute>
+                <attribute name="invisible">state not in ['purchase','done']</attribute>
+            </xpath>
+
+            <!-- PO date (date_order) readonly in approved/cancelled state or if linked to requisition -->
+            <xpath expr="//field[@name='date_order']" position="attributes">
+                <attribute name="readonly">state in ['purchase', 'done', 'cancel'] or custom_requisition_id</attribute>
+                <attribute name="invisible">state in ['purchase','done']</attribute>
+            </xpath>
+
+            <!-- (Optional duplicate xpath: could be redundant, but kept for safety) -->
+            <xpath expr="//field[@name='date_order']" position="attributes">
+                <attribute name="readonly">state in ['purchase', 'done', 'cancel'] or custom_requisition_id</attribute>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

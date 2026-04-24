@@ -1,0 +1,519 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Tender RFQs Form View -->
+    <record id="view_tender_rfq_form" model="ir.ui.view">
+        <field name="name">tender.rfq.form</field>
+        <field name="model">tender.rfq</field>
+        <field name="arch" type="xml">
+            <form string="Tender RFQs">
+                <header>
+                    <button name="action_activate" invisible="state != 'draft'"
+                            class="btn btn-primary" string="Activate" type="object"/>
+                    <button name="action_tender_close" invisible="state != 'active'"
+                            confirm="Are you sure you want to close this tender?"
+                            class="btn btn-primary" string="Close Tender" type="object"/>
+                    <button name="action_tender_under_review" invisible="state != 'closed'"
+                            class="btn btn-primary" string="Review Tender" type="object"/>
+                    <button name="action_award_tender" icon="fa-trophy" invisible="state != 'under_review'"
+                            class="btn btn-primary" string="Award" type="object"/>
+                    <button name="action_tender_bafo" invisible="state != 'under_review' or tender_rfq_id"
+                            class="btn btn-secondary" string="BAFO" type="object"/>
+                    <button name="action_create_tender_bafo" invisible="state != 'bafo' or tender_rfq_id"
+                            class="btn btn-primary" string="BAFO" type="object"/>
+                    <button name="action_send_notification_mail" invisible="state != 'active'"
+                            class="btn btn-secondary" icon="fa-paper-plane" string="Send Mail" type="object"/>
+                    <button name="action_create_bid" invisible="state != 'active'"
+                            class="btn btn-secondary" icon="fa-gavel" string="Create A Bid" type="object"/>
+                    <button name="action_reset_to_draft"
+                            invisible="state in ['draft', 'bafo', 'bafo_awarded', 'awarded']"
+                            confirm="Are you sure you want to Reset this tender to draft?"
+                            class="btn btn-secondary" string="Reset to Draft" type="object"/>
+                    <button name="action_cancel"
+                            invisible="state in ['draft', 'cancelled', 'bafo', 'bafo_awarded', 'awarded']"
+                            confirm="Are you sure you want to Cancel this tender?"
+                            class="btn btn-secondary" string="Cancel" type="object"/>
+
+                    <button name="action_create_purchase" icon="fa-trophy"
+                            invisible="state != 'awarded' or purchase_id or tender_type != 'purchase'"
+                            class="btn btn-primary" string="Create PO" type="object"/>
+
+                    <button name="action_update_kick_off_meeting_date" icon="fa-calendar"
+                            invisible="state != 'awarded' or kick_off_meeting_date"
+                            class="btn btn-primary" string="Update Kick Off Meeting Date" type="object"/>
+
+                    <button name="action_send_award_letter" icon="fa-paper-plane"
+                            invisible="state != 'awarded'"
+                            class="btn" string="Send Award Letter" type="object"/>
+
+                    <button name="action_update_kick_off_meeting_date" icon="fa-calendar"
+                            invisible="state != 'awarded' or not kick_off_meeting_date"
+                            class="btn" string="Update Kick Off Meeting Date" type="object"/>
+
+                    <field name="purchase_agreement_id" invisible="1"/>
+                    <button name="action_create_blanket_order" icon="fa-trophy"
+                            invisible="state != 'awarded' or purchase_agreement_id or tender_type != 'blanket'"
+                            class="btn btn-primary" string="Create Blanket Order" type="object"/>
+
+                    <field name="contract_agreement_id" invisible="1"/>
+                    <button name="action_create_contract_agreement" icon="fa-file"
+                            invisible="state != 'awarded' or contract_agreement_id or tender_type != 'contract'"
+                            class="btn btn-primary" string="Contract" type="object"/>
+
+                    <button name="action_create_purchase" icon="fa-trophy"
+                            invisible="state != 'awarded' or purchase_id or tender_type != 'contract' or not contract_agreement_id"
+                            class="btn btn-primary" string="Create PO" type="object"/>
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,closed,under_review,awarded"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Awarded" bg_color="text-bg-success"
+                            invisible="state != 'awarded'"/>
+                    <widget name="web_ribbon" title="BAFO Awarded" bg_color="text-bg-success"
+                            invisible="state != 'bafo_awarded'"/>
+                    <widget name="web_ribbon" title="Cancelled" bg_color="text-bg-danger"
+                            invisible="state != 'cancelled'"/>
+                    <div name="button_box" class="oe_button_box">
+                        <button invisible="not purchase_id" class="oe_stat_button" type="object"
+                                name="action_open_purchase" icon="fa-pencil-square-o">
+                            <field name="purchase_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Purchase Order</span>
+                            </div>
+                        </button>
+                        <button invisible="not purchase_agreement_ids" class="oe_stat_button" type="object"
+                                name="action_open_blanket_order" icon="fa-file">
+                            <field name="purchase_agreement_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Blanket Order</span>
+                            </div>
+                        </button>
+                        <button invisible="not contract_agreement_ids" class="oe_stat_button" type="object"
+                                name="action_open_contract_agreement" icon="fa-file">
+                            <field name="contract_agreement_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Contract Agreement</span>
+                            </div>
+                        </button>
+                        <button invisible="not awarded_tender_bid_id" class="oe_stat_button" type="object"
+                                name="action_open_awarded_bid" icon="fa-trophy">
+                            <field name="awarded_tender_bid_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Awarded Bid</span>
+                            </div>
+                        </button>
+                        <button invisible="not tender_rfq_ids" class="oe_stat_button" type="object"
+                                name="action_child_tenders" icon="fa-sitemap">
+                            <field name="tender_rfq_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <field name="child_tender_rfq_count"/>
+                                <span class="o_stat_text">BAFO Tenders</span>
+                            </div>
+                        </button>
+                        <button invisible="not tender_rfq_id" class="oe_stat_button" type="object"
+                                name="action_parent_tender" icon="fa-file">
+                            <field name="tender_rfq_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Parent Tender</span>
+                            </div>
+                        </button>
+                        <button invisible="not purchase_requisition_id" class="oe_stat_button" type="object"
+                                name="action_open_purchase_requisition" icon="fa-file">
+                            <field name="purchase_requisition_id" invisible="1"/>
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Purchase Requisition</span>
+                            </div>
+                        </button>
+                        <button invisible="not tender_bid_ids" class="oe_stat_button" type="object"
+                                name="action_open_bid" icon="fa-gavel">
+                            <field name="tender_bid_ids" invisible="1"/>
+                            <div class="o_stat_info">
+                                <field name="bid_count"/>
+                                <span class="o_stat_text">All Bids</span>
+                            </div>
+                        </button>
+                        <button invisible="state not in ['bafo'] or not is_bafo" class="oe_stat_button"
+                                type="object"
+                                name="action_open_bafo_bid" icon="fa-gavel">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">BAFO Bids</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title d-flex gap-1">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <h1>
+                            #
+                            <field name="version" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="General Information">
+                            <field name="title" readonly="state != 'draft'"/>
+                            <field name="responsible_user_id" domain="[('share', '=', False)]"
+                                   readonly="state != 'draft'" required="1"/>
+                            <field name="tender_type" required="1" readonly="state != 'draft'"/>
+                            <field name="order_type" required="1"
+                                   readonly="state != 'draft' or purchase_requisition_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <label for="currency_id" groups="base.group_multi_currency"/>
+                            <div name="journal_div" class="d-flex">
+                                <div name="in_and_refresh_button_div" groups="base.group_multi_currency"
+                                     class="d-flex flex-column mx-3 text-center" style="width: 6ch;">
+                                    <field name="expected_currency_rate" invisible="1"/>
+                                    <div class="d-flex flex-column justify-content-center flex-grow-1"
+                                         invisible="state != 'draft' or manual_currency_rate == expected_currency_rate or purchase_requisition_id">
+                                        <button type="object" name="refresh_currency_rate" icon="fa-refresh"
+                                                title="Refresh currency rate to the invoice date"
+                                                class="btn btn-link p-0"/>
+                                    </div>
+                                </div>
+                                <div name="currency_div" groups="base.group_multi_currency" class="w-100">
+                                    <div class="d-flex gap-1">
+                                        <field name="currency_id" readonly="state != 'draft' or purchase_requisition_id"
+                                               class="oe_inline"
+                                               options="{'no_create': True}"
+                                               context="{'search_default_active': 1, 'search_default_inactive': 1}"/>
+                                        <widget name="pick_currency_date" update_field="manual_currency_rate"
+                                                invisible="state != 'draft' or currency_id == company_currency_id or purchase_requisition_id"/>
+                                    </div>
+                                    <div name="currency_conversion_div" class="d-flex gap-1 text-muted"
+                                         invisible="currency_id == company_currency_id">
+                                        <span>1</span>
+                                        <field name="company_currency_id" readonly="True" options="{'no_open': True}"
+                                               class="w-auto"/>
+                                        <span>=</span>
+                                        <field name="manual_currency_rate" digits="[12,6]"
+                                               readonly="state != 'draft'or purchase_requisition_id"/>
+                                        <field name="currency_id" readonly="True" options="{'no_open': True}"
+                                               class="w-auto"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </group>
+
+                        <group string="Timeline">
+                            <field name="submission_date" readonly="state != 'draft'" required="1"/>
+                            <field name="bid_start_date" readonly="state != 'draft'" required="1"/>
+                            <field name="bid_end_date" readonly="state != 'draft'" required="1"/>
+                            <field name="expected_decision_date" readonly="state != 'draft'" string="Decision Date"
+                                   required="1"/>
+                            <field name="delivery_date" readonly="state != 'draft'" required="1"/>
+                            <field name="kick_off_meeting_date" readonly="1" invisible="state != 'awarded'"/>
+                        </group>
+
+                        <group string="Evaluation Setup">
+                            <field name="is_bafo" widget="boolean_toggle" invisible="not is_bafo"
+                                   readonly="state != 'draft'"/>
+                            <field name="bafo_type" invisible="not is_bafo" required="is_bafo"
+                                   readonly="state != 'draft'"/>
+                            <field name="technical_user_ids" options="{'no_create': True, 'no_create_edit': True}"
+                                   required="1" widget="many2many_tags"
+                                   readonly="state != 'draft'"/>
+                            <field name="commercial_user_ids" options="{'no_create': True, 'no_create_edit': True}"
+                                   required="1" widget="many2many_tags"
+                                   readonly="state != 'draft'"/>
+                            <field name="technical_evaluation_checklist_id"
+                                   options="{'no_create': True, 'no_create_edit': True}" required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="commercial_evaluation_checklist_id"
+                                   options="{'no_create': True, 'no_create_edit': True}" required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="technical_score_weight" readonly="state != 'draft'"/>
+                            <field name="commercial_score_weight" readonly="state != 'draft'"/>
+                        </group>
+
+                        <group string="Vendor Participation">
+                            <field name="is_exclusive" widget="boolean_toggle" readonly="state != 'draft'"/>
+                            <field name="partner_category_ids" options="{'no_create': True, 'no_create_edit': True}"
+                                   widget="many2many_tags" readonly="state != 'draft'"/>
+                            <field name="partner_ids" options="{'no_create': True, 'no_create_edit': True}"
+                                   domain="[('is_vendor', '=', True)]" widget="many2many_tags"
+                                   invisible="not is_exclusive" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Requisition Lines" name="tender_rfq_line">
+                            <field name="tender_rfq_line_ids" required="1"
+                                   readonly="state != 'draft' or purchase_requisition_id">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="name" optional="show"/>
+                                    <field name="account_id"/>
+                                    <field name="analytic_distribution" widget="analytic_distribution" required="1"/>
+                                    <field name="qty"/>
+                                    <field name="price_unit"/>
+                                    <field name="amount_in_currency"/>
+                                    <field name="uom_id"/>
+                                    <field name="currency_id" optional="hide"/>
+                                </list>
+                            </field>
+                            <group>
+                                <group>
+                                </group>
+                                <group class="oe_subtotal_footer">
+                                    <field name="total_amount" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Description" name="description">
+                            <field name="description" readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Portal Description" name="portal_description">
+                            <field name="portal_description" readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Evaluation Criteria Description" name="evaluation_criteria">
+                            <field name="evaluation_criteria" readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Tender Documents" name="tender_documents">
+                            <field name="tender_rfq_document_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="tender_rfq_id" column_invisible="1"/>
+                                    <field name="name"/>
+                                    <field name="file_name" readonly="1" force_save="1" optional="hide"/>
+                                    <field name="attachment_id" widget="binary" filename="file_name"/>
+                                    <field name="available_online"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Required Documents" name="tender_required_attachment">
+                            <field name="tender_required_attachment_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="tender_rfq_id" column_invisible="1"/>
+                                    <field name="sequence" readonly="1"/>
+                                    <field name="name"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page invisible="not tender_bafo_request_ids" string="BAFO Requests" name="tender_bafo_request">
+                            <field name="tender_bafo_request_ids">
+                                <list editable="bottom" create="0" delete="0" default_order="sequence desc">
+                                    <field name="tender_rfq_id" column_invisible="1"/>
+                                    <field name="sequence" readonly="1" optional="show"/>
+                                    <field name="bafo_type" readonly="1"/>
+                                    <field name="best_x_bids" readonly="1" optional="hide"/>
+                                    <field name="reason" readonly="1"/>
+                                    <field name="requested_user_id" readonly="1"/>
+                                    <field name="state" readonly="1"/>
+                                    <field name="created_tender_rfq_id" readonly="1" optional="hide"/>
+                                    <button name="action_approve" type="object"
+                                            string="Approve"
+                                            class="btn btn-primary"
+                                            confirm="Are you sure you want to Approve this BAFO Request?"
+                                            invisible="state != 'draft'"/>
+                                    <button name="action_reject" type="object"
+                                            string="Reject"
+                                            class="btn btn-secondary"
+                                            confirm="Are you sure you want to Reject this BAFO Request?"
+                                            invisible="state != 'draft'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tender RFQs List View -->
+    <record id="view_tender_rfq_list" model="ir.ui.view">
+        <field name="name">tender.rfq.list</field>
+        <field name="model">tender.rfq</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="version"/>
+                <field name="title"/>
+                <field name="state" widget="badge"
+                       decoration-success="state in ['awarded','closed']"
+                       decoration-danger="state == 'cancelled'"
+                       decoration-info="state == 'pre_qualified'"
+                       decoration-warning="state == 'under_review'"
+                       decoration-primary="state == 'bafo'"/>
+                <field name="bid_count" optional="show"/>
+                <field name="is_exclusive" widget="boolean_toggle" optional="show"/>
+                <field name="partner_category_ids"/>
+                <field name="bid_start_date" optional="show"/>
+                <field name="bid_end_date" optional="show"/>
+                <field name="submission_date" optional="hide"/>
+                <field name="expected_decision_date" optional="hide"/>
+                <field name="delivery_date" optional="hide"/>
+                <field name="company_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_tender_rfq_calendar" model="ir.ui.view">
+        <field name="name">tender.rfq.view.calendar</field>
+        <field name="model">tender.rfq</field>
+        <field name="arch" type="xml">
+            <calendar string="Tenders RFQ" date_start="bid_start_date" date_stop="bid_end_date"
+                      mode="month"
+                      quick_create="False"
+                      hide_time="True" event_open_popup="True">
+                <field name="name"/>
+                <field name="title"/>
+                <field name="version"/>
+                <field name="bid_start_date"/>
+                <field name="bid_end_date"/>
+                <field name="submission_date"/>
+                <field name="delivery_date"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_tender_rfq_kanban" model="ir.ui.view">
+        <field name="name">tender.rfq.view.kanban</field>
+        <field name="model">tender.rfq</field>
+        <field name="arch" type="xml">
+            <kanban class="o_res_partner_kanban" default_order="state" records_draggable="false"
+                    sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="version"/>
+                <field name="title"/>
+                <field name="state"/>
+                <field name="submission_date"/>
+                <field name="expected_decision_date"/>
+                <field name="delivery_date"/>
+                <field name="bid_start_date"/>
+                <field name="bid_end_date"/>
+                <field name="bid_count"/>
+                <field name="is_exclusive"/>
+                <field name="activity_ids"/>
+                <field name="responsible_user_id"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <div class="row">
+                                <div class="col-5 d-flex flex-column justify-content-center">
+                                    <div class="text-bg-primary tender-date-cell mt-6px">
+                                        Bidding Start Date
+                                        <br/>
+                                        <div t-esc="luxon.DateTime.fromISO(record.bid_start_date.raw_value).toFormat('d')"
+                                             class="font-size-25px"/>
+                                        <div t-esc="luxon.DateTime.fromISO(record.bid_start_date.raw_value).toFormat('MMM yyyy')"/>
+                                    </div>
+                                    <div class="text-bg-primary tender-date-cell">
+                                        Bidding End Date
+                                        <br/>
+                                        <div t-esc="luxon.DateTime.fromISO(record.bid_end_date.raw_value).toFormat('d')"
+                                             class="font-size-25px"/>
+                                        <div t-esc="luxon.DateTime.fromISO(record.bid_end_date.raw_value).toFormat('MMM yyyy')"/>
+                                    </div>
+                                </div>
+                                <div class="col-7 ps-0">
+                                    <strong>
+                                        <field name="name" class="text-primary font-size-16px"/>
+                                        #
+                                        <field name="version"/>
+                                    </strong>
+                                    <hr class="my-1"/>
+                                    <strong>
+                                        <field name="title" class="font-size-16px"/>
+                                    </strong>
+                                    <br/>
+                                    <strong>
+                                        Submission Date :
+                                    </strong>
+                                    <field name="submission_date"/>
+                                    <br/>
+                                    <strong>
+                                        Delivery Date :
+                                    </strong>
+                                    <field name="delivery_date"/>
+                                    <hr class="my-1"/>
+                                    <div>
+                                        <field name="state" widget="badge"
+                                               decoration-success="state in ['awarded','closed']"
+                                               decoration-danger="state == 'cancelled'"
+                                               decoration-info="state == 'pre_qualified'"
+                                               decoration-warning="state == 'under_review'"
+                                               decoration-primary="state == 'bafo'"/>
+                                    </div>
+                                    <hr class="my-1"/>
+                                    <strong>
+                                        Bid Count :
+                                    </strong>
+                                    <field name="bid_count"/>
+                                    <hr class="my-1"/>
+                                    <div class="o_kanban_record_bottom d-flex gap-2 align-items-center">
+                                        <div class="d-flex gap-2">
+                                            <field name="activity_ids" widget="kanban_activity"/>
+                                            Schedule Activity
+                                        </div>
+                                        <div>
+                                            <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_tender_rfq_search" model="ir.ui.view">
+        <field name="name">tender.rfq.view.search</field>
+        <field name="model">tender.rfq</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title" string="Title"/>
+                <field name="name" string="Name"/>
+                <field name="submission_date"/>
+                <field name="delivery_date"/>
+                <field name="bid_start_date"/>
+                <field name="bid_end_date"/>
+                <filter string="Exclusive" name="is_exclusive"
+                        domain="[('is_exclusive', '=', True)]"/>
+                <filter string="Active" name="active_state"
+                        domain="[('state', '=', 'active')]"/>
+                <separator/>
+                <group expand="1" string="Group By">
+                    <filter string="Tender Submission Date" name="group_by_submission_date"
+                            context="{'group_by': 'submission_date'}"/>
+                    <filter string="Tender Delivery Date" name="group_by_delivery_date"
+                            context="{'group_by': 'delivery_date'}"/>
+                    <separator/>
+                    <filter string="Bid Start Date" name="group_by_bid_start_date"
+                            context="{'group_by': 'bid_start_date'}"/>
+                    <filter string="Bid End Date" name="group_by_bid_end_date"
+                            context="{'group_by': 'bid_end_date'}"/>
+                </group>
+                <searchpanel>
+                    <field name="state" string="State" enable_counters="1" icon="fa-filter"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_tender_rfq" model="ir.actions.act_window">
+        <field name="path">tender</field>
+        <field name="name">Tender RFQ</field>
+        <field name="res_model">tender.rfq</field>
+        <field name="view_mode">kanban,list,form,calendar,activity</field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_tender_rfq_management" name="Tender Management"
+              groups="kaz_vendor_management.group_tender_user"
+              web_icon="kaz_vendor_management,static/description/menu.png"
+              sequence="20"/>
+    <menuitem id="menu_tender_rfq_conf_root" name="Configuration"
+              parent="menu_tender_rfq_management"
+              groups="kaz_vendor_management.group_tender_admin"
+              sequence="100"/>
+    <menuitem id="menu_tender_rfq_items" name="Tenders"
+              parent="menu_tender_rfq_management"
+              action="action_tender_rfq"
+              sequence="1"/>
+</odoo>

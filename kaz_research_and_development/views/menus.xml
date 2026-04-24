@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="kaz_vendor_management.menu_tender_rfq_conf_root" name="Configuration"
+              parent="kaz_vendor_management.menu_tender_rfq_management"
+              groups="kaz_vendor_management.group_tender_admin,kaz_research_and_development.group_research_cio_kuec"
+              sequence="100"/>
+</odoo>

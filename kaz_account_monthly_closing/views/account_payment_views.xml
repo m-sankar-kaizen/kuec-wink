@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_payment_account_monthly_closing" model="ir.ui.view">
+        <field name="name">account.payment.account.monthly.closing</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//form/div[1]" position="after">
+                <div groups="account.group_account_invoice,account.group_account_readonly"
+                        class="alert alert-warning" role="alert"
+                        invisible="not br_tax_lock_date_message">
+                    <field name="br_tax_lock_date_message" nolabel="1"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

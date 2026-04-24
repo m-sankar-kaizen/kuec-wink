@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_internship_user,HR Internship User,model_hr_internship,hr.group_hr_user,1,1,1,0
+access_hr_internship_reward_user,HR Internship Reward User,model_hr_internship_reward,hr.group_hr_user,1,1,1,0
+access_hr_internship_feedback_user,HR Internship Feedback User,model_hr_internship_feedback,hr.group_hr_user,1,1,1,0
+access_hr_internship_orientation_user,HR Internship Orientation User,model_hr_internship_orientation,hr.group_hr_user,1,1,1,0
+access_hr_internship_freelance_deliverable_user,HR Internship Freelance Deliverable User,model_hr_internship_freelance_deliverable,hr.group_hr_user,1,1,1,0
+access_hr_internship_manager,HR Internship Manager,model_hr_internship,hr.group_hr_manager,1,1,1,1
+access_hr_internship_reward_manager,HR Internship Reward Manager,model_hr_internship_reward,hr.group_hr_manager,1,1,1,1
+access_hr_internship_feedback_manager,HR Internship Feedback Manager,model_hr_internship_feedback,hr.group_hr_manager,1,1,1,1
+access_hr_internship_orientation_manager,HR Internship Orientation Manager,model_hr_internship_orientation,hr.group_hr_manager,1,1,1,1
+access_hr_internship_freelance_deliverable_manager,HR Internship Freelance Deliverable Manager,model_hr_internship_freelance_deliverable,hr.group_hr_manager,1,1,1,1

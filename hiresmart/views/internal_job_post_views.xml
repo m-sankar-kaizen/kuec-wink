@@ -1,0 +1,122 @@
+<odoo>
+    <data>
+
+<!-- [Start] [Model: hr.job] To display new kanban view for internal job posting ################################################################# -->
+        <record id="view_hr_job_kanban_internal" model="ir.ui.view">
+            <field name="name">hr.job.kanban.internal</field>
+            <field name="model">hr.job</field>
+            <field name="priority" eval="20"/>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_small_column">
+                    <field name="name"/>
+                    <field name="department_id"/>
+                    <field name="user_id"/>
+                    <field name="no_of_recruitment"/>
+                    <field name="application_count"/>
+                    <field name="new_internal_application_count"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_card oe_kanban_global_click">
+                                <div class="o_kanban_details mb8">
+                                    <strong class="d-block" style="font-size: 18px; font-weight: bold;">
+                                        <field name="name"/>
+                                    </strong>
+                                    <strong class="d-block text-muted" style="font-size: 12px;">
+                                        <field name="department_id"/>
+                                    </strong>
+                                    <small class="text-muted">
+                                        <field name="user_id"/>
+                                    </small>
+                                </div>
+
+                                <t t-if="record.new_internal_application_count.raw_value > 0">
+                                    <p style="font-size:11px; font-weight:bold;">
+                                        <t t-esc="record.new_internal_application_count.raw_value"/> Internal Job Switch Request Application
+                                    </p>
+                                </t>
+                                <t t-else="">
+                                    <p class="fw-bold fs-5">
+                                        0 Internal Job Request Application
+                                    </p>
+                                </t>
+
+                                <div class="mt-1 text-end">
+                                    <span class="fw-bold">
+                                        <t t-esc="(record.no_of_recruitment.raw_value or 0) + ' To Recruit'"/>
+                                    </span>
+                                    <br/>
+                                    <small class="text-muted">
+                                        <t t-esc="(record.application_count.raw_value or 0) + ' Applications'"/>
+                                    </small>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+<!-- [End] [Model: hr.job] To display new kanban view for internal job posting ########################################################################## -->
+
+
+
+<!-- [Start] [Model: hr.job] To display field & button on the form ################################################ -->
+        <record id="view_hr_job_form_internal" model="ir.ui.view">
+            <field name="name">hr.job.form.internal</field>
+            <field name="model">hr.job</field>
+            <field name="inherit_id" ref="hr.view_hr_job_form"/>
+            <field name="arch" type="xml">
+            <!-- [Start] To display field in the hr.job form ########################### -->
+                <field name="name" position="after">
+                    <group>
+                        <field name="is_internal_job"/>
+                    </group>
+                </field>
+            <!-- [End] To display field in the hr.job form ############################# -->
+
+            <!-- [Start] To display button for opening new application form ############ -->
+                <header position="inside">
+                    <button name="action_create_internal_application"
+                        type="object"
+                        class="oe_stat_button btn-primary"
+                        string="Request 'Internal Job Switch'"
+                        icon="fa-plus"
+                        invisible="not is_internal_job"
+                    />
+                </header>
+            <!-- [End] To display button for opening new application form ############ -->
+
+            <!-- [Start] To add a smart button ####################################### -->
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_internal_applications_by_job)d"
+                            type="action"
+                            class="oe_stat_button"
+                            icon="fa-users"
+                            invisible="not is_internal_job"
+                        >
+                        <field name="new_internal_application_count"
+                            widget="statinfo"
+                            string="Internal Job Switch Request Applications"
+                        />
+                        </button>
+                    </div>
+                </xpath>
+            <!-- [End] To add a smart button ####################################### -->
+            </field>
+        </record>
+<!-- [End] [Model: hr.job] To display field & button on the form ################################################ -->
+
+
+
+<!-- [Start] [Model: hr.job] To display new views for internal job posting ######################################## -->
+        <record id="action_internal_jobs" model="ir.actions.act_window">
+            <field name="name">Internal Jobs</field>
+            <field name="res_model">hr.job</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="domain">[('is_internal_job', '=', True)]</field>
+            <field name="view_id" ref="hiresmart.view_hr_job_kanban_internal"/>
+        </record>
+<!-- [End] [Model: hr.job] To display new views for internal job posting ######################################## -->
+
+    </data>
+</odoo>

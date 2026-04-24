@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_internship_feedback_form" model="ir.ui.view">
+        <field name="name">hr.internship.feedback.form</field>
+        <field name="model">hr.internship.feedback</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group string="Feedback Classification">
+                            <field name="internship_id" help="The internship being reviewed" options="{'no_create': True}"/>
+                            <field name="feedback_type" required="1" help="Type of feedback: Weekly (short check-in), Monthly (regular review), or Final Evaluation (end of internship)"/>
+                            <field name="feedback_date" required="1" help="Date when feedback was given"/>
+                            <field name="mentor_id" required="1" help="Mentor providing the feedback"/>
+                        </group>
+                        <group string="Performance Assessment">
+                            <field name="performance_score" required="1" help="Rate performance: 1=Poor, 2=Fair, 3=Good, 4=Very Good, 5=Excellent"/>
+                        </group>
+                    </group>
+
+                    <field name="feedback_text" string="Feedback Comments" required="1" placeholder="Detailed feedback comments..." widget="html" help="Comprehensive feedback comments covering performance, behavior, technical skills, etc."/>
+
+                    <group string="Goals &amp; Development">
+                        <group>
+                            <field name="goals" string="Goals &amp; Targets" placeholder="Goals &amp; targets for this period..." help="Goals and targets set for the intern in this period"/>
+                        </group>
+                        <group>
+                            <field name="achievements" string="Achievements" placeholder="Accomplishments &amp; achievements..." help="Accomplishments and achievements completed in this period"/>
+                        </group>
+                    </group>
+
+                    <group string="Improvement Plan">
+                        <field name="improvement_areas" string="Improvement Areas" placeholder="Areas where improvement is needed..." help="Skills or behaviors that need improvement"/>
+                        <field name="development_plan" string="Development Plan" placeholder="Action plan for next review period..." help="Specific action plan and suggestions for the next period"/>
+                    </group>
+
+                    <group string="Internal Comments">
+                        <field name="comments" string="Internal Comments" placeholder="Private internal notes..." widget="html" help="Internal comments visible to HR/mentors only"/>
+                    </group>
+                    
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_hr_internship_feedback_list" model="ir.ui.view">
+        <field name="name">hr.internship.feedback.list</field>
+        <field name="model">hr.internship.feedback</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="feedback_date"/>
+                <field name="internship_id"/>
+                <field name="feedback_type" widget="badge"/>
+                <field name="performance_score" widget="badge"/>
+                <field name="mentor_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_hr_internship_feedback_search" model="ir.ui.view">
+        <field name="name">hr.internship.feedback.search</field>
+        <field name="model">hr.internship.feedback</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="internship_id"/>
+                <field name="mentor_id"/>
+                <separator/>
+                <filter name="weekly" string="Weekly Feedback" domain="[('feedback_type', '=', 'weekly')]"/>
+                <filter name="monthly" string="Monthly Feedback" domain="[('feedback_type', '=', 'monthly')]"/>
+                <filter name="final" string="Final Evaluation" domain="[('feedback_type', '=', 'final')]"/>
+                <separator/>
+                <filter name="excellent" string="Excellent" domain="[('performance_score', '=', '5_excellent')]"/>
+                <filter name="good" string="Good &amp; Above" domain="[('performance_score', 'in', ['3_good', '4_very_good', '5_excellent'])]"/>
+                <separator/>
+                
+            </search>
+        </field>
+    </record>
+
+    <record id="action_hr_internship_feedback" model="ir.actions.act_window">
+        <field name="name">Feedback</field>
+        <field name="res_model">hr.internship.feedback</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

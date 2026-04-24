@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="mail_template_external_recruitment_request" model="mail.template">
+        <field name="name">External Recruitment Request</field>
+        <field name="model_id" ref="hr.model_hr_job"/>
+        <field name="email_from">{{(user.email_formatted or '')}}</field>
+        <field name="email_to">{{ctx.get('partner_email')}}</field>
+        <field name="subject">Job Request: {{object.name}}</field>
+        <field name="body_html">
+            <![CDATA[
+            <p>Dear Recruiter,</p>
+
+            <p>
+                We would like to request your support in sourcing candidates for the following job opening:
+            </p>
+
+            <p><strong>Job Title:</strong> <t t-out="object.name"/></p>
+            <p><strong>Number of Vacancies:</strong> <t t-out="object.no_of_recruitment"/></p>
+            <p><strong>Expected Salary Range:</strong>
+                <t t-out="object.salary_min"/> - <t t-out="object.salary_max"/>
+            </p>
+
+            <p><strong>Job Description:</strong></p>
+            <p><t t-out="object.description or ''"/></p>
+
+            <p>
+                Please review the details and share suitable candidate profiles at your earliest convenience.
+            </p>
+            <p>
+                <a t-att-href="object.get_base_url() + object.website_url"
+                   style="background:#875A7B;color:#fff;padding:10px 16px;
+                          text-decoration:none;border-radius:4px;display:inline-block;">
+                    Go to Job
+                </a>
+            </p>
+
+            <p>Best regards,<br/>
+            ]]>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo noupdate="1">
+    <!-- Sequence for Tender RFQ -->
+    <record id="seq_tender_rfq" model="ir.sequence">
+        <field name="name">Tender RFQ</field>
+        <field name="code">tender.rfq</field>
+        <field name="prefix">TRFQ/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Tender Bidding -->
+    <record id="seq_tender_bid" model="ir.sequence">
+        <field name="name">Tender Bidding</field>
+        <field name="code">tender.bid</field>
+        <field name="prefix">TBID/%(year)s/</field>
+        <field name="padding">6</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Contract Agreement -->
+    <record id="seq_contract_agreement" model="ir.sequence">
+        <field name="name">Purchase Contract Agreement</field>
+        <field name="code">purchase.contract.agreement</field>
+        <field name="prefix">PCA/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

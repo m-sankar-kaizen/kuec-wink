@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="report_invoice_document"
+              inherit_id="account.report_invoice_document">
+        <xpath expr="//div[@id='informations']" position="after">
+            <div id="contact_details" class="row mb-4" t-if="o.partner_id.company_type == 'company' and o.company_id.company_code == 'KUEC'">
+                <div class="col" t-if="o.partner_id.contact_name" name="contact_name">
+                    <strong>Contact Person</strong>
+                    <div>
+                        <span t-esc="o.partner_id.contact_name"/> <span t-if="o.partner_id.contact_function"> - <span t-esc="o.partner_id.contact_function"/></span></div>
+                </div>
+                <div class="col" t-if="o.partner_id.contact_phone">
+                    <strong>Contact Phone</strong>
+                    <div t-field="o.partner_id.contact_phone"/>
+                </div>
+                <div class="col" t-if="o.partner_id.contact_email" name="contact_email">
+                    <strong>Contact Email</strong>
+                    <div t-field="o.partner_id.contact_email"/>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//div[@id='payment_term']" position="after">
+            <div id="bank_details" class="row mb-4" t-if="o.company_id.company_code == 'KUEC' and o.move_type == 'out_invoice'">
+                <div class="col-4" t-if="o.company_id.kuec_bank_id" name="bank_id">
+                    <strong>Bank Name</strong>
+                        <div t-esc="o.company_id.kuec_bank_id.name"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.iban_num">
+                    <strong>Iban No</strong>
+                    <div t-field="o.company_id.iban_num"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.branch_name">
+                    <strong>Branch</strong>
+                    <div t-field="o.company_id.branch_name"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.kuec_account_no">
+                    <strong>Acc. No</strong>
+                    <div t-field="o.company_id.kuec_account_no"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.beneficiary">
+                    <strong>Beneficiary</strong>
+                    <div t-field="o.company_id.beneficiary"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.swift_code">
+                    <strong>Swift Code</strong>
+                    <div t-field="o.company_id.swift_code"/>
+                </div>
+
+            </div>
+            <div id="approval_details" class="row mb-4" t-if="o.company_id.company_code == 'KUEC' and o.account_move_approval_ids">
+                <div class="col-6" t-if="o.account_move_approval_ids[-1].create_uid" name="signed_by">
+                    <strong>Signed By</strong>
+                        <div t-esc="o.account_move_approval_ids[-1].create_uid.name"/>
+                </div>
+                <div class="col-6" t-if="o.account_move_approval_ids[-1].signature">
+                    <strong>Signature</strong>
+                    <div>
+                        <img t-att-src="'/web/image/account.move.approval/%s/signature' % o.account_move_approval_ids[-1].id"
+                            style="width: 150px;max-width: 150px;height: 50px;max-height: 50px;"/>
+                    </div>
+                </div>
+            </div>
+
+        </xpath>
+    </template>
+
+
+    <template id="arabic_english_invoice"
+              inherit_id="l10n_gcc_invoice.arabic_english_invoice">
+        <xpath expr="//div[@id='informations']" position="after">
+            <div id="contact_details" class="row mb-4" t-if="o.partner_id.company_type == 'company' and o.company_id.company_code == 'KUEC'">
+                <div class="col" t-if="o.partner_id.contact_name" name="contact_name">
+                    <strong>Contact Person</strong>
+                    <div>
+                        <span t-esc="o.partner_id.contact_name"/> <span t-if="o.partner_id.contact_function"> - <span t-esc="o.partner_id.contact_function"/></span></div>
+                </div>
+                <div class="col" t-if="o.partner_id.contact_phone">
+                    <strong>Contact Phone</strong>
+                    <div t-field="o.partner_id.contact_phone"/>
+                </div>
+                <div class="col" t-if="o.partner_id.contact_email" name="contact_email">
+                    <strong>Contact Email</strong>
+                    <div t-field="o.partner_id.contact_email"/>
+                </div>
+            </div>
+        </xpath>
+        <xpath expr="//p[@name='payment_term']" position="after">
+            <div id="bank_details" class="row mb-4" t-if="o.company_id.company_code == 'KUEC' and o.move_type == 'out_invoice'">
+                <div class="col-4" t-if="o.company_id.kuec_bank_id" name="bank_id">
+                    <strong>Bank Name</strong>
+                        <div t-esc="o.company_id.kuec_bank_id.name"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.iban_num">
+                    <strong>Iban No</strong>
+                    <div t-field="o.company_id.iban_num"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.branch_name">
+                    <strong>Branch</strong>
+                    <div t-field="o.company_id.branch_name"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.kuec_account_no">
+                    <strong>Acc. No</strong>
+                    <div t-field="o.company_id.kuec_account_no"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.beneficiary">
+                    <strong>Beneficiary</strong>
+                    <div t-field="o.company_id.beneficiary"/>
+                </div>
+                <div class="col-4" t-if="o.company_id.swift_code">
+                    <strong>Swift Code</strong>
+                    <div t-field="o.company_id.swift_code"/>
+                </div>
+
+            </div>
+            <div id="approval_details" class="row mb-4" t-if="o.company_id.company_code == 'KUEC' and o.account_move_approval_ids">
+                <div class="col-6" t-if="o.account_move_approval_ids[-1].create_uid" name="signed_by">
+                    <strong>Signed By</strong>
+                        <div t-esc="o.account_move_approval_ids[-1].create_uid.name"/>
+                </div>
+                <div class="col-6" t-if="o.account_move_approval_ids[-1].signature">
+                    <strong>Signature</strong>
+                    <div>
+                        <img t-att-src="'/web/image/account.move.approval/%s/signature' % o.account_move_approval_ids[-1].id"
+                            style="width: 150px;max-width: 150px;height: 50px;max-height: 50px;"/>
+                    </div>
+                </div>
+            </div>
+
+        </xpath>
+    </template>
+
+
+
+</odoo>

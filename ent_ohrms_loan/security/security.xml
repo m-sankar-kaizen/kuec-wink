@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ========================================
+         Module Category: Loan
+         Creates a new app category "Loans" for access groups.
+    ======================================== -->
+    <record id="hr_loan_category" model="ir.module.category">
+        <field name="name">Loans</field>
+        <field name="sequence" eval="1"/>
+    </record>
+
+    <!-- ========================================
+         Group: Loan User
+         Base access group for regular users requesting loans.
+         - Inherits: Internal User
+         - Has access to view and manage own loans.
+    ======================================== -->
+    <record id="hr_loan_user" model="res.groups">
+        <field name="name">User</field>
+        <field name="category_id" ref="ent_ohrms_loan.hr_loan_category"/>
+        <field name="implied_ids" eval="[Command.link(ref('base.group_user'))]"/>
+    </record>
+
+    <!-- ========================================
+         Group: HR Team
+         For HR Officers managing department-level loan requests.
+         - Inherits: Loan User, HR User
+         - Gets full read/write access via record rule.
+    ======================================== -->
+    <record id="group_loan_branch_manager" model="res.groups">
+        <field name="name">HR Team</field>
+        <field name="category_id" ref="ent_ohrms_loan.hr_loan_category"/>
+        <field name="implied_ids"
+               eval="[Command.link(ref('ent_ohrms_loan.hr_loan_user')), (4, ref('hr.group_hr_user'))]"/>
+    </record>
+
+    <!-- ========================================
+         Group: HR Manager
+         Top-level access for HR Managers
+         - Inherits: HR Team
+         - Used for approval and configuration tasks.
+    ======================================== -->
+    <record id="group_loan_super_admin" model="res.groups">
+        <field name="name">HR Manager</field>
+        <field name="category_id" ref="ent_ohrms_loan.hr_loan_category"/>
+        <field name="implied_ids" eval="[Command.link(ref('ent_ohrms_loan.group_loan_branch_manager'))]"/>
+    </record>
+
+    <!-- ========================================
+         Record Rule: Loan User Rule
+         Restricts access to loan records for users to only their own.
+         Applied to: hr_loan_user group.
+         Domain: employee_id.user_id == current user
+    ======================================== -->
+    <record model="ir.rule" id="loan_user_rule">
+        <field name="name">Loan User Rule</field>
+        <field name="model_id" ref="ent_ohrms_loan.model_hr_loan"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[Command.link(ref('ent_ohrms_loan.hr_loan_user'))]"/>
+    </record>
+
+    <!-- ========================================
+         Record Rule: Loan HR Team Access
+         Full access for HR Team group to all loan records.
+         Domain: Always True (1 = 1)
+    ======================================== -->
+    <record model="ir.rule" id="loan_user_accounting_rule">
+        <field name="name">Loan HR Team</field>
+        <field name="model_id" ref="ent_ohrms_loan.model_hr_loan"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[Command.link(ref('ent_ohrms_loan.group_loan_branch_manager'))]"/>
+    </record>
+
+    <record id="housing_advance_company_rule" model="ir.rule">
+        <field name="name">Housing Advance: Company</field>
+        <field name="model_id" ref="ent_ohrms_loan.model_hr_loan"/>
+        <!-- Users can see records if their company is in company_ids -->
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Sequence Configuration for HR Employee Records
+        This sequence is used for generating unique employee identifiers.
+        The generated employee ID will have the format: ANK### (e.g., ANK001, ANK002, ...).
+    -->
+    <record id="sequence_employee_register" model="ir.sequence">
+        <field name="name">employee</field>
+        <field name="code">hr.employee</field>
+        <field name="prefix">ANK</field>
+        <field name="padding">3</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

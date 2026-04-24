@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        View Extension: Enrich Employee Form with Additional Personal, Banking, Family, and Emergency Info
+        Model: hr.employee
+
+        Key Features:
+            - Auto-generated employee sequence
+            - Extended job/contract classification (unit, section, scale, grade)
+            - Emergency contact tab with one2many inline editing
+            - Citizenship and passport details
+            - Family details including spouse and children
+            - Bank account information
+    -->
+    <record id="add_fields_employee_form" model="ir.ui.view">
+        <field name="name">employee.form.inherit.kaz</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add auto-generated employee sequence -->
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="sequence" readonly="1"/>
+            </xpath>
+
+            <!-- Add unit and section below work email -->
+            <xpath expr="//field[@name='work_email']" position="after">
+                <field name="unit_id"/>
+                <field name="section_id"/>
+            </xpath>
+
+            <!-- Add employee type, grade, scale after job -->
+            <xpath expr="//field[@name='job_id']" position="after">
+                <field name="kaz_employee_type"/>
+                <field name="grade_id"/>
+                <field name="scale"/>
+            </xpath>
+
+            <!-- Add hire date after employee_type -->
+            <xpath expr="//field[@name='employee_type']" position="after">
+                <field name="hire_date"/>
+            </xpath>
+
+            <!-- Update job_id domain to restrict by department and company -->
+            <xpath expr="//field[@name='job_id']" position="attributes">
+                <attribute name="domain">
+                    [('department_id', '=', department_id), '|', ('company_id', '=', False), ('company_id', '=',
+                    company_id)]
+                </attribute>
+            </xpath>
+
+            <!-- Add blood type after home/work distance fields -->
+            <xpath expr="//div[@name='div_km_home_work']" position="after">
+                <separator name="blood" string="Blood Type"/>
+                <field name="blood_type_id"/>
+            </xpath>
+
+            <!-- Hide default emergency contact fields -->
+            <!--            <xpath expr="//separator[@name='emergency']" position="attributes">-->
+            <!--                <attribute name="invisible">1</attribute>-->
+            <!--            </xpath>-->
+            <xpath expr="//field[@name='emergency_contact']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='emergency_phone']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- Emergency Tab with One2many editable list -->
+            <xpath expr="//page[@name='personal_information']" position="after">
+                <page name="emergency_tab" string="Emergency Contacts">
+                    <field name="emergency_data_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="name"/>
+                            <field name="email"/>
+                            <field name="number"/>
+                            <field name="type"/>
+                            <field name="relationship_id"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+            <!-- Children visibility based on marital status -->
+            <xpath expr="//field[@name='children']" position="attributes">
+                <attribute name="invisible">marital in [False, 'single']</attribute>
+            </xpath>
+
+            <!-- Add spouse employee reference -->
+            <xpath expr="//field[@name='spouse_complete_name']" position="after">
+                <field name="spouse_employee_id" invisible="marital not in ['married', 'cohabitant']"/>
+            </xpath>
+
+            <!-- Add family details (father, mother, children) -->
+            <xpath expr="//field[@name='children']" position="after">
+                <field name="father_name"/>
+                <field name="mother_name"/>
+                <field name="kid_ids" invisible="marital in [False, 'single']">
+                    <list editable="bottom">
+                        <field name="name"/>
+                        <field name="age"/>
+                        <field name="age_calc"/>
+                    </list>
+                </field>
+            </xpath>
+
+            <!-- Citizenship/ID block inside personal information tab -->
+            <xpath expr="//page[@name='personal_information']" position="inside">
+                <group string="CITIZENSHIP" name="citizenship">
+                    <group>
+                        <field name="emirates"/>
+                        <field name="emirates_expiration"/>
+                    </group>
+                </group>
+            </xpath>
+
+            <!-- Passport expiration and issue date -->
+            <field name="passport_id" position="after">
+                <field name="passport_expiration"/>
+                <field name="issue_date"/>
+            </field>
+
+            <!-- Add bank details before managers block -->
+            <xpath expr="//group[@name='managers']" position="before">
+                <group name="bank" string="Bank Info">
+                    <field name="bank_name_id"/>
+                    <field name="bank_branch_id"/>
+                    <field name="iban_num"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_budget_analytic_form_progress" model="ir.ui.view">
+        <field name="name">view.budget.analytic.form.prgress</field>
+        <field name="model">budget.analytic</field>
+        <field name="inherit_id" ref="account_budget.view_budget_analytic_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="short_code"
+                       string="Budget ID"
+                       readonly="state != 'draft'"
+                       required="state == 'draft'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

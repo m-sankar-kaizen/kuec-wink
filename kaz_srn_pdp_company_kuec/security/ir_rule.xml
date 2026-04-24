@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Multi-company restriction -->
+    <record id="srn_report_template_comp_rule" model="ir.rule">
+        <field name="name">SRN Report Template multi-company</field>
+        <field name="model_id" ref="model_srn_report_template"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="answer_selection_comp_rule" model="ir.rule">
+        <field name="name">Answer Selection multi-company</field>
+        <field name="model_id" ref="model_answer_selection"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+</odoo>

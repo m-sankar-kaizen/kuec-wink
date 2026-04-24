@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="mail_template_registration_success" model="mail.template">
+        <field name="name">Vendor Registration Success</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="subject">Registration Success: {{ object.company_id.name }}</field>
+<!--        <field name="email_from">{{ object.company_id.email }}</field>-->
+<!--        _________________________^^^^^^^^^^^^^^^^^^^^^^^^^^^ Uses procurement@kuec-->
+        <field name="email_to">{{ object.email }}</field>
+        <field name="description">A Notification Will be sent to the partners to notify them of the successful
+            Registration
+        </field>
+        <field name="auto_delete" eval="False"/>
+        <field name="body_html" type="html">
+            <p>Dear <t t-esc="object.name"/>,
+            </p>
+            <p>
+                We would like to confirm that we have successfully received your registration request.
+                It is currently under review and pending approval.
+            </p>
+
+            <p>
+                We will notify you once the approval process is completed.
+            </p>
+
+            <p>Thank you for your cooperation.</p>
+
+            <p>
+                Best regards,
+                <br/>
+                <span t-esc="object.company_id.name"/>
+            </p>
+        </field>
+    </record>
+</odoo>

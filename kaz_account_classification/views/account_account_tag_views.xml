@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="account_tag_view_form" model="ir.ui.view">
+        <field name="name">account.tag.view.form</field>
+        <field name="model">account.account.tag</field>
+        <field name="inherit_id" ref="account.account_tag_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='country_id']" position="after">
+                <field name="type"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_account_form_inherit_classification" model="ir.ui.view">
+        <field name="name">account.account.view.form.inherit.classification</field>
+        <field name="model">account.account</field>
+        <field name="inherit_id" ref="account.view_account_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tag_ids']" position="attributes">
+                <attribute name="options">{'no_quick_create': True}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

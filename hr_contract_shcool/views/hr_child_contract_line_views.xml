@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+        Inherit the form view of hr.contract to add a new tab for managing
+        Education Fees related to the employee's contract.
+
+        This extension adds a new notebook page named "Education Fees" that displays
+        the one2many field `child_contract_line_ids` allowing users to view and
+        edit detailed child contract lines such as child's name, birth date, school,
+        academic details, tuition fees, and payment info.
+
+        Editable list view enables adding new child contract lines or editing existing ones
+        directly from the contract form.
+    -->
+    <record id="view_contract_form_inherit" model="ir.ui.view">
+        <field name="name">hr.contract.form.inherit</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <!-- Add a new page (tab) -->
+                <page string="Education Fees">
+                    <field name="child_contract_line_ids">
+                        <list string="Child Contract" editable="bottom">
+                            <field name="child_name" width="60"/>
+                            <field name="created_on"/>
+                            <field name="birth_day"/>
+                            <field name="school" width="60"/>
+                            <field name="reference" width="60"/>
+                            <field name="academic" width="60"/>
+                            <field name="semester"/>
+                            <field name="grade"/>
+                            <field name="book"/>
+                            <field name="total_paid_before"/>
+                            <field name="transportation"/>
+                            <field name="tuition"/>
+                            <field name="amount_requested"/>
+                            <field name="child_entitlement"/>
+                            <field name="amount_paid"/>
+                            <field name="paid_to"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

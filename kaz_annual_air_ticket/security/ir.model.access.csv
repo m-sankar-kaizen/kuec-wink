@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_res_destination_id,access_res_destination_name,model_res_destination,,1,1,1,1
+access_ticket_type,ticket.type,model_ticket_type,,1,1,1,1
+access_price_list_ticket,price.list.ticket,model_price_list_ticket,,1,1,1,1
+access_price_list_ticket_lines,price.list.ticket.lines,model_price_list_ticket_lines,,1,1,1,1
+ticket_grant_id,access_ticket_grant,model_ticket_grant,,1,1,1,1
+ticket_grant_line,access_ticket_grant_line,model_ticket_grant_line,,1,1,1,1

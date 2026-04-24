@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- ============================== -->
+    <!-- Form View: Ticket Type Record -->
+    <!-- ============================== -->
+    <record model="ir.ui.view" id="ticket_type_form_view">
+        <field name="name">ticket_type_form_view</field>
+        <field name="model">ticket.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <!-- Display the 'name' field with label -->
+                    <label for="name"/>
+                    <div class="oe_title">
+                        <h1>
+                            <!-- Name of the ticket type (e.g., Economy, Business) -->
+                            <field name="name" string="Ticket Type"/>
+                        </h1>
+                    </div>
+                </sheet>
+
+                <!-- Chatter Section for Notes and Communication -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================= -->
+    <!-- List (Tree) View: Ticket Types -->
+    <!-- ============================= -->
+    <record model="ir.ui.view" id="ticket_type_list_view">
+        <field name="name">ticket_type_list_view</field>
+        <field name="model">ticket.type</field>
+        <field name="arch" type="xml">
+            <list>
+                <!-- Show ticket type name in list view -->
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- =========================================== -->
+    <!-- Action Window: Opens Form/List of Ticket Types -->
+    <!-- =========================================== -->
+    <record model="ir.actions.act_window" id="ticket_type_action">
+        <field name="name">Ticket Type</field>
+        <field name="res_model">ticket.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

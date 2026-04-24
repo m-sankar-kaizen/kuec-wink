@@ -1,0 +1,111 @@
+<odoo>
+
+<!-- [Start] List view ##################################################################################################################### -->
+    <record id="view_list_hiring_request" model="ir.ui.view">
+        <field name="name">hiring.request.list</field>
+        <field name="model">hiring.request</field>
+        <field name="arch" type="xml">
+            <list string="Hiring Requests" sample="1" expand="1">
+                <field name="requested_by"/>
+                <field name="department"/>
+                <field name="job_title"/>
+                <field name="employment_type"/>
+                <field name="priority"/>
+                <field name="expected_joining_date"/>
+            </list>
+        </field>
+    </record>
+<!-- [End] List view ##################################################################################################################### -->
+
+
+
+<!-- [Start] Form view ##################################################################################################################### -->
+    <record id="view_form_hiring_request" model="ir.ui.view">
+        <field name="name">hiring.request.form</field>
+        <field name="model">hiring.request</field>
+        <field name="arch" type="xml">
+            <form string="Hiring Request">
+            <!-- [Start] Header ############################################################################################-->
+                <header>
+                    <button name="action_in_process" string="In Process"
+                        type="object"
+                        groups="hiresmart.group_recruitment_hr"
+                        invisible="stage == 'in_process' or stage == 'approved'"
+                    />
+                    <button name="action_approve" string="Approve"
+                        type="object"
+                        groups="hiresmart.group_recruitment_hr"
+                        invisible="stage == 'new' or stage == 'approved' or stage == 'rejected'"
+                    />
+                    <button name="action_reject" string="Reject"
+                        type="object"
+                        groups="hiresmart.group_recruitment_hr"
+                        invisible="stage == 'rejected'"
+                    />
+                    <field name="stage" widget="statusbar" statusbar_visible="new,in_process,approved,rejected"/>
+                </header>
+            <!-- [End] Header ############################################################################################-->
+
+            <!-- [Start] Form Content #################################################################################### -->
+                <sheet>
+                    <group>
+                        <group>
+                            <separator string="Requester Information"/>
+                                <field name="requested_by" string='Requested By *'/>
+                                <field name="department"/>
+                                <field name="email_address"/>
+                                <field name="date_of_request"/>
+
+                            <separator string="Position Details"/>
+                                <field name="job_title" string='Job Title / Position Name *'/>
+                                <field name="number_of_openings"/>
+                                <field name="employment_type" string='Type of Employment *'/>
+                                <field name="job_level"/>
+                                <field name="work_location"/>
+                        </group>
+
+                        <group>
+                            <separator string="Justification / Reason for Hiring"/>
+                                <field name="hiring_reason" string='Reason for Hiring *'/>
+                                <field name="justification"/>
+
+                            <separator string="Job Description and Requirements"/>
+                                <field name="job_description"/>
+                                <field name="key_skills"/>
+                                <field name="min_qualification"/>
+                                <field name="experience_range"/>
+                                <field name="additional_notes"/>
+                                <field name="expected_joining_date"/>
+                                <field name="priority" string='Urgency / Priority *'/>
+                        </group>
+                        
+                        <group groups="hiresmart.group_recruitment_hr"
+                            invisible="stage == 'rejected'">
+                            <separator string="Rejection"/>
+                            <field name="rejection_reason"/>
+                        </group>
+                        <group invisible="stage != 'rejected'">
+                            <separator string="Rejection"/>
+                            <field name="rejection_reason"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            <!-- [End] Form Content #################################################################################### -->
+            </form>
+        </field>
+    </record>
+<!-- [End] Form view ##################################################################################################################### -->
+
+
+
+<!-- [Start] Action ####################################################################################################################### -->
+    <record id="action_hiring_request" model="ir.actions.act_window">
+        <field name="name">Hiring Requests</field>
+        <field name="res_model">hiring.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('user_id', '=', uid)]</field>
+    </record>
+<!-- [End] Action ####################################################################################################################### -->
+
+</odoo>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="ratingBar">
+        <div class="d-flex flex-column align-items-center justify-content-center bg-light user-select-none font-sans w-100">
+            <!-- Main Container -->
+            <div class="w-100 px-3" style="max-width: 24rem; padding-top: 3.5rem; padding-bottom: 1rem;">
+
+                <!-- Bar Track (Relative Parent) -->
+                <div class="position-relative w-100 rounded-pill cursor-pointer"
+                     style="height: 1.5rem;"
+                     t-ref="bar"
+                     t-on-mousedown="handleMouseDown"
+                     t-on-mousemove="handleBarHover"
+                     t-on-mouseup="handleMouseUp"
+                     t-on-mouseleave="handleBarLeave">
+
+                    <!-- 1. Inner Shadow (Background Layer) -->
+                    <div class="position-absolute w-100 h-100 rounded-pill bg-light shadow-sm" style="transform: translateY(2px); top:0; left:0;"/>
+
+                    <!-- 2. Gradient Background (Background Layer) -->
+                    <div class="position-absolute w-100 h-100 rounded-pill overflow-hidden border gradient-rating-bk" style="top:0; left:0;">
+                         <!-- Vertical Segments -->
+                         <t t-foreach="[10, 20, 30, 40, 50, 60, 70, 80, 90]" t-as="pos" t-key="pos">
+                             <div class="position-absolute h-100 bg-white opacity-25 pointer-events-none"
+                                  t-attf-style="width: 1px; left: {{ pos }}%;"/>
+                         </t>
+                    </div>
+
+                    <!-- 3. Hover Line Indicator -->
+                    <div t-if="state.hoverScore !== null and !state.isDragging"
+                         class="position-absolute top-0 bottom-0 bg-white opacity-75 pointer-events-none shadow"
+                         style="width: 2px; z-index: 10; transition: all 75ms;"
+                         t-attf-style="left: {{hoverPercent}}%;"
+                    />
+
+                    <!-- 4. Draggable Handle -->
+                    <div class="position-absolute top-50 z-20 bg-light rounded border shadow d-flex align-items-center justify-content-center gap-1 cursor-grab translate-middle"
+                         style="height: 2.5rem; width: 1rem; transition: background-color 0.2s;"
+                         t-attf-style="left: {{currentPercent}}%;"
+                         t-on-mousedown="handleMouseDown">
+                        <div class="bg-secondary rounded-pill" style="width: 2px; height: 1.25rem;"/>
+                        <div class="bg-secondary rounded-pill" style="width: 2px; height: 1.25rem;"/>
+                    </div>
+
+                    <!-- 5. Tooltip: "Score" -->
+                    <div class="position-absolute translate-middle-x"
+                         t-attf-style="left: {{currentPercent}}%; bottom: 100%; transition: all 75ms ease-out; z-index: 40; padding-bottom: 0.5rem;">
+                        <div class="position-relative cursor-grab">
+                            <div class="bg-white border shadow-sm px-2 py-1 rounded text-center position-relative" style="min-width: 30px;">
+                                <span class="d-block fw-bold text-muted text-uppercase" style="font-size: 7px; letter-spacing: 0.05em;">
+                                    Score
+                                </span>
+                                <span class="d-block fw-bolder" style="font-size: 1rem; line-height: 1;"
+                                      t-attf-style="color: {{ color }}"
+                                      t-out="formattedRating"
+                                />
+                                <!-- Tooltip Arrow -->
+                                <div class="position-absolute bg-white border-bottom border-end"
+                                     style="bottom: -4px; left: 50%; width: 8px; height: 8px; transform: translateX(-50%) rotate(45deg);"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Hover Tooltip -->
+                    <t t-if="state.hoverScore !== null and !state.isDragging">
+                        <div class="position-absolute translate-middle-x pointer-events-none"
+                             style="top: 100%; margin-top: 0.25rem; z-index: 50; transition: all 75ms ease-out;"
+                             t-attf-style="left: {{hoverPercent}}%">
+                             <!-- Arrow pointing up -->
+                             <div class="bg-dark mx-auto" style="width: 6px; height: 6px; transform: rotate(45deg); margin-bottom: -3px;"/>
+                             <div class="bg-dark text-white px-2 py-0 rounded fw-bold shadow-sm" style="font-size: 0.7rem;"
+                                  t-out="formattedHoverScore"/>
+                        </div>
+                    </t>
+
+                </div>
+
+                <!-- Labels -->
+                <div class="d-flex justify-content-between mt-2 px-1 w-100">
+                    <t t-foreach="['Poor', 'Fair', 'Good', 'Excellent']" t-as="label" t-key="label_index">
+                        <div class="text-center w-25 pointer-events-none text-muted fw-bolder text-uppercase"
+                             style="opacity: 0.4; font-size: 0.75rem; letter-spacing: -0.05em;"
+                             t-out="label"/>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

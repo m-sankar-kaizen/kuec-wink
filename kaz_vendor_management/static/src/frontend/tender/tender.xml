@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="Tender">
+        <div class="container py-4 px-4">
+            <!-- Header Row -->
+            <div class="row mb-4">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="fw-bold text-start">Public Tenders</h2>
+                    </div>
+                    <div class="d-flex justify-content-end align-items-center gap-3">
+                        <Dropdown>
+                            <button t-attf-class="btn btn-secondary d-flex align-items-center">
+                                <span>Sort by:</span>
+                                <span class="ms-2" t-out="displaySortName"/>
+                                <i class="fa fa-caret-down ms-1"/>
+                            </button>
+                            <t t-set-slot="content">
+                                <DropdownItem t-foreach="sortByFields" t-as="field" t-key="field_index"
+                                              class="'d-flex align-items-center'"
+                                              onSelected="() => this.setSort(field)">
+                                    <span t-out="sortByFields[field]"/>
+                                </DropdownItem>
+                            </t>
+                        </Dropdown>
+
+                        <div class="pagination-controls d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-primary btn-sm"
+                                    t-on-click="() => this.prevPage()"
+                                    t-att-disabled="state.offset === 0">
+                                <i class="fa fa-chevron-left"/>
+                            </button>
+                            <span>Page
+                                <t t-out="Math.floor(state.offset / state.limit) + 1"/>
+                                of
+                                <t t-out="Math.ceil(state.total / state.limit)"/>
+                            </span>
+                            <button class="btn btn-outline-primary btn-sm"
+                                    t-on-click="() => this.nextPage()"
+                                    t-att-disabled="state.offset + state.limit >= state.total">
+                                <i class="fa fa-chevron-right"/>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Row -->
+            <div class="row">
+                <div class="col-3">
+                    <div class="active-scroll">
+                        <div class="mb-2 pe-2">
+                            <t t-foreach="tenderStates" t-as="state" t-key="state_index">
+                                <div t-on-click="() => this.toggleState(state)"
+                                     class="tender-type-selection cursor-pointer d-flex gap-3 align-items-center">
+                                    <div t-if="this.state.tenderState === state" class="selected-div"/>
+                                    <div>
+                                        &gt;
+                                        <span t-out="tenderStates[state]"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                        <!-- Search Bar -->
+                        <div class="mt-3 pe-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="fw-bold mb-1">Search</label>
+                                <span class="text-primary cursor-pointer pe-1"
+                                      t-on-click="clearSearch">
+                                    Clear
+                                </span>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fa fa-search"/>
+                                </span>
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="Search…"
+                                       t-model="state.searchQuery"/>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 pe-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="fw-bold mb-0">Categories</label>
+                                <span class="text-primary cursor-pointer pe-1"
+                                      t-on-click="clearCategory">
+                                    Clear
+                                </span>
+                            </div>
+                            <div class="filter-active-scroll">
+                                <div class="d-flex flex-column">
+                                    <!-- "All" option -->
+                                    <div t-on-click="clearCategory"
+                                         class="tender-type-circle-selection cursor-pointer d-flex align-items-center gap-2">
+                                        <div class="selection-circle"
+                                             t-att-class="!state.selectedCategories.length ? 'selected' : ''"/>
+                                        <div>All</div>
+                                    </div>
+                                    <!-- Loop through categories -->
+                                    <t t-foreach="state.categories" t-as="category" t-key="category.id">
+                                        <div t-on-click="() => this.toggleCategory(category.id)"
+                                             class="tender-type-circle-selection cursor-pointer d-flex align-items-center gap-2">
+                                            <div class="selection-circle"
+                                                 t-att-class="state.selectedCategories.includes(category.id) ? 'selected' : ''"/>
+                                            <div t-out="category.name"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 pe-2">
+                            <label class="fw-bold mb-1">Select Due Date</label>
+                            <div class="d-flex flex-column">
+                                <t t-foreach="closingDays" t-as="days" t-key="days">
+                                    <div t-on-click="() => this.state.closingDays = days"
+                                         class="tender-type-circle-selection cursor-pointer d-flex align-items-center gap-2">
+                                        <div class="selection-circle"
+                                             t-att-class="state.closingDays === days ? 'selected' : ''"/>
+                                        <div t-out="days === 'all' ? 'All' : 'Closing in ' + days + ' days'"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-9">
+                    <div class="active-scroll">
+                        <div class="row g-3 pe-2">
+                            <t t-if="state.tenders.length gt 0">
+                                <TenderItem t-foreach="state.tenders" t-as="tender" t-key="tender.id" t-props="getTenderProps(tender)"/>
+                            </t>
+                            <t t-else="">
+                                <div class="col-12">
+                                    <div class="alert alert-info text-center m-0">
+                                        There are no tenders to show.
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

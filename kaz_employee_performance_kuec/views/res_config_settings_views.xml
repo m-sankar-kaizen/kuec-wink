@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.kaz.employee.performance.kuec</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Goal" string="Goal/Performance" name="goal_eval"
+                     logo="/kaz_employee_performance_kuec/static/description/logo.png">
+                    <field name="company_code" invisible="1"/>
+                    <block title="Goal Configuration" name="employee_goal_config"
+                           invisible="company_code not in ['KUEC']">
+                        <setting
+                                help="Default Goal Template, will be selected by default while creating a Goal Evaluation"
+                                title="Default Goal Template.">
+                            <field name="goal_template_id"/>
+                        </setting>
+                        <setting
+                                help="Number of days before the final evaluation date when the system should automatically trigger the final evaluation state and notify the HOD. Used by the performance evaluation cron job."
+                                title="Days Before Final Evaluation.">
+                            <field name="final_eval_trigger_days_before"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="res_config_settings_view_form_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_id" ref="res_config_settings_view_form"/>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'goal_eval', 'bin_size': False}</field>
+    </record>
+
+    <menuitem id="menu_goal_settings"
+              name="Settings"
+              parent="kaz_employee_performance_kuec.menu_performance_evaluation_conf_parent"
+              action="res_config_settings_view_form_action"
+              sequence="1"/>
+</odoo>

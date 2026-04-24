@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.research.and.development</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="kaz_vendor_management.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='kaz_vendor_management']" position="inside">
+                <block title="Research &amp; Development" id="kaz_research_and_development">
+                    <setting string="Research &amp; Development Financial Limit">
+                        <div class="text-muted content-group mt16">
+                            <field name="r_and_d_max_financial_limit"
+                                   class="text-center" required="1"
+                                   style="width: 10%; min-width: 4rem;"/>
+                            <span>Maximum Allowed Financial Limit for Research &amp; Development Requests</span>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

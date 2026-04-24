@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="action_kuec_golden_visa_letter" model="ir.actions.act_window">
+        <field name="name">KUEC Golden Visa Letter</field>
+        <field name="res_model">kuec.golden.visa.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Golden Visa Request
+            </p>
+        </field>
+    </record>
+
+    <record id="action_kuec_salary_letter" model="ir.actions.act_window">
+        <field name="name">KUEC Salary Letter</field>
+        <field name="res_model">kuec.salary.letter</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Salary Request
+            </p>
+        </field>
+    </record>
+
+    <record id="action_kuec_visa_request" model="ir.actions.act_window">
+        <field name="name">KUEC Visa Request</field>
+        <field name="res_model">kuec.visa.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new visa request
+            </p>
+        </field>
+    </record>
+
+    <record id="action_kuec_health_insurance" model="ir.actions.act_window">
+        <field name="name">KUEC Health Insurance</field>
+        <field name="res_model">kuec.health.insurance</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new health insurance
+            </p>
+        </field>
+    </record>
+
+    <record id="action_kuec_salary_transfer_letters" model="ir.actions.act_window">
+        <field name="name">KUEC Salary Transfer Letter</field>
+        <field name="res_model">kuec.salary.transfer.letter</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Salary Transfer Letter
+            </p>
+        </field>
+    </record>
+
+    <record id="action_kuec_employment_letters" model="ir.actions.act_window">
+        <field name="name">KUEC Employment Letter</field>
+        <field name="res_model">kuec.employment.letter</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Employment Letter
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="kuec_letter_menu"
+              name="KUEC Letters"
+              parent="hr.menu_hr_root">
+        <menuitem id="employment_letter_menu"
+              name="Employment Letter"
+              action="kaz_kuec_letters.action_kuec_employment_letters"/>
+        <menuitem id="salary_transfer_letter_menu"
+              name="Salary Transfer Letter"
+              action="kaz_kuec_letters.action_kuec_salary_transfer_letters"/>
+        <menuitem id="health_insurance_letter_menu"
+              name="Health Insurance Letter"
+              action="kaz_kuec_letters.action_kuec_health_insurance"/>
+        <menuitem id="visa_request_letter_menu"
+              name="Visa Request Letter"
+              action="kaz_kuec_letters.action_kuec_visa_request"/>
+        <menuitem id="golden_visa_letter_menu"
+              name="Golden Visa Letter"
+              action="kaz_kuec_letters.action_kuec_golden_visa_letter"/>
+        <menuitem id="salary_letter_menu"
+              name="Salary Letter"
+              action="kaz_kuec_letters.action_kuec_salary_letter"/>
+
+    </menuitem>
+</odoo>

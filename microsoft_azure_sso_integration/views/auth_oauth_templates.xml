@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+    Template Inheritance: auth_oauth.providers
+    Purpose:
+        Customize the appearance of the OAuth provider section on the login screen.
+        This specifically targets the `<em>` tag within the original `auth_oauth.providers` template.
+
+    Key Customization:
+        - Replaces the existing `<em>` tag with an updated version that has Bootstrap utility classes:
+            • `d-block`: Ensures the element behaves as a block-level item (full-width)
+            • `text-primary`: Applies the primary theme color (typically blue)
+            • `text-uppercase`: Converts text content to uppercase
+
+    Use Case:
+        Enhances the visual appearance and consistency of the OAuth provider section headers
+        (e.g., "Log in with Microsoft") by aligning them with the site's theme and layout style.
+    -->
+
+    <template id="providers_separator" inherit_id="auth_oauth.providers">
+        <!-- Replace the <em> tag used for the separator title with a styled version -->
+        <xpath expr="//em" position="replace">
+            <em t-attf-class="d-block text-primary text-uppercase"/>
+        </xpath>
+    </template>
+
+</odoo>

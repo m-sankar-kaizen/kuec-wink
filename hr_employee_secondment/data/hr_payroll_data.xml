@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Secondment Allowance Input Type -->
+    <record id="hr_payslip_input_type_secondment_allowance" model="hr.payslip.input.type">
+        <field name="name">Secondment Allowance</field>
+        <field name="code">SECOND_ALLOW</field>
+    </record>
+    
+    <!-- Secondment Allowance Salary Rule -->
+    <record id="hr_salary_rule_secondment_allowance" model="hr.salary.rule">
+        <field name="name">Secondment Allowance</field>
+        <field name="code">SECOND_ALLOW</field>
+        <field name="sequence">199</field>
+        <field name="category_id" ref="hr_payroll.ALW"/>
+        <field name="struct_id" ref="hr_payroll.default_structure"/>
+        <field name="condition_select">python</field>
+        <field name="condition_python">result = employee.has_active_secondment</field>
+        <field name="amount_select">code</field>
+        <field name="amount_python_compute">
+# Get active secondment
+secondment = employee.active_secondment_id
+if secondment and secondment.allowance_eligible:
+    result = secondment.allowance_amount
+else:
+    result = 0.0
+        </field>
+        <field name="appears_on_payslip" eval="True"/>
+        <field name="note">Monthly allowance for employees on secondment (paid after completing 2 months threshold)</field>
+    </record>
+    
+</odoo>

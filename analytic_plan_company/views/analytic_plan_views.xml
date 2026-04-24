@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="account_analytic_plan_form_view_inherit_company" model="ir.ui.view">
+            <field name="name">account.analytic.plan.inherit.form</field>
+            <field name="model">account.analytic.plan</field>
+            <field name="inherit_id" ref="analytic.account_analytic_plan_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='default_applicability']" position="after">
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </xpath>
+                <xpath expr="//page[@name='applicability']/field[@name='applicability_ids']/list/field[@name='company_id']"
+                       position="attributes">
+                    <attribute name="column_invisible">1</attribute>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

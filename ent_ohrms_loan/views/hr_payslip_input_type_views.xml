@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===============================================================
+         Form View Inheritance for hr.payslip.input.type
+         Purpose:
+           - Extend the existing form to add a link from Input Type to Salary Rule.
+           - This helps in associating inputs (e.g., loans, bonuses) directly
+             with the salary rule that uses them.
+         Dependencies:
+           - Depends on hr_payroll module’s form view: hr_payslip_input_type_view_form
+           - Uses field: input_id (Many2one -> hr.salary.rule) defined in Python model
+    ================================================================ -->
+    <record id="hr_payslip_input_type_form_view" model="ir.ui.view">
+        <field name="name">hr.payslip.input.type.inherit</field>
+        <field name="model">hr.payslip.input.type</field>
+        <field name="inherit_id" ref="hr_payroll.hr_payslip_input_type_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='code']" position="after">
+                <field name="input_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

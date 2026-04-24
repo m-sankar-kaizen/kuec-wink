@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="awarding_letter_report">
+        <t t-call="web.report_layout">
+            <t t-set="body_classname" t-value="'main_page'"/>
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_kuec_report_base.external_layout">
+                    <t t-set="show_page" t-value="True"/>
+                    <t t-set="sequence_field" t-value="'name'"/>
+                    <div class="page main_page">
+                        <div class="px-2">
+                            <div class="row">
+                                <div class="col-12 english-text" style="text-align: center;">
+                                    <u>
+                                        <strong>
+                                            AWARDING LETTER
+                                        </strong>
+                                    </u>
+                                </div>
+
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 english-text">
+                                    <strong>
+                                        <span>To:</span>
+                                    </strong>
+                                    <span class="ms-1" t-field="o.partner_id"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 english-text">
+                                    <strong>
+                                        <span>From:</span>
+                                    </strong>
+                                    <span class="ms-1" t-field="o.company_id"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 english-text">
+                                    <strong>
+                                        <span>Date:</span>
+                                    </strong>
+                                    <span class="ms-1" t-esc="datetime.datetime.now().strftime('%m/%d/%Y')"/>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 english-text">
+                                    <strong>
+                                        <span>Subject:</span>
+                                    </strong>
+                                    <span class="ms-1">Tender
+                                        <span class="fw-bold" t-field="o.tender_rfq_id"/>
+                                        has been Awarded
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="border-bottom: 1px solid black;" class="my-3"/>
+                            <div class="row mt-2">
+                                <div class="col-12 english-text">
+                                    <div>Dear
+                                        <span t-field="o.partner_id"/>,
+                                    </div>
+                                    <br/>
+                                    <div>
+                                        We are pleased to officially inform you that your company has been selected as
+                                        the successful supplier for the subject.
+                                    </div>
+                                    <br/>
+                                    <div>
+                                        This award is based on your proposal submitted on
+                                        <span t-esc="o.create_date.strftime('%m/%d/%Y')"/>
+                                        which met all our technical and commercial requirements.
+                                    </div>
+                                    <br/>
+                                    <div>
+                                        <div class="fw-bold">
+                                            Award Details:
+                                        </div>
+                                        <div class="fw-bold">
+                                            Scope of Work/Goods:
+                                        </div>
+                                        <div t-field="o.tender_rfq_id.description"/>
+                                        <div class="mt-2">
+                                            Please consider this letter as the official confirmation of the award.
+                                            <u>We kindly ask you to provide the following at your earliest
+                                                convenience:
+                                            </u>
+                                            <ul>
+                                                <li>Award letter: Please sign and return a scanned copy. stamp each page
+                                                    along with the award letter.
+                                                </li>
+                                                <li>Contract: Please sign and return the attached contract.</li>
+                                                <li>NDA: Please fill in the required details, sign, and stamp the
+                                                    form.
+                                                </li>
+                                                <li>Confirm the kick of meeting on<span class="ms-1"
+                                                        t-field="o.tender_rfq_id.kick_off_meeting_date"/>.
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <br/>
+                                    <div>
+                                        <div class="fw-bold">
+                                            KUEC project team:
+                                        </div>
+                                        <table class="table table-sm mt-2"
+                                               style="border: 1px solid black; width: 100%;">
+                                            <thead>
+                                                <tr style="border-bottom: 1px solid black;">
+                                                    <th style="border: 1px solid black; padding: 5px; width: 8%;">Sl
+                                                        No
+                                                    </th>
+                                                    <th style="border: 1px solid black; padding: 5px; width: 22%;">
+                                                        Role
+                                                    </th>
+                                                    <th style="border: 1px solid black; padding: 5px; width: 35%;">
+                                                        Name
+                                                    </th>
+                                                    <th style="border: 1px solid black; padding: 5px; width: 35%;">
+                                                        Contact
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-set="sl_no" t-value="1"/>
+<!--                                                <t t-foreach="o.kuec_project_team_ids" t-as="line">-->
+<!--                                                    <tr>-->
+<!--                                                        <td style="border: 1px solid black; padding: 5px; text-align: center;">-->
+<!--                                                            <t t-esc="sl_no"/>-->
+<!--                                                        </td>-->
+<!--                                                        <td style="border: 1px solid black; padding: 5px;">-->
+<!--                                                            <t t-esc="line.role"/>-->
+<!--                                                        </td>-->
+<!--                                                        <td style="border: 1px solid black; padding: 5px;">-->
+<!--                                                            <t t-esc="line.name"/>-->
+<!--                                                        </td>-->
+<!--                                                        <td style="border: 1px solid black; padding: 5px;">-->
+<!--                                                            <t t-esc="line.name.phone or line.name.mobile"/>-->
+<!--                                                        </td>-->
+<!--                                                    </tr>-->
+<!--                                                    <t t-set="sl_no" t-value="sl_no + 1"/>-->
+<!--                                                </t>-->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+    <record id="action_report_awarding_letter_report" model="ir.actions.report">
+        <field name="name">Awarding Letter</field>
+        <field name="model">tender.bid</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_vendor_management.awarding_letter_report</field>
+        <field name="report_file">kaz_vendor_management.awarding_letter_report</field>
+        <field name="print_report_name">'Awarding Letter - %s - %s' % (object.name, object.create_date)</field>
+        <field name="binding_type">report</field>
+        <field name="binding_model_id" ref="model_tender_bid"/>
+        <field name="domain">[('state', '=', 'awarded')]</field>
+        <field name="paperformat_id" ref="kaz_kuec_report_base.paperformat_kuec_letters"/>
+    </record>
+</odoo>

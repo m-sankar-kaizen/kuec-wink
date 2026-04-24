@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!--
+    =============================
+    Template: kaz_external_layout_standard
+    Description: Custom external layout that includes company logo and header/footer
+    Used by: salary_letter_report and similar reports
+    =============================
+    -->
+
+    <template id="kaz_external_layout_standard" name="Ankabut External Layout">
+        <div t-attf-class="header o_company_#{company.id}_layout"
+             t-att-style="report_header_style">
+            <div class="o_boxed_header container" style="border-bottom: 0px;">
+                <div class="row mb8">
+                    <div class="col-1"/>
+                    <div class="col-6">
+                        <img t-if="company.logo"
+                             t-att-src="image_data_uri(company.logo)"
+                             height="80"
+                             alt="Logo"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div t-attf-class="article o_report_layout_boxed o_company_#{company.id}_layout"
+             t-att-data-oe-model="o and o._name"
+             t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <div class="pt-2">
+                <!-- This div ensures that the address is not cropped by the header. -->
+                <t t-call="web.address_layout"/>
+            </div>
+            <t t-out="0"/>
+        </div>
+
+        <div class="footer container">
+            <div t-attf-class="o_boxed_footer o_company_#{company.id}_layout border-top-0">
+                <div class="text-center">
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!--
+   =============================
+   Template: external_layout
+   Description: Wrapper layout that selects and renders the company layout dynamically
+   =============================
+   -->
+
+    <template id="external_layout">
+        <t t-if="not o" t-set="o" t-value="doc"/>
+        <t t-if="not company">
+            <!-- Multicompany -->
+            <t t-if="company_id">
+                <t t-set="company" t-value="company_id"/>
+            </t>
+            <t t-elif="o and 'company_id' in o and o.company_id.sudo()">
+                <t t-set="company" t-value="o.company_id.sudo()"/>
+            </t>
+            <t t-else="else">
+                <t t-set="company" t-value="res_company"/>
+            </t>
+        </t>
+        <t t-call="kaz_employee_reports.kaz_external_layout_standard">
+            <t t-out="0"/>
+        </t>
+    </template>
+
+    <!--
+    =============================
+    Template: salary_letter_report
+    Description: Bilingual salary transfer letter for employees, formatted in both English and Arabic.
+    Model: salary.transfer.letter
+    =============================
+    -->
+
+    <template id="salary_letter_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="kaz_employee_reports.external_layout">
+                    <style>
+                        div {
+                        font-size: 15px;
+                        }
+                    </style>
+                    <div class="page">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-6">
+                                    Date :
+                                    <span t-field="o.date"/>
+                                </div>
+                                <div class="col-6">
+                                    <div style="text-align : right; ">
+                                        التاريخ :
+                                        <span t-field="o.date"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    Addressed To :
+                                    <span t-field="o.bank_id.name"/>
+                                </div>
+                                <div class="col-6">
+                                    <div style="text-align : right; ">
+                                        موجهة إلى:
+                                        <span t-field="o.bank_id.bank_arabic_name"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Salary Transfer Letter</strong>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-right" style="text-align : right !important; float:right; ">
+                                        <strong>رسالة تحويل راتب</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <p>
+                                        This is to certify that the person mentioned below is employed by
+                                        <t t-esc="o.sudo().company_id.company_name"/>
+                                        to date.
+                                    </p>
+                                </div>
+                                <div class="col-6 text-end" style="direction:rtl;">
+                                    <p>
+                                        نشهد بأن المذكور أدناه أحد العاملين لدى
+                                        <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                        حتى تاريخه.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Name :</strong>
+                                    <span t-field="o.sudo().name"/>
+                                </div>
+                                <div class="col-6" style="text-align : right;">
+                                    <strong>الاسم :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_name"/>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    <strong>Emirates ID No :</strong>
+                                    <span t-field="o.id_no"/>
+                                </div>
+                                <div class="col-6" style="text-align : right;">
+                                    <span t-field="o.id_no"/>
+                                    <strong>: رقم الهوية</strong>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    <strong>Job Title :</strong>
+                                    <span t-field="o.job_title"/>
+                                </div>
+                                <div class="col-6" style="text-align : right;">
+                                    <strong>المسمي الوظيفي :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_job_position"/>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    <strong>Nationality :</strong>
+                                    <span t-field="o.nationality"/>
+                                </div>
+                                <div class="col-6" style="text-align : right;">
+                                    <strong>الجنسية :</strong>
+                                    <span t-field="o.sudo().name.employee_arabic_nationality"/>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    <strong>Joining Date :</strong>
+                                    <span t-field="o.join_date"/>
+                                </div>
+                                <div class="col-6" style="text-align : right;">
+                                    <span t-field="o.join_date"/>
+                                    <strong>: تاريخ التعيين</strong>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    <strong>Gross Salary :</strong>
+                                    <span t-field="o.gross_salary"/>
+                                    / Month
+                                </div>
+                                <div class="col-6" style="text-align: right; direction: rtl;">
+                                    <strong>اجمالي الراتب :</strong>
+                                    <span t-field="o.gross_salary"/>
+                                    / شهرياً
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <p>
+                                        We confirm that the employee’s monthly salary will be transferred to the credit
+                                        of their IBAN number (
+                                        <strong>
+                                            <span t-field="o.name.iban_num"/>
+                                        </strong>
+                                        ) from
+                                        <span t-field="o.date"/>
+                                        with yourselves and undertake not to transfer the salary to any other bank
+                                        unless the employee produces a clearance letter from your establishment.
+                                    </p>
+                                </div>
+                                <div class="col-6" style="text-align : right; direction:rtl;">
+                                    <p>
+                                        نُقرّ بأنه سيتم تحويل الراتب الشهري الخاص بالموظف إلى حسابه المصرفي رقم (
+                                        <strong>
+                                            <span t-field="o.name.iban_num"/>
+                                        </strong>
+                                        )، وذلك اعتبارًا من تاريخ<span t-field="o.date"/>، بناءً على طلبكم. كما نتعهد
+                                        بعدم تحويل الراتب إلى أي حساب بنكي آخر، ما لم يتم تزويدنا برسالة إخلاء طرف رسمية
+                                        صادرة من جهتكم.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row mt-1">
+                                <div class="col-6">
+                                    <p>
+                                        In case of the employee’s resignation/ termination we will transfer their
+                                        gratuity and final settlement of their dues if any, unless forfeited , to their
+                                        account at your bank.
+                                    </p>
+                                </div>
+                                <div class="col-6" style="text-align : right; direction:rtl;">
+                                    <p>
+                                        في حال استقالة الموظف /إنهاء خدماته، سوف تحول مستحقات نهاية الخدمة والتسوية
+                                        النهائية المستحقة لهم  إن وجدت – ما عدا ما يتم خصمه من تلك المستحقات -  لحسابه
+                                        البنكي لديكم.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>
+                                        Yours sincerely,
+                                    </strong>
+                                </div>
+                                <div class="col-6" style="text-align : right;">
+                                    وتقبلوا فائق الاحترام والتقدير،
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="text-center">
+                                    <div>
+                                        <img t-if="o.sudo().company_id.signature" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.signature)" alt="Signature"/>
+                                    </div>
+                                    <div class="mt-1">
+                                        <strong>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_id.name"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.employee_arabic_job_position"/>
+                                            <br/>
+                                            <t t-esc="o.sudo().company_id.job_id.name"/>
+                                            <br/>
+                                        </strong>
+                                    </div>
+                                    <div class="mt-1">
+                                        <img t-if="o.company_id.stamp" style="max-width: 150px;"
+                                             t-att-src="image_data_uri(o.sudo().company_id.stamp)" alt="Stamp"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6" style="font-size: 12px;">
+                                    <ul>
+                                        <li>This letter is valid for 30 days from the date of issuance.</li>
+                                        <li>This Letter has been issued upon the employee’s request without any
+                                            obligation to<t t-esc="o.sudo().company_id.company_name"/>.
+                                        </li>
+                                        <li>Any modification or alteration will invalidate this letter.</li>
+                                    </ul>
+                                </div>
+                                <div class="col-6 mr-2" style="font-size: 12px;">
+                                    <ul style="direction:rtl;">
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                هذه الرسالة صالحة لمدة 30 يوما من تاريخ الإصدار
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align: right; margin-bottom: 0px;">
+                                                أصدرت هذه الرسالة بناء على طلب الموظف دون أن تتحمل
+                                                <t t-esc="o.sudo().company_id.company_name_arabic"/>
+                                                أية مسؤولية تجاه الغير
+                                            </span>
+                                        </li>
+                                        <li style="direction:rtl;">
+                                            <span style="text-align : right; margin-bottom: 0px;">
+                                                أي تعديل أو تغيير في هذه الرسالة تعتبرها لاغية
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!--
+    =============================
+    Report Action: action_report_salary_letter_report
+    Description: Allows printing the salary transfer letter from the salary.transfer.letter model.
+    =============================
+    -->
+
+    <record id="action_report_salary_letter_report" model="ir.actions.report">
+        <field name="name">Salary Transfer Letter</field>
+        <field name="model">salary.transfer.letter</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">kaz_employee_reports.salary_letter_report</field>
+        <field name="report_file">kaz_employee_reports.salary_letter_report</field>
+        <field name="print_report_name">'Salary Transfer Letter - %s - %s' % (object.name.name, object.date)</field>
+        <field name="binding_model_id" ref="model_salary_transfer_letter"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

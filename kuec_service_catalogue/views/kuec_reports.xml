@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EPIC-11: WINK Reporting Pack — Catalogue, Delivery SLA, Financial, Compliance, CX -->
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         A) CATALOGUE REPORT
+         Model: product.template — WINK services with active sub counts
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="wink_catalogue_report_list" model="ir.ui.view">
+        <field name="name">product.template.wink.catalogue.list</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <list string="Catalogue Report" default_order="name">
+                <field name="name" string="Service"/>
+                <field name="delivery_model" string="Delivery Model" optional="show"/>
+                <field name="commercial_structure" string="Commercial Structure" optional="show"/>
+                <field name="available_on_wink" string="On Portal" widget="boolean" optional="show"/>
+                <field name="wink_active_order_count" string="Active Subscriptions"/>
+                <field name="list_price" string="List Price" widget="monetary"
+                       options="{'currency_field': 'currency_id'}" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="wink_catalogue_report_pivot" model="ir.ui.view">
+        <field name="name">product.template.wink.catalogue.pivot</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <pivot string="Catalogue Pivot" display_quantity="true">
+                <field name="delivery_model" type="row"/>
+                <field name="commercial_structure" type="col"/>
+                <field name="wink_active_order_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_wink_catalogue_report" model="ir.actions.act_window">
+        <field name="name">Catalogue Report</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,pivot</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list',  'view_id': ref('wink_catalogue_report_list')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('wink_catalogue_report_pivot')}),
+        ]"/>
+        <field name="domain">[('available_on_wink', '=', True)]</field>
+        <field name="context">{'search_default_groupby_delivery': 1}</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         B) DELIVERY SLA REPORT
+         Model: project.task — WINK tasks with days-open SLA
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="wink_delivery_sla_list" model="ir.ui.view">
+        <field name="name">project.task.wink.sla.list</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <list string="Delivery SLA" default_order="create_date desc"
+                  decoration-danger="wink_days_open &gt; 14"
+                  decoration-warning="wink_days_open &gt; 7">
+                <field name="name" string="Task"/>
+                <field name="project_id" string="Project" optional="show"/>
+                <field name="sale_order_id" string="Order" optional="show"/>
+                <field name="stage_id" string="Stage"/>
+                <field name="wink_vendor_id" string="Vendor" optional="show"/>
+                <field name="create_date" string="Opened" optional="show"/>
+                <field name="wink_days_open" string="Days Open"
+                       decoration-danger="wink_days_open &gt; 14"
+                       decoration-warning="wink_days_open &gt; 7"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="wink_delivery_sla_pivot" model="ir.ui.view">
+        <field name="name">project.task.wink.sla.pivot</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <pivot string="Delivery SLA Pivot">
+                <field name="stage_id" type="row"/>
+                <field name="wink_vendor_id" type="col"/>
+                <field name="wink_days_open" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="wink_delivery_sla_graph" model="ir.ui.view">
+        <field name="name">project.task.wink.sla.graph</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <graph string="Delivery SLA" type="bar">
+                <field name="stage_id" type="row"/>
+                <field name="wink_days_open" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_wink_delivery_sla_report" model="ir.actions.act_window">
+        <field name="name">Delivery SLA Report</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">list,pivot,graph</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list',  'view_id': ref('wink_delivery_sla_list')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('wink_delivery_sla_pivot')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('wink_delivery_sla_graph')}),
+        ]"/>
+        <field name="domain">[('sale_order_id.wink_is_portal_request', '=', True)]</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         C) FINANCIAL REPORT — MRR / ARR
+         Model: sale.order — WINK subscriptions with recurring_monthly
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="wink_financial_mrr_list" model="ir.ui.view">
+        <field name="name">sale.order.wink.mrr.list</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="MRR / ARR" default_order="date_order desc">
+                <field name="name" string="Reference"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="wink_source_product_id" string="Service" optional="show"/>
+                <field name="date_order" string="Start Date" optional="show"/>
+                <field name="next_invoice_date" string="Next Renewal" optional="show"/>
+                <field name="recurring_monthly" string="MRR" widget="monetary"
+                       options="{'currency_field': 'currency_id'}"/>
+                <field name="amount_total" string="Total" widget="monetary"
+                       options="{'currency_field': 'currency_id'}" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" string="Status" widget="badge"
+                       decoration-success="state == 'sale'"
+                       decoration-muted="state == 'cancel'"
+                       optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="wink_financial_mrr_pivot" model="ir.ui.view">
+        <field name="name">sale.order.wink.mrr.pivot</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <pivot string="MRR Pivot">
+                <field name="wink_source_product_id" type="row"/>
+                <field name="partner_id" type="col"/>
+                <field name="recurring_monthly" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="wink_financial_mrr_graph" model="ir.ui.view">
+        <field name="name">sale.order.wink.mrr.graph</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <graph string="MRR by Service" type="bar" stacked="True">
+                <field name="wink_source_product_id" type="row"/>
+                <field name="recurring_monthly" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_wink_financial_report" model="ir.actions.act_window">
+        <field name="name">Financial Report (MRR / ARR)</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,pivot,graph</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list',  'view_id': ref('wink_financial_mrr_list')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('wink_financial_mrr_pivot')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('wink_financial_mrr_graph')}),
+        ]"/>
+        <field name="domain">[
+            ('wink_is_portal_request', '=', True),
+            ('is_subscription', '=', True),
+            ('state', '=', 'sale'),
+        ]</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         D) CUSTOMER EXPERIENCE (CX) REPORT
+         Model: rating.rating — WINK task evaluations
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="wink_cx_list" model="ir.ui.view">
+        <field name="name">rating.rating.wink.cx.list</field>
+        <field name="model">rating.rating</field>
+        <field name="arch" type="xml">
+            <list string="Customer Experience" default_order="write_date desc"
+                  decoration-success="rating &gt;= 4"
+                  decoration-danger="rating &lt; 3">
+                <field name="partner_id" string="Customer"/>
+                <field name="rated_partner_id" string="Vendor"/>
+                <field name="res_name" string="Task" optional="show"/>
+                <field name="rating" string="Score (1–5)"
+                       decoration-success="rating &gt;= 4"
+                       decoration-warning="rating == 3"
+                       decoration-danger="rating &lt; 3"/>
+                <field name="wink_satisfaction_label" string="Satisfaction Rate" widget="badge" optional="show"/>
+                <field name="feedback" string="Feedback" optional="show"/>
+                <field name="write_date" string="Date"/>
+                <field name="consumed" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="wink_cx_pivot" model="ir.ui.view">
+        <field name="name">rating.rating.wink.cx.pivot</field>
+        <field name="model">rating.rating</field>
+        <field name="arch" type="xml">
+            <pivot string="CX Ratings Pivot">
+                <field name="rated_partner_id" type="row"/>
+                <field name="wink_satisfaction_label" type="col"/>
+                <field name="rating" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="wink_cx_graph" model="ir.ui.view">
+        <field name="name">rating.rating.wink.cx.graph</field>
+        <field name="model">rating.rating</field>
+        <field name="arch" type="xml">
+            <graph string="CX Ratings" type="bar">
+                <field name="rated_partner_id" type="row"/>
+                <field name="rating" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_wink_cx_report" model="ir.actions.act_window">
+        <field name="name">Customer Experience Report</field>
+        <field name="res_model">rating.rating</field>
+        <field name="view_mode">list,pivot,graph</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list',  'view_id': ref('wink_cx_list')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('wink_cx_pivot')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('wink_cx_graph')}),
+        ]"/>
+        <field name="domain">[('res_model', '=', 'project.task'), ('consumed', '=', True)]</field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         SEARCH VIEWS (extend default for key filters)
+    ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- SLA search: filter by WINK orders only -->
+    <record id="wink_sla_search" model="ir.ui.view">
+        <field name="name">project.task.wink.sla.search</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <search string="Delivery SLA">
+                <field name="name" string="Task"/>
+                <field name="wink_vendor_id" string="Vendor"/>
+                <filter string="Open Tasks" name="open"
+                        domain="[('stage_id.fold', '=', False)]"/>
+                <filter string="Closed" name="closed"
+                        domain="[('stage_id.fold', '=', True)]"/>
+                <group string="Group By" expand="0">
+                    <filter string="Stage" name="group_stage" context="{'group_by': 'stage_id'}"/>
+                    <filter string="Vendor" name="group_vendor" context="{'group_by': 'wink_vendor_id'}"/>
+                    <filter string="Project" name="group_project" context="{'group_by': 'project_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>
