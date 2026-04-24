@@ -20,7 +20,8 @@
     'depends': [
         'kaz_kuec_overall_doa_approval',
         'kaz_kuec_wink_company',
-        'kaz_vendor_contact_company_restriction'
+        'kaz_vendor_contact_company_restriction',
+        'kaz_pr_and_po_ageing_management',
     ],
     'data': [
         'security/res_groups.xml',
@@ -28,6 +29,8 @@
         'views/account_move_views.xml',
         'views/account_payment_approval_views.xml',
         'views/account_payment_views.xml',
+        'views/purchase_requisition_views.xml',
+        'views/extend_agreement_views.xml',
     ],
     'license': 'LGPL-3',
     'installable': True,

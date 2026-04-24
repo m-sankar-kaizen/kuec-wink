@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_purchase_requisition_form_wink_doa" model="ir.ui.view">
+        <field name="name">purchase.requisition.form.inherit.kaz.wink.doa.approval</field>
+        <field name="model">purchase.requisition</field>
+        <field name="inherit_id" ref="kaz_vendor_contact_company_restriction.view_purchase_requisition_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Show the Extend Agreement button for WINK as well as KUEC -->
+            <button name="action_extend_agreement" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC', 'WINK']</attribute>
+            </button>
+
+            <!--
+                The extension_request page is currently hidden for non-KUEC.
+                Replace the invisible condition to include WINK.
+            -->
+            <page name="extension_request" position="attributes">
+                <attribute name="invisible">company_code not in ['KUEC', 'WINK']</attribute>
+            </page>
+
+            <!-- Add WINK approval state badge as a read-only column in the list.
+                 Approvers open the full form via the external link icon to take action. -->
+            <xpath expr="//page[@name='extension_request']//list//field[@name='state']"
+                   position="after">
+                <field name="company_code" column_invisible="1"/>
+                <field name="wink_approval_state"
+                       string="WINK State"
+                       widget="badge"
+                       optional="show"
+                       invisible="company_code not in ['WINK']"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

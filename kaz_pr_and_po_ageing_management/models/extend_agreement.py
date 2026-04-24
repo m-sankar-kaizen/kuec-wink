@@ -8,6 +8,7 @@ from odoo.exceptions import ValidationError
 class ExtendAgreement(models.Model):
     _name = 'extend.agreement'
     _description = 'Extend Agreement'
+    _inherit = ['mail.thread', 'mail.activity']
 
     purchase_requisition_id = fields.Many2one('purchase.requisition', string="Purchase Requisition")
     new_date_end = fields.Date(string="New Date End", required=True)
