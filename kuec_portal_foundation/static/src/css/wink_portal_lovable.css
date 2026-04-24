@@ -1,493 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <template id="kuec_inline_portal_styles" inherit_id="website.layout" name="WINK Inline Portal Styles">
-        <xpath expr="//head" position="inside">
-            <style id="kuec-wink-inline-styles" type="text/css"><![CDATA[
-:root {
-  --wink-primary: #0055b7;
-  --wink-secondary: #c62753;
-  --wink-accent: #53c8e7;
-  --wink-bg: #F8F9FA;
-  --wink-info: #0d6efd;
-  --wink-border: #dee2e6;
-  --wink-muted: #6c757d;
-  --wink-light: #f8f9fa;
-  --wink-text-dark: #212529;
-  --wink-text-light: #6C757D;
-  --wink-font-primary: 'Calibri', 'Inter', sans-serif;
-  --wink-font-heading: 'Calibri', 'Inter', sans-serif;
-}
-
-body {
-  font-family: var(--wink-font-primary) !important;
-  background-color: var(--wink-bg) !important;
-  color: var(--wink-text-dark) !important;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--wink-font-heading) !important;
-}
-
-.btn-primary {
-  background-color: var(--wink-primary) !important;
-  border-color: var(--wink-primary) !important;
-}
-
-.btn-secondary {
-  background-color: var(--wink-secondary) !important;
-  border-color: var(--wink-secondary) !important;
-}
-
-.o_portal_menu {
-  border-bottom: 3px solid var(--wink-primary) !important;
-}
-
-/* â”€â”€ Epic 4: Stage Progress Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.wink-delivery-panel {
-  background: var(--wink-light);
-  border: 1px solid var(--wink-border);
-  border-radius: 8px;
-  padding: 16px 20px;
-}
-
-.wink-panel-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--wink-muted);
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-/* â”€â”€ Modern Stepper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.wink-stepper-wrap {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  padding: 24px 32px;
-  margin-bottom: 28px;
-}
-
-.wink-stepper-row {
-  display: flex;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.wink-stage-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  flex: 0 0 auto;
-  width: 90px;
-  position: relative;
-}
-
-.wink-node-dot {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #f3f4f6;
-  border: 2px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: #9ca3af;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 1;
-}
-
-.wink-step-num {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.wink-node-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #9ca3af;
-  text-align: center;
-  white-space: nowrap;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  transition: color 0.3s ease;
-}
-
-.wink-node-date {
-  font-size: 10px;
-  color: #98a2b3;
-  text-align: center;
-}
-
-/* Done: green gradient + checkmark */
-.wink-stage-node.wink-done .wink-node-dot {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.wink-stage-node.wink-done .wink-node-label {
-  color: #059669;
-  font-weight: 700;
-}
-
-/* Current: brand gradient + pulse glow */
-.wink-stage-node.wink-current .wink-node-dot {
-  background: linear-gradient(135deg, #1f4e79 0%, #2e86de 100%);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 0 0 5px rgba(46, 134, 222, 0.18), 0 4px 16px rgba(31, 78, 121, 0.35);
-  animation: wink-step-pulse 2.2s ease-in-out infinite;
-}
-
-.wink-stage-node.wink-current .wink-node-label {
-  color: #1f4e79;
-  font-weight: 700;
-}
-
-@keyframes wink-step-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 5px rgba(46, 134, 222, 0.18), 0 4px 16px rgba(31, 78, 121, 0.35);
-  }
-  50% {
-    box-shadow: 0 0 0 9px rgba(46, 134, 222, 0.1), 0 6px 20px rgba(31, 78, 121, 0.45);
-  }
-}
-
-/* connector line between steps */
-.wink-stage-connector {
-  flex: 1 1 0%;
-  height: 3px;
-  border-radius: 2px;
-  background: #e5e7eb;
-  min-width: 24px;
-  margin-top: 21px;
-  align-self: auto;
-  transition: background 0.4s ease;
-}
-
-/* â”€â”€ Bundle Tier Selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.wink-tier-card {
-  cursor: pointer;
-}
-
-.wink-tier-label {
-  border: 2px solid var(--wink-border);
-  border-radius: 8px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-  display: block;
-}
-
-.wink-tier-radio:checked + .wink-tier-label {
-  border-color: var(--wink-primary);
-  box-shadow: 0 0 0 3px rgba(0, 85, 183, 0.12);
-}
-
-.wink-tier-label:hover {
-  border-color: var(--wink-primary);
-}
-
-/* UI-020 â€” Portal component library (WINK_PORTAL_UI_SPEC Â§2) */
-/* Buttons */
-.btn-wink-primary {
-  background-color: var(--wink-primary) !important;
-  border-color: var(--wink-primary) !important;
-  color: #fff !important;
-}
-
-.btn-wink-secondary {
-  background-color: #fff !important;
-  border: 1px solid var(--wink-primary);
-  color: var(--wink-primary) !important;
-}
-
-.btn-wink-ghost {
-  background-color: #fff !important;
-  border: 1px solid var(--wink-border);
-  color: var(--wink-text-dark) !important;
-}
-
-.btn-wink-destructive {
-  background-color: var(--wink-secondary) !important;
-  border-color: var(--wink-secondary) !important;
-  color: #fff !important;
-}
-
-.btn-wink-primary:hover, .btn-wink-secondary:hover, .btn-wink-ghost:hover {
-  opacity: 0.9;
-}
-
-/* Badges â€” Type */
-.badge-wink-type-onetime {
-  background-color: #e9ecef !important;
-  color: #495057 !important;
-}
-
-.badge-wink-type-retainer {
-  background-color: #cfe2ff !important;
-  color: #084298 !important;
-}
-
-/* Badges â€” Status (with dot) */
-.badge-wink-status-quotation {
-  background-color: #fff3cd !important;
-  color: #856404 !important;
-}
-
-.badge-wink-status-salesorder {
-  background-color: #cfe2ff !important;
-  color: #084298 !important;
-}
-
-/* Badges â€” Payment */
-.badge-wink-payment-locked {
-  background-color: #fff3cd !important;
-  color: #856404 !important;
-}
-
-.badge-wink-payment-due {
-  background-color: #f8d7da !important;
-  color: #721c24 !important;
-}
-
-.badge-wink-payment-paid {
-  background-color: #d1e7dd !important;
-  color: #0f5132 !important;
-}
-
-/* Badge â€” POPULAR */
-.badge-wink-popular {
-  background-color: #fd7e14 !important;
-  color: #fff !important;
-}
-
-/* Badges â€” Document status */
-.badge-wink-doc-not-submitted {
-  background-color: #e9ecef !important;
-  color: #495057 !important;
-}
-
-.badge-wink-doc-under-review {
-  background-color: var(--wink-info) !important;
-  color: #fff !important;
-}
-
-.badge-wink-doc-change-required {
-  background-color: #fff3cd !important;
-  color: #856404 !important;
-}
-
-.badge-wink-doc-approved {
-  background-color: #d1e7dd !important;
-  color: #0f5132 !important;
-}
-
-.badge-wink-doc-rejected {
-  background-color: #f8d7da !important;
-  color: #721c24 !important;
-}
-
-/* Cards */
-.card-wink-summary .card-header {
-  background: var(--wink-primary) !important;
-  color: #fff !important;
-}
-
-.card-wink-info {
-  background-color: #e7f1ff !important;
-  border: 1px solid rgba(0, 85, 183, 0.2);
-  border-radius: 8px;
-}
-
-/* â”€â”€ Shared step-node classes (used by wizard stepper + ENH-1 tracker) â”€â”€ */
-.wink-step-node {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.wink-step-done {
-  background: var(--wink-primary);
-  color: #fff;
-}
-
-.wink-step-active {
-  border: 3px solid var(--wink-primary);
-  color: var(--wink-primary);
-  background: #fff;
-  animation: wink-step-node-pulse 1.5s ease-in-out infinite;
-}
-
-.wink-step-future {
-  background: #dee2e6;
-  color: #adb5bd;
-}
-
-@keyframes wink-step-node-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(0, 85, 183, 0.35);
-  }
-  50% {
-    box-shadow: 0 0 0 7px rgba(0, 85, 183, 0);
-  }
-}
-
-/* Stepper connector states */
-.wink-stage-connector.wink-done {
-  background: linear-gradient(90deg, #10b981, #059669);
-}
-
-.wink-stage-connector.wink-pending {
-  background: #e5e7eb;
-}
-
-.wink-stage-connector.wink-skipped {
-  background: #e5e7eb;
-  opacity: 0.35;
-}
-
-/* Alert â€” Payment locked (spec Â§1.3) */
-.wink-alert-locked {
-  background-color: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-
-.wink-alert-success {
-  background-color: #d1e7dd;
-  border: 1px solid #198754;
-  border-radius: 8px;
-  padding: 12px 16px;
-}
-
-/* Breadcrumbs */
-.wink-breadcrumb {
-  font-size: 0.9rem;
-}
-
-.wink-breadcrumb a {
-  color: var(--wink-primary);
-}
-
-/* Timeline / Activity */
-.wink-timeline-item {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  padding: 12px 0;
-}
-
-.wink-timeline-item + .wink-timeline-item {
-  border-top: 1px solid #f2f4f7;
-}
-
-.wink-timeline-icon {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: 50%;
-  background: #eff8ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--wink-primary);
-  font-size: 14px;
-  margin-top: 2px;
-}
-
-.wink-timeline-icon.wink-icon-system {
-  background: #f2f4f7;
-  color: #667085;
-}
-
-.wink-timeline-body {
-  flex: 1;
-}
-
-.wink-timeline-text {
-  font-size: 0.925rem;
-  line-height: 1.5;
-  color: #344054;
-  font-weight: 500;
-}
-
-.wink-timeline-time {
-  font-size: 0.8rem;
-  color: #12b76a;
-  margin-top: 2px;
-  display: block;
-}
-
-/* Upload zone */
-.wink-upload-zone {
-  border: 2px dashed var(--wink-border);
-  border-radius: 8px;
-  padding: 24px;
-  background: var(--wink-light);
-  text-align: center;
-}
-
-/* Empty state & Skeleton */
-.wink-empty-state {
-  text-align: center;
-  padding: 48px 24px;
-  color: var(--wink-muted);
-}
-
-.wink-skeleton {
-  background: linear-gradient(90deg, var(--wink-border) 25%, var(--wink-light) 50%, var(--wink-border) 75%);
-  background-size: 200% 100%;
-  animation: wink-skeleton 1.5s ease-in-out infinite;
-  border-radius: 4px;
-}
-
-@keyframes wink-skeleton {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Catalogue â€” Blue header banner (UI-001) */
-.wink-catalogue-banner {
-  background: var(--wink-primary);
-  color: #fff;
-  padding: 24px 0;
-  margin-bottom: 24px;
-}
-
-.wink-catalogue-banner .form-control {
-  border-radius: 8px;
-}
-
-/* UI-005 Alternating table rows (My Requests) */
-.o_portal_table tbody tr:nth-child(even) {
-  background-color: var(--wink-light);
-}
-
-/* â”€â”€ Semantic classes (same names as Lovable where possible) â”€â”€ */
+@charset "UTF-8";
+/* ── Semantic classes (same names as Lovable where possible) ── */
 .page-header {
   font-size: 1.5rem;
   font-weight: 700;
@@ -724,7 +236,7 @@ h6 {
   opacity: 0.6;
 }
 
-/* CAT-1, CAT-2, CAT-10 â€” Service Catalogue hero & container */
+/* CAT-1, CAT-2, CAT-10 — Service Catalogue hero & container */
 .wink-catalogue-hero {
   border-radius: 16px;
   padding: 1.5rem 1rem;
@@ -762,7 +274,7 @@ h6 {
   }
 }
 
-/* CAT-5 â€” Department strip on service cards (left border); default for unknown slugs */
+/* CAT-5 — Department strip on service cards (left border); default for unknown slugs */
 .wink-service-card.wink-dept-strip {
   border-left-width: 4px;
   border-left-style: solid;
@@ -826,7 +338,7 @@ h6 {
   overflow: hidden;
 }
 
-/* G-2 â€” Card selected state (wizard) */
+/* G-2 — Card selected state (wizard) */
 .wink-card-selectable {
   transition: border-color 0.2s, background-color 0.2s;
 }
@@ -870,7 +382,7 @@ h6 {
   background-color: rgba(31, 78, 121, 0.06);
 }
 
-/* Standalone retainer plan card â€” Most Popular highlight */
+/* Standalone retainer plan card — Most Popular highlight */
 .wink-plan-popular .wink-tier-label {
   border-color: var(--wink-primary) !important;
   border-width: 2px !important;
@@ -932,7 +444,7 @@ h6 {
   font-weight: 500;
 }
 
-/* â”€â”€ UI-REV-001: Bundle Configurator Premium Tier Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── UI-REV-001: Bundle Configurator Premium Tier Cards ────────────── */
 /* Billing toggle */
 .wink-billing-toggle-wrapper {
   display: flex;
@@ -1238,7 +750,7 @@ input:checked + .wink-slider::before {
   color: #cbd5e1;
 }
 
-/* â”€â”€ UI-REV-002: Review page redesign â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── UI-REV-002: Review page redesign ─────────────────────────────── */
 .wink-review-card {
   background: #fff;
   border: 1px solid var(--wink-border);
@@ -1332,7 +844,7 @@ input:checked + .wink-slider::before {
   font-family: 'IBM Plex Mono', monospace;
 }
 
-/* â”€â”€ Activation Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Activation Modal ─────────────────────────────────────────────── */
 .wink-activate-modal-content {
   border: none;
   border-radius: 16px;
@@ -1645,7 +1157,3 @@ input:checked + .wink-slider::before {
   background: #fef3c7;
   color: #d97706;
 }
-            ]]></style>
-        </xpath>
-    </template>
-</odoo>

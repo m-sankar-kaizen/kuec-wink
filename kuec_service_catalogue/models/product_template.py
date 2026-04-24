@@ -117,9 +117,6 @@ class ProductTemplate(models.Model):
                 vals['delivery_model'] = 'retainer'
                 vals['recurring_invoice'] = True
                 vals.setdefault('request_frequency', 'repeated')
-            # Sub-services (bundled but not bundle template) must never appear in catalog
-            if vals.get('commercial_structure') == 'bundled' and not vals.get('wink_is_bundle'):
-                vals['available_on_wink'] = False
         templates = super().create(vals_list)
         for tmpl in templates:
             if tmpl.wink_is_bundle and not tmpl.wink_bundle_id:
@@ -133,20 +130,12 @@ class ProductTemplate(models.Model):
 
     def write(self, vals):
         """Enforce delivery_model=retainer and recurring_invoice when wink_is_bundle is set.
-        Enforce available_on_wink=False for bundled sub-services (not bundle templates).
         Auto-create wink.bundle when wink_is_bundle is set to True and no bundle exists yet."""
         if vals.get('wink_is_bundle'):
             vals['delivery_model'] = 'retainer'
             vals['recurring_invoice'] = True
             if 'request_frequency' not in vals:
                 vals['request_frequency'] = 'repeated'
-        # When commercial_structure is set to 'bundled' and product is not a bundle template
-        if vals.get('commercial_structure') == 'bundled':
-            for rec in self:
-                is_bundle = vals.get('wink_is_bundle', rec.wink_is_bundle)
-                if not is_bundle:
-                    vals['available_on_wink'] = False
-                    break
         result = super().write(vals)
         if vals.get('wink_is_bundle'):
             for rec in self:
@@ -183,8 +172,8 @@ class ProductTemplate(models.Model):
     @api.onchange('commercial_structure')
     def _onchange_commercial_structure(self):
         if self.commercial_structure == 'bundled' and not self.wink_is_bundle:
-            # Sub-services belong inside a bundle tier only; hide from portal catalog
-            self.available_on_wink = False
+            # Sub-services belong inside a bundle tier only; portal controllers
+            # exclude them from standalone catalogue/request flows.
             self.delivery_model = 'retainer'
             self.recurring_invoice = True
 
@@ -196,10 +185,13 @@ class ProductTemplate(models.Model):
         elif self.delivery_model == 'project':
             self.recurring_invoice = False
 
-    def _wink_recurring_plan_lines(self):
-        """Return native Recurring Prices for portal plan selection (retainer).
-        Uses sudo so portal users can see plans. Discovers the Recurring Prices One2many
-        by field name and by dynamic detection (any One2many whose comodel has plan + price)."""
+    def _wink_recurring_plan_lines(self, allow_plan_fallback=True):
+        """Return recurring pricing rows for portal plan selection.
+
+        When ``allow_plan_fallback`` is False, only actual Recurring Prices rows are
+        returned. Bare sale.subscription.plan links are ignored so standalone retainer
+        requests cannot proceed without a configured pricing row.
+        """
         self.ensure_one()
         product = self.sudo()
 
@@ -277,18 +269,19 @@ class ProductTemplate(models.Model):
             except KeyError:
                 continue
 
-        # 4) sale.subscription.plan: product linked via Many2many or plan has product_tmpl_id
-        try:
-            Plan = self.env['sale.subscription.plan'].sudo()
-            for field_name in ('plan_ids', 'subscription_plan_ids', 'recurring_plan_ids'):
-                if field_name in product._fields and product[field_name]:
-                    return _sort_lines(product[field_name])
-            if Plan._fields.get('product_tmpl_id'):
-                plans = Plan.search([('product_tmpl_id', '=', product.id)])
-                if plans:
-                    return _sort_lines(plans)
-        except (KeyError, AttributeError):
-            pass
+        # 4) Fallback to bare plans only where legacy bundle flows still rely on it.
+        if allow_plan_fallback:
+            try:
+                Plan = self.env['sale.subscription.plan'].sudo()
+                for field_name in ('plan_ids', 'subscription_plan_ids', 'recurring_plan_ids'):
+                    if field_name in product._fields and product[field_name]:
+                        return _sort_lines(product[field_name])
+                if Plan._fields.get('product_tmpl_id'):
+                    plans = Plan.search([('product_tmpl_id', '=', product.id)])
+                    if plans:
+                        return _sort_lines(plans)
+            except (KeyError, AttributeError):
+                pass
         return []
 
     def _recurrence_duration_months(self, recurrence):
@@ -307,12 +300,12 @@ class ProductTemplate(models.Model):
             return round(duration * 12 / 52.0, 2)
         return duration
 
-    def _wink_subscription_plans_dicts(self, pricelist_id=False):
+    def _wink_subscription_plans_dicts(self, pricelist_id=False, allow_plan_fallback=True):
         """Build subscription plan dicts for portal: plan_name, price, period_label, monthly_equivalent,
         savings_pct, show_savings, is_most_popular, features, recurrence_id, recurrence_id_str.
         Uses Monthly as baseline for savings; if no Monthly, use shortest period. pricelist_id=False for public."""
         self.ensure_one()
-        lines = self.sudo()._wink_recurring_plan_lines()
+        lines = self.sudo()._wink_recurring_plan_lines(allow_plan_fallback=allow_plan_fallback)
         if not lines:
             return []
         # Resolve currency: pricelist > company

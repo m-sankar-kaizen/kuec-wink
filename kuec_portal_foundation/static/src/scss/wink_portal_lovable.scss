@@ -194,16 +194,16 @@
     border-radius: 12px;
 }
 .wink-catalogue-container {
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 1rem;
+    max-width: 1280px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 1rem !important;
 }
 @media (min-width: 768px) {
-    .wink-catalogue-container { padding: 1.5rem; }
+    .wink-catalogue-container { padding: 1.5rem !important; }
 }
 @media (min-width: 992px) {
-    .wink-catalogue-container { padding: 2rem; }
+    .wink-catalogue-container { padding: 2rem !important; }
 }
 
 /* CAT-5 — Department strip on service cards (left border); default for unknown slugs */

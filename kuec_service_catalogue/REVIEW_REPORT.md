@@ -26,8 +26,8 @@
 - **ACLs** (`security/ir.model.access.csv`):
   - Header-only; no new model-level ACLs (no custom models).
 - **Assets / Theming**:
-  - `static/src/scss/wink_theme.scss`: CSS variables and styling for portal UI (buttons, typography, stage progress bar, bundle cards).
-  - `views/portal_templates/branded_layout.xml`: Currently commented-out example template for portal layout overrides.
+  - `kuec_portal_foundation/static/src/css/wink_theme.css`: Compiled CSS variables and styling for portal UI (buttons, typography, stage progress bar, bundle cards).
+  - `views/portal_templates/branded_layout.xml`: Injects the compiled portal styling inline through the shared website layout.
 - **Scheduled actions**:
   - None defined in this module.
 
@@ -133,10 +133,10 @@
     - Vendor users (in `group_kuec_vendor`) are explicitly denied all sale orders, limited to tickets where they are assigned, and constrained to their own partner record hierarchy.
   - Works entirely at record-rule and group level; no custom workflow or new models are introduced.
 - **Branding / UI**:
-  - `wink_theme.scss` defines CSS variables for brand colours, typography, portal menu decoration, and reusable UI components such as:
+  - `wink_theme.css` defines CSS variables for brand colours, typography, portal menu decoration, and reusable UI components such as:
     - Multi-stage delivery progress bar.
     - Bundle tier selector card visuals.
-  - `branded_layout.xml` currently holds commented guidance for dynamic CSS injection using `res.company` attributes, ready for future multi-brand rollout.
+  - `branded_layout.xml` injects the compiled portal CSS inline through `website.layout`.
 
 ### 2.2 Business Layer – `kuec_service_catalogue`
 

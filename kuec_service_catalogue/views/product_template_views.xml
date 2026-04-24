@@ -87,7 +87,7 @@
                 </page>
 
                 <!-- Docs tab visible for: any available service, OR bundled sub-services (commercial_structure='bundled')
-                     so coordinators can define required docs even after available_on_wink is auto-cleared.
+                     so coordinators can define required docs for services used inside bundle tiers.
                      Not shown for bundle template wrappers (wink_is_bundle=True) — their child services carry the docs. -->
                 <page string="Required Documents" name="required_documents_tab" invisible="(not available_on_wink and commercial_structure != 'bundled') or type != 'service' or not sale_ok or wink_is_bundle">
                     <field name="kuec_document_ids" widget="one2many">
