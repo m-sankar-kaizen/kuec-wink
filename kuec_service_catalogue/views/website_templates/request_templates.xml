@@ -82,7 +82,8 @@
                                     <label class="d-block mb-0 cursor-pointer wizard-service-card-label">
                                         <input type="radio" name="product_id" t-att-value="p.id" class="d-none wizard-service-radio" required="required"/>
                                         <t t-set="strip_class" t-value="('wink-dept-strip wink-dept-' + slug) if slug else ''"/>
-                                        <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative wink-card-selectable ' + strip_class">
+                                        <t t-set="strip_style" t-value="p.wink_ribbon_tag_id.color_html and ('border-left: 4px solid %s;' % p.wink_ribbon_tag_id.color_html) or ''"/>
+                                        <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative wink-card-selectable ' + strip_class" t-att-style="strip_style">
                                             <span class="wink-card-selected-check"><i class="fa fa-check-circle"/></span>
                                             <div class="card-body d-flex flex-column">
                                                 <h5 class="card-title fw-bold mb-2"><t t-esc="p.name"/></h5>

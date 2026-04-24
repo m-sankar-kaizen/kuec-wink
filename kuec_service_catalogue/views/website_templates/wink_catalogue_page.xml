@@ -5,7 +5,8 @@
     <template id="wink_service_card" name="WINK Service Card">
         <t t-set="dept_slug" t-value="dept_slug if dept_slug else ''"/>
         <t t-set="strip_class" t-value="(' wink-dept-strip wink-dept-' + dept_slug) if dept_slug else ''"/>
-        <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative' + strip_class">
+        <t t-set="strip_style" t-value="product.wink_ribbon_tag_id.color_html and ('border-left: 4px solid %s;' % product.wink_ribbon_tag_id.color_html) or ''"/>
+        <div t-att-class="'card h-100 wink-service-card shadow-sm position-relative' + strip_class" t-att-style="strip_style">
             <!-- UI-TAG-001 (FB-001h): Diagonal ribbon on card; backend color + visible folded-corner -->
             <t t-if="product.wink_ribbon_tag_id">
                 <div class="wink-ribbon-wrapper">
